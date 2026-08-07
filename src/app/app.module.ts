@@ -11,8 +11,6 @@ import { ShareModule } from './share';
 import { PopupModule } from './popup';
 import { N404Module } from './404';
 import { CoreModule } from './core';
-import { PopupNotificationModule } from './popup/notification/notification.module';
-import { LedgerModule } from './ledger/ledger.module';
 import * as Sentry from '@sentry/angular';
 
 // #region Startup Service
@@ -53,8 +51,8 @@ const APPINIT_PROVIDES = [
     CoreModule,
     ShareModule,
     PopupModule,
-    LedgerModule,
-    PopupNotificationModule,
+    // N404Module must stay last: it contributes the `**` route, and forChild
+    // configs are appended in import order.
     N404Module,
     StoreModule.forRoot(rootReducer, {
       metaReducers: accountMetaReducers,

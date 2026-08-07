@@ -25,6 +25,19 @@ import {
   PopupWalletGuard,
 } from '@app/core';
 
+/**
+ * This is the single owner of the `popup` path. Feature modules used to each
+ * declare their own top-level `{ path: 'popup', component: PopupComponent }`
+ * entry and rely on the router falling through to the next sibling when no
+ * child matched. That only works while every one of those modules is eagerly
+ * loaded — the router cannot look inside a lazy module to decide whether to
+ * fall through — so the lazily loaded features are mounted here as children
+ * with a distinct path prefix instead.
+ *
+ * All URLs are unchanged. They have to be: the background worker builds
+ * `index.html#popup/notification/...` and `index.html#popup/login?...` as
+ * strings (extension/background/tool.ts, request-handlers/connect-session.ts).
+ */
 const routes: Routes = [
   {
     path: 'popup',
@@ -81,6 +94,8 @@ const routes: Routes = [
         path: 'login',
         component: PopupLoginComponent,
       },
+      // Must stay ahead of the lazy `wallet` mount below, which would
+      // otherwise swallow `wallet/new-guide`.
       {
         canActivate: [OpenedWalletGuard],
         path: 'wallet/new-guide',
@@ -111,6 +126,25 @@ const routes: Routes = [
         canActivate: [PopupWalletGuard],
         component: PopupNoticeComponent,
       },
+      //#region lazily loaded features
+      {
+        path: 'notification',
+        loadChildren: () =>
+          import('./notification/notification.module').then(
+            (m) => m.PopupNotificationModule
+          ),
+      },
+      {
+        path: 'transfer',
+        loadChildren: () =>
+          import('./transfer/transfer.module').then((m) => m.TransferModule),
+      },
+      {
+        path: 'wallet',
+        loadChildren: () =>
+          import('./wallet/wallet.module').then((m) => m.PopupWalletModule),
+      },
+      //#endregion
     ],
   },
 ];

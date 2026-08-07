@@ -29,7 +29,7 @@ interface CreateNeo3TxInput {
 }
 
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class Neo3TransferService {
   private rpcClient;
   private n3Network: RpcNetwork;

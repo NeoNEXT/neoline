@@ -43,7 +43,7 @@ interface CreateNeo3TxInput {
   validUntilBlock?: number;
 }
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class Neo3InvokeService {
   private rpcClient;
   private address: string;

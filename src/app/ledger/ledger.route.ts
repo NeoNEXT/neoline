@@ -4,9 +4,13 @@ import { NgModule } from '@angular/core';
 import { PopupWalletGuard } from '@app/core';
 import { LedgerComponent } from './ledger.component';
 
+/**
+ * Mounted lazily at `ledger` by AppRoutingModule, so the path is empty here.
+ * The URL is unchanged.
+ */
 const routes: Routes = [
   {
-    path: 'ledger',
+    path: '',
     component: LedgerComponent,
     canActivate: [PopupWalletGuard],
   },

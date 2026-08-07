@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 
 import { ShareModule } from '@app/share';
 
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { PopupNotificationComponent } from './notification.component';
 import { PopupNotificationRoutingModule } from './notification.route';
 import { PopupNoticeTransferComponent } from './transfer/transfer.component';
@@ -65,12 +64,10 @@ import {
     PopupNoticeEvmConfirmContractInteractionComponent,
     PopupNoticeEvmConfirmApproveComponent,
   ],
-  imports: [
-    CommonModule,
-    ShareModule,
-    PopupNotificationRoutingModule,
-    BrowserAnimationsModule,
-  ],
+  // BrowserAnimationsModule belongs to the root injector only (app.module
+  // already imports it); re-importing it from a lazy module gives the lazy
+  // injector its own animation providers.
+  imports: [CommonModule, ShareModule, PopupNotificationRoutingModule],
   exports: [],
   providers: [],
 })

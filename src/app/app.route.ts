@@ -8,6 +8,14 @@ const routes: Routes = [
     redirectTo: '/popup/home',
     pathMatch: 'full',
   },
+  // Hardware-wallet screens. Lazy because they drag in the @ledgerhq and
+  // @onekeyfe SDKs, which most users never touch. Declared in forRoot so it
+  // still resolves ahead of the `**` route N404Module appends.
+  {
+    path: 'ledger',
+    loadChildren: () =>
+      import('./ledger/ledger.module').then((m) => m.LedgerModule),
+  },
 ];
 
 @NgModule({

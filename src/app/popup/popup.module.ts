@@ -6,18 +6,16 @@ import { PopupRoutingModule } from './popup.route';
 import { ShareModule } from '@app/share';
 
 //#region modules
+// PopupNotificationModule, TransferModule and PopupWalletModule are NOT listed
+// here on purpose — they are loaded on demand via loadChildren in popup.route.ts.
+// Importing them eagerly would pull their components back into the initial
+// bundle and defeat the lazy routes.
 import { PopupAddAssetModule } from './add/add-asset/add-asset.module';
 import { PopupAddNftModule } from './add/add-nft/add-nft.module';
 import { PopupAddEvmNftModule } from './add/add-evm-nft/add-nft.module';
-import { PopupNotificationModule } from './notification/notification.module';
-import { TransferModule } from './transfer/transfer.module';
-import { PopupWalletModule } from './wallet/wallet.module';
 
 const POPUP_MODULES = [
   PopupAddAssetModule,
-  PopupNotificationModule,
-  TransferModule,
-  PopupWalletModule,
   PopupAddNftModule,
   PopupAddEvmNftModule,
 ];

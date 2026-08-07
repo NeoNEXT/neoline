@@ -11,7 +11,7 @@ import { AppState } from '@/app/reduers';
 import { ChainType, getErrorMessage } from '../_lib';
 import { isAsset } from '@/app/core/utils/neo';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class TransferService {
   private chainType: ChainType;
   constructor(

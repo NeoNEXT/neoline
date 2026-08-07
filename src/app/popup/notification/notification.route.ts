@@ -1,8 +1,6 @@
 import { Routes, RouterModule } from '@angular/router';
 import { NgModule } from '@angular/core';
 
-import { PopupComponent } from '@popup/popup.component';
-
 import { PopupNotificationComponent } from './notification.component';
 import { PopupNoticeSignComponent } from './signature/signature.component';
 import { PopupNoticeAuthComponent } from './authorization/authorization.component';
@@ -23,49 +21,55 @@ import { PopupNoticeNeo3SignV2Component } from './neo3-signature-v2/neo3-signatu
 import { PopupNoticeNeo3SignV3Component } from './neo3-signature-v3/neo3-signature-v3.component';
 import { PopupNoticeNeo3AuthenticateComponent } from './neo3-authenticate/neo3-authenticate.component';
 
+/**
+ * Mounted lazily at `popup/notification` by PopupRoutingModule. The empty path
+ * carries PopupNotificationComponent (which the leaves render into), and the
+ * PopupComponent shell comes from the parent route, so every URL the background
+ * worker builds — `index.html#popup/notification/<leaf>` — is unchanged.
+ */
 const routes: Routes = [
   {
-    path: 'popup',
-    component: PopupComponent,
+    path: '',
+    component: PopupNotificationComponent,
+    canActivate: [PopupWalletGuard],
     children: [
+      { path: 'signature', component: PopupNoticeSignComponent },
+      { path: 'authorization', component: PopupNoticeAuthComponent },
       {
-        path: 'notification',
-        component: PopupNotificationComponent,
-        canActivate: [PopupWalletGuard],
-        children: [
-          { path: 'signature', component: PopupNoticeSignComponent },
-          { path: 'authorization', component: PopupNoticeAuthComponent },
-          {
-            path: 'neo3-transfer',
-            component: PopupNoticeNeo3TransferComponent,
-          },
-          { path: 'neo3-invoke', component: PopupNoticeNeo3InvokeComponent },
-          {
-            path: 'neo3-invoke-multiple',
-            component: PopupNoticeNeo3InvokeMultipleComponent,
-          },
-          { path: 'neo3-signature', component: PopupNoticeNeo3SignComponent },
-          { path: 'neo3-signature-v2', component: PopupNoticeNeo3SignV2Component },
-          { path: 'neo3-signature-v3', component: PopupNoticeNeo3SignV3Component },
-          { path: 'neo3-authenticate', component: PopupNoticeNeo3AuthenticateComponent },
-          {
-            path: 'neo3-sign-transaction',
-            component: PopupNoticeNeo3SignTransactionComponent,
-          },
-          { path: 'pick-address', component: PopupPickAddressComponent },
-          {
-            path: 'wallet-switch-network',
-            component: PopupWalletSwitchNetworkComponent,
-          },
-          {
-            path: 'wallet-switch-account',
-            component: PopupWalletSwitchAccountComponent,
-          },
-          { path: 'evm-add-chain', component: PopupEvmAddChainComponent },
-          { path: 'evm-add-asset', component: PopupEvmAddAssetComponent },
-          { path: 'evm-personal-sign', component: PopupNoticeEvmSignComponent },
-          { path: 'evm-send-transaction', component: PopupNoticeEvmSendTxComponent },
-        ],
+        path: 'neo3-transfer',
+        component: PopupNoticeNeo3TransferComponent,
+      },
+      { path: 'neo3-invoke', component: PopupNoticeNeo3InvokeComponent },
+      {
+        path: 'neo3-invoke-multiple',
+        component: PopupNoticeNeo3InvokeMultipleComponent,
+      },
+      { path: 'neo3-signature', component: PopupNoticeNeo3SignComponent },
+      { path: 'neo3-signature-v2', component: PopupNoticeNeo3SignV2Component },
+      { path: 'neo3-signature-v3', component: PopupNoticeNeo3SignV3Component },
+      {
+        path: 'neo3-authenticate',
+        component: PopupNoticeNeo3AuthenticateComponent,
+      },
+      {
+        path: 'neo3-sign-transaction',
+        component: PopupNoticeNeo3SignTransactionComponent,
+      },
+      { path: 'pick-address', component: PopupPickAddressComponent },
+      {
+        path: 'wallet-switch-network',
+        component: PopupWalletSwitchNetworkComponent,
+      },
+      {
+        path: 'wallet-switch-account',
+        component: PopupWalletSwitchAccountComponent,
+      },
+      { path: 'evm-add-chain', component: PopupEvmAddChainComponent },
+      { path: 'evm-add-asset', component: PopupEvmAddAssetComponent },
+      { path: 'evm-personal-sign', component: PopupNoticeEvmSignComponent },
+      {
+        path: 'evm-send-transaction',
+        component: PopupNoticeEvmSendTxComponent,
       },
     ],
   },
