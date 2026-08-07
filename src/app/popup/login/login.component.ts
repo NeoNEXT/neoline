@@ -129,7 +129,9 @@ export class PopupLoginComponent
           account = this.selectWallet.accounts[0];
           break;
         case 'Neo3':
-          account = this.neo3Service.getNeo3Account(this.selectWallet.accounts[0]);
+          account = await this.neo3Service.getNeo3Account(
+            this.selectWallet.accounts[0]
+          );
           break;
         case 'NeoX':
           this.evmWalletService

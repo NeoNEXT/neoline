@@ -37,7 +37,7 @@ export class PopupPrivateKeyComponent implements OnInit {
     this.address = this.data.currentWallet.accounts[0].address;
   }
 
-  verify() {
+  async verify() {
     if (this.loading) {
       return;
     }
@@ -90,7 +90,9 @@ export class PopupPrivateKeyComponent implements OnInit {
     }
     const account =
       this.data.chainType === 'Neo3'
-        ? this.neo3Service.getNeo3Account(this.data.currentWallet.accounts[0])
+        ? await this.neo3Service.getNeo3Account(
+            this.data.currentWallet.accounts[0]
+          )
         : this.data.currentWallet.accounts[0];
     account
       .decrypt(this.pwd)

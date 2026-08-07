@@ -29,11 +29,11 @@ export class PopupPasswordDialogComponent implements OnInit {
     this.address = this.data.account.accounts[0].address;
   }
 
-  verify() {
+  async verify() {
     const account =
       this.data.chainType === 'Neo2'
         ? this.data.account.accounts[0]
-        : this.neo3Service.getNeo3Account(this.data.account.accounts[0]);
+        : await this.neo3Service.getNeo3Account(this.data.account.accounts[0]);
     account
       .decrypt(this.pwd)
       .then(() => {

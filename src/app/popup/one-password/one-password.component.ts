@@ -111,7 +111,7 @@ export class PopupOnePasswordComponent implements OnInit {
     const account =
       chainType === 'Neo2'
         ? item.accounts[0]
-        : this.neo3Service.getNeo3Account(item.accounts[0]);
+        : await this.neo3Service.getNeo3Account(item.accounts[0]);
     account
       .decrypt(this.pwdForm.value[`password${index}`])
       .then(() => {
