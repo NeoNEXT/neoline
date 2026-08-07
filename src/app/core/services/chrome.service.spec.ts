@@ -1,4 +1,6 @@
 import { ChromeService } from './chrome.service';
+import { firstValueFrom } from 'rxjs';
+import { STORAGE_NAME } from '@popup/_lib';
 
 describe('ChromeService session password', () => {
   it('resolves setPassword only after extension session storage is committed', async () => {
@@ -45,5 +47,42 @@ describe('ChromeService session password', () => {
     await expectAsync(service.setPassword('password')).toBeRejectedWithError(
       'session storage unavailable'
     );
+  });
+});
+
+describe('ChromeService startup storage', () => {
+  it('reads all local startup keys with one extension request', async () => {
+    const crx = {
+      isCrx: () => true,
+      getLocalStorage: jasmine
+        .createSpy('getLocalStorage')
+        .and.callFake((keys: STORAGE_NAME[], callback: (value: any) => void) => {
+          const value = {
+            [STORAGE_NAME.wallet]: { accounts: [{ address: 'Nabc' }] },
+            [STORAGE_NAME['walletArr-Neo3']]: [{ name: 'Account 1' }],
+          };
+          callback(value);
+          return Promise.resolve(value);
+        }),
+    };
+    const service = new ChromeService(crx as any);
+
+    const result = await firstValueFrom(
+      service.getStorages([
+        STORAGE_NAME.wallet,
+        STORAGE_NAME['walletArr-Neo3'],
+        STORAGE_NAME.n3Networks,
+      ])
+    );
+
+    expect(crx.getLocalStorage).toHaveBeenCalledTimes(1);
+    expect(crx.getLocalStorage.calls.mostRecent().args[0]).toEqual([
+      STORAGE_NAME.wallet,
+      STORAGE_NAME['walletArr-Neo3'],
+      STORAGE_NAME.n3Networks,
+    ]);
+    expect(result[STORAGE_NAME.wallet].accounts[0].address).toBe('Nabc');
+    expect(result[STORAGE_NAME['walletArr-Neo3']].length).toBe(1);
+    expect(result[STORAGE_NAME.n3Networks].length).toBeGreaterThan(0);
   });
 });

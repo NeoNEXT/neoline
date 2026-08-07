@@ -69,12 +69,13 @@ export function getStorage(key, callback) {
     return;
   }
   try {
-    chrome.storage.sync.get([key], (result) => {
+    const keys = Array.isArray(key) ? key : [key];
+    chrome.storage.sync.get(keys, (result) => {
       if (chrome.runtime.lastError) {
         callback(undefined);
         return;
       }
-      callback(result[key]);
+      callback(Array.isArray(key) ? result : result[key]);
     });
   } catch {
     callback(undefined);
@@ -102,14 +103,16 @@ export function getLocalStorage(key, callback): Promise<any> {
       return;
     }
     try {
-      chrome.storage.local.get([key], (result) => {
+      const keys = Array.isArray(key) ? key : [key];
+      chrome.storage.local.get(keys, (result) => {
         if (chrome.runtime.lastError) {
           callback(undefined);
           resolve(undefined);
           return;
         }
-        callback(result[key]);
-        resolve(result[key]);
+        const value = Array.isArray(key) ? result : result[key];
+        callback(value);
+        resolve(value);
       });
     } catch {
       callback(undefined);

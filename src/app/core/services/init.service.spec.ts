@@ -1,4 +1,4 @@
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import {
   DEFAULT_N2_RPC_NETWORK,
   DEFAULT_N3_RPC_NETWORK,
@@ -31,6 +31,23 @@ describe('InitService', () => {
         }
         return of(undefined);
       }),
+      getStorages: jasmine.createSpy('getStorages').and.returnValue(
+        of({
+          [STORAGE_NAME.wallet]: undefined,
+          [STORAGE_NAME.WIFArr]: [],
+          [STORAGE_NAME['WIFArr-Neo3']]: [],
+          [STORAGE_NAME.walletArr]: [],
+          [STORAGE_NAME['walletArr-Neo3']]: [],
+          [STORAGE_NAME['walletArr-NeoX']]: [],
+          [STORAGE_NAME.neo3AddressFlag]: true,
+          [STORAGE_NAME.n2Networks]: DEFAULT_N2_RPC_NETWORK,
+          [STORAGE_NAME.n2SelectedNetworkIndex]: 0,
+          [STORAGE_NAME.n3Networks]: DEFAULT_N3_RPC_NETWORK,
+          [STORAGE_NAME.n3SelectedNetworkIndex]: 0,
+          [STORAGE_NAME.neoXNetworks]: [],
+          [STORAGE_NAME.neoXSelectedNetworkIndex]: 0,
+        })
+      ),
       setStorage: jasmine.createSpy('setStorage'),
     };
     const store = {
@@ -100,6 +117,57 @@ describe('InitService', () => {
       jasmine.objectContaining({ type: UPDATE_NEOX_NETWORKS })
     );
     expect(chrome.setShouldFindNode).toHaveBeenCalledWith(false);
+  });
+
+  it('shares one batched storage hydration across startup consumers', async () => {
+    const { service, chrome } = createService();
+
+    const first = service.initData();
+    const second = service.initData();
+
+    expect(first).toBe(second);
+    await first;
+    expect(chrome.getStorages).toHaveBeenCalledTimes(1);
+    expect(chrome.getStorages.calls.mostRecent().args[0].length).toBe(13);
+  });
+
+  it('does not cache a failed hydration, so startup can be retried', async () => {
+    const { service, chrome } = createService();
+    chrome.getStorages.and.returnValue(
+      throwError(() => new Error('storage unavailable'))
+    );
+
+    await expectAsync(service.initData()).toBeRejected();
+
+    chrome.getStorages.and.returnValue(
+      of({
+        [STORAGE_NAME.wallet]: undefined,
+        [STORAGE_NAME.n2Networks]: DEFAULT_N2_RPC_NETWORK,
+        [STORAGE_NAME.n3Networks]: DEFAULT_N3_RPC_NETWORK,
+        [STORAGE_NAME.neoXNetworks]: [],
+      })
+    );
+
+    await expectAsync(service.initData()).toBeResolved();
+    expect(chrome.getStorages).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not cache a hydration that throws while parsing storage', async () => {
+    const { service, chrome } = createService();
+    // n2Networks 为空数组时会在读取 [0].version 时抛错。
+    // An empty n2Networks array makes the [0].version read throw.
+    chrome.getStorages.and.returnValue(
+      of({
+        [STORAGE_NAME.wallet]: { accounts: [{ address: 'NgaiKF' }] },
+        [STORAGE_NAME.n2Networks]: [],
+        [STORAGE_NAME.n3Networks]: DEFAULT_N3_RPC_NETWORK,
+        [STORAGE_NAME.neoXNetworks]: [],
+      })
+    );
+
+    await expectAsync(service.initData()).toBeRejected();
+    await expectAsync(service.initData()).toBeRejected();
+    expect(chrome.getStorages).toHaveBeenCalledTimes(2);
   });
 
   it('keeps custom Neo3 networks out of remote fast-RPC replacement', async () => {

@@ -41,17 +41,20 @@ export class ExtensionService {
     });
   }
 
-  getStorage(key, callback) {
-    chrome.runtime.sendMessage(
-      {
-        type: 'syncStorage',
-        method: 'get',
-        data: key,
-      },
-      (result) => {
-        callback(result);
-      }
-    );
+  getStorage(key, callback): Promise<any> {
+    return new Promise((resolve) => {
+      chrome.runtime.sendMessage(
+        {
+          type: 'syncStorage',
+          method: 'get',
+          data: key,
+        },
+        (result) => {
+          callback(result);
+          resolve(result);
+        }
+      );
+    });
   }
 
   setStorage(value) {

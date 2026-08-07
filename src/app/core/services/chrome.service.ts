@@ -530,6 +530,50 @@ export class ChromeService {
       }),
     );
   }
+
+  public getStorages(
+    storageNames: STORAGE_NAME[]
+  ): Observable<Partial<Record<STORAGE_NAME, any>>> {
+    if (!this.check) {
+      const result = {} as Partial<Record<STORAGE_NAME, any>>;
+      storageNames.forEach((storageName) => {
+        result[storageName] = this.handleStorageValue(
+          storageName,
+          localStorage.getItem(storageName)
+        );
+      });
+      return of(result);
+    }
+
+    const localNames = storageNames.filter(
+      (storageName) => STORAGE_VALUE_MESSAGE[storageName].isLocal
+    );
+    const syncNames = storageNames.filter(
+      (storageName) => !STORAGE_VALUE_MESSAGE[storageName].isLocal
+    );
+    const localRequest = localNames.length
+      ? this.crx.getLocalStorage(localNames, (res) => res)
+      : Promise.resolve({});
+    const syncRequest = syncNames.length
+      ? this.crx.getStorage(syncNames, (res) => res)
+      : Promise.resolve({});
+
+    return from(
+      Promise.all([localRequest, syncRequest]).then(
+        ([localValues = {}, syncValues = {}]) => {
+          const values = { ...localValues, ...syncValues };
+          const result = {} as Partial<Record<STORAGE_NAME, any>>;
+          storageNames.forEach((storageName) => {
+            result[storageName] = this.handleStorageValue(
+              storageName,
+              values[storageName]
+            );
+          });
+          return result;
+        }
+      )
+    );
+  }
   public removeStorage(storageName: STORAGE_NAME) {
     if (!this.check) {
       localStorage.removeItem(storageName);
