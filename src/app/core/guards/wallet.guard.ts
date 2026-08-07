@@ -20,6 +20,7 @@ export class PopupLoginGuard implements CanActivate {
         const w = parseWallet(res);
         if (!w) {
           this.router.navigateByUrl('/popup/wallet/new-guide');
+          resolve(false);
         } else {
           this.chrome.getPassword().then((pwd) => {
             if (!pwd) {
@@ -52,6 +53,7 @@ export class OpenedWalletGuard implements CanActivate {
               this.router.navigate(['/popup/login'], {
                 queryParams: { returnUrl: state.url },
               });
+              resolve(false);
             } else {
               resolve(true);
             }
@@ -81,6 +83,7 @@ export class PopupWalletGuard implements CanActivate {
           this.router.navigate(['/popup/wallet/new-guide'], {
             queryParams: { returnUrl: state.url },
           });
+          resolve(false);
         } else {
           this.chrome.getPassword().then((pwd) => {
             if (!pwd) {
@@ -88,6 +91,7 @@ export class PopupWalletGuard implements CanActivate {
                 queryParams: { returnUrl: state.url },
               });
               this.global.log('Wallet should login.');
+              resolve(false);
             } else {
               resolve(true);
             }
