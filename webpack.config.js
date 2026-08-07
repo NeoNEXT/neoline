@@ -13,24 +13,9 @@ module.exports = (config, options) => {
     optimization: {
       splitChunks: {
         cacheGroups: {
-          ledger: {
-            test: /[\\/]node_modules[\\/]@ledgerhq[\\/]/,
-            name: "ledger",
-            maxSize: 4000000,
-            priority: 20,
-            chunks: "all",
-            enforce: true,
-          },
           neonjs: {
             test: /[\\/]node_modules[\\/]@cityofzion[\\/]/,
             name: "neonjs",
-            priority: 20,
-            chunks: "all",
-            enforce: true,
-          },
-          onekeyfe: {
-            test: /[\\/]node_modules[\\/]@onekeyfe[\\/]/,
-            name: "onekeyfe",
             priority: 20,
             chunks: "all",
             enforce: true,

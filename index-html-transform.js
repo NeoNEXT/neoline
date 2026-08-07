@@ -9,9 +9,7 @@ module.exports = (targetOptions, indexHtml) => {
   let vendorScripts = ``;
   fs.readdirSync(vendor_path).forEach((file) => {
     if (
-      file.indexOf("ledger") === 0 ||
-      file.indexOf("neonjs") === 0 ||
-      file.indexOf("onekeyfe") === 0
+      file.indexOf("neonjs") === 0
     ) {
       vendorScripts += addScript(file);
     }
