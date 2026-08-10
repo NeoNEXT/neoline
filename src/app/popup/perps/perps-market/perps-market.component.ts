@@ -4,7 +4,8 @@ import { Store } from '@ngrx/store';
 import { Unsubscribable } from 'rxjs';
 
 import { AppState } from '@/app/reduers';
-import { ChromeService, HyperliquidService } from '@/app/core';
+import { ChromeService } from '@/app/core';
+import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
 import { STORAGE_NAME } from '@popup/_lib';
 import {
   PerpsCandle,

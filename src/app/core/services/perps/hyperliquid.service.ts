@@ -69,7 +69,7 @@ export function resolvePerpsTestnet(
  * by a `type` field. Live updates arrive over a single websocket that is opened
  * lazily and shared by all subscribers.
  */
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class HyperliquidService {
   private readonly isTestnet = resolvePerpsTestnet(environment.perpsNetwork);
 

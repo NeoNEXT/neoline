@@ -7,8 +7,8 @@ import {
   ChromeService,
   EvmWalletService,
   GlobalService,
-  HyperliquidService,
 } from '@/app/core';
+import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
 import { EvmWalletJSON } from '@popup/_lib/evm';
 import {
   PerpsFill,

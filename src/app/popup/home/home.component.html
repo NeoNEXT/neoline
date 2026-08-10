@@ -108,7 +108,7 @@
         <span
           *ngIf="chainType === 'NeoX'"
           [class]="{ selected: selectedTabType === 'perpetual' }"
-          (click)="selectedTabType = 'perpetual'"
+          (click)="showPerps()"
         >
           {{ "perps" | translate | async }}
         </span>
@@ -149,7 +149,9 @@
       </p>
     </div>
     <div *ngIf="selectedTabType === 'perpetual' && chainType === 'NeoX'">
-      <app-perps></app-perps>
+      <ng-container
+        *ngComponentOutlet="perpsTabComponent; ngModule: perpsModule"
+      ></ng-container>
       <p class="get-help" (click)="getSupport()">
         {{ "GetSupport" | translate | async }}{{ " " }}
         <img src="assets/images/common/support-arrow.svg" alt="" />

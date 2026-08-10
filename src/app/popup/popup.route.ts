@@ -90,6 +90,12 @@ const routes: Routes = [
         component: PopupHomeComponent,
       },
       {
+        path: 'perps',
+        canActivate: [PopupWalletGuard],
+        loadChildren: () =>
+          import('./perps/perps.module').then((m) => m.PerpsModule),
+      },
+      {
         canActivate: [PopupLoginGuard],
         path: 'login',
         component: PopupLoginComponent,

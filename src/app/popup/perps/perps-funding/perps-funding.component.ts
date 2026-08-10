@@ -9,8 +9,8 @@ import {
   ChromeService,
   EvmWalletService,
   GlobalService,
-  HyperliquidService,
 } from '@/app/core';
+import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
 import { abiERC20 } from '@popup/_lib';
 import { EvmWalletJSON } from '@popup/_lib/evm';
 import {

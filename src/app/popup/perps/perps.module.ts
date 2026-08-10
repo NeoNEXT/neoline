@@ -11,6 +11,7 @@ import { PerpsOrderComponent } from './perps-order/perps-order.component';
 import { PerpsFundingComponent } from './perps-funding/perps-funding.component';
 import { PerpsHistoryComponent } from './perps-history/perps-history.component';
 import { PerpsChartComponent } from './perps-chart/perps-chart.component';
+import { PopupPerpsSlippageDialogComponent } from '@popup/_dialogs/perps-slippage/perps-slippage.dialog';
 
 @NgModule({
   declarations: [
@@ -20,9 +21,12 @@ import { PerpsChartComponent } from './perps-chart/perps-chart.component';
     PerpsFundingComponent,
     PerpsHistoryComponent,
     PerpsChartComponent,
+    PopupPerpsSlippageDialogComponent,
   ],
   imports: [CommonModule, FormsModule, ShareModule, PerpsRoutingModule],
   // The tab is embedded by the home page, the rest are routed.
   exports: [PerpsTabComponent],
 })
 export class PerpsModule {}
+
+export { PerpsTabComponent };

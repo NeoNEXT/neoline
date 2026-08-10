@@ -4,7 +4,8 @@ import { Store } from '@ngrx/store';
 import { Unsubscribable } from 'rxjs';
 
 import { AppState } from '@/app/reduers';
-import { GlobalService, HyperliquidService } from '@/app/core';
+import { GlobalService } from '@/app/core';
+import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
 import {
   PerpsAccount,
   PerpsMarket,

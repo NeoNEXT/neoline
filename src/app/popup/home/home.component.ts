@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Type } from '@angular/core';
 import { SettingState } from '@/app/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
@@ -27,6 +27,8 @@ declare var chrome: any;
 })
 export class PopupHomeComponent implements OnInit {
   selectedTabType: 'asset' | 'NFT' | 'activity' | 'perpetual' = 'asset'; // asset tab or transaction tab
+  perpsTabComponent: Type<unknown>;
+  perpsModule: Type<unknown>;
   rateCurrency: string;
   hideValue = false;
   totalValue = 0;
@@ -78,6 +80,19 @@ export class PopupHomeComponent implements OnInit {
 
   getTotalValue(value) {
     this.totalValue = value;
+  }
+
+  async showPerps() {
+    this.selectedTabType = 'perpetual';
+    if (this.perpsTabComponent) {
+      return;
+    }
+
+    const { PerpsModule, PerpsTabComponent } = await import(
+      '../perps/perps.module'
+    );
+    this.perpsModule = PerpsModule;
+    this.perpsTabComponent = PerpsTabComponent;
   }
 
   showAccountList() {

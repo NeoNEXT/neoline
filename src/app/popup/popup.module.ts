@@ -13,13 +13,11 @@ import { ShareModule } from '@app/share';
 import { PopupAddAssetModule } from './add/add-asset/add-asset.module';
 import { PopupAddNftModule } from './add/add-nft/add-nft.module';
 import { PopupAddEvmNftModule } from './add/add-evm-nft/add-nft.module';
-import { PerpsModule } from './perps/perps.module';
 
 const POPUP_MODULES = [
   PopupAddAssetModule,
   PopupAddNftModule,
   PopupAddEvmNftModule,
-  PerpsModule,
 ];
 //#endregion
 
@@ -118,7 +116,6 @@ import {
   PopupEditApproveCapDialogComponent,
   PopupQRBasedSignDialogComponent,
   PopupSelectAccountsDialogComponent,
-  PopupPerpsSlippageDialogComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
@@ -151,7 +148,6 @@ const POPUP_DIALOGS = [
   PopupEditApproveCapDialogComponent,
   PopupQRBasedSignDialogComponent,
   PopupSelectAccountsDialogComponent,
-  PopupPerpsSlippageDialogComponent,
 ];
 
 //#endregion
