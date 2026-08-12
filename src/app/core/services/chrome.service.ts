@@ -311,25 +311,24 @@ export class ChromeService {
 
   public async getShouldFindNode(): Promise<boolean> {
     if (!this.check) {
-      return Promise.resolve(
-        sessionStorage.getItem('shouldFindNode') === 'false' ? false : true,
-      );
-    } else {
-      return (await this.crx.getSessionStorage(
-        STORAGE_NAME.shouldFindNode,
-        (res) => res,
-      )) === false
-        ? false
-        : true;
+      return sessionStorage.getItem(STORAGE_NAME.shouldFindNode) !== 'false';
     }
+    return (
+      (await this.crx.getSessionStorage(
+        STORAGE_NAME.shouldFindNode,
+        (res) => res
+      )) !== false
+    );
   }
 
-  public setShouldFindNode(status: boolean) {
+  public setShouldFindNode(status: boolean): Promise<void> | void {
     if (!this.check) {
-      sessionStorage.setItem('shouldFindNode', status.toString());
-    } else {
-      this.crx.setSessionStorage({ [STORAGE_NAME.shouldFindNode]: status });
+      sessionStorage.setItem(STORAGE_NAME.shouldFindNode, status.toString());
+      return;
     }
+    return this.crx.setSessionStorage({
+      [STORAGE_NAME.shouldFindNode]: status,
+    });
   }
 
   public async getHasLoginAddress(): Promise<any> {

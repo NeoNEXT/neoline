@@ -254,7 +254,6 @@ export async function waitTxs(currNetwork: RpcNetwork, chainType: ChainType) {
 export function resetData() {
   setLocalStorage({
     password: '',
-    [STORAGE_NAME.shouldFindNode]: true,
     [STORAGE_NAME.hasLoginAddress]: {},
     [STORAGE_NAME.InvokeArgsArray]: {},
   });

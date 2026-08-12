@@ -86,3 +86,37 @@ describe('ChromeService startup storage', () => {
     expect(result[STORAGE_NAME.n3Networks].length).toBeGreaterThan(0);
   });
 });
+
+describe('ChromeService shouldFindNode storage', () => {
+  it('reads and writes shouldFindNode through extension session storage', async () => {
+    let storedValue = true;
+    const crx = {
+      isCrx: () => true,
+      getSessionStorage: jasmine
+        .createSpy('getSessionStorage')
+        .and.callFake((_key: STORAGE_NAME, callback: (value: boolean) => void) => {
+          callback(storedValue);
+          return Promise.resolve(storedValue);
+        }),
+      setSessionStorage: jasmine
+        .createSpy('setSessionStorage')
+        .and.callFake((value: Record<string, boolean>) => {
+          storedValue = value[STORAGE_NAME.shouldFindNode];
+          return Promise.resolve();
+        }),
+    };
+    const service = new ChromeService(crx as any);
+
+    await expectAsync(service.getShouldFindNode()).toBeResolvedTo(true);
+    await service.setShouldFindNode(false);
+
+    expect(crx.getSessionStorage).toHaveBeenCalledWith(
+      STORAGE_NAME.shouldFindNode,
+      jasmine.any(Function)
+    );
+    expect(crx.setSessionStorage).toHaveBeenCalledWith({
+      [STORAGE_NAME.shouldFindNode]: false,
+    });
+    await expectAsync(service.getShouldFindNode()).toBeResolvedTo(false);
+  });
+});

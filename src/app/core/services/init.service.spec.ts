@@ -14,6 +14,13 @@ import { InitService } from './init.service';
 describe('InitService', () => {
   function createService({
     shouldFindNode = true,
+    cachedRpcUrls = {
+      nodes: {
+        1: ['http://n2-cached-slow.example', 'http://n2-cached-fast.example'],
+      },
+      lastModified: 'old-modified',
+    },
+    remoteLastModified = 'new-modified',
     remoteNodes = {
       1: ['http://n2-slow.example', 'http://n2-fast.example'],
       3: ['http://n3-main-slow.example', 'http://n3-main-fast.example'],
@@ -24,10 +31,12 @@ describe('InitService', () => {
       getShouldFindNode: jasmine
         .createSpy('getShouldFindNode')
         .and.resolveTo(shouldFindNode),
-      setShouldFindNode: jasmine.createSpy('setShouldFindNode'),
+      setShouldFindNode: jasmine
+        .createSpy('setShouldFindNode')
+        .and.resolveTo(),
       getStorage: jasmine.createSpy('getStorage').and.callFake((key) => {
         if (key === STORAGE_NAME.rpcUrls) {
-          return of({ nodes: {}, lastModified: 'old-modified' });
+          return of(cachedRpcUrls);
         }
         return of(undefined);
       }),
@@ -57,7 +66,7 @@ describe('InitService', () => {
       get: jasmine.createSpy('get').and.returnValue(
         of({
           body: remoteNodes,
-          headers: { get: () => 'new-modified' },
+          headers: { get: () => remoteLastModified },
         })
       ),
       post: jasmine.createSpy('post'),
@@ -193,15 +202,81 @@ describe('InitService', () => {
     expect(n3Dispatch.data[2]).toBe(customNetwork);
   });
 
-  it('does not load remote nodes when fast-RPC lookup is disabled for the session', async () => {
-    const { service, store, http } = createService({ shouldFindNode: false });
+  it('uses cached nodes when the response has no data and lookup is required', async () => {
+    const { service, store } = createService({
+      remoteNodes: null,
+    });
 
     await (service as any).updateFastNeoRpcNetworks(
       [...DEFAULT_N2_RPC_NETWORK],
       [...DEFAULT_N3_RPC_NETWORK]
     );
 
-    expect(http.get).not.toHaveBeenCalled();
+    expect(store.dispatch).toHaveBeenCalledWith({
+      type: UPDATE_NEO2_NETWORKS,
+      data: [
+        jasmine.objectContaining({
+          rpcUrl: 'http://n2-cached-fast.example',
+        }),
+      ],
+    });
+  });
+
+  it('uses cached nodes after a 304 response when lookup is required', async () => {
+    const { service, http, store } = createService();
+    http.get.and.returnValue(
+      throwError(() => ({ status: 304, statusText: 'Not Modified' }))
+    );
+
+    await (service as any).updateFastNeoRpcNetworks(
+      [...DEFAULT_N2_RPC_NETWORK],
+      [...DEFAULT_N3_RPC_NETWORK]
+    );
+
+    expect(store.dispatch).toHaveBeenCalledWith({
+      type: UPDATE_NEO2_NETWORKS,
+      data: [
+        jasmine.objectContaining({
+          rpcUrl: 'http://n2-cached-fast.example',
+        }),
+      ],
+    });
+  });
+
+  it('does not update networks when the response has no data and lookup is not required', async () => {
+    const { service, chrome, store } = createService({
+      shouldFindNode: false,
+      remoteNodes: null,
+    });
+
+    await (service as any).updateFastNeoRpcNetworks(
+      [...DEFAULT_N2_RPC_NETWORK],
+      [...DEFAULT_N3_RPC_NETWORK]
+    );
+
+    expect(chrome.getShouldFindNode).toHaveBeenCalled();
+    expect(chrome.setShouldFindNode).not.toHaveBeenCalled();
     expect(store.dispatch).not.toHaveBeenCalled();
+  });
+
+  it('releases the update lock when persisting lookup state fails', async () => {
+    const { service, chrome, http } = createService();
+    chrome.setShouldFindNode.and.rejectWith(new Error('storage unavailable'));
+
+    await expectAsync(
+      (service as any).updateFastNeoRpcNetworks(
+        [...DEFAULT_N2_RPC_NETWORK],
+        [...DEFAULT_N3_RPC_NETWORK]
+      )
+    ).toBeRejectedWithError('storage unavailable');
+
+    chrome.setShouldFindNode.and.resolveTo();
+    await expectAsync(
+      (service as any).updateFastNeoRpcNetworks(
+        [...DEFAULT_N2_RPC_NETWORK],
+        [...DEFAULT_N3_RPC_NETWORK]
+      )
+    ).toBeResolved();
+    expect(http.get).toHaveBeenCalledTimes(2);
   });
 });

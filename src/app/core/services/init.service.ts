@@ -292,37 +292,35 @@ export class InitService {
     if (this.hasUpdatedFastRpc || this.updatingFastRpc) {
       return;
     }
-    const shouldFindNode = await this.chrome.getShouldFindNode();
-    if (!shouldFindNode) {
-      return;
-    }
 
     this.updatingFastRpc = true;
-    const rpcUrls = await this.getRpcUrls();
-    if (!rpcUrls) {
+    try {
+      const rpcUrls = await this.getRpcUrlsForFastLookup();
+      if (!rpcUrls) {
+        return;
+      }
+
+      const [nextN2Networks, nextN3Networks] = await Promise.all([
+        this.getNetworksWithFastRpc(n2Networks, rpcUrls),
+        this.getNetworksWithFastRpc(n3Networks, rpcUrls),
+      ]);
+
+      this.store.dispatch({
+        type: UPDATE_NEO2_NETWORKS,
+        data: nextN2Networks,
+      });
+      this.store.dispatch({
+        type: UPDATE_NEO3_NETWORKS,
+        data: nextN3Networks,
+      });
+      await this.chrome.setShouldFindNode(false);
+      this.hasUpdatedFastRpc = true;
+    } finally {
       this.updatingFastRpc = false;
-      return;
     }
-
-    const [nextN2Networks, nextN3Networks] = await Promise.all([
-      this.getNetworksWithFastRpc(n2Networks, rpcUrls),
-      this.getNetworksWithFastRpc(n3Networks, rpcUrls),
-    ]);
-
-    this.store.dispatch({
-      type: UPDATE_NEO2_NETWORKS,
-      data: nextN2Networks,
-    });
-    this.store.dispatch({
-      type: UPDATE_NEO3_NETWORKS,
-      data: nextN3Networks,
-    });
-    this.chrome.setShouldFindNode(false);
-    this.hasUpdatedFastRpc = true;
-    this.updatingFastRpc = false;
   }
 
-  private async getRpcUrls(): Promise<RpcUrlMap | null> {
+  private async getRpcUrlsForFastLookup(): Promise<RpcUrlMap | null> {
     const cachedRpcUrls: RpcUrlStorage = await firstValueFrom(
       this.chrome.getStorage(STORAGE_NAME.rpcUrls)
     );
@@ -338,15 +336,20 @@ export class InitService {
           observe: 'response',
         })
       );
-      const nodes = response.body || cachedRpcUrls?.nodes || DEFAULT_RPC_URLS.nodes;
-      this.chrome.setStorage(STORAGE_NAME.rpcUrls, {
-        nodes,
-        lastModified: response.headers.get('Last-Modified'),
-      });
-      return nodes;
+      if (response.body && Object.keys(response.body).length > 0) {
+        this.chrome.setStorage(STORAGE_NAME.rpcUrls, {
+          nodes: response.body,
+          lastModified: response.headers.get('Last-Modified'),
+        });
+        return response.body;
+      }
     } catch (error) {
-      return cachedRpcUrls?.nodes || DEFAULT_RPC_URLS.nodes || null;
+      // 304 and request failures have no usable response body.
     }
+
+    const shouldFindNode = await this.chrome.getShouldFindNode();
+    const nodes = cachedRpcUrls?.nodes || DEFAULT_RPC_URLS.nodes;
+    return shouldFindNode ? nodes : null;
   }
 
   private async getNetworksWithFastRpc(
