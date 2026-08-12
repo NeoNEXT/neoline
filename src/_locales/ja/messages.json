@@ -1787,14 +1787,17 @@
   "perpsPositions": {
     "message": "ポジション"
   },
-  "perpsCloseAll": {
-    "message": "すべて決済"
-  },
   "perpsLong": {
     "message": "ロング"
   },
   "perpsShort": {
     "message": "ショート"
+  },
+  "perpsOpenLong": {
+    "message": "ロングを建てる"
+  },
+  "perpsOpenShort": {
+    "message": "ショートを建てる"
   },
   "perpsEntry": {
     "message": "エントリー"
@@ -1850,6 +1853,9 @@
   "perpsNoChartData": {
     "message": "チャートデータなし"
   },
+  "perpsChartVolumeUsd": {
+    "message": "出来高 (USD)"
+  },
   "perpsRiskTip": {
     "message": "無期限先物取引には大きなリスクがあり、警告なしに投資額全体を瞬時に失う可能性があります。取引の責任はすべてお客様が負います。"
   },
@@ -1899,7 +1905,7 @@
     "message": "手数料"
   },
   "perpsFeeTip": {
-    "message": "NeoLine手数料　0.000%<br />Hyperliquid手数料　0.045%"
+    "message": "NeoLine手数料　{{neoLineFeeRate}}<br />Hyperliquid手数料　{{hyperliquidFeeRate}}"
   },
   "perpsSlippage": {
     "message": "スリッページ"
@@ -1911,10 +1917,13 @@
     "message": "最大"
   },
   "perpsEditSlippage": {
-    "message": "スリッページを編集"
+    "message": "最大スリッページを調整"
   },
   "perpsSlippageRange": {
     "message": "{{min}}%から{{max}}%までの値を入力してください。"
+  },
+  "perpsSlippageNote": {
+    "message": "最大スリッページは注文フォームから送信した成行注文にのみ適用されます。"
   },
   "perpsSlippageTip": {
     "message": "予想スリッページは現在の板情報と注文数量から算出されます。最大値は成行注文で許容する価格差で、低すぎると約定しない場合があります。"
@@ -1966,6 +1975,9 @@
   },
   "perpsExceedsBalance": {
     "message": "残高を超えています"
+  },
+  "perpsAmountPrecision": {
+    "message": "金額は小数点以下 {{decimals}} 桁まで入力できます"
   },
   "perpsMaxFunding": {
     "message": "最大"
@@ -2077,5 +2089,11 @@
   },
   "perpsTransferSubmitted": {
     "message": "現物 USDC を無期限先物口座へ移動しました。"
+  },
+  "perpsAutoClose": {
+    "message": "自動決済"
+  },
+  "confirm": {
+    "message": "確認"
   }
 }

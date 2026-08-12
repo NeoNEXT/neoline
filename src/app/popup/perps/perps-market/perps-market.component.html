@@ -43,13 +43,13 @@
 
   <!-- 大字价格 -->
   <div class="price-block">
-    <span class="price">${{ market ? formatPrice(market.markPx) : "--" }}</span>
+    <span class="price">${{ market ? formatPrice(displayPrice) : "--" }}</span>
     <span
       class="change"
       *ngIf="market"
-      [class.negative]="market.changePercent < 0"
+      [class.negative]="displayChangePercent < 0"
     >
-      {{ formatSignedPercent(market.changePercent) }}
+      {{ formatSignedPercent(displayChangePercent) }}
     </span>
   </div>
 
@@ -59,6 +59,9 @@
       [loading]="chartLoading"
       [priceDecimals]="priceDecimals"
     ></perps-chart>
+    <p class="risk-tip" *ngIf="chartLoadError">
+      {{ "perpsLoadFailed" | translate | async }}
+    </p>
   </div>
 
   <div class="interval-bar">
@@ -149,7 +152,12 @@
         <div class="dir">{{ fillLabel(fill) }} {{ fill.coin }}</div>
         <div class="time">{{ fillTime(fill) }}</div>
       </div>
-      <div class="fill-size">{{ fill.sz }} {{ fill.coin }}</div>
+      <div class="fill-size">
+        {{ fill.sz }} {{ fill.coin }}<br />
+        <small>${{ formatPrice(+fill.px) }}</small>
+        <small *ngIf="fill.fee"> · {{ "perpsFee" | translate | async }} {{ fill.fee }} {{ fill.feeToken || "USDC" }}</small>
+        <small *ngIf="+fill.closedPnl"> · PnL {{ formatSignedUsd(+fill.closedPnl) }}</small>
+      </div>
     </div>
   </ng-container>
 

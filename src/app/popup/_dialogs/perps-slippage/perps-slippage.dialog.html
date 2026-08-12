@@ -10,9 +10,9 @@
 </div>
 
 <div class="content">
-  <label for="perps-slippage-input">
-    {{ "perpsSlippage" | translate | async }}
-  </label>
+  <p class="note">
+    {{ "perpsSlippageNote" | translate | async }}
+  </p>
   <div class="input-box">
     <input
       id="perps-slippage-input"
@@ -20,14 +20,14 @@
       inputmode="decimal"
       [min]="data.min"
       [max]="data.max"
-      step="0.1"
+      step="0.01"
       [(ngModel)]="value"
       (keydown.enter)="confirm()"
       autofocus
     />
     <span>%</span>
   </div>
-  <p class="range-tip">
+  <p class="range-tip" *ngIf="!valid">
     {{
       "perpsSlippageRange"
         | translate : { min: data.min, max: data.max }
@@ -36,16 +36,13 @@
   </p>
 
   <div class="choose-group">
-    <button class="cancel pop-ups" [mat-dialog-close]="false">
-      {{ "cancel" | translate | async }}
-    </button>
     <button
       class="confirm pop-ups"
       [class.disabled]="!valid"
       [disabled]="!valid"
       (click)="confirm()"
     >
-      {{ "yes" | translate | async }}
+      {{ "confirm" | translate | async }}
     </button>
   </div>
 </div>

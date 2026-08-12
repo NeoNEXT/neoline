@@ -9,6 +9,16 @@
     height: 250px;
   }
 
+  .volume-unit {
+    position: absolute;
+    left: 4px;
+    bottom: 48px;
+    z-index: 1;
+    font-size: 10px;
+    color: var(--tip-color);
+    pointer-events: none;
+  }
+
   .chart-overlay {
     position: absolute;
     inset: 0;

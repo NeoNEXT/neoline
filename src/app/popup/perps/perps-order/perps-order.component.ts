@@ -22,26 +22,31 @@ import {
   PerpsOrderSide,
   PerpsOrderType,
   PerpsPosition,
+  PERPS_BUILDER_FEE_RATE,
+  PERPS_DEFAULT_SLIPPAGE_PERCENT,
+  PERPS_MAX_SLIPPAGE_PERCENT,
   PERPS_MIN_ORDER_NOTIONAL,
+  PERPS_MIN_SLIPPAGE_PERCENT,
 } from '@popup/_lib/perps';
 import {
   coinColor,
   coinLogo,
   availableToTradeForSide,
+  collateralToNotional,
   estimateMarketSlippagePercent,
+  formatFeeRatePercent,
   formatPrice,
   formatSignedPercent,
   formatUsd,
   maxOrderNotionalForSide,
+  notionalAtLotSize,
   previewClosePosition,
   previewOrder,
   roundSize,
 } from '../perps.util';
 
-/** Hyperliquid's base taker fee before any builder fee is added. */
+/** Hyperliquid's base taker fee, used until `userFees` reports the real one. */
 const TAKER_FEE_RATE = 0.00045;
-const MIN_SLIPPAGE_PERCENT = 0.1;
-const MAX_SLIPPAGE_PERCENT = 10;
 
 @Component({
   templateUrl: 'perps-order.component.html',
@@ -63,7 +68,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   limitPrice: number;
   amount: number = null;
   leverage = 1;
-  slippagePercent = 5;
+  slippagePercent = PERPS_DEFAULT_SLIPPAGE_PERCENT;
   activePercent: number = null;
 
   submitting = false;
@@ -88,6 +93,15 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   private userFeeSub: Unsubscribable;
   private leverageSelected = false;
   private takerFeeRate = TAKER_FEE_RATE;
+  /** Text being typed into a box, or null when it is showing the live value. */
+  private percentDraft: string = null;
+  private leverageDraft: string = null;
+  /**
+   * Chrome collapses a focus-time `select()` when the click's mouseup lands.
+   * Suppressing that one mouseup keeps the whole value selected, so typing
+   * replaces it; later clicks inside the box still position the caret.
+   */
+  private selectingOnFocus = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -136,7 +150,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       const initialLoad = !this.market;
       this.market = market;
       if (this.market && initialLoad) {
-        this.limitPrice = this.market.markPx;
+        // Seed the limit field with the same reference a market order uses.
+        this.limitPrice = this.market.midPx || this.market.markPx;
         if (
           this.activeAssetData &&
           !this.leverageSelected &&
@@ -231,26 +246,46 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return this.side === 'long';
   }
 
+  /**
+   * NeoLine's cut, charged by the exchange alongside its own fee. Zero unless a
+   * builder address is configured for the active network, so a build without one
+   * previews exactly what it will be charged.
+   */
+  get builderFeeRate(): number {
+    return this.hyperliquid.builderAddress ? PERPS_BUILDER_FEE_RATE : 0;
+  }
+
+  get formattedBuilderFeeRate(): string {
+    return formatFeeRatePercent(this.builderFeeRate);
+  }
+
+  get formattedTakerFeeRate(): string {
+    return formatFeeRatePercent(this.takerFeeRate);
+  }
+
+  get formattedTotalFeeRate(): string {
+    return formatFeeRatePercent(this.takerFeeRate + this.builderFeeRate);
+  }
+
   get positionSize(): number {
     return Math.abs(this.position?.szi || 0);
   }
 
-  /** Hyperliquid's direction-aware order notional, with account balance fallback. */
+  /**
+   * Free collateral for this direction, as Hyperliquid reports it, falling back
+   * to the account-wide figure. A margin number: it does not move with leverage.
+   */
   get available(): number {
     if (this.activeAssetData) {
-      return availableToTradeForSide(
-        this.activeAssetData,
-        this.side,
-        this.leverage
-      );
+      return availableToTradeForSide(this.activeAssetData, this.side);
     }
     return this.account?.availableBalance || 0;
   }
 
-  /** Exchange-side position cap expressed as order notional. */
+  /** What that collateral can open, capped by the exchange's per-asset size limit. */
   private get maxOrderNotional(): number {
     if (!this.activeAssetData) {
-      return this.available;
+      return collateralToNotional(this.available, this.leverage);
     }
     return maxOrderNotionalForSide(
       this.activeAssetData,
@@ -284,17 +319,34 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     );
   }
 
+  /**
+   * Four decimals, matching Hyperliquid's own order form. Price impact on a
+   * small order is a few ten-thousandths of a percent, which two decimals
+   * flatten to a misleading "0.00%".
+   */
   get formattedEstimatedSlippage(): string {
     return this.estimatedSlippagePercent === null
       ? '--'
-      : `${this.estimatedSlippagePercent.toFixed(2)}%`;
+      : `${this.estimatedSlippagePercent.toFixed(4)}%`;
   }
 
-  /** Price used for size, margin and liquidation calculations. */
+  get formattedMaxSlippage(): string {
+    return `${Number(this.slippagePercent).toFixed(2)}%`;
+  }
+
+  /**
+   * Price used for size, margin and liquidation calculations, and the reference
+   * the market order's IOC limit is derived from.
+   *
+   * Market orders price off the book mid, as Hyperliquid's own front end does.
+   * The mark is an oracle-weighted price that can sit outside the spread, so
+   * using it would shift the slippage window off the prices actually on offer.
+   */
   get orderPrice(): number {
-    return this.orderType === 'limit'
-      ? Number(this.limitPrice) || 0
-      : this.market?.markPx || 0;
+    if (this.orderType === 'limit') {
+      return Number(this.limitPrice) || 0;
+    }
+    return this.market?.midPx || this.market?.markPx || 0;
   }
 
   get unsupportedAccountMode(): boolean {
@@ -311,12 +363,15 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         notional: this.amount,
         szDecimals: this.market.szDecimals,
         feeRate: this.takerFeeRate,
+        builderFeeRate: this.builderFeeRate,
         fullClose: this.fullClose,
       });
       return {
         notional: this.position.positionValue * this.closeFraction,
         margin: closePreview.releasedMargin,
         fee: closePreview.fee,
+        protocolFee: closePreview.protocolFee,
+        builderFee: closePreview.builderFee,
         size: closePreview.size,
         liquidationPx: 0,
       };
@@ -328,6 +383,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       leverage: this.leverage,
       isLong: this.isLong,
       feeRate: this.takerFeeRate,
+      builderFeeRate: this.builderFeeRate,
     });
     return {
       ...preview,
@@ -351,6 +407,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       notional: this.amount,
       szDecimals: this.market.szDecimals,
       feeRate: this.takerFeeRate,
+      builderFeeRate: this.builderFeeRate,
       fullClose: this.fullClose,
     }).size;
   }
@@ -383,10 +440,14 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     if (this.closeMode || !this.amount) {
       return false;
     }
-    if (this.activeAssetData) {
-      return this.amount > this.maxOrderNotional;
+    if (!this.market || !this.orderPrice) {
+      return true;
     }
-    return this.requiredMargin + (this.preview?.fee || 0) > this.available;
+    const maxSize = roundSize(
+      this.maxOrderNotional / this.orderPrice,
+      this.market.szDecimals
+    );
+    return this.orderSize > maxSize;
   }
 
   get belowMinimum(): boolean {
@@ -441,9 +502,31 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     }
   }
 
-  onLeverageInputChange(input: HTMLInputElement) {
-    this.setLeverage(Number(input.value));
-    input.value = String(this.leverage);
+  /**
+   * What the leverage box shows. While it has focus it echoes the typed text
+   * verbatim, so clamping never fights the caret or refills a box the user is
+   * clearing; leaving the field falls back to the value actually in effect.
+   */
+  get leverageBoxText(): string {
+    return this.leverageDraft === null
+      ? String(this.leverage)
+      : this.leverageDraft;
+  }
+
+  onLeverageFocus(input: HTMLInputElement) {
+    this.leverageDraft = input.value;
+    this.selectingOnFocus = true;
+    input.select();
+  }
+
+  /** Typing recalculates on every keystroke, exactly as dragging does. */
+  onLeverageInput(value: string) {
+    this.leverageDraft = value;
+    this.setLeverage(Number(value));
+  }
+
+  onLeverageBlur() {
+    this.leverageDraft = null;
   }
 
   /**
@@ -458,9 +541,34 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     );
   }
 
-  onPercentInputChange(input: HTMLInputElement) {
-    this.setPercent(Number(input.value));
-    input.value = String(Math.round(this.amountSliderPercent));
+  /** See {@link leverageBoxText}; the percentage box works the same way. */
+  get percentBoxText(): string {
+    return this.percentDraft === null
+      ? String(Math.round(this.amountSliderPercent))
+      : this.percentDraft;
+  }
+
+  onPercentFocus(input: HTMLInputElement) {
+    this.percentDraft = input.value;
+    this.selectingOnFocus = true;
+    input.select();
+  }
+
+  onPercentInput(value: string) {
+    this.percentDraft = value;
+    this.setPercent(Number(value));
+  }
+
+  onPercentBlur() {
+    this.percentDraft = null;
+  }
+
+  /** Shared by both boxes; see {@link selectingOnFocus}. */
+  onBoxMouseUp(event: MouseEvent) {
+    if (this.selectingOnFocus) {
+      this.selectingOnFocus = false;
+      event.preventDefault();
+    }
   }
 
   onAmountChange() {
@@ -479,8 +587,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         backdropClass: 'custom-dialog-backdrop',
         data: {
           value: this.slippagePercent,
-          min: MIN_SLIPPAGE_PERCENT,
-          max: MAX_SLIPPAGE_PERCENT,
+          min: PERPS_MIN_SLIPPAGE_PERCENT,
+          max: PERPS_MAX_SLIPPAGE_PERCENT,
         },
       })
       .afterClosed()
@@ -490,21 +598,31 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         }
         this.slippagePercent = Number(
           Math.max(
-            MIN_SLIPPAGE_PERCENT,
-            Math.min(MAX_SLIPPAGE_PERCENT, value)
-          ).toFixed(1)
+            PERPS_MIN_SLIPPAGE_PERCENT,
+            Math.min(PERPS_MAX_SLIPPAGE_PERCENT, value)
+          ).toFixed(2)
         );
         this.reviewing = false;
       });
   }
 
+  /**
+   * Base the percentage buttons size against. Order sizes snap down to the
+   * market's lot, so the largest notional that can actually rest is the
+   * quantised one — 100% must land there, not on the raw buying power, or the
+   * amount shown is one the exchange would trim anyway.
+   */
   private get percentBase(): number {
     if (this.closeMode) {
       return this.position?.positionValue || 0;
     }
-    return this.activeAssetData
-      ? this.maxOrderNotional
-      : this.available / (1 / this.leverage + this.takerFeeRate);
+    return this.market
+      ? notionalAtLotSize(
+          this.maxOrderNotional,
+          this.orderPrice,
+          this.market.szDecimals
+        )
+      : this.maxOrderNotional;
   }
 
   get ctaLabel(): string {

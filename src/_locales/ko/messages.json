@@ -1787,14 +1787,17 @@
   "perpsPositions": {
     "message": "포지션"
   },
-  "perpsCloseAll": {
-    "message": "전체 청산"
-  },
   "perpsLong": {
     "message": "롱"
   },
   "perpsShort": {
     "message": "숏"
+  },
+  "perpsOpenLong": {
+    "message": "롱 포지션 진입"
+  },
+  "perpsOpenShort": {
+    "message": "숏 포지션 진입"
   },
   "perpsEntry": {
     "message": "진입가"
@@ -1850,6 +1853,9 @@
   "perpsNoChartData": {
     "message": "차트 데이터 없음"
   },
+  "perpsChartVolumeUsd": {
+    "message": "거래대금 (USD)"
+  },
   "perpsRiskTip": {
     "message": "무기한 선물 거래는 큰 위험을 수반하며, 경고 없이 순식간에 투자금 전액을 잃을 수 있습니다. 거래 책임은 전적으로 본인에게 있습니다."
   },
@@ -1899,7 +1905,7 @@
     "message": "수수료"
   },
   "perpsFeeTip": {
-    "message": "NeoLine 수수료　0.000%<br />Hyperliquid 수수료　0.045%"
+    "message": "NeoLine 수수료　{{neoLineFeeRate}}<br />Hyperliquid 수수료　{{hyperliquidFeeRate}}"
   },
   "perpsSlippage": {
     "message": "슬리피지"
@@ -1911,10 +1917,13 @@
     "message": "최대"
   },
   "perpsEditSlippage": {
-    "message": "슬리피지 편집"
+    "message": "최대 슬리피지 조정"
   },
   "perpsSlippageRange": {
     "message": "{{min}}%에서 {{max}}% 사이의 값을 입력하세요."
+  },
+  "perpsSlippageNote": {
+    "message": "최대 슬리피지는 주문 양식에서 제출한 시장가 주문에만 적용됩니다."
   },
   "perpsSlippageTip": {
     "message": "예상 슬리피지는 현재 호가창과 주문 수량으로 계산됩니다. 최대값은 시장가 주문에 허용되는 가격 차이이며, 너무 낮으면 주문이 체결되지 않을 수 있습니다."
@@ -1966,6 +1975,9 @@
   },
   "perpsExceedsBalance": {
     "message": "잔액을 초과합니다"
+  },
+  "perpsAmountPrecision": {
+    "message": "금액은 소수점 이하 {{decimals}}자리까지 입력할 수 있습니다"
   },
   "perpsMaxFunding": {
     "message": "최대"
@@ -2077,5 +2089,11 @@
   },
   "perpsTransferSubmitted": {
     "message": "현물 USDC가 무기한 선물 계정으로 이동되었습니다."
+  },
+  "perpsAutoClose": {
+    "message": "자동 청산"
+  },
+  "confirm": {
+    "message": "확인"
   }
 }

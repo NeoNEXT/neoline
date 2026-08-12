@@ -33,8 +33,11 @@
         </div>
         <div class="fill-info">
           <div class="dir">
-            {{ orderIsBuy(order) ? ("perpsLong" | translate | async) : ("perpsShort" | translate | async) }}
+            {{ orderDirectionKey(order) | translate | async }}
             {{ order.coin }}
+            <span class="status" *ngIf="orderIsPositionTpsl(order)">
+              {{ "perpsAutoClose" | translate | async }}
+            </span>
           </div>
           <div class="time">{{ time(order.timestamp) }}</div>
         </div>
@@ -73,6 +76,12 @@
         <div class="fill-amount">
           <div class="size">{{ fill.sz }} {{ fill.coin }}</div>
           <div class="price">${{ formatPrice(+fill.px) }}</div>
+          <div class="price" *ngIf="fill.fee">
+            {{ "perpsFee" | translate | async }}: {{ fill.fee }} {{ fill.feeToken || "USDC" }}
+          </div>
+          <div class="price" *ngIf="+fill.closedPnl">
+            PnL: {{ formatSignedUsd(+fill.closedPnl) }}
+          </div>
         </div>
       </div>
       <p class="empty" *ngIf="fills.length === 0">
@@ -88,8 +97,11 @@
         </div>
         <div class="fill-info">
           <div class="dir">
-            {{ orderIsBuy(item.order) ? ("perpsLong" | translate | async) : ("perpsShort" | translate | async) }}
+            {{ orderDirectionKey(item.order) | translate | async }}
             {{ item.order.coin }}
+            <span class="status" *ngIf="orderIsPositionTpsl(item.order)">
+              {{ "perpsAutoClose" | translate | async }}
+            </span>
             <span class="status">{{
               orderStatusKey(item.status)
                 ? ((orderStatusKey(item.status) | translate | async))

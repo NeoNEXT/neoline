@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { forkJoin, Observable, Unsubscribable } from 'rxjs';
+import { forkJoin, Observable, of, Subscription, Unsubscribable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 import { AppState } from '@/app/reduers';
 import {
@@ -23,7 +24,11 @@ import {
   formatSignedUsd,
 } from '../perps.util';
 
-type PerpsActivityTab = 'orders' | 'fills' | 'orderHistory' | 'transfers';
+type PerpsActivityTab =
+  | 'orders'
+  | 'fills'
+  | 'orderHistory'
+  | 'transfers';
 
 /**
  * Order states that get a friendly label. Hyperliquid ships a long tail of
@@ -76,6 +81,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
   private wallet: EvmWalletJSON;
   private markets: PerpsMarket[] = [];
   private accountSub: Unsubscribable;
+  private liveSubs = new Subscription();
   /** Tabs already fetched for the current address. */
   private loadedTabs = new Set<PerpsActivityTab>();
   /** Tabs with a request in flight, so switching back and forth sends one. */
@@ -102,6 +108,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.accountSub?.unsubscribe();
+    this.liveSubs.unsubscribe();
   }
 
   private load() {
@@ -113,16 +120,19 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     this.transfers = [];
     forkJoin([
       this.hyperliquid.getOpenOrders(this.address),
-      this.hyperliquid.getUserFills(this.address),
-      this.hyperliquid.getMarkets(),
+      // Markets only resolve the asset id a cancel needs. A rate-limited or
+      // failed market snapshot must not hide orders that loaded fine.
+      this.hyperliquid.getMarkets().pipe(catchError(() => of([]))),
     ]).subscribe(
-      ([openOrders, fills, markets]) => {
+      ([openOrders, markets]) => {
         this.openOrders = openOrders;
-        this.fills = fills;
+        // `userFills` immediately pushes an `isSnapshot` websocket message.
+        // Do not spend a weighted REST request fetching the same history first.
+        this.fills = [];
         this.markets = markets;
         this.loadedTabs.add('orders');
-        this.loadedTabs.add('fills');
         this.loading = false;
+        this.watchLiveActivity();
         this.loadTab(this.tab);
       },
       () => {
@@ -134,6 +144,9 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
 
   /** The two archive tabs are only worth a request once the user opens them. */
   private loadTab(tab: PerpsActivityTab) {
+    if (tab === 'orders' || tab === 'fills') {
+      return;
+    }
     if (
       this.loading ||
       this.loadedTabs.has(tab) ||
@@ -143,10 +156,9 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
       return;
     }
     this.pendingTabs.add(tab);
-    const request: Observable<any[]> =
-      tab === 'orderHistory'
-        ? this.hyperliquid.getHistoricalOrders(this.address)
-        : this.hyperliquid.getLedgerUpdates(this.address);
+    const request: Observable<any[]> = tab === 'orderHistory'
+      ? this.hyperliquid.getHistoricalOrders(this.address)
+      : this.hyperliquid.getLedgerUpdates(this.address);
     this.tabLoading = true;
     request.subscribe((res: any[]) => {
       if (tab === 'orderHistory') {
@@ -169,7 +181,53 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
       if (this.tab === tab) {
         this.tabLoading = false;
       }
+    }, () => {
+      this.pendingTabs.delete(tab);
+      this.tabLoading = false;
+      this.loadError = true;
     });
+  }
+
+  private watchLiveActivity() {
+    this.liveSubs.unsubscribe();
+    this.liveSubs = new Subscription();
+    this.liveSubs.add(
+      this.hyperliquid.watchOpenOrders(this.address).subscribe({
+        next: (orders) => (this.openOrders = orders),
+        error: () => (this.loadError = true),
+      })
+    );
+    this.liveSubs.add(
+      this.hyperliquid.watchUserFills(this.address).subscribe({
+        next: (update) => {
+          const incoming: PerpsFill[] = update?.fills || [];
+          this.fills = update?.isSnapshot
+            ? incoming
+            : this.mergeFills(incoming, this.fills);
+          if (update?.isSnapshot) {
+            this.loadedTabs.add('fills');
+            if (this.tab === 'fills') {
+              this.tabLoading = false;
+            }
+          }
+        },
+        error: () => (this.loadError = true),
+      })
+    );
+  }
+
+  private mergeFills(incoming: PerpsFill[], current: PerpsFill[]): PerpsFill[] {
+    const seen = new Set<string>();
+    return [...incoming, ...current]
+      .filter((fill) => {
+        const key = `${fill.tid ?? ''}:${fill.oid ?? ''}:${fill.time}:${fill.px}:${fill.sz}`;
+        if (seen.has(key)) {
+          return false;
+        }
+        seen.add(key);
+        return true;
+      })
+      .sort((a, b) => b.time - a.time);
   }
 
   setTab(tab: PerpsActivityTab) {
@@ -242,6 +300,20 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     return order.side === 'B';
   }
 
+  /** Translate Hyperliquid's side and reduce-only flag into trading intent. */
+  orderDirectionKey(
+    order: PerpsOpenOrder
+  ): 'perpsOpenLong' | 'perpsOpenShort' | 'perpsCloseLong' | 'perpsCloseShort' {
+    if (order.reduceOnly) {
+      return this.orderIsBuy(order) ? 'perpsCloseShort' : 'perpsCloseLong';
+    }
+    return this.orderIsBuy(order) ? 'perpsOpenLong' : 'perpsOpenShort';
+  }
+
+  orderIsPositionTpsl(order: PerpsOpenOrder): boolean {
+    return !!order.isPositionTpsl;
+  }
+
   fillTime(fill: PerpsFill): string {
     return formatFillTime(fill.time);
   }
@@ -297,4 +369,5 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     const token = delta.usdc !== undefined ? 'USDC' : delta.token || '';
     return `${this.ledgerIsOut(update) ? '-' : '+'}${value} ${token}`.trim();
   }
+
 }

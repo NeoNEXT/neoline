@@ -4,7 +4,6 @@ import { Store } from '@ngrx/store';
 import { Unsubscribable } from 'rxjs';
 
 import { AppState } from '@/app/reduers';
-import { GlobalService } from '@/app/core';
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
 import {
   PerpsAccount,
@@ -37,6 +36,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   address: string;
   loading = true;
   accountLoadError = false;
+  marketLoadError = false;
 
   account: PerpsAccount;
   markets: PerpsMarket[] = [];
@@ -75,7 +75,6 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private store: Store<AppState>,
-    private global: GlobalService,
     private hyperliquid: HyperliquidService
   ) {}
 
@@ -103,10 +102,17 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   }
 
   private watchMarkets() {
-    this.marketsSub = this.hyperliquid.watchMarkets().subscribe((markets) => {
-      this.markets = markets;
-      this.applyFilter();
-      this.loading = false;
+    this.marketsSub = this.hyperliquid.watchMarkets().subscribe({
+      next: (markets) => {
+        this.markets = markets;
+        this.applyFilter();
+        this.loading = false;
+        this.marketLoadError = false;
+      },
+      error: () => {
+        this.loading = false;
+        this.marketLoadError = true;
+      },
     });
   }
 
@@ -271,19 +277,14 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     return this.account?.abstractionMode === 'portfolioMargin';
   }
 
-  /** Sparkline path for a market row; derived from the 24h move, not history. */
-  sparklinePath(market: PerpsMarket): string {
-    const up = market.changePercent >= 0;
-    return up
-      ? 'M1 20 L10 18 L19 21 L28 15 L37 16 L46 12 L55 14 L64 9 L71 11'
-      : 'M1 6 L10 10 L19 16 L28 20 L37 17 L46 19 L55 15 L64 18 L71 13';
-  }
-
   toMarket(coin: string) {
     this.router.navigateByUrl(`/popup/perps/market/${coin}`);
   }
 
   toFunding(tab: 'deposit' | 'withdraw' | 'transfer') {
+    if (this.unsupportedAccountMode) {
+      return;
+    }
     this.router.navigateByUrl(`/popup/perps/funding?tab=${tab}`);
   }
 
@@ -301,10 +302,5 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
 
   closePosition(position: PerpsPosition) {
     this.router.navigateByUrl(`/popup/perps/order/${position.coin}?close=1`);
-  }
-
-  /** Closing every position at once needs a signed exchange action per market. */
-  closeAll() {
-    this.global.snackBarTip('perpsTradingComingSoon');
   }
 }

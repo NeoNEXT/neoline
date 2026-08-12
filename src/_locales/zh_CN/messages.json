@@ -1787,14 +1787,17 @@
   "perpsPositions": {
     "message": "持仓"
   },
-  "perpsCloseAll": {
-    "message": "全部平仓"
-  },
   "perpsLong": {
     "message": "做多"
   },
   "perpsShort": {
     "message": "做空"
+  },
+  "perpsOpenLong": {
+    "message": "开多"
+  },
+  "perpsOpenShort": {
+    "message": "开空"
   },
   "perpsEntry": {
     "message": "开仓"
@@ -1850,6 +1853,9 @@
   "perpsNoChartData": {
     "message": "暂无图表数据"
   },
+  "perpsChartVolumeUsd": {
+    "message": "成交额 (USD)"
+  },
   "perpsRiskTip": {
     "message": "永续合约交易存在很大风险，您可能会在毫无预警的情况下瞬间损失全部投资。交易风险完全由您自行承担。"
   },
@@ -1899,7 +1905,7 @@
     "message": "费用"
   },
   "perpsFeeTip": {
-    "message": "NeoLine 费用　0.000%<br />Hyperliquid 费用　0.045%"
+    "message": "NeoLine 费用　{{neoLineFeeRate}}<br />Hyperliquid 费用　{{hyperliquidFeeRate}}"
   },
   "perpsSlippage": {
     "message": "滑点"
@@ -1911,10 +1917,13 @@
     "message": "最大"
   },
   "perpsEditSlippage": {
-    "message": "编辑滑点"
+    "message": "调整最大滑点"
   },
   "perpsSlippageRange": {
     "message": "请输入 {{min}}% 至 {{max}}% 之间的数值。"
+  },
+  "perpsSlippageNote": {
+    "message": "最大滑点仅影响从下单表单提交的市价单。"
   },
   "perpsSlippageTip": {
     "message": "预估滑点根据当前盘口和订单数量计算；最大滑点是市价单允许的成交价格偏差，设置过低可能导致订单无法成交。"
@@ -1966,6 +1975,9 @@
   },
   "perpsExceedsBalance": {
     "message": "超出可用余额"
+  },
+  "perpsAmountPrecision": {
+    "message": "金额最多支持 {{decimals}} 位小数"
   },
   "perpsMaxFunding": {
     "message": "最大"
@@ -2077,5 +2089,11 @@
   },
   "perpsTransferSubmitted": {
     "message": "现货 USDC 已转入合约账户。"
+  },
+  "perpsAutoClose": {
+    "message": "自动止盈止损"
+  },
+  "confirm": {
+    "message": "确认"
   }
 }

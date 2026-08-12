@@ -1,12 +1,12 @@
 .content {
   padding: 20px 24px 24px;
+}
 
-  > label {
-    display: block;
-    margin-bottom: 8px;
-    color: var(--sub-title-color);
-    font-size: 13px;
-  }
+.note {
+  margin-bottom: 16px;
+  color: var(--sub-title-color);
+  font-size: 13px;
+  line-height: 20px;
 }
 
 .input-box {
@@ -49,11 +49,9 @@
 }
 
 .choose-group {
-  display: flex;
-  gap: 24px;
   margin-top: 28px;
 
   button {
-    flex: 1;
+    width: 100%;
   }
 }

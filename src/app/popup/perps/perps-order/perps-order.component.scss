@@ -298,15 +298,18 @@
     }
   }
 
+  /* Same field layout as Hyperliquid: the value starts at the left padding and
+     the unit is pinned right, so the number keeps its position as digits change.
+     70px keeps "100%" clear of both edges at our 14px font. */
   .range-value {
-    flex: 0 0 60px;
-    width: 60px;
+    flex: 0 0 70px;
+    width: 70px;
     height: 34px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    justify-content: center;
-    text-align: center;
+    gap: 6px;
+    padding-inline: 10px 12px;
     font-family: NeverMind-Medium;
     font-size: 14px;
     line-height: 1;
@@ -315,13 +318,13 @@
     border-radius: 8px;
 
     input {
+      flex: 1;
       min-width: 0;
-      width: 100%;
       border: none;
       background: transparent;
       outline: none;
       padding: 0;
-      text-align: right;
+      text-align: left;
       font: inherit;
       line-height: inherit;
       color: var(--important-title-color);
@@ -376,11 +379,6 @@
     &::-moz-range-progress {
       background: transparent;
     }
-  }
-
-  .range-value {
-    justify-content: space-between;
-    padding: 0 12px;
   }
 }
 

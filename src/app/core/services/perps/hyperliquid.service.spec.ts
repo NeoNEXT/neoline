@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 
+import { PERPS_MAX_SLIPPAGE_PERCENT } from '@popup/_lib/perps';
 import {
   HyperliquidService,
   resolvePerpsTestnet,
@@ -151,6 +152,138 @@ describe('HyperliquidService account balances', () => {
     });
   }));
 
+  it('honours a slippage tolerance above the old 5% ceiling', fakeAsync(() => {
+    http.post.and.returnValue(
+      of({ status: 'ok', response: { type: 'order' } }) as any
+    );
+
+    service
+      .placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          assetId: 3,
+          isBuy: true,
+          price: 100,
+          size: 1,
+          szDecimals: 2,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'market',
+          slippagePercent: 8,
+          reduceOnly: true,
+          isCross: true,
+        }
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    expect(http.post.calls.mostRecent().args[1].action.orders[0].p).toBe('108');
+  }));
+
+  it('never rounds an IOC buy above its maximum slippage price', fakeAsync(() => {
+    http.post.and.returnValue(
+      of({ status: 'ok', response: { type: 'order' } }) as any
+    );
+    const mid = 1925.57;
+    const slippagePercent = 0.1;
+
+    service
+      .placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          assetId: 3,
+          isBuy: true,
+          price: mid,
+          size: 0.01,
+          szDecimals: 4,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'market',
+          slippagePercent,
+          reduceOnly: true,
+          isCross: false,
+        }
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    const wirePrice = Number(
+      http.post.calls.mostRecent().args[1].action.orders[0].p
+    );
+    expect(wirePrice).toBeLessThanOrEqual(
+      mid * (1 + slippagePercent / 100)
+    );
+  }));
+
+  it('never rounds an IOC sell below its minimum slippage price', fakeAsync(() => {
+    http.post.and.returnValue(
+      of({ status: 'ok', response: { type: 'order' } }) as any
+    );
+    const mid = 1925.68;
+    const slippagePercent = 0.1;
+
+    service
+      .placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          assetId: 3,
+          isBuy: false,
+          price: mid,
+          size: 0.01,
+          szDecimals: 4,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'market',
+          slippagePercent,
+          reduceOnly: true,
+          isCross: false,
+        }
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    const wirePrice = Number(
+      http.post.calls.mostRecent().args[1].action.orders[0].p
+    );
+    expect(wirePrice).toBeGreaterThanOrEqual(
+      mid * (1 - slippagePercent / 100)
+    );
+  }));
+
+  it('clamps a tolerance beyond the configured ceiling', fakeAsync(() => {
+    http.post.and.returnValue(
+      of({ status: 'ok', response: { type: 'order' } }) as any
+    );
+
+    service
+      .placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          assetId: 3,
+          isBuy: true,
+          price: 100,
+          size: 1,
+          szDecimals: 2,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'market',
+          slippagePercent: 999,
+          reduceOnly: true,
+          isCross: true,
+        }
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    // Derived from the constant rather than pinned, so retuning the ceiling
+    // does not turn this into a false failure. Compared numerically because the
+    // wire value is rounded while the expectation carries float error.
+    const ceiling = 100 * (1 + PERPS_MAX_SLIPPAGE_PERCENT / 100);
+    expect(
+      Number(http.post.calls.mostRecent().args[1].action.orders[0].p)
+    ).toBeCloseTo(ceiling, 8);
+  }));
+
   it('uses isolated leverage for an isolated-only market', fakeAsync(() => {
     http.post.and.returnValue(
       of({ status: 'ok', response: { type: 'default' } }) as any
@@ -216,6 +349,234 @@ describe('HyperliquidService account balances', () => {
     });
   });
 
+  it('loads only supported HIP-3 markets with their protocol asset ids', (done) => {
+    http.post.and.callFake(((_url: string, body: any) => {
+      if (body.type === 'perpDexs') {
+        return of([
+          null,
+          { name: 'unsupported-one' },
+          { name: 'neol' },
+          { name: 'unsupported-two' },
+        ]);
+      }
+      if (body.type === 'metaAndAssetCtxs' && body.dex === 'neol') {
+        return of([
+          { universe: [{ name: 'NEO', szDecimals: 2, maxLeverage: 5 }] },
+          [{ markPx: '10', midPx: '10', oraclePx: '10', prevDayPx: '9', dayNtlVlm: '100', openInterest: '2', funding: '0' }],
+        ]);
+      }
+      return of([{ universe: [] }, []]);
+    }) as any);
+
+    service.getMarkets().subscribe((markets) => {
+      const dexRequests = http.post.calls
+        .allArgs()
+        .map((args) => args[1])
+        .filter((body) => body.type === 'metaAndAssetCtxs' && body.dex);
+      expect(dexRequests).toEqual([
+        { type: 'metaAndAssetCtxs', dex: 'neol' },
+      ]);
+      expect(markets[0].coin).toBe('neol:NEO');
+      expect(markets[0].dex).toBe('neol');
+      // `neol` remains at registry index 2 even though index 1 is unsupported.
+      expect(markets[0].assetId).toBe(120000);
+      done();
+    });
+  });
+
+  it('uses websocket snapshots for fills without a duplicate REST request', () => {
+    spyOn<any>(service, 'send');
+    const updates = jasmine.createSpy('updates');
+
+    service.watchUserFills('0xABC').subscribe(updates);
+
+    expect(http.post).not.toHaveBeenCalled();
+    (service as any).handleMessage({
+      data: JSON.stringify({
+        channel: 'userFills',
+        data: { user: '0xabc', fills: [], isSnapshot: true },
+      }),
+    });
+    expect(updates).toHaveBeenCalledWith({
+      user: '0xabc',
+      fills: [],
+      isSnapshot: true,
+    });
+  });
+
+  it('uses open-order websocket snapshots without refetching on updates', () => {
+    spyOn<any>(service, 'send');
+    const updates = jasmine.createSpy('updates');
+
+    service.watchOpenOrders('0xABC').subscribe(updates);
+
+    expect(http.post).not.toHaveBeenCalled();
+    const orders = [{ oid: 42, coin: 'ETH' }];
+    (service as any).handleMessage({
+      data: JSON.stringify({
+        channel: 'openOrders',
+        data: { user: '0xabc', orders },
+      }),
+    });
+    expect(updates).toHaveBeenCalledWith(orders);
+    expect(http.post).not.toHaveBeenCalled();
+  });
+
+  it('reads the mid price and falls back to the mark when the book is empty', (done) => {
+    http.post.and.returnValue(
+      of([
+        {
+          universe: [
+            { name: 'ETH', szDecimals: 4, maxLeverage: 25 },
+            { name: 'CASHCAT', szDecimals: 0, maxLeverage: 3 },
+          ],
+        },
+        [
+          {
+            markPx: '1900',
+            midPx: '1899.5',
+            oraclePx: '1900',
+            prevDayPx: '1800',
+            dayNtlVlm: '100',
+            openInterest: '10',
+            funding: '0',
+          },
+          {
+            markPx: '1',
+            // Hyperliquid reports a null mid whenever a side of the book is empty.
+            midPx: null,
+            oraclePx: '1',
+            prevDayPx: '1',
+            dayNtlVlm: '100',
+            openInterest: '10',
+            funding: '0',
+          },
+        ],
+      ]) as any
+    );
+
+    service.getMarkets().subscribe((markets) => {
+      const eth = markets.find((market) => market.coin === 'ETH');
+      const cashcat = markets.find((market) => market.coin === 'CASHCAT');
+      expect(eth.midPx).toBe(1899.5);
+      expect(cashcat.midPx).toBe(1);
+      // The 24h change follows the displayed mid, not the mark beside it.
+      expect(eth.changePercent).toBeCloseTo(((1899.5 - 1800) / 1800) * 100, 8);
+      done();
+    });
+  });
+
+  it('omits the builder fee when no builder address is configured', fakeAsync(() => {
+    http.post.and.returnValue(
+      of({ status: 'ok', response: { type: 'default' } }) as any
+    );
+
+    service
+      .placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          assetId: 3,
+          isBuy: true,
+          price: 100,
+          size: 1,
+          szDecimals: 2,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'market',
+          slippagePercent: 1,
+          reduceOnly: true,
+          isCross: false,
+        }
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    // No approval round-trip and no builder field: the order pays the exchange only.
+    expect(http.post).toHaveBeenCalledTimes(1);
+    expect(
+      http.post.calls.mostRecent().args[1].action.builder
+    ).toBeUndefined();
+  }));
+
+  it('omits a configured builder when the configured fee is zero', fakeAsync(() => {
+    const builder = '0x000000000000000000000000000000000000beef';
+    spyOnProperty(service, 'builderAddress', 'get').and.returnValue(builder);
+    http.post.and.callFake(((_url: string, body: any) => {
+      if (body.type === 'maxBuilderFee') {
+        // Nothing approved yet.
+        return of(0) as any;
+      }
+      return of({ status: 'ok', response: { type: 'default' } }) as any;
+    }) as any);
+
+    const request = {
+      assetId: 3,
+      isBuy: true,
+      price: 100,
+      size: 1,
+      szDecimals: 2,
+      maxLeverage: 20,
+      leverage: 5,
+      orderType: 'market' as const,
+      slippagePercent: 1,
+      reduceOnly: true,
+      isCross: false,
+    };
+    const key =
+      '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
+
+    service.placeOrder(key, request).subscribe();
+    flushMicrotasks();
+
+    const bodies = http.post.calls.allArgs().map((args) => args[1]);
+    expect(bodies.length).toBe(1);
+    expect(bodies[0].action.builder).toBeUndefined();
+
+    // A disabled fee never needs an approval round trip.
+    http.post.calls.reset();
+    service.placeOrder(key, request).subscribe();
+    flushMicrotasks();
+
+    expect(http.post).toHaveBeenCalledTimes(1);
+    expect(http.post.calls.mostRecent().args[1].action.builder).toBeUndefined();
+  }));
+
+  it('does not query approval state when the configured fee is zero', fakeAsync(() => {
+    const builder = '0x000000000000000000000000000000000000beef';
+    spyOnProperty(service, 'builderAddress', 'get').and.returnValue(builder);
+    http.post.and.callFake(((_url: string, body: any) => {
+      if (body.type === 'maxBuilderFee') {
+        return of(45) as any;
+      }
+      return of({ status: 'ok', response: { type: 'default' } }) as any;
+    }) as any);
+
+    service
+      .placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          assetId: 3,
+          isBuy: true,
+          price: 100,
+          size: 1,
+          szDecimals: 2,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'market',
+          slippagePercent: 1,
+          reduceOnly: true,
+          isCross: false,
+        }
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    const bodies = http.post.calls.allArgs().map((args) => args[1]);
+    expect(bodies.length).toBe(1);
+    expect(bodies[0].action.type).toBe('order');
+    expect(bodies[0].action.builder).toBeUndefined();
+  }));
+
   it('loads frontend open orders and cancels by asset and order id', fakeAsync(() => {
     http.post.and.callFake(((_url: string, body: any) => {
       if (body.type === 'frontendOpenOrders') {
@@ -263,7 +624,7 @@ describe('HyperliquidService account balances', () => {
     service
       .transferUsdClass(
         '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        12.5,
+        '12.5',
         true
       )
       .subscribe();
@@ -275,6 +636,46 @@ describe('HyperliquidService account balances', () => {
     expect(action.toPerp).toBeTrue();
     expect(action.nonce).toBe(http.post.calls.mostRecent().args[1].nonce);
   }));
+
+  it('preserves exact funding balances for MAX signatures', (done) => {
+    http.post.and.callFake(((_url: string, body: any) => {
+      switch (body.type) {
+        case 'clearinghouseState':
+          return of({
+            marginSummary: {
+              accountValue: '9007199254740993.000001',
+              totalMarginUsed: '0',
+              totalNtlPos: '0',
+            },
+            withdrawable: '9007199254740993.000001',
+            assetPositions: [],
+          });
+        case 'spotClearinghouseState':
+          return of({
+            balances: [
+              {
+                coin: 'USDC',
+                token: 0,
+                total: '9007199254740993.000002',
+                hold: '0.000001',
+              },
+            ],
+          });
+        case 'userAbstraction':
+          return of('default');
+        default:
+          throw new Error(`Unexpected request: ${body.type}`);
+      }
+    }) as any);
+
+    service.getAccount('0xABC').subscribe((account) => {
+      expect(account.withdrawableExact).toBe('9007199254740993.000001');
+      expect(account.availableBalanceExact).toBe('9007199254740993.000001');
+      expect(account.spotUsdcExact).toBe('9007199254740993.000002');
+      expect(account.spotUsdcHoldExact).toBe('0.000001');
+      done();
+    });
+  });
 
   function mockAccountRequests(mode: string, hold: string) {
     http.post.and.callFake(((_url: string, body: any) => {
@@ -516,6 +917,25 @@ describe('HyperliquidService account balances', () => {
     expect(listener).toHaveBeenCalledWith({ ctxs: [['', []]] });
   });
 
+  it('starts and stops the websocket heartbeat with the socket lifecycle', fakeAsync(() => {
+    const send = jasmine.createSpy('send');
+    const socket: any = {
+      readyState: WebSocket.OPEN,
+      send,
+      close: jasmine.createSpy('close'),
+    };
+    (service as any).ws = socket;
+
+    (service as any).startHeartbeat(socket);
+    tick(30000);
+    expect(send).toHaveBeenCalledWith(JSON.stringify({ method: 'ping' }));
+
+    (service as any).stopHeartbeat();
+    send.calls.reset();
+    tick(30000);
+    expect(send).not.toHaveBeenCalled();
+  }));
+
   it('merges spotState updates without another info request', (done) => {
     mockAccountRequests('unifiedAccount', '0.96');
 
@@ -614,7 +1034,11 @@ describe('HyperliquidService account balances', () => {
     service.getMarkets().subscribe();
     service.getMarkets().subscribe();
 
-    expect(http.post).toHaveBeenCalledTimes(1);
+    expect(
+      http.post.calls
+        .allArgs()
+        .filter((args) => args[1].type === 'metaAndAssetCtxs').length
+    ).toBe(1);
   });
 
   it('uses assetId to merge main dex websocket market contexts', () => {
@@ -665,7 +1089,75 @@ describe('HyperliquidService account balances', () => {
     tick(15001);
     service.getMarkets().subscribe();
 
-    expect(http.post).toHaveBeenCalledTimes(2);
+    expect(
+      http.post.calls
+        .allArgs()
+        .filter((args) => args[1].type === 'metaAndAssetCtxs').length
+    ).toBe(2);
+  }));
+
+  it('reuses the DEX registry across market snapshot refreshes', fakeAsync(() => {
+    http.post.and.callFake(((_url: string, body: any) =>
+      body.type === 'perpDexs'
+        ? of([null, { name: 'neol' }])
+        : of([{ universe: [] }, []])) as any);
+
+    service.getMarkets().subscribe();
+    tick(15001);
+    service.getMarkets().subscribe();
+
+    const types = http.post.calls.allArgs().map((args) => args[1].type);
+    expect(types.filter((type) => type === 'perpDexs').length).toBe(1);
+    expect(types.filter((type) => type === 'metaAndAssetCtxs').length).toBe(4);
+  }));
+
+  it('does not keep a failed DEX registry in the long-lived cache', fakeAsync(() => {
+    let registryAttempts = 0;
+    http.post.and.callFake(((_url: string, body: any) => {
+      if (body.type === 'perpDexs') {
+        registryAttempts += 1;
+        return registryAttempts === 1
+          ? throwError(() => new Error('temporary'))
+          : of([null, { name: 'neol' }]);
+      }
+      return of([{ universe: [] }, []]);
+    }) as any);
+    const dexRequests = () =>
+      http.post.calls
+        .allArgs()
+        .filter((args) => args[1].type === 'metaAndAssetCtxs' && args[1].dex)
+        .length;
+
+    service.getMarkets().subscribe();
+    // A registry this refresh could not read leaves canonical markets alone.
+    expect(dexRequests()).toBe(0);
+
+    tick(15001);
+    service.getMarkets().subscribe();
+
+    expect(registryAttempts).toBe(2);
+    expect(dexRequests()).toBe(1);
+  }));
+
+  it('waits longer before retrying a rate-limited market snapshot', fakeAsync(() => {
+    http.post.and.returnValue(throwError(() => ({ status: 429 })) as any);
+    (service as any).marketObservers = 1;
+    (service as any).marketState$.next([]);
+    const attempts = () =>
+      http.post.calls
+        .allArgs()
+        .filter((args) => args[1].type === 'metaAndAssetCtxs').length;
+
+    (service as any).loadMarketSnapshot();
+    expect(attempts()).toBe(1);
+
+    // The plain 1s backoff would already have spent another request by here.
+    tick(9999);
+    expect(attempts()).toBe(1);
+    tick(2);
+    expect(attempts()).toBe(2);
+
+    clearTimeout((service as any).marketSnapshotRetryTimer);
   }));
 
   it('does not keep a failed spot snapshot in the long-lived cache', fakeAsync(() => {

@@ -16,7 +16,7 @@
       >{{ coin.charAt(0) }}</span
     >
     <div class="pair">{{ coin }}-USDC</div>
-    <span class="price">${{ market ? formatPrice(market.markPx) : "--" }}</span>
+    <span class="price">${{ market ? formatPrice(market.midPx) : "--" }}</span>
     <span
       class="change"
       *ngIf="market"
@@ -130,9 +130,11 @@
         min="0"
         max="100"
         step="1"
-        [value]="amountSliderPercent | number: '1.0-0'"
-        (focus)="$any($event.target).select()"
-        (change)="onPercentInputChange($any($event.target))"
+        [value]="percentBoxText"
+        (focus)="onPercentFocus($any($event.target))"
+        (mouseup)="onBoxMouseUp($event)"
+        (input)="onPercentInput($any($event.target).value)"
+        (blur)="onPercentBlur()"
         (keydown.enter)="$any($event.target).blur()"
         [attr.aria-label]="'perpsAmount' | translate | async"
       />
@@ -167,9 +169,11 @@
           min="1"
           [max]="market?.maxLeverage || 1"
           step="1"
-          [value]="leverage"
-          (focus)="$any($event.target).select()"
-          (change)="onLeverageInputChange($any($event.target))"
+          [value]="leverageBoxText"
+          (focus)="onLeverageFocus($any($event.target))"
+          (mouseup)="onBoxMouseUp($event)"
+          (input)="onLeverageInput($any($event.target).value)"
+          (blur)="onLeverageBlur()"
           (keydown.enter)="$any($event.target).blur()"
           [attr.aria-label]="'perpsLeverage' | translate | async"
         />
@@ -217,12 +221,22 @@
         {{ "perpsFee" | translate | async }}
         <tooltip
           placement="topLeft"
-          [tip]="'perpsFeeTip' | translate | async"
+          [tip]="
+            'perpsFeeTip'
+              | translate
+                : {
+                    neoLineFeeRate: formattedBuilderFeeRate,
+                    hyperliquidFeeRate: formattedTakerFeeRate
+                  }
+              | async
+          "
         >
           <img src="assets/images/common/tooltip.svg" alt="" />
         </tooltip>
       </span>
-      <span class="value">{{ formatUsd(preview.fee) }}</span>
+      <span class="value">
+        {{ formattedTotalFeeRate }} ({{ formatUsd(preview.fee) }})
+      </span>
     </div>
     <div class="row" *ngIf="orderType === 'market'">
       <span class="label">
@@ -239,7 +253,7 @@
         {{ formattedEstimatedSlippage }}
         <i>/</i>
         {{ "perpsMaximumShort" | translate | async }}:
-        {{ slippagePercent }}%
+        {{ formattedMaxSlippage }}
         <button
           type="button"
           class="edit-slippage"

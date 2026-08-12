@@ -22,6 +22,9 @@ import { PerpsCandle } from '@popup/_lib/perps';
 const UP_COLOR = '#06ccab';
 const DOWN_COLOR = '#fa5555';
 const VOLUME_ALPHA = '59'; // 35% opacity suffix for 8-digit hex colors
+/** Keep candles close to MetaMask's visual density at extension width. */
+const INITIAL_VISIBLE_BARS = 30;
+const RIGHT_OFFSET_BARS = 2;
 
 /**
  * Candlestick + volume chart backed by TradingView lightweight-charts.
@@ -118,7 +121,7 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
         this.applyBar(data[data.length - 1]);
       } else {
         this.setAllData(data);
-        this.chart.timeScale().fitContent();
+        this.showRecentBars(data.length);
       }
       this.renderedFirstTime = firstTime;
       this.renderedCount = data.length;
@@ -173,7 +176,20 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
       .applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
     this.candleSeries
       .priceScale()
-      .applyOptions({ scaleMargins: { top: 0.05, bottom: 0.25 } });
+      .applyOptions({ scaleMargins: { top: 0.15, bottom: 0.3 } });
+  }
+
+  /**
+   * `fitContent` compressed the complete candle snapshot into one screen. Start
+   * at a readable MetaMask-like density instead, while leaving later live ticks
+   * and user zoom/scroll untouched.
+   */
+  private showRecentBars(dataLength: number) {
+    const lastIndex = dataLength - 1;
+    this.chart.timeScale().setVisibleLogicalRange({
+      from: Math.max(0, lastIndex - INITIAL_VISIBLE_BARS + 1),
+      to: lastIndex + RIGHT_OFFSET_BARS,
+    });
   }
 
   private setAllData(data: PerpsCandle[]) {
@@ -189,7 +205,7 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     this.volumeSeries.setData(
       data.map((c) => ({
         time: this.toChartTime(c.t),
-        value: Number(c.v),
+        value: this.volumeUsd(c),
         color: this.volumeColor(c),
       }))
     );
@@ -206,9 +222,15 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     });
     this.volumeSeries.update({
       time,
-      value: Number(c.v),
+      value: this.volumeUsd(c),
       color: this.volumeColor(c),
     });
+  }
+
+  /** Hyperliquid candle volume is base-asset size; chart it as USD notional. */
+  private volumeUsd(c: PerpsCandle): number {
+    const value = Number(c.v) * Number(c.c);
+    return Number.isFinite(value) && value >= 0 ? value : 0;
   }
 
   private volumeColor(c: PerpsCandle): string {

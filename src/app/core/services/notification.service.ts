@@ -37,10 +37,11 @@ interface NotificationContent {
   exceedBridgeCapacity: string;
   EstimateFeeNetworkError: string;
   getBridgeInfoFailed: string;
-  perpsTradingComingSoon: string;
   perpsOrderSubmitted: string;
+  perpsOrderCanceled: string;
   perpsDepositSubmitted: string;
   perpsWithdrawSuccess: string;
+  perpsTransferSubmitted: string;
   perpsSigningUnavailable: string;
 }
 
@@ -86,10 +87,11 @@ export class NotificationService {
       'Network error: unable to fetch the gas fee right now. Please try again later.',
     getBridgeInfoFailed:
       'Unable to load the bridge fee and limits. Please try again later.',
-    perpsTradingComingSoon: 'Perps trading is not enabled in this build yet.',
     perpsOrderSubmitted: 'Perps order submitted.',
+    perpsOrderCanceled: 'Order canceled.',
     perpsDepositSubmitted: 'Deposit submitted.',
     perpsWithdrawSuccess: 'Withdrawal successful.',
+    perpsTransferSubmitted: 'Transfer submitted.',
     perpsSigningUnavailable:
       'This wallet does not support Hyperliquid typed-data signing yet.',
   };
@@ -129,10 +131,11 @@ export class NotificationService {
     exceedBridgeCapacity: '跨链桥容量不足，剩余可存入',
     EstimateFeeNetworkError: '网络异常，暂时无法获取手续费，请稍后重试。',
     getBridgeInfoFailed: '暂时无法获取跨链手续费和限额，请稍后重试。',
-    perpsTradingComingSoon: '当前版本尚未开放永续合约下单。',
     perpsOrderSubmitted: '永续合约订单已提交。',
+    perpsOrderCanceled: '订单已撤销。',
     perpsDepositSubmitted: '入金交易已提交。',
     perpsWithdrawSuccess: '提现成功。',
+    perpsTransferSubmitted: '划转已提交。',
     perpsSigningUnavailable: '该钱包暂不支持 Hyperliquid 类型化数据签名。',
   };
   private JA: NotificationContent = {
@@ -175,10 +178,11 @@ export class NotificationService {
       'ネットワークエラー：現在ガス料金を取得できません。後でもう一度お試しください。',
     getBridgeInfoFailed:
       'ブリッジの手数料と上限を取得できません。後でもう一度お試しください。',
-    perpsTradingComingSoon: 'このビルドではまだ無期限先物の取引を利用できません。',
     perpsOrderSubmitted: '無期限先物注文を送信しました。',
+    perpsOrderCanceled: '注文をキャンセルしました。',
     perpsDepositSubmitted: '入金を送信しました。',
     perpsWithdrawSuccess: '出金に成功しました。',
+    perpsTransferSubmitted: '振替を送信しました。',
     perpsSigningUnavailable:
       'このウォレットはHyperliquidの型付きデータ署名にまだ対応していません。',
   };
@@ -221,10 +225,11 @@ export class NotificationService {
       '네트워크 오류: 현재 가스 수수료를 가져올 수 없습니다. 나중에 다시 시도해 주세요.',
     getBridgeInfoFailed:
       '브리지 수수료와 한도를 가져올 수 없습니다. 나중에 다시 시도해 주세요.',
-    perpsTradingComingSoon: '이 빌드에서는 아직 무기한 선물 거래를 사용할 수 없습니다.',
     perpsOrderSubmitted: '무기한 선물 주문을 제출했습니다.',
+    perpsOrderCanceled: '주문을 취소했습니다.',
     perpsDepositSubmitted: '입금을 제출했습니다.',
     perpsWithdrawSuccess: '출금에 성공했습니다.',
+    perpsTransferSubmitted: '이체를 제출했습니다.',
     perpsSigningUnavailable:
       '이 지갑은 아직 Hyperliquid 형식화 데이터 서명을 지원하지 않습니다.',
   };

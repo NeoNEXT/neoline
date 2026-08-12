@@ -45,6 +45,15 @@ const USD_CLASS_TRANSFER_TYPES = {
   ],
 };
 
+const APPROVE_BUILDER_FEE_TYPES = {
+  'HyperliquidTransaction:ApproveBuilderFee': [
+    { name: 'hyperliquidChain', type: 'string' },
+    { name: 'maxFeeRate', type: 'string' },
+    { name: 'builder', type: 'address' },
+    { name: 'nonce', type: 'uint64' },
+  ],
+};
+
 function nonceBytes(nonce: number): Uint8Array {
   const bytes = new Uint8Array(8);
   let value = nonce;
@@ -136,6 +145,36 @@ export async function signHyperliquidWithdraw(
   const signature = await new ethers.Wallet(privateKey).signTypedData(
     USER_DOMAIN,
     WITHDRAW_TYPES,
+    action
+  );
+  return { action, signature: splitSignature(signature) };
+}
+
+/**
+ * Authorise a builder to charge up to `maxFeeRate` on this account's orders.
+ *
+ * The rate is a percentage string ("0.045%") and the approval is a ceiling, not
+ * a fixed price: signing it lets the builder attach any fee up to that rate to
+ * later orders. It is signed once per account and stays in force until replaced.
+ */
+export async function signHyperliquidApproveBuilderFee(
+  privateKey: string,
+  builder: string,
+  maxFeeRate: string,
+  nonce: number,
+  isMainnet: boolean
+): Promise<{ action: any; signature: PerpsSignature }> {
+  const action = {
+    type: 'approveBuilderFee',
+    signatureChainId: ethers.toQuantity(USER_SIGNATURE_CHAIN_ID),
+    hyperliquidChain: isMainnet ? 'Mainnet' : 'Testnet',
+    maxFeeRate,
+    builder: builder.toLowerCase(),
+    nonce,
+  };
+  const signature = await new ethers.Wallet(privateKey).signTypedData(
+    USER_DOMAIN,
+    APPROVE_BUILDER_FEE_TYPES,
     action
   );
   return { action, signature: splitSignature(signature) };

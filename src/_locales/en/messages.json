@@ -1787,14 +1787,17 @@
   "perpsPositions": {
     "message": "Positions"
   },
-  "perpsCloseAll": {
-    "message": "Close all"
-  },
   "perpsLong": {
     "message": "Long"
   },
   "perpsShort": {
     "message": "Short"
+  },
+  "perpsOpenLong": {
+    "message": "Open long"
+  },
+  "perpsOpenShort": {
+    "message": "Open short"
   },
   "perpsEntry": {
     "message": "Entry"
@@ -1850,6 +1853,9 @@
   "perpsNoChartData": {
     "message": "No chart data"
   },
+  "perpsChartVolumeUsd": {
+    "message": "Vol (USD)"
+  },
   "perpsRiskTip": {
     "message": "Perpetual futures trading carries substantial risk. You could lose your entire investment in an instant without warning. You are solely responsible for your trades."
   },
@@ -1899,7 +1905,7 @@
     "message": "Fee"
   },
   "perpsFeeTip": {
-    "message": "NeoLine fee　0.000%<br />Hyperliquid fee　0.045%"
+    "message": "NeoLine fee　{{neoLineFeeRate}}<br />Hyperliquid fee　{{hyperliquidFeeRate}}"
   },
   "perpsSlippage": {
     "message": "Slippage"
@@ -1911,10 +1917,13 @@
     "message": "Max"
   },
   "perpsEditSlippage": {
-    "message": "Edit slippage"
+    "message": "Adjust max slippage"
   },
   "perpsSlippageRange": {
     "message": "Enter a value from {{min}}% to {{max}}%."
+  },
+  "perpsSlippageNote": {
+    "message": "Max slippage only affects market orders submitted from the order form."
   },
   "perpsSlippageTip": {
     "message": "Estimated slippage is calculated from the current order book and order size. Max is the allowed price deviation; a lower value may cause the order to fail."
@@ -1966,6 +1975,9 @@
   },
   "perpsExceedsBalance": {
     "message": "Amount exceeds your balance"
+  },
+  "perpsAmountPrecision": {
+    "message": "Amount supports at most {{decimals}} decimal places"
   },
   "perpsMaxFunding": {
     "message": "Max"
@@ -2077,5 +2089,11 @@
   },
   "perpsTransferSubmitted": {
     "message": "Spot USDC was moved to the Perps account."
+  },
+  "perpsAutoClose": {
+    "message": "Auto-close"
+  },
+  "confirm": {
+    "message": "Confirm"
   }
 }

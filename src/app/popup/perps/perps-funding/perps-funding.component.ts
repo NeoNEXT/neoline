@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable, Unsubscribable } from 'rxjs';
 import { ethers } from 'ethers';
+import BigNumber from 'bignumber.js';
 
 import { AppState } from '@/app/reduers';
 import {
@@ -36,14 +37,18 @@ type FundingTab = 'deposit' | 'withdraw' | 'transfer';
 })
 export class PerpsFundingComponent implements OnInit, OnDestroy {
   tab: FundingTab = 'deposit';
-  amount: number = null;
+  /** Human-unit decimal text. It must not pass through Number before signing. */
+  amount: string = null;
   activePreset: number = null;
 
   account: PerpsAccount;
   /** Balance of the source token in the wallet, for the deposit side. */
   walletBalance = 0;
+  /** Exact decimal balance used by MAX so ERC-20 base units never pass through Number. */
+  private walletBalanceExact = '0';
   submitting = false;
   accountLoadError = false;
+  accountLoading = true;
 
   readonly minDeposit = PERPS_MIN_DEPOSIT;
   readonly minWithdraw = PERPS_MIN_WITHDRAW;
@@ -86,15 +91,18 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
         this.loadedConfig = this.token;
         const config = this.token;
         this.accountLoadError = false;
+        this.accountLoading = true;
         this.hyperliquid.getAccount(address).subscribe({
           next: (account) => {
             if (config === this.token && address === this.address) {
               this.account = account;
+              this.accountLoading = false;
             }
           },
           error: () => {
             if (config === this.token && address === this.address) {
               this.accountLoadError = true;
+              this.accountLoading = false;
             }
           },
         });
@@ -112,6 +120,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   private async loadWalletBalance(address: string) {
     const config = this.token;
     this.walletBalance = 0;
+    this.walletBalanceExact = '0';
     try {
       const provider = new ethers.JsonRpcProvider(config.rpc);
       const usdc = new ethers.Contract(config.address, abiERC20, provider);
@@ -120,11 +129,11 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
       if (config !== this.token || address !== this.address) {
         return;
       }
-      this.walletBalance = Number(
-        ethers.formatUnits(balance, config.decimals)
-      );
+      this.walletBalanceExact = ethers.formatUnits(balance, config.decimals);
+      this.walletBalance = Number(this.walletBalanceExact);
     } catch (e) {
       this.walletBalance = 0;
+      this.walletBalanceExact = '0';
     }
   }
 
@@ -149,23 +158,27 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   }
 
   get unsupportedAccountMode(): boolean {
-    return (
-      !this.isDeposit && this.account?.abstractionMode === 'portfolioMargin'
-    );
+    return this.account?.abstractionMode === 'portfolioMargin';
   }
 
-  /** Ceiling for the current direction: wallet balance in, free collateral out. */
-  get maxAmount(): number {
+  /** Exact source balance for MAX and balance checks. */
+  private get maxAmountExact(): string {
     return this.isDeposit
-      ? this.walletBalance
+      ? this.walletBalanceExact
       : this.isTransfer
-      ? this.account?.spotUsdc || 0
-      : this.account?.availableBalance || 0;
+      ? this.account?.spotUsdcExact ?? String(this.account?.spotUsdc || 0)
+      : this.account?.availableBalanceExact ??
+          String(this.account?.availableBalance || 0);
+  }
+
+  get amountNumber(): number {
+    const amount = Number(this.amount);
+    return Number.isFinite(amount) ? amount : 0;
   }
 
   get receiveAmount(): number {
     const net =
-      (this.amount || 0) - (this.isWithdraw ? this.withdrawFee : 0);
+      this.amountNumber - (this.isWithdraw ? this.withdrawFee : 0);
     return net > 0 ? net : 0;
   }
 
@@ -174,27 +187,54 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   }
 
   get belowMinimum(): boolean {
-    if (!this.amount) {
+    if (!this.hasPositiveAmount) {
       return false;
     }
     if (this.isTransfer) {
       return false;
     }
-    return this.amount < this.minimumAmount;
+    return new BigNumber(this.amount).isLessThan(this.minimumAmount);
   }
 
   get exceedsBalance(): boolean {
-    return !!this.amount && this.amount > this.maxAmount;
+    return (
+      this.hasPositiveAmount &&
+      new BigNumber(this.amount).isGreaterThan(this.maxAmountExact)
+    );
+  }
+
+  get amountExceedsPrecision(): boolean {
+    if (!this.amount) {
+      return false;
+    }
+    const amount = new BigNumber(this.amount);
+    return (
+      !amount.isFinite() ||
+      (amount.decimalPlaces() || 0) > this.amountDecimals
+    );
+  }
+
+  /** Deposit uses ERC-20 decimals; Hyperliquid's signed wire amounts allow 8. */
+  get amountDecimals(): number {
+    return this.isDeposit ? this.token?.decimals ?? 6 : 8;
+  }
+
+  private get hasPositiveAmount(): boolean {
+    const amount = new BigNumber(this.amount ?? '');
+    return amount.isFinite() && amount.isGreaterThan(0);
   }
 
   get canSubmit(): boolean {
     return (
-      this.amount > 0 &&
+      this.hasPositiveAmount &&
+      !!this.account &&
+      !this.accountLoading &&
+      !this.accountLoadError &&
       !this.submitting &&
       !this.belowMinimum &&
       !this.exceedsBalance &&
+      !this.amountExceedsPrecision &&
       !this.unsupportedAccountMode &&
-      (this.isDeposit || !this.accountLoadError) &&
       (!this.isDeposit || this.walletBalance > 0)
     );
   }
@@ -210,17 +250,31 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
 
   setPreset(value: number) {
     this.activePreset = value;
-    this.amount = value;
+    this.amount = String(value);
   }
 
   setPercent(percent: number) {
     this.activePreset = percent;
-    this.amount = Number(((this.maxAmount * percent) / 100).toFixed(2));
+    this.amount = this.floorAmount(
+      new BigNumber(this.maxAmountExact).times(percent).dividedBy(100)
+    );
   }
 
   setMax() {
     this.activePreset = -1;
-    this.amount = Number(this.maxAmount.toFixed(2));
+    this.amount = this.maxAmountExact;
+  }
+
+  /** Never round a MAX value above the spendable USDC balance. */
+  private floorAmount(value: BigNumber.Value): string {
+    return new BigNumber(value)
+      .decimalPlaces(this.amountDecimals, BigNumber.ROUND_FLOOR)
+      .toFixed();
+  }
+
+  /** Normalize signed/submitted values without converting through Number. */
+  private get submissionAmount(): string {
+    return new BigNumber(this.amount).toFixed();
   }
 
   onAmountChange() {
@@ -244,10 +298,18 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
         password
       );
       const request: Observable<unknown> = this.isDeposit
-        ? this.hyperliquid.deposit(privateKey, this.amount)
+        ? this.hyperliquid.deposit(privateKey, this.submissionAmount)
         : this.isTransfer
-        ? this.hyperliquid.transferUsdClass(privateKey, this.amount, true)
-        : this.hyperliquid.withdraw(privateKey, this.address, this.amount);
+        ? this.hyperliquid.transferUsdClass(
+            privateKey,
+            this.submissionAmount,
+            true
+          )
+        : this.hyperliquid.withdraw(
+            privateKey,
+            this.address,
+            this.submissionAmount
+          );
       request.subscribe({
         next: () => {
           this.submitting = false;

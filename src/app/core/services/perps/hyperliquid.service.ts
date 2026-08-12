@@ -19,6 +19,7 @@ import {
   switchMap,
 } from 'rxjs/operators';
 import { ethers } from 'ethers';
+import BigNumber from 'bignumber.js';
 
 import {
   HYPERLIQUID_API,
@@ -39,10 +40,17 @@ import {
   PerpsExchangeResponse,
   PerpsPosition,
   PerpsUniverseItem,
+  PERPS_BUILDER_ADDRESS,
+  PERPS_BUILDER_FEE_TENTHS_BPS,
+  PERPS_BUILDER_MAX_FEE_RATE,
   PERPS_DEPOSIT_CONFIG,
+  PERPS_HIP3_DEXES,
+  PERPS_MAX_SLIPPAGE_PERCENT,
+  PERPS_MIN_SLIPPAGE_PERCENT,
 } from '@popup/_lib/perps';
 import { environment } from '@/environments/environment';
 import {
+  signHyperliquidApproveBuilderFee,
   signHyperliquidL1Action,
   signHyperliquidUsdClassTransfer,
   signHyperliquidWithdraw,
@@ -81,10 +89,14 @@ export class HyperliquidService {
   private channelObservers = new Map<string, number>();
   private reconnectAttempts = 0;
   private reconnectTimer: any;
+  /** Hyperliquid closes quiet sockets after 60s; ping well before that. */
+  private heartbeatTimer: any;
+  private readonly heartbeatMs = 30000;
 
   /**
    * Cache snapshots according to their volatility:
    * - market snapshots have a short TTL and are refreshed by live contexts;
+   * - the DEX registry carries no prices and outlives every market snapshot;
    * - spot state persists until a websocket update;
    * - combined account snapshots absorb short navigation/request bursts;
    * - account abstraction is refreshed infrequently.
@@ -92,12 +104,18 @@ export class HyperliquidService {
   private readonly accountCacheMs = 3000;
   private readonly accountModeCacheMs = 30 * 60 * 1000;
   private readonly marketCacheMs = 15000;
+  private readonly dexRegistryCacheMs = 6 * 60 * 60 * 1000;
   private readonly userFeeCacheMs = 5 * 60 * 1000;
   private marketCache: {
     expiresAt: number;
     request: Observable<PerpsMarket[]>;
   };
+  private dexRegistryCache: {
+    expiresAt: number;
+    request: Observable<any[]>;
+  };
   private marketState$ = new BehaviorSubject<PerpsMarket[] | null>(null);
+  private marketError$ = new Subject<any>();
   private marketLiveSub: Subscription;
   private marketObservers = 0;
   private pendingAssetContexts: any;
@@ -116,12 +134,112 @@ export class HyperliquidService {
     string,
     { expiresAt: number; request: Observable<number> }
   >();
+  /** Accounts whose builder-fee approval this session has already confirmed. */
+  private builderFeeApproved = new Set<string>();
   private lastNonce = 0;
 
   constructor(private http: HttpClient) {}
 
   private get api() {
     return this.isTestnet ? HYPERLIQUID_API.testnet : HYPERLIQUID_API.mainnet;
+  }
+
+  private get supportedHip3Dexes(): string[] {
+    return this.isTestnet
+      ? PERPS_HIP3_DEXES.testnet
+      : PERPS_HIP3_DEXES.mainnet;
+  }
+
+  /** Empty when this build has no builder configured for the active network. */
+  get builderAddress(): string {
+    const address = this.isTestnet
+      ? PERPS_BUILDER_ADDRESS.testnet
+      : PERPS_BUILDER_ADDRESS.mainnet;
+    return address ? address.toLowerCase() : '';
+  }
+
+  /** The `builder` field orders carry, or undefined when the fee is disabled. */
+  private get builderField():
+    | { b: string; f: number }
+    | undefined {
+    return this.builderAddress && PERPS_BUILDER_FEE_TENTHS_BPS > 0
+      ? { b: this.builderAddress, f: PERPS_BUILDER_FEE_TENTHS_BPS }
+      : undefined;
+  }
+
+  /**
+   * Attach the builder fee to an order action, leaving the action untouched when
+   * no builder is configured. Hyperliquid rejects an order whose builder fee
+   * exceeds what the account approved, so the two must move together.
+   */
+  private withBuilder(action: any): any {
+    const builder = this.builderField;
+    return builder ? { ...action, builder } : action;
+  }
+
+  /** Tenths of a basis point this account has already approved for our builder. */
+  getMaxBuilderFee(address: string): Observable<number> {
+    if (!this.builderAddress) {
+      return of(0);
+    }
+    return this.post<number>({
+      type: 'maxBuilderFee',
+      user: address.toLowerCase(),
+      builder: this.builderAddress,
+    }).pipe(map((value) => this.toFiniteNumber(value)));
+  }
+
+  /**
+   * Make sure the account has approved our builder fee before an order carries
+   * it. The approval is a one-time signature per account, so the result is
+   * remembered for the session.
+   *
+   * A failed *query* is not fatal — the approval is attempted anyway, and a
+   * redundant one is harmless. A failed *approval* is: the order that follows
+   * would be rejected by the exchange, so the error is surfaced rather than
+   * swallowed into a silent no-fee order.
+   */
+  private ensureBuilderFeeApproved(privateKey: string): Observable<void> {
+    if (!this.builderField) {
+      return of(undefined);
+    }
+    const user = new ethers.Wallet(privateKey).address.toLowerCase();
+    if (this.builderFeeApproved.has(user)) {
+      return of(undefined);
+    }
+    return this.getMaxBuilderFee(user).pipe(
+      catchError(() => of(0)),
+      switchMap((approved) => {
+        if (approved >= PERPS_BUILDER_FEE_TENTHS_BPS) {
+          this.builderFeeApproved.add(user);
+          return of(undefined);
+        }
+        return this.approveBuilderFee(privateKey).pipe(
+          map(() => {
+            this.builderFeeApproved.add(user);
+            return undefined;
+          })
+        );
+      })
+    );
+  }
+
+  /** Sign the one-time approval letting our builder charge its fee. */
+  approveBuilderFee(privateKey: string): Observable<PerpsExchangeResponse> {
+    const nonce = this.nextNonce();
+    return from(
+      signHyperliquidApproveBuilderFee(
+        privateKey,
+        this.builderAddress,
+        PERPS_BUILDER_MAX_FEE_RATE,
+        nonce,
+        !this.isTestnet
+      )
+    ).pipe(
+      switchMap(({ action, signature }) =>
+        this.postExchange(action, signature, nonce)
+      )
+    );
   }
 
   /** Bridge2 funding chain/token matching the configured endpoint. */
@@ -234,11 +352,21 @@ export class HyperliquidService {
     );
   }
 
+  /** Market orders are IOC limits priced this far through the mark. */
+  private slippageFraction(slippagePercent: number): number {
+    return (
+      Math.max(
+        PERPS_MIN_SLIPPAGE_PERCENT,
+        Math.min(PERPS_MAX_SLIPPAGE_PERCENT, slippagePercent)
+      ) / 100
+    );
+  }
+
   /**
    * Set the requested leverage / margin mode (`isCross`) and place one order.
    * Callers currently open isolated so the per-order liquidation preview is
-   * binding. Market orders use an IOC limit through the mark according to the
-   * caller's configured slippage tolerance.
+   * binding. Market orders use an IOC limit priced through the mid — the price
+   * the caller supplies — according to its configured slippage tolerance.
    */
   placeOrder(
     privateKey: string,
@@ -248,24 +376,30 @@ export class HyperliquidService {
       1,
       Math.min(request.maxLeverage, Math.floor(request.leverage))
     );
-    const slippage = Math.max(
-      0.001,
-      Math.min(0.05, request.slippagePercent / 100)
-    );
+    const slippage = this.slippageFraction(request.slippagePercent);
     const price =
       request.orderType === 'market'
-        ? request.price * (request.isBuy ? 1 + slippage : 1 - slippage)
-        : request.price;
-    const action = {
+        ? new BigNumber(request.price).times(
+            new BigNumber(1)[request.isBuy ? 'plus' : 'minus'](slippage)
+          )
+        : new BigNumber(request.price);
+    const wirePrice = this.roundPrice(
+      price,
+      request.szDecimals,
+      request.orderType === 'market'
+        ? request.isBuy
+          ? BigNumber.ROUND_FLOOR
+          : BigNumber.ROUND_CEIL
+        : BigNumber.ROUND_HALF_UP
+    );
+    const action = this.withBuilder({
       type: 'order',
       orders: [
         {
           a: request.assetId,
           b: request.isBuy,
-          p: this.floatToWire(
-            this.roundPrice(price, request.szDecimals)
-          ),
-          s: this.floatToWire(request.size),
+          p: this.floatToWire(wirePrice),
+          s: this.floatToWire(String(request.size)),
           r: request.reduceOnly,
           t: {
             limit: {
@@ -275,22 +409,26 @@ export class HyperliquidService {
         },
       ],
       grouping: 'na',
-    };
-    if (request.reduceOnly) {
-      return this.signedL1Action(privateKey, action);
-    }
-    return this.signedL1Action(privateKey, {
-      type: 'updateLeverage',
-      asset: request.assetId,
-      isCross: request.isCross,
-      leverage,
-    }).pipe(switchMap(() => this.signedL1Action(privateKey, action)));
+    });
+    return this.ensureBuilderFeeApproved(privateKey).pipe(
+      switchMap(() => {
+        if (request.reduceOnly) {
+          return this.signedL1Action(privateKey, action);
+        }
+        return this.signedL1Action(privateKey, {
+          type: 'updateLeverage',
+          asset: request.assetId,
+          isCross: request.isCross,
+          leverage,
+        }).pipe(switchMap(() => this.signedL1Action(privateKey, action)));
+      })
+    );
   }
 
   withdraw(
     privateKey: string,
     destination: string,
-    amount: number
+    amount: string
   ): Observable<PerpsExchangeResponse> {
     const nonce = this.nextNonce();
     const amountWire = this.floatToWire(amount);
@@ -313,7 +451,7 @@ export class HyperliquidService {
   /** Move USDC between Hyperliquid Spot and Perps for standard accounts. */
   transferUsdClass(
     privateKey: string,
-    amount: number,
+    amount: string,
     toPerp: boolean
   ): Observable<PerpsExchangeResponse> {
     const nonce = this.nextNonce();
@@ -334,7 +472,7 @@ export class HyperliquidService {
   }
 
   /** Send native USDC to Bridge2 from the same address that will be credited. */
-  deposit(privateKey: string, amount: number): Observable<string> {
+  deposit(privateKey: string, amount: string): Observable<string> {
     const config = this.depositConfig;
     return from(
       (async () => {
@@ -359,27 +497,68 @@ export class HyperliquidService {
   /**
    * Hyperliquid wire numbers allow at most 8 decimals and no trailing zeroes.
    */
-  private floatToWire(value: number): string {
-    if (!Number.isFinite(value)) {
+  private floatToWire(value: string): string {
+    const decimal = new BigNumber(value);
+    if (!decimal.isFinite()) {
       throw new Error('Invalid Hyperliquid number');
     }
-    const rounded = Number(value.toFixed(8));
-    if (Math.abs(rounded - value) >= 1e-12) {
+    if ((decimal.decimalPlaces() || 0) > 8) {
       throw new Error('Hyperliquid number exceeds 8 decimal places');
     }
-    return rounded === 0 ? '0' : rounded.toString();
+    return decimal.isZero() ? '0' : decimal.toFixed();
   }
 
   /**
    * Perp prices use at most five significant figures and 6-szDecimals places.
    */
-  private roundPrice(price: number, szDecimals: number): number {
+  private roundPrice(
+    price: BigNumber,
+    szDecimals: number,
+    roundingMode: BigNumber.RoundingMode = BigNumber.ROUND_HALF_UP
+  ): string {
     const maxDecimals = Math.max(0, 6 - szDecimals);
+    const numericPrice = price.toNumber();
     const significantDecimals = Math.max(
       0,
-      5 - Math.floor(Math.log10(Math.abs(price))) - 1
+      5 - Math.floor(Math.log10(Math.abs(numericPrice))) - 1
     );
-    return Number(price.toFixed(Math.min(maxDecimals, significantDecimals)));
+    return price
+      .decimalPlaces(
+        Math.min(maxDecimals, significantDecimals),
+        roundingMode
+      )
+      .toFixed();
+  }
+
+  /**
+   * Registry of builder-deployed DEXes. A DEX's position in this list is baked
+   * into the asset ids of its markets, so entries are append-only and the whole
+   * response is worth caching far longer than the prices it feeds. A failure is
+   * never cached: it degrades this refresh to canonical markets and is retried.
+   */
+  private getDexRegistry(): Observable<any[]> {
+    if (this.supportedHip3Dexes.length === 0) {
+      return of([]);
+    }
+    const now = Date.now();
+    if (this.dexRegistryCache?.expiresAt > now) {
+      return this.dexRegistryCache.request;
+    }
+    const request = this.post<any[]>({ type: 'perpDexs' }).pipe(
+      catchError(() => {
+        if (this.dexRegistryCache?.request === request) {
+          this.dexRegistryCache = undefined;
+        }
+        // Older/self-hosted API servers may not expose HIP-3 discovery yet.
+        return of([]);
+      }),
+      shareReplay({ bufferSize: 1, refCount: false })
+    );
+    this.dexRegistryCache = {
+      expiresAt: now + this.dexRegistryCacheMs,
+      request,
+    };
+    return request;
   }
 
   /**
@@ -393,25 +572,64 @@ export class HyperliquidService {
       const current = this.marketState$.value;
       return current !== null ? of(current) : this.marketCache.request;
     }
-    const request = this.post<
-      [{ universe: PerpsUniverseItem[] }, PerpsAssetCtx[]]
-    >({
-      type: 'metaAndAssetCtxs',
-    }).pipe(
-      map(([meta, ctxs]) => {
-        const markets: PerpsMarket[] = [];
-        meta.universe.forEach((item, index) => {
-          const ctx = ctxs[index];
-          if (item.isDelisted || !ctx) {
+    const supportedHip3Dexes = this.supportedHip3Dexes;
+    const request = this.getDexRegistry().pipe(
+      switchMap((perpDexs) => {
+        const dexRequests: Array<
+          Observable<{
+            dex: string;
+            dexIndex: number;
+            response: [{ universe: PerpsUniverseItem[] }, PerpsAssetCtx[]];
+          }>
+        > = [
+          this.post<
+            [{ universe: PerpsUniverseItem[] }, PerpsAssetCtx[]]
+          >({ type: 'metaAndAssetCtxs' }).pipe(
+            map((response) => ({ dex: '', dexIndex: 0, response }))
+          ),
+        ];
+        const supportedDexes = new Set(supportedHip3Dexes);
+        (Array.isArray(perpDexs) ? perpDexs : []).forEach((item, dexIndex) => {
+          const dex = item?.name;
+          if (!dex || dexIndex === 0 || !supportedDexes.has(dex)) {
             return;
           }
-          markets.push({
-            assetId: index,
-            coin: item.name,
-            szDecimals: item.szDecimals,
-            maxLeverage: item.maxLeverage,
-            onlyIsolated: !!item.onlyIsolated,
-            ...this.marketContextFields(ctx),
+          dexRequests.push(
+            this.post<
+              [{ universe: PerpsUniverseItem[] }, PerpsAssetCtx[]]
+            >({ type: 'metaAndAssetCtxs', dex }).pipe(
+              map((response) => ({ dex, dexIndex, response })),
+              // One unavailable builder DEX must not hide canonical markets.
+              catchError(() => of(null))
+            )
+          );
+        });
+        return forkJoin(dexRequests);
+      }),
+      map((dexResponses) => {
+        const markets: PerpsMarket[] = [];
+        dexResponses.filter(Boolean).forEach(({ dex, dexIndex, response }) => {
+          const [meta, ctxs] = response || ([] as any);
+          (meta?.universe || []).forEach((item, index) => {
+            const ctx = ctxs?.[index];
+            if (item.isDelisted || !ctx) {
+              return;
+            }
+            markets.push({
+              assetId: dex
+                ? 100000 + dexIndex * 10000 + index
+                : index,
+              dex,
+              dexAssetIndex: index,
+              coin:
+                dex && !item.name.includes(':')
+                  ? `${dex}:${item.name}`
+                  : item.name,
+              szDecimals: item.szDecimals,
+              maxLeverage: item.maxLeverage,
+              onlyIsolated: !!item.onlyIsolated,
+              ...this.marketContextFields(ctx),
+            });
           });
         });
         const sorted = markets.sort((a, b) => b.dayVolume - a.dayVolume);
@@ -459,9 +677,11 @@ export class HyperliquidService {
           )
         )
         .subscribe(observer);
+      const errorSub = this.marketError$.subscribe((error) => observer.error(error));
       this.loadMarketSnapshot();
       return () => {
         stateSub.unsubscribe();
+        errorSub.unsubscribe();
         this.marketObservers -= 1;
         if (this.marketObservers === 0) {
           this.marketLiveSub?.unsubscribe();
@@ -527,14 +747,21 @@ export class HyperliquidService {
 
   private loadMarketSnapshot() {
     this.getMarkets().subscribe({
-      error: () => {
+      error: (error) => {
         if (this.marketObservers === 0) {
           return;
         }
+        if (this.marketState$.value === null) {
+          this.marketError$.next(error);
+          return;
+        }
         clearTimeout(this.marketSnapshotRetryTimer);
+        // A 429 is an IP budget that only refills over the following minute, so
+        // a one-second retry just spends the next slot on another refusal.
+        const base = error?.status === 429 ? 10000 : 1000;
         const delay = Math.min(
-          1000 * Math.pow(2, this.marketSnapshotAttempts),
-          30000
+          base * Math.pow(2, this.marketSnapshotAttempts),
+          60000
         );
         this.marketSnapshotAttempts += 1;
         this.marketSnapshotRetryTimer = setTimeout(
@@ -554,13 +781,14 @@ export class HyperliquidService {
     markets: PerpsMarket[],
     update: any
   ): PerpsMarket[] {
-    const ctxs = this.mainDexAssetContexts(update?.ctxs);
-    if (ctxs.length === 0) {
+    const contextsByDex = this.assetContextsByDex(update?.ctxs);
+    if (contextsByDex.size === 0) {
       return markets;
     }
     const updated = markets
       .map((market) => {
-        const ctx = ctxs[market.assetId];
+        const ctxs = contextsByDex.get(market.dex || '');
+        const ctx = ctxs?.[market.dexAssetIndex ?? market.assetId];
         if (!ctx) {
           return market;
         }
@@ -578,6 +806,7 @@ export class HyperliquidService {
   ): Pick<
     PerpsMarket,
     | 'markPx'
+    | 'midPx'
     | 'oraclePx'
     | 'prevDayPx'
     | 'changePercent'
@@ -586,14 +815,22 @@ export class HyperliquidService {
     | 'funding'
   > {
     const markPx = Number(ctx.markPx);
+    const rawMidPx = Number(ctx.midPx);
+    // `midPx` is null whenever a side of the book is empty; the mark is the
+    // only price left to trade against then.
+    const midPx =
+      Number.isFinite(rawMidPx) && rawMidPx > 0 ? rawMidPx : markPx;
     const prevDayPx = Number(ctx.prevDayPx);
     return {
       markPx,
+      midPx,
       oraclePx: Number(ctx.oraclePx),
       prevDayPx,
-      changePercent: prevDayPx
-        ? ((markPx - prevDayPx) / prevDayPx) * 100
-        : 0,
+      // Quoted against the mid, which is the price every screen displays, so a
+      // price and the change beside it can never disagree. The mark is an
+      // oracle-weighted price that lags the book by design; it stays reserved
+      // for margin, liquidation and position valuation.
+      changePercent: prevDayPx ? ((midPx - prevDayPx) / prevDayPx) * 100 : 0,
       dayVolume: Number(ctx.dayNtlVlm),
       openInterest: Number(ctx.openInterest) * markPx,
       funding: Number(ctx.funding),
@@ -601,20 +838,38 @@ export class HyperliquidService {
   }
 
   private mainDexAssetContexts(raw: any): PerpsAssetCtx[] {
+    return this.assetContextsByDex(raw).get('') || [];
+  }
+
+  private assetContextsByDex(raw: any): Map<string, PerpsAssetCtx[]> {
+    const result = new Map<string, PerpsAssetCtx[]>();
     if (Array.isArray(raw)) {
-      const mainDex = raw.find(
-        (entry) => Array.isArray(entry) && entry[0] === ''
-      );
-      if (mainDex && Array.isArray(mainDex[1])) {
-        return mainDex[1];
+      raw.forEach((entry) => {
+        if (
+          Array.isArray(entry) &&
+          typeof entry[0] === 'string' &&
+          Array.isArray(entry[1])
+        ) {
+          result.set(entry[0], entry[1]);
+        }
+      });
+      if (result.size > 0) {
+        return result;
       }
       // Compatibility with a direct context array if the API shape changes.
       if (raw.every((entry) => !Array.isArray(entry))) {
-        return raw;
+        result.set('', raw);
+        return result;
       }
     }
-    const mainDex = raw?.[''];
-    return Array.isArray(mainDex) ? mainDex : [];
+    if (raw && typeof raw === 'object') {
+      Object.keys(raw).forEach((dex) => {
+        if (Array.isArray(raw[dex])) {
+          result.set(dex, raw[dex]);
+        }
+      });
+    }
+    return result;
   }
 
   /**
@@ -779,13 +1034,28 @@ export class HyperliquidService {
    * balance; `hold` is the slice already reserved as margin for open perps
    * positions, so `total - hold` is what is still free to back new orders.
    */
-  private parseSpotUsdc(spot: any): { total: number; hold: number } {
+  private parseSpotUsdc(spot: any): {
+    total: number;
+    hold: number;
+    totalExact: string;
+    holdExact: string;
+    freeExact: string;
+  } {
     const balance = (spot?.balances || []).find(
       (b) => b.coin === 'USDC' || b.token === 0
     );
+    const totalExact = this.toFiniteDecimal(balance?.total);
+    const holdExact = this.toFiniteDecimal(balance?.hold);
+    const freeExact = BigNumber.maximum(
+      0,
+      new BigNumber(totalExact).minus(holdExact)
+    ).toFixed();
     return {
-      total: balance ? Number(balance.total) : 0,
-      hold: balance ? Number(balance.hold) : 0,
+      total: Number(totalExact),
+      hold: Number(holdExact),
+      totalExact,
+      holdExact,
+      freeExact,
     };
   }
 
@@ -805,17 +1075,32 @@ export class HyperliquidService {
     if (!Array.isArray(spot?.balances)) {
       return account;
     }
-    const { total: spotUsdc, hold: spotUsdcHold } = this.parseSpotUsdc(spot);
-    const freeSpotUsdc = Math.max(0, spotUsdc - spotUsdcHold);
+    const {
+      total: spotUsdc,
+      hold: spotUsdcHold,
+      totalExact: spotUsdcExact,
+      holdExact: spotUsdcHoldExact,
+      freeExact: freeSpotUsdcExact,
+    } = this.parseSpotUsdc(spot);
+    const freeSpotUsdc = Number(freeSpotUsdcExact);
     const foldedSpot = account.unified ? freeSpotUsdc : 0;
+    const foldedSpotExact = account.unified ? freeSpotUsdcExact : '0';
+    const availableBalanceExact = new BigNumber(
+      account.withdrawableExact ?? account.withdrawable
+    )
+      .plus(foldedSpotExact)
+      .toFixed();
     const updated = {
       ...account,
       totalBalance: account.unified
         ? account.accountValue + freeSpotUsdc
         : account.accountValue,
       availableBalance: account.withdrawable + foldedSpot,
+      availableBalanceExact,
       spotUsdc,
+      spotUsdcExact,
       spotUsdcHold,
+      spotUsdcHoldExact,
     };
     const user =
       typeof update?.user === 'string' ? update.user.toLowerCase() : undefined;
@@ -843,8 +1128,8 @@ export class HyperliquidService {
         {
           coin: 'USDC',
           token: 0,
-          total: account.spotUsdc,
-          hold: account.spotUsdcHold,
+          total: account.spotUsdcExact ?? String(account.spotUsdc),
+          hold: account.spotUsdcHoldExact ?? String(account.spotUsdcHold),
         },
       ],
     };
@@ -882,8 +1167,14 @@ export class HyperliquidService {
     mode: PerpsAccountMode = 'unknown'
   ): PerpsAccount {
     const unified = this.isUnifiedMode(mode);
-    const { total: spotUsdc, hold: spotUsdcHold } = this.parseSpotUsdc(spot);
-    const freeSpotUsdc = Math.max(0, spotUsdc - spotUsdcHold);
+    const {
+      total: spotUsdc,
+      hold: spotUsdcHold,
+      totalExact: spotUsdcExact,
+      holdExact: spotUsdcHoldExact,
+      freeExact: freeSpotUsdcExact,
+    } = this.parseSpotUsdc(spot);
+    const freeSpotUsdc = Number(freeSpotUsdcExact);
     if (!res || !res.marginSummary) {
       return {
         ...this.emptyAccount(),
@@ -891,8 +1182,11 @@ export class HyperliquidService {
         abstractionMode: mode,
         totalBalance: unified ? freeSpotUsdc : 0,
         availableBalance: unified ? freeSpotUsdc : 0,
+        availableBalanceExact: unified ? freeSpotUsdcExact : '0',
         spotUsdc,
+        spotUsdcExact,
         spotUsdcHold,
+        spotUsdcHoldExact,
       };
     }
     const positions: PerpsPosition[] = (res.assetPositions || [])
@@ -917,7 +1211,11 @@ export class HyperliquidService {
       });
     const accountValue = this.toFiniteNumber(res.marginSummary.accountValue);
     const withdrawable = this.toFiniteNumber(res.withdrawable);
+    const withdrawableExact = this.toFiniteDecimal(res.withdrawable);
     const foldedSpot = unified ? freeSpotUsdc : 0;
+    const availableBalanceExact = new BigNumber(withdrawableExact)
+      .plus(unified ? freeSpotUsdcExact : 0)
+      .toFixed();
     const maintenanceMarginUsed = this.toFiniteNumber(
       res.crossMaintenanceMarginUsed
     );
@@ -938,9 +1236,13 @@ export class HyperliquidService {
             standardRiskCapital
           ),
       withdrawable,
+      withdrawableExact,
       availableBalance: withdrawable + foldedSpot,
+      availableBalanceExact,
       spotUsdc,
+      spotUsdcExact,
       spotUsdcHold,
+      spotUsdcHoldExact,
       positions,
     };
   }
@@ -948,6 +1250,12 @@ export class HyperliquidService {
   private toFiniteNumber(value: any): number {
     const parsed = Number(value ?? 0);
     return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  /** Keep API decimal strings intact for values that can flow back into a signature. */
+  private toFiniteDecimal(value: any): string {
+    const parsed = new BigNumber(value ?? 0);
+    return parsed.isFinite() ? (parsed.isZero() ? '0' : parsed.toFixed()) : '0';
   }
 
   private calculateMarginRatio(
@@ -967,9 +1275,13 @@ export class HyperliquidService {
       totalNtlPos: 0,
       marginRatio: null,
       withdrawable: 0,
+      withdrawableExact: '0',
       availableBalance: 0,
+      availableBalanceExact: '0',
       spotUsdc: 0,
+      spotUsdcExact: '0',
       spotUsdcHold: 0,
+      spotUsdcHoldExact: '0',
       positions: [],
     };
   }
@@ -988,20 +1300,20 @@ export class HyperliquidService {
     return this.post<PerpsCandle[]>({
       type: 'candleSnapshot',
       req: { coin, interval, startTime, endTime },
-    }).pipe(
-      map((res) => (Array.isArray(res) ? res.slice(-limit) : [])),
-      catchError(() => of([]))
-    );
+    }).pipe(map((res) => (Array.isArray(res) ? res.slice(-limit) : [])));
   }
 
   getUserFills(address: string): Observable<PerpsFill[]> {
     return this.post<PerpsFill[]>({
       type: 'userFills',
       user: address.toLowerCase(),
-    }).pipe(
-      map((res) => (Array.isArray(res) ? res : [])),
-      catchError(() => of([]))
-    );
+    }).pipe(map((res) => (Array.isArray(res) ? res : [])));
+  }
+
+  /** Websocket snapshot followed by incremental fill pushes. */
+  watchUserFills(address: string): Observable<any> {
+    const user = address.toLowerCase();
+    return this.subscribe({ type: 'userFills', user });
   }
 
   /** Active orders that can still fill and therefore must remain manageable. */
@@ -1012,15 +1324,20 @@ export class HyperliquidService {
     }).pipe(map((res) => (Array.isArray(res) ? res : [])));
   }
 
+  /** Full open-order snapshots pushed whenever the user's book changes. */
+  watchOpenOrders(address: string): Observable<PerpsOpenOrder[]> {
+    const user = address.toLowerCase();
+    return this.subscribe({ type: 'openOrders', user }).pipe(
+      map((data) => (Array.isArray(data?.orders) ? data.orders : []))
+    );
+  }
+
   /** Orders that already left the book. Hyperliquid caps this at 2000 rows. */
   getHistoricalOrders(address: string): Observable<PerpsHistoricalOrder[]> {
     return this.post<PerpsHistoricalOrder[]>({
       type: 'historicalOrders',
       user: address.toLowerCase(),
-    }).pipe(
-      map((res) => (Array.isArray(res) ? res : [])),
-      catchError(() => of([]))
-    );
+    }).pipe(map((res) => (Array.isArray(res) ? res : [])));
   }
 
   /**
@@ -1032,10 +1349,7 @@ export class HyperliquidService {
       type: 'userNonFundingLedgerUpdates',
       user: address.toLowerCase(),
       startTime: 0,
-    }).pipe(
-      map((res) => (Array.isArray(res) ? res : [])),
-      catchError(() => of([]))
-    );
+    }).pipe(map((res) => (Array.isArray(res) ? res : [])));
   }
 
   cancelOrder(
@@ -1137,6 +1451,7 @@ export class HyperliquidService {
       }
       this.wsReady = true;
       this.reconnectAttempts = 0;
+      this.startHeartbeat(socket);
       this.activeSubs.forEach((subscription) =>
         socket.send(JSON.stringify({ method: 'subscribe', subscription }))
       );
@@ -1151,6 +1466,7 @@ export class HyperliquidService {
         return;
       }
       this.wsReady = false;
+      this.stopHeartbeat();
       this.ws = undefined;
       if (this.channels.size > 0) {
         this.scheduleReconnect();
@@ -1212,6 +1528,21 @@ export class HyperliquidService {
       );
       return;
     }
+    if (
+      [
+        'userFills',
+        'openOrders',
+        'orderUpdates',
+        'userNonFundingLedgerUpdates',
+      ].includes(msg.channel) &&
+      typeof msg.data?.user === 'string'
+    ) {
+      this.emit(
+        `${msg.channel}:${msg.data.user.toLowerCase()}`,
+        msg.data
+      );
+      return;
+    }
     this.emit(msg.channel, msg.data);
   }
 
@@ -1232,8 +1563,23 @@ export class HyperliquidService {
     }, delay);
   }
 
+  private startHeartbeat(socket: WebSocket) {
+    this.stopHeartbeat();
+    this.heartbeatTimer = setInterval(() => {
+      if (this.ws === socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ method: 'ping' }));
+      }
+    }, this.heartbeatMs);
+  }
+
+  private stopHeartbeat() {
+    clearInterval(this.heartbeatTimer);
+    this.heartbeatTimer = undefined;
+  }
+
   private closeSocket() {
     clearTimeout(this.reconnectTimer);
+    this.stopHeartbeat();
     this.wsReady = false;
     const socket = this.ws;
     this.ws = undefined;

@@ -38,10 +38,10 @@
       </button>
     </div>
     <div class="card-actions">
-      <button class="primary" (click)="toFunding('deposit')">
+      <button class="primary" [disabled]="unsupportedAccountMode" (click)="toFunding('deposit')">
         {{ "perpsDeposit" | translate | async }}
       </button>
-      <button class="ghost" (click)="toFunding('withdraw')">
+      <button class="ghost" [disabled]="unsupportedAccountMode" (click)="toFunding('withdraw')">
         {{ "perpsWithdraw" | translate | async }}
       </button>
       <button class="plain" (click)="toHistory()">
@@ -57,9 +57,6 @@
         >{{ "perpsPositions" | translate | async }} ·
         {{ account.positions.length }}</span
       >
-      <span class="action" (click)="closeAll()">
-        {{ "perpsCloseAll" | translate | async }}
-      </span>
     </div>
     <div class="positions">
       <div
@@ -172,18 +169,8 @@
       </div>
       <div class="volume">{{ formatCompactUsd(market.dayVolume) }}</div>
     </div>
-    <svg class="sparkline" width="72" height="26" viewBox="0 0 72 26" fill="none">
-      <path
-        [attr.d]="sparklinePath(market)"
-        [attr.stroke]="
-          market.changePercent >= 0 ? 'var(--theme-color)' : 'var(--error-color)'
-        "
-        stroke-width="1.5"
-        stroke-linecap="round"
-      />
-    </svg>
     <div class="market-price">
-      <div class="price">${{ formatPrice(market.markPx) }}</div>
+      <div class="price">${{ formatPrice(market.midPx) }}</div>
       <div class="change" [class.negative]="market.changePercent < 0">
         {{ formatSignedPercent(market.changePercent) }}
       </div>
@@ -191,6 +178,6 @@
   </div>
 
   <p class="market-empty" *ngIf="!loading && visibleMarkets.length === 0">
-    {{ "perpsNoMarkets" | translate | async }}
+    {{ (marketLoadError ? "perpsLoadFailed" : "perpsNoMarkets") | translate | async }}
   </p>
 </div>

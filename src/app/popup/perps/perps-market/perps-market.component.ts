@@ -20,6 +20,7 @@ import {
   formatFillTime,
   formatPrice,
   formatSignedPercent,
+  formatSignedUsd,
   pad2,
   priceDecimals,
 } from '../perps.util';
@@ -40,6 +41,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
 
   candles: PerpsCandle[] = [];
   chartLoading = true;
+  chartLoadError = false;
   interval: PerpsCandleInterval = '15m';
   readonly quickIntervals: PerpsCandleInterval[] = ['1m', '3m', '5m', '15m'];
   readonly longIntervals: PerpsCandleInterval[] = ['1h', '4h', '1d'];
@@ -53,6 +55,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   private address: string;
   private accountSub: Unsubscribable;
   private marketsSub: Unsubscribable;
+  private fillsSub: Unsubscribable;
   private candleSub: Unsubscribable;
   /** Monotonic token so a stale candle snapshot can't overwrite a newer interval. */
   private candleReqId = 0;
@@ -64,6 +67,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   formatPrice = formatPrice;
   formatCompactUsd = formatCompactUsd;
   formatSignedPercent = formatSignedPercent;
+  formatSignedUsd = formatSignedUsd;
   //#endregion
 
   constructor(
@@ -93,12 +97,37 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.accountSub?.unsubscribe();
     this.marketsSub?.unsubscribe();
+    this.fillsSub?.unsubscribe();
     this.unwatchCandles();
     clearInterval(this.countdownTimer);
   }
 
   get priceDecimals(): number {
-    return priceDecimals(this.market?.markPx || 0);
+    // MetaMask keeps high-value market axes compact (1879.0 rather than
+    // 1879.00). This input only affects the chart axis; header/order precision
+    // remains unchanged.
+    return Math.abs(this.displayPrice) >= 100
+      ? 1
+      : priceDecimals(this.displayPrice);
+  }
+
+  /**
+   * The live mid from the shared market stream — the same price the market
+   * list and the order form quote, so one coin reads the same everywhere.
+   *
+   * The chart's trailing candle is deliberately not used: a candle only moves
+   * when a trade prints, so a quiet market freezes the header while the book
+   * keeps moving, and changing interval would change what the header quotes.
+   * Mark and oracle stay where they belong — margin, liquidation and funding —
+   * with the oracle shown on its own row in the stats card below.
+   */
+  get displayPrice(): number {
+    return this.market?.midPx || this.market?.markPx || 0;
+  }
+
+  /** Quoted off the same price shown beside it, against yesterday's close. */
+  get displayChangePercent(): number {
+    return this.market?.changePercent || 0;
   }
 
   /** Funding is quoted per hour; show it the way Hyperliquid's own UI does. */
@@ -126,9 +155,30 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   }
 
   private loadFills() {
-    this.hyperliquid.getUserFills(this.address).subscribe((fills) => {
-      this.fills = fills.filter((f) => f.coin === this.coin).slice(0, 5);
-    });
+    this.fillsSub?.unsubscribe();
+    this.fillsSub = this.hyperliquid
+      .watchUserFills(this.address)
+      .subscribe((update) => {
+        const incoming: PerpsFill[] = Array.isArray(update)
+          ? update
+          : update?.fills || [];
+        const merged = update?.isSnapshot
+          ? incoming
+          : [...incoming, ...this.fills];
+        const seen = new Set<string>();
+        this.fills = merged
+          .filter((fill) => fill.coin === this.coin)
+          .filter((fill) => {
+            const key = `${fill.tid ?? ''}:${fill.oid ?? ''}:${fill.time}:${fill.px}:${fill.sz}`;
+            if (seen.has(key)) {
+              return false;
+            }
+            seen.add(key);
+            return true;
+          })
+          .sort((a, b) => b.time - a.time)
+          .slice(0, 5);
+      });
   }
 
   //#region favorite
@@ -156,16 +206,26 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
 
   private loadCandles() {
     this.chartLoading = true;
+    this.chartLoadError = false;
     this.unwatchCandles();
     const reqId = ++this.candleReqId;
-    this.hyperliquid.getCandles(this.coin, this.interval).subscribe((res) => {
-      if (reqId !== this.candleReqId) {
-        // A newer interval selection superseded this request while in flight.
-        return;
-      }
-      this.candles = res;
-      this.chartLoading = false;
-      this.watchCandles();
+    this.hyperliquid.getCandles(this.coin, this.interval).subscribe({
+      next: (res) => {
+        if (reqId !== this.candleReqId) {
+          return;
+        }
+        this.candles = res;
+        this.chartLoading = false;
+        this.chartLoadError = false;
+        this.watchCandles();
+      },
+      error: () => {
+        if (reqId === this.candleReqId) {
+          this.candles = [];
+          this.chartLoading = false;
+          this.chartLoadError = true;
+        }
+      },
     });
   }
 

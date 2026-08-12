@@ -32,7 +32,8 @@
     <div class="amount-input">
       <span class="prefix">$</span>
       <input
-        type="number"
+        type="text"
+        inputmode="decimal"
         [(ngModel)]="amount"
         (ngModelChange)="onAmountChange()"
         placeholder="0"
@@ -157,6 +158,9 @@
   <p class="error-tip" *ngIf="exceedsBalance">
     {{ "perpsExceedsBalance" | translate | async }}
   </p>
+  <p class="error-tip" *ngIf="amountExceedsPrecision">
+    {{ "perpsAmountPrecision" | translate: { decimals: amountDecimals } | async }}
+  </p>
   <p class="error-tip" *ngIf="accountLoadError && !isDeposit">
     {{ "perpsLoadFailed" | translate | async }}
   </p>
@@ -174,7 +178,7 @@
           : "perpsWithdraw"
         ) | translate | async
       }}
-      <ng-container *ngIf="amount"> {{ formatUsd(amount) }}</ng-container>
+      <ng-container *ngIf="amount"> {{ formatUsd(amountNumber) }}</ng-container>
     </button>
   </div>
 </div>

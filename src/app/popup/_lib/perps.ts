@@ -16,6 +16,22 @@ export const HYPERLIQUID_API = {
   },
 };
 
+/**
+ * HIP-3 DEXes exposed by NeoLine in addition to Hyperliquid's canonical DEX.
+ *
+ * `perpDexs` is an unbounded registry (especially on testnet), so treating it
+ * as a market list would fan one metadata request out to every deployed DEX
+ * and exhaust Hyperliquid's shared IP rate limit. Keep product support
+ * explicit instead.
+ */
+export const PERPS_HIP3_DEXES: {
+  mainnet: string[];
+  testnet: string[];
+} = {
+  mainnet: [],
+  testnet: ['neol'],
+};
+
 /** Markets pinned to the top of the list and used by the "Neo 生态" filter. */
 export const PERPS_NEO_COINS = ['NEO', 'GAS'];
 
@@ -74,6 +90,49 @@ export const PERPS_MIN_ORDER_NOTIONAL = 10;
 /** Flat fee Hyperliquid charges on withdrawals, in USDC. */
 export const PERPS_WITHDRAW_FEE = 1;
 
+/**
+ * NeoLine's builder fee, charged by Hyperliquid on top of its own taker/maker
+ * rate and paid to the builder address below.
+ *
+ * The wire field `f` counts tenths of a basis point. The
+ * approval the user signs is pinned to exactly this rate rather than to
+ * Hyperliquid's 0.1% ceiling: an approval authorises everything up to the rate
+ * it names, so approving more than is charged would leave headroom to raise the
+ * fee without asking again.
+ */
+export const PERPS_BUILDER_FEE_RATE = 0;
+export const PERPS_BUILDER_FEE_TENTHS_BPS = 0;
+export const PERPS_BUILDER_MAX_FEE_RATE = '0.045%';
+
+/**
+ * Address collecting the builder fee, per network.
+ *
+ * Empty disables the fee entirely — no `builder` field on orders and no
+ * approval prompt — so an unconfigured build trades at Hyperliquid's bare rate
+ * instead of paying an unrelated address. Hyperliquid also requires the builder
+ * to hold at least 100 USDC of perps account value before it will honour the
+ * fee; below that it rejects every order carrying the field.
+ */
+export const PERPS_BUILDER_ADDRESS: { mainnet: string; testnet: string } = {
+  mainnet: '',
+  testnet: '',
+};
+
+/**
+ * Slippage tolerance for market orders, in percent. A market order is an IOC
+ * limit priced this far through the mark, so the bounds are shared by the form
+ * and by the service that builds the order — a UI-only maximum would be clamped
+ * away without the user noticing.
+ *
+ * The 100% ceiling matches Hyperliquid's own dialog, which accepts values up to
+ * 100.00. It is deliberately permissive: at 100% the IOC limit sits at twice
+ * (or zero times) the mark, which just means "fill me against whatever the book
+ * holds".
+ */
+export const PERPS_MIN_SLIPPAGE_PERCENT = 0.1;
+export const PERPS_MAX_SLIPPAGE_PERCENT = 10;
+export const PERPS_DEFAULT_SLIPPAGE_PERCENT = 3;
+
 export type PerpsMarketFilter = 'all' | 'neo' | 'major' | 'gainers';
 
 export const PERPS_MAJOR_COINS = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'DOGE'];
@@ -115,12 +174,24 @@ export interface PerpsAssetCtx {
 export interface PerpsMarket {
   /** Hyperliquid asset index, required when placing orders. */
   assetId: number;
+  /** Empty for the canonical DEX; otherwise the HIP-3 deployer DEX name. */
+  dex?: string;
+  /** Index inside this market's own DEX metadata, used by live context arrays. */
+  dexAssetIndex?: number;
   coin: string;
   szDecimals: number;
   maxLeverage: number;
   /** The exchange rejects cross-margin leverage updates for this market. */
   onlyIsolated: boolean;
   markPx: number;
+  /**
+   * Book mid, and the reference every market order is priced from. Hyperliquid's
+   * own front end sizes and prices against the mid rather than the mark: the
+   * mark is an oracle-weighted figure that can sit outside the spread, which
+   * would push an IOC limit further through the book than the tolerance implies.
+   * Falls back to the mark when the exchange reports no mid (an empty book).
+   */
+  midPx: number;
   oraclePx: number;
   prevDayPx: number;
   /** Percent change over the last 24h, e.g. -3.12 */
@@ -215,11 +286,15 @@ export interface PerpsAccount {
   marginRatio: number | null;
   /** Free perps collateral to open positions or withdraw (standard account). */
   withdrawable: number;
+  /** Exact decimal wire value; `withdrawable` is its display/calculation projection. */
+  withdrawableExact: string;
   /**
    * Free collateral available for orders or withdrawal. Unified/portfolio
    * accounts fold in free spot USDC; standard accounts remain perps-only.
    */
   availableBalance: number;
+  /** Exact decimal value used when a funding action submits MAX. */
+  availableBalanceExact: string;
   /**
    * Total USDC in the spot balance (token index 0). This is the cross-margin
    * collateral only under a unified account; under a standard account it is a
@@ -227,8 +302,12 @@ export interface PerpsAccount {
    * it must not be folded into the perps equity.
    */
   spotUsdc: number;
+  /** Exact decimal value used when a Spot → Perps transfer submits MAX. */
+  spotUsdcExact: string;
   /** Portion of `spotUsdc` reserved as margin (its hold); meaningful when unified. */
   spotUsdcHold: number;
+  /** Exact hold retained across clearinghouse websocket updates. */
+  spotUsdcHoldExact: string;
   positions: PerpsPosition[];
 }
 
@@ -250,6 +329,10 @@ export interface PerpsFill {
   closedPnl: string;
   hash: string;
   fee: string;
+  feeToken?: string;
+  builderFee?: string;
+  oid?: number;
+  tid?: number;
 }
 
 export interface PerpsOpenOrder {
@@ -345,5 +428,10 @@ export interface PerpsOrderPreview {
   /** Size in base units of the coin. */
   size: number;
   liquidationPx: number;
+  /** Everything the fill costs: exchange fee plus builder fee. */
   fee: number;
+  /** Hyperliquid's own taker fee. */
+  protocolFee: number;
+  /** NeoLine's builder fee; zero when no builder address is configured. */
+  builderFee: number;
 }

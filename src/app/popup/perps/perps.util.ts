@@ -107,6 +107,12 @@ export function formatSignedPercent(value: number, decimals = 2): string {
   return `${n >= 0 ? '+' : ''}${n.toFixed(decimals)}%`;
 }
 
+/** Format a fractional fee rate for display, e.g. 0.000405 -> "0.0405%". */
+export function formatFeeRatePercent(value: number): string {
+  const percent = (Number(value) || 0) * 100;
+  return `${percent.toFixed(6).replace(/\.?0+$/, '')}%`;
+}
+
 export function pad2(value: number): string {
   return value < 10 ? `0${value}` : `${value}`;
 }
@@ -122,7 +128,13 @@ export function formatFillTime(time: number): string {
 /** Size rounded to the market's lot precision, as Hyperliquid requires. */
 export function roundSize(size: number, szDecimals: number): number {
   const factor = Math.pow(10, szDecimals);
-  return Math.floor((Number(size) || 0) * factor) / factor;
+  const scaledSize = (Number(size) || 0) * factor;
+  // Multiplying an exact lot boundary can land a few ulps below its integer
+  // (for example 0.0255 * 1e4 -> 254.99999999999997). Compensate only for
+  // floating-point representation noise so genuine sub-lot values still floor.
+  const tolerance =
+    Number.EPSILON * Math.max(1, Math.abs(scaledSize)) * 4;
+  return Math.floor(scaledSize + tolerance) / factor;
 }
 
 /**
@@ -176,42 +188,72 @@ export function leverageTiers(maxLeverage: number): number[] {
 }
 
 /**
- * Direction-aware notional reported by Hyperliquid. If the form previews a
- * leverage that has not yet been signed on-chain, scale only the common opening
- * capacity and preserve the opposite-position reduction allowance.
+ * Free collateral Hyperliquid reports for this asset, per direction.
+ *
+ * This is a margin figure in USDC, not a notional: on an account with no
+ * position `availableToTrade` equals `withdrawable` exactly, whatever leverage
+ * is signed on-chain. It therefore must not be rescaled when the form previews
+ * a different leverage — leverage multiplies it into buying power instead (see
+ * `collateralToNotional`).
  */
 export function availableToTradeForSide(
   data: PerpsActiveAssetData,
-  side: PerpsOrderSide,
-  leverage = data?.leverage?.value
+  side: PerpsOrderSide
 ): number {
   if (!data) {
     return 0;
   }
-  const sideIndex = side === 'long' ? 0 : 1;
-  const commonCapacity = Math.min(...data.availableToTrade);
-  const directionalBonus = data.availableToTrade[sideIndex] - commonCapacity;
-  const currentLeverage = data.leverage.value || 1;
-  const previewLeverage = Math.max(1, leverage || currentLeverage);
-  return (
-    commonCapacity * (previewLeverage / currentLeverage) + directionalBonus
-  );
+  return data.availableToTrade[side === 'long' ? 0 : 1];
 }
 
-/** Apply both account capacity and the exchange's per-asset position cap. */
+/**
+ * Buying power of some collateral: leverage multiplies it.
+ *
+ * No taker fee is set aside. Hyperliquid's own form sizes 100% at exactly
+ * collateral × leverage — the exchange already keeps a buffer inside
+ * `availableToTrade`, so deducting a fee here would just undershoot its number.
+ */
+export function collateralToNotional(
+  collateral: number,
+  leverage: number
+): number {
+  return Math.max(0, collateral) * Math.max(1, leverage || 1);
+}
+
+/** Apply both account buying power and the exchange's per-asset size cap. */
 export function maxOrderNotionalForSide(
   data: PerpsActiveAssetData,
   side: PerpsOrderSide,
-  leverage = data?.leverage?.value,
+  leverage: number,
   executionPrice = data?.markPx
 ): number {
-  const available = availableToTradeForSide(data, side, leverage);
+  const notional = collateralToNotional(
+    availableToTradeForSide(data, side),
+    leverage
+  );
   if (!data) {
-    return available;
+    return notional;
   }
   const sideIndex = side === 'long' ? 0 : 1;
   const positionCap = data.maxTradeSzs[sideIndex] * executionPrice;
-  return positionCap > 0 ? Math.min(available, positionCap) : available;
+  return positionCap > 0 ? Math.min(notional, positionCap) : notional;
+}
+
+/**
+ * Notional trimmed to what the market's lot size can actually express: sizes
+ * floor to `szDecimals`, so the placeable notional is the floored size priced
+ * back out. Hyperliquid's percentage buttons land on this value rather than on
+ * the raw buying power — at 10x on 4.80 USDC that is 47.95, not 48.00.
+ */
+export function notionalAtLotSize(
+  notional: number,
+  price: number,
+  szDecimals: number
+): number {
+  if (!price || !Number.isFinite(price)) {
+    return notional;
+  }
+  return roundSize(notional / price, szDecimals) * price;
 }
 
 /**
@@ -225,14 +267,36 @@ export function previewClosePosition(params: {
   position: PerpsPosition;
   notional: number;
   szDecimals: number;
+  /** Hyperliquid's own taker fee rate. */
   feeRate: number;
+  /** NeoLine's builder fee rate; zero when no builder is configured. */
+  builderFeeRate?: number;
   fullClose: boolean;
-}): { size: number; releasedMargin: number; fee: number } {
-  const { position, notional, szDecimals, feeRate, fullClose } = params;
+}): {
+  size: number;
+  releasedMargin: number;
+  fee: number;
+  protocolFee: number;
+  builderFee: number;
+} {
+  const {
+    position,
+    notional,
+    szDecimals,
+    feeRate,
+    builderFeeRate = 0,
+    fullClose,
+  } = params;
   const positionSize = Math.abs(position?.szi || 0);
   const positionValue = Math.abs(position?.positionValue || 0);
   if (!positionSize || !positionValue) {
-    return { size: 0, releasedMargin: 0, fee: 0 };
+    return {
+      size: 0,
+      releasedMargin: 0,
+      fee: 0,
+      protocolFee: 0,
+      builderFee: 0,
+    };
   }
   const requestedFraction = fullClose
     ? 1
@@ -241,10 +305,15 @@ export function previewClosePosition(params: {
     ? positionSize
     : roundSize(positionSize * requestedFraction, szDecimals);
   const actualFraction = Math.min(1, size / positionSize);
+  const closedValue = positionValue * actualFraction;
+  const protocolFee = closedValue * feeRate;
+  const builderFee = closedValue * builderFeeRate;
   return {
     size,
     releasedMargin: Math.abs(position.marginUsed || 0) * actualFraction,
-    fee: positionValue * actualFraction * feeRate,
+    fee: protocolFee + builderFee,
+    protocolFee,
+    builderFee,
   };
 }
 
@@ -259,13 +328,15 @@ export function previewClosePosition(params: {
  */
 export function previewOrder(params: {
   market: PerpsMarket;
-  /** Expected entry price; limit orders must not use the current mark price. */
+  /** Expected entry price; limit orders must not use the current mid price. */
   executionPrice?: number;
   notional: number;
   leverage: number;
   isLong: boolean;
   /** Taker fee rate as a fraction, e.g. 0.00045 for 4.5bps. */
   feeRate: number;
+  /** NeoLine's builder fee rate; zero when no builder is configured. */
+  builderFeeRate?: number;
 }): PerpsOrderPreview {
   const {
     market,
@@ -274,8 +345,9 @@ export function previewOrder(params: {
     leverage,
     isLong,
     feeRate,
+    builderFeeRate = 0,
   } = params;
-  const price = executionPrice || market.markPx;
+  const price = executionPrice || market.midPx || market.markPx;
   const lev = Math.max(1, leverage);
   const margin = notional / lev;
   const size = price ? roundSize(notional / price, market.szDecimals) : 0;
@@ -290,11 +362,16 @@ export function previewOrder(params: {
       (side * (1 / lev - maintenanceFraction)) /
         (1 - side * maintenanceFraction));
 
+  const protocolFee = notional * feeRate;
+  const builderFee = notional * builderFeeRate;
+
   return {
     notional,
     margin,
     size,
     liquidationPx: liquidationPx > 0 ? liquidationPx : 0,
-    fee: notional * feeRate,
+    fee: protocolFee + builderFee,
+    protocolFee,
+    builderFee,
   };
 }

@@ -1,5 +1,6 @@
 <div class="perps-chart">
   <div #chartContainer class="chart-container"></div>
+  <span class="volume-unit">{{ "perpsChartVolumeUsd" | translate | async }}</span>
   <div class="chart-overlay" *ngIf="loading">
     <loading-dot></loading-dot>
   </div>
