@@ -34,6 +34,7 @@ interface NotificationContent {
   copied: string;
   exceedDepositLimit: string;
   exceedWithdrawalLimit: string;
+  exceedBridgeCapacity: string;
 }
 
 @Injectable()
@@ -73,6 +74,7 @@ export class NotificationService {
     copied: 'Copied!',
     exceedDepositLimit: 'Exceeding the maximum deposit limit',
     exceedWithdrawalLimit: 'Exceeding the maximum withdrawal limit',
+    exceedBridgeCapacity: 'Bridge capacity is not enough, remaining',
   };
   private CN: NotificationContent = {
     close: '关闭',
@@ -107,6 +109,7 @@ export class NotificationService {
     copied: '已复制！',
     exceedDepositLimit: '超过最大存入值',
     exceedWithdrawalLimit: '超过最大取出值',
+    exceedBridgeCapacity: '跨链桥容量不足，剩余可存入',
   };
   private JA: NotificationContent = {
     close: '閉じる',
@@ -143,6 +146,7 @@ export class NotificationService {
     copied: 'コピーしました！',
     exceedDepositLimit: '最大入金制限を超えています',
     exceedWithdrawalLimit: '最大出金制限を超えています',
+    exceedBridgeCapacity: 'ブリッジの残り容量が不足しています。残り',
   };
   private KO: NotificationContent = {
     close: '닫기',
@@ -178,6 +182,7 @@ export class NotificationService {
     copied: '복사됨!',
     exceedDepositLimit: '최대 입금 한도를 초과했습니다',
     exceedWithdrawalLimit: '최대 출금 한도를 초과했습니다',
+    exceedBridgeCapacity: '브리지 잔여 한도가 부족합니다. 잔여',
   };
   constructor(private settingState: SettingState) {
     this.content = this.EN;

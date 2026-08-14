@@ -15,6 +15,9 @@
     margin-top: 12px;
     color: var(--theme-color);
     font-size: 16px;
+    &.failed {
+      color: #fa5555;
+    }
   }
   .tip {
     margin-top: 8px;

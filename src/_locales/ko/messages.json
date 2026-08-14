@@ -1367,6 +1367,18 @@
   "Transferred": {
     "message": "전송됨"
   },
+  "DepositFailed": {
+    "message": "입금 실패"
+  },
+  "WithdrawFailed": {
+    "message": "출금 실패"
+  },
+  "DepositFailedTip": {
+    "message": "트랜잭션이 Neo N3에서 실패하여 {{symbol}}이 브릿지되지 않았습니다. 트랜잭션을 확인한 후 다시 시도해 주세요."
+  },
+  "WithdrawFailedTip": {
+    "message": "트랜잭션이 Neo X에서 실패하여 {{symbol}}이 브릿지되지 않았습니다. 트랜잭션을 확인한 후 다시 시도해 주세요."
+  },
   "SpendingCapRequestForYour": {
     "message": "내 계정에 대한 지출 한도 요청"
   },

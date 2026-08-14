@@ -50,6 +50,7 @@ import {
   PopupSelectAddressDialogComponent,
 } from '../_dialogs';
 import { BridgeParams } from '../_lib/bridge';
+import { hasEnoughGasForBridgeFees } from './bridge-fee';
 
 @Component({
   templateUrl: 'bridge.component.html',
@@ -146,7 +147,11 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
           this.sessionFirstTx = tx[0];
           if (tx[0].type === 'bridge') {
             this.sessionTx = tx[0];
-            if (!tx[0].sourceTxID || !tx[0].targetTxID) {
+            // A failed source tx has no target tx to wait for.
+            if (
+              !tx[0].sourceTxFailed &&
+              (!tx[0].sourceTxID || !tx[0].targetTxID)
+            ) {
               if (tx[0].sourceChainType === 'Neo3') {
                 this.waitNeo3SourceTxComplete(tx[0].txId);
               }
@@ -303,7 +308,9 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       this.bridgeAmount = this.bridgeAsset.balance;
     } else if (this.chainType === 'Neo3') {
       const getAllAmount = () => {
+        // depositNative charges maxFee on top of amount, so reserve it as well.
         const tAmount = new BigNumber(this.bridgeAsset.balance)
+          .minus(this.bridgeInfo?.bridgeFee || 0)
           .minus(this.systemFee)
           .minus(this.networkFee);
         if (tAmount.comparedTo(0) > 0) {
@@ -429,7 +436,35 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (!this.hasEnoughGasBeforeFeeEstimation()) {
+      this.globalService.snackBarTip(
+        `${this.notification.content.InsufficientGas}`
+      );
+      return;
+    }
+
     this.loading = true;
+    if (
+      this.chainType === 'Neo3' &&
+      this.bridgeAsset.asset_id === GAS3_CONTRACT
+    ) {
+      // The native bridge holds a cap on the total deposited amount; going over
+      // it aborts the deposit on chain. Read it fresh, other deposits move it.
+      const remaining = await this.bridgeService
+        .getNativeDepositCapacity(this.currentBridgeNetwork)
+        .toPromise();
+      if (
+        remaining !== undefined &&
+        new BigNumber(this.bridgeAmount).comparedTo(remaining) > 0
+      ) {
+        this.globalService.snackBarTip(
+          'exceedBridgeCapacity',
+          `${remaining} ${this.bridgeAsset.symbol}`
+        );
+        this.loading = false;
+        return;
+      }
+    }
     if (this.chainType === 'Neo3') {
       const { invokeArgs, signers } = this.bridgeService.getNeoN3TxParams({
         bridgeAsset: this.bridgeAsset,
@@ -458,6 +493,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
             if (this.bridgeAsset.asset_id === GAS3_CONTRACT) {
               const tAmount = new BigNumber(this.bridgeAsset.balance)
                 .minus(this.bridgeAmount)
+                .minus(this.bridgeInfo.bridgeFee)
                 .minus(this.systemFee)
                 .minus(this.networkFee);
               if (tAmount.comparedTo(0) < 0) {
@@ -468,10 +504,15 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
                 this.showConfirmPage = true;
               }
             } else {
-              const tAmount = new BigNumber(this.gasBalance)
-                .minus(this.systemFee)
-                .minus(this.networkFee);
-              if (tAmount.comparedTo(0) < 0) {
+              // depositToken pays maxFee in GAS as well.
+              if (
+                !hasEnoughGasForBridgeFees(
+                  this.gasBalance,
+                  this.bridgeInfo.bridgeFee,
+                  this.systemFee,
+                  this.networkFee
+                )
+              ) {
                 this.globalService.snackBarTip(
                   `${this.notification.content.InsufficientGas}`
                 );
@@ -521,10 +562,13 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
           this.showConfirmPage = true;
         }
       } else {
-        const tAmount = new BigNumber(this.gasBalance)
-          .minus(this.bridgeInfo.bridgeFee)
-          .minus(this.neoXFeeInfo.estimateGas);
-        if (tAmount.comparedTo(0) < 0) {
+        if (
+          !hasEnoughGasForBridgeFees(
+            this.gasBalance,
+            this.bridgeInfo.bridgeFee,
+            this.neoXFeeInfo.estimateGas
+          )
+        ) {
           this.globalService.snackBarTip(
             `${this.notification.content.InsufficientGas}`
           );
@@ -618,6 +662,26 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     this.chrome.setStorage(STORAGE_NAME.bridgeTransaction, [tx]);
   }
 
+  private markSourceTxComplete(hash: string) {
+    this.sessionTx.sourceTxID = hash;
+    this.updateSessionBridgeTx(this.sessionTx);
+    if (this.bridgeProgressDialogRef?.componentInstance) {
+      this.bridgeProgressDialogRef.componentInstance.data.sourceTxID = hash;
+    }
+  }
+
+  private markSourceTxFailed(hash: string) {
+    this.getSourceTxReceiptInterval?.unsubscribe();
+    this.getTargetTxReceiptInterval?.unsubscribe();
+    this.sessionTx.sourceTxID = hash;
+    this.sessionTx.sourceTxFailed = true;
+    this.updateSessionBridgeTx(this.sessionTx);
+    if (this.bridgeProgressDialogRef?.componentInstance) {
+      this.bridgeProgressDialogRef.componentInstance.data.sourceTxID = hash;
+      this.bridgeProgressDialogRef.componentInstance.data.sourceTxFailed = true;
+    }
+  }
+
   //#region neo3
   private waitNeo3SourceTxComplete(hash: string) {
     this.getSourceTxReceiptInterval?.unsubscribe();
@@ -625,26 +689,32 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       this.neoTxService
         .getApplicationLog(hash, this.sessionTx.sourceRpcUrl)
         .subscribe((res) => {
-          this.sessionTx.sourceTxID = hash;
-          this.updateSessionBridgeTx(this.sessionTx);
-          if (this.bridgeProgressDialogRef?.componentInstance) {
-            this.bridgeProgressDialogRef.componentInstance.data.sourceTxID =
-              hash;
-          }
           this.getSourceTxReceiptInterval.unsubscribe();
-          const notifications = res.executions[0].notifications;
+          const execution = res?.executions?.[0];
+          // FAULT means the deposit never happened, so no tx will show up on NeoX.
+          if (execution?.vmstate !== 'HALT') {
+            this.markSourceTxFailed(hash);
+            return;
+          }
+          const notifications = execution.notifications || [];
           let depositId;
           if (this.sessionTx.asset.asset_id === GAS3_CONTRACT) {
             const notifi = notifications.find(
               (item) => item.eventname === 'NativeDeposit'
             );
-            depositId = notifi.state.value[0].value;
+            depositId = notifi?.state.value[0].value;
           } else {
             const notifi = notifications.find(
               (item) => item.eventname === 'TokenDeposit'
             );
-            depositId = notifi.state.value[2].value;
+            depositId = notifi?.state.value[2].value;
           }
+          // No deposit event means the bridge contract never accepted the deposit.
+          if (depositId === undefined) {
+            this.markSourceTxFailed(hash);
+            return;
+          }
+          this.markSourceTxComplete(hash);
           this.waitNeo3TargetTxComplete(depositId);
         });
     });
@@ -678,20 +748,24 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         .getTransactionReceipt(hash, this.sessionTx.sourceRpcUrl)
         .then((res) => {
           if (res) {
-            this.sessionTx.sourceTxID = hash;
-            this.updateSessionBridgeTx(this.sessionTx);
-            if (this.bridgeProgressDialogRef?.componentInstance) {
-              this.bridgeProgressDialogRef.componentInstance.data.sourceTxID =
-                hash;
-            }
             this.getSourceTxReceiptInterval.unsubscribe();
+            // status 0 means the withdrawal reverted, so no tx will show up on Neo3.
+            if (res.status === 0) {
+              this.markSourceTxFailed(hash);
+              return;
+            }
             const nonce = this.bridgeService.getNonceFromTransactionReceipt(
               res,
               this.sessionTx.asset
             );
-            if (nonce) {
-              this.waitNeoXTargetTxComplete(nonce);
+            // No withdrawal event means the bridge contract never took the funds.
+            // nonce 0 is valid, so only a null/undefined nonce counts as failure.
+            if (nonce === null || nonce === undefined) {
+              this.markSourceTxFailed(hash);
+              return;
             }
+            this.markSourceTxComplete(hash);
+            this.waitNeoXTargetTxComplete(nonce);
           }
         });
     });
@@ -728,18 +802,64 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     this.loading = false;
     this.globalService.snackBarTip('txFailed', getErrorMessage(error));
   }
+
+  /**
+   * Reject balances that cannot cover the fees already known locally before
+   * invokescript/estimateGas is called. The full fee is checked again after the
+   * RPC returns the system and network fee estimates.
+   */
+  private hasEnoughGasBeforeFeeEstimation(): boolean {
+    if (this.chainType === 'Neo3') {
+      const availableGas =
+        this.bridgeAsset.asset_id === GAS3_CONTRACT
+          ? new BigNumber(this.bridgeAsset.balance)
+              .minus(this.bridgeAmount)
+              .toFixed()
+          : this.gasBalance;
+      return hasEnoughGasForBridgeFees(
+        availableGas,
+        this.bridgeInfo.bridgeFee,
+        this.priorityFee
+      );
+    }
+
+    if (this.bridgeAsset.asset_id !== ETH_SOURCE_ASSET_HASH) {
+      return hasEnoughGasForBridgeFees(
+        this.gasBalance,
+        this.bridgeInfo.bridgeFee
+      );
+    }
+
+    return true;
+  }
+
   private async getBridgeAssetBalance() {
-    const balance = await this.neoAssetService.getAddressAssetBalance(
-      this.currentWallet.accounts[0].address,
-      this.bridgeAsset.asset_id,
-      this.chainType
-    );
+    const address = this.currentWallet.accounts[0].address;
+    const gasAssetId =
+      this.chainType === 'Neo3' ? GAS3_CONTRACT : ETH_SOURCE_ASSET_HASH;
+    const isGasAsset = this.bridgeAsset.asset_id === gasAssetId;
+    const [balance, gasBalance] = await Promise.all([
+      this.neoAssetService.getAddressAssetBalance(
+        address,
+        this.bridgeAsset.asset_id,
+        this.chainType
+      ),
+      isGasAsset
+        ? Promise.resolve(undefined)
+        : this.neoAssetService.getAddressAssetBalance(
+            address,
+            gasAssetId,
+            this.chainType
+          ),
+    ]);
     this.bridgeAsset.balance = new BigNumber(balance)
       .shiftedBy(-this.bridgeAsset.decimals)
       .toFixed();
-    if (this.bridgeAsset.symbol === 'GAS') {
-      this.gasBalance = this.bridgeAsset.balance;
-    }
+    this.gasBalance = isGasAsset
+      ? this.bridgeAsset.balance
+      : new BigNumber(gasBalance)
+          .shiftedBy(this.chainType === 'NeoX' ? -18 : -8)
+          .toFixed();
   }
   //#endregion
 

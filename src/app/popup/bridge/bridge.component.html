@@ -163,11 +163,16 @@
           (click)="openTxModal()"
         ></mat-spinner>
         <span
-          *ngIf="sessionTx.sourceTxID"
+          *ngIf="sessionTx.sourceTxID && !sessionTx.sourceTxFailed"
           class="checked-icon"
           (click)="openTxModal()"
         ></span>
-        <span class="name">
+        <span
+          *ngIf="sessionTx.sourceTxFailed"
+          class="failed-icon"
+          (click)="openTxModal()"
+        ></span>
+        <span class="name" *ngIf="!sessionTx.sourceTxFailed">
           {{
             (sessionTx.sourceChainType === "Neo3"
               ? !sessionTx.sourceTxID
@@ -181,13 +186,23 @@
               | async
           }}
         </span>
+        <span class="name" *ngIf="sessionTx.sourceTxFailed">
+          {{
+            (sessionTx.sourceChainType === "Neo3"
+              ? "DepositFailed"
+              : "WithdrawFailed"
+            )
+              | translate
+              | async
+          }}
+        </span>
       </div>
       <span *ngIf="sessionTx.sourceTxID" (click)="toViewTx()" class="tx">
         {{ "ViewTransaction" | translate | async }}
         <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
       </span>
     </div>
-    <div class="item" *ngIf="sessionTx.sourceTxID">
+    <div class="item" *ngIf="sessionTx.sourceTxID && !sessionTx.sourceTxFailed">
       <div class="left">
         <mat-spinner
           *ngIf="!sessionTx.targetTxID"

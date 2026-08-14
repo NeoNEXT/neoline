@@ -1367,6 +1367,18 @@
   "Transferred": {
     "message": "Transferred"
   },
+  "DepositFailed": {
+    "message": "Deposit failed"
+  },
+  "WithdrawFailed": {
+    "message": "Withdrawal failed"
+  },
+  "DepositFailedTip": {
+    "message": "The transaction failed on Neo N3, no {{symbol}} was bridged. Please check the transaction and try again."
+  },
+  "WithdrawFailedTip": {
+    "message": "The transaction failed on Neo X, no {{symbol}} was bridged. Please check the transaction and try again."
+  },
   "SpendingCapRequestForYour": {
     "message": "Spending cap request for your"
   },

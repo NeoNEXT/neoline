@@ -234,6 +234,40 @@ export class BridgeService {
     return from(this.getTokenBridgeProgress(network, asset));
   }
 
+  /**
+   * Remaining native (GAS) deposit capacity in GAS. depositNative aborts with
+   * "Max total deposited native tokens exceeded" once a deposit would push the
+   * bridge past maxTotalDepositedNative. Emits undefined when the capacity
+   * can't be read, so callers can skip the check instead of blocking a deposit.
+   * Only the native bridge has this cap; tokens have no equivalent.
+   */
+  getNativeDepositCapacity(network: BridgeNetwork): Observable<string> {
+    const data = {
+      jsonrpc: '2.0',
+      method: 'invokefunction',
+      params: [BridgeParams[network].n3BridgeContract, 'getNativeBridge'],
+      id: 1,
+    };
+    const neo3RPC =
+      network === BridgeNetwork.MainNet
+        ? N3MainnetNetwork.rpcUrl
+        : N3TestnetNetwork.rpcUrl;
+    return this.http.rpcPost(neo3RPC, data).pipe(
+      map((res: any) => {
+        if (res.state !== 'HALT') return undefined;
+        const value = res.stack?.[0]?.value;
+        const deposited = value?.[1];
+        const max = value?.[4]?.value?.[4];
+        if (!deposited || !max) return undefined;
+        const remaining = new BigNumber(handleNeo3StackNumber(max))
+          .minus(handleNeo3StackNumber(deposited))
+          .shiftedBy(-8);
+        return remaining.isNegative() ? '0' : remaining.toFixed();
+      }),
+      catchError(() => of(undefined))
+    );
+  }
+
   private getNativeBridgeProgress(network: BridgeNetwork) {
     const data = {
       jsonrpc: '2.0',

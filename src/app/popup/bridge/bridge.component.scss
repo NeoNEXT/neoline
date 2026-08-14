@@ -228,6 +228,14 @@
         background-image: url("/assets/images/third-party/auth-selected.svg");
       }
     }
+    .failed-icon {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      background: url("/assets/images/common/warning-red.svg") center center
+        no-repeat;
+    }
   }
   .tx {
     text-decoration: underline;

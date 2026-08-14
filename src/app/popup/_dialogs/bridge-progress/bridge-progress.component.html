@@ -7,7 +7,9 @@
     alt=""
   />
 
-  <ng-container *ngIf="!data.sourceTxID || !data.targetTxID">
+  <ng-container
+    *ngIf="!data.sourceTxFailed && (!data.sourceTxID || !data.targetTxID)"
+  >
     <img src="/assets/images/bridge/progress.svg" alt="" />
     <p class="title">
       {{
@@ -24,7 +26,27 @@
       }}
     </p>
   </ng-container>
-  <ng-container *ngIf="data.sourceTxID && data.targetTxID">
+  <ng-container *ngIf="data.sourceTxFailed">
+    <img src="/assets/images/bridge/failed.svg" alt="" />
+    <p class="title failed">
+      {{
+        (data.sourceChainType === "Neo3" ? "DepositFailed" : "WithdrawFailed")
+          | translate
+          | async
+      }}
+    </p>
+    <p class="tip">
+      {{
+        (data.sourceChainType === "Neo3"
+          ? "DepositFailedTip"
+          : "WithdrawFailedTip"
+        )
+          | translate : { symbol: data.asset.symbol }
+          | async
+      }}
+    </p>
+  </ng-container>
+  <ng-container *ngIf="!data.sourceTxFailed && data.sourceTxID && data.targetTxID">
     <img src="/assets/images/transfer/success.svg" alt="" />
     <p class="title">
       {{ "Completed" | translate | async }}
@@ -46,11 +68,16 @@
           diameter="17"
         ></mat-spinner>
         <img
-          *ngIf="data.sourceTxID"
+          *ngIf="data.sourceTxID && !data.sourceTxFailed"
           src="/assets/images/login/checked.svg"
           alt=""
         />
-        <span class="name">
+        <img
+          *ngIf="data.sourceTxFailed"
+          src="assets/images/common/warning-red.svg"
+          alt=""
+        />
+        <span class="name" *ngIf="!data.sourceTxFailed">
           {{
             (data.sourceChainType === "Neo3"
               ? !data.sourceTxID
@@ -59,6 +86,16 @@
               : !data.sourceTxID
               ? "Withdrawing"
               : "Withdrawn"
+            )
+              | translate
+              | async
+          }}
+        </span>
+        <span class="name" *ngIf="data.sourceTxFailed">
+          {{
+            (data.sourceChainType === "Neo3"
+              ? "DepositFailed"
+              : "WithdrawFailed"
             )
               | translate
               | async
@@ -78,7 +115,7 @@
         </span>
       </p>
     </div>
-    <div class="item" *ngIf="data.sourceTxID">
+    <div class="item" *ngIf="data.sourceTxID && !data.sourceTxFailed">
       <p class="item-name">
         <mat-spinner
           *ngIf="!data.targetTxID"

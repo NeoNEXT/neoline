@@ -1367,6 +1367,18 @@
   "Transferred": {
     "message": "転送済み"
   },
+  "DepositFailed": {
+    "message": "預入失敗"
+  },
+  "WithdrawFailed": {
+    "message": "引出失敗"
+  },
+  "DepositFailedTip": {
+    "message": "取引がNeo N3で失敗したため、{{symbol}}はブリッジされていません。取引をご確認のうえ、再度お試しください。"
+  },
+  "WithdrawFailedTip": {
+    "message": "取引がNeo Xで失敗したため、{{symbol}}はブリッジされていません。取引をご確認のうえ、再度お試しください。"
+  },
   "SpendingCapRequestForYour": {
     "message": "の支出上限リクエスト"
   },

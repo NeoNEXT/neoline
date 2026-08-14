@@ -19,6 +19,9 @@ export interface BridgeTransactionOnBridge extends BaseTransactionOnBridge {
   type: 'bridge';
   sourceTxID?: string;
   targetTxID?: string;
+  // Source tx was confirmed but reverted (Neo3 FAULT / NeoX status 0),
+  // so nothing will ever arrive on the target chain.
+  sourceTxFailed?: boolean;
   sourceChainType: ChainType;
   targetChainType: ChainType;
   sourceExplorer: string;

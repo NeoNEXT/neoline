@@ -1367,6 +1367,18 @@
   "Transferred": {
     "message": "已转入"
   },
+  "DepositFailed": {
+    "message": "存入失败"
+  },
+  "WithdrawFailed": {
+    "message": "提取失败"
+  },
+  "DepositFailedTip": {
+    "message": "交易在 Neo N3 上执行失败，{{symbol}} 未被跨链转移。请查看交易详情后重试。"
+  },
+  "WithdrawFailedTip": {
+    "message": "交易在 Neo X 上执行失败，{{symbol}} 未被跨链转移。请查看交易详情后重试。"
+  },
   "SpendingCapRequestForYour": {
     "message": "的支出上限请求"
   },
