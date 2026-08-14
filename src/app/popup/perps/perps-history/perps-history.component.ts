@@ -22,6 +22,7 @@ import {
   formatFillTime,
   formatPrice,
   formatSignedUsd,
+  formatSize,
 } from '../perps.util';
 
 type PerpsActivityTab =
@@ -71,8 +72,8 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
   /** Per-tab spinner for the two lazily fetched tabs. */
   tabLoading = false;
   loadError = false;
-  pendingCancelOrderId: number;
-  cancelingOrderId: number;
+  pendingCancelOrderId: string;
+  cancelingOrderId: string;
 
   formatPrice = formatPrice;
   formatSignedUsd = formatSignedUsd;
@@ -320,6 +321,15 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
 
   time(timestamp: number): string {
     return formatFillTime(timestamp);
+  }
+
+  /**
+   * An order or fill size at its market's lot precision. History spans markets
+   * this wallet may no longer hold, so an unknown coin sizes by magnitude.
+   */
+  size(value: string | number, coin: string): string {
+    const market = this.markets.find((item) => item.coin === coin);
+    return formatSize(value, market?.szDecimals);
   }
 
   /** i18n key for an order state, or '' when it needs the raw value. */

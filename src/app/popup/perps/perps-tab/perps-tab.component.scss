@@ -227,7 +227,7 @@
   }
 }
 
-.market-filter {
+.market-controls {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -363,4 +363,154 @@
   font-family: NeverMind-DemiBold;
   font-size: 15px;
   flex-shrink: 0;
+}
+
+// 非实时:保留最后值,但让每个报价读起来都不像实时数据
+.stale-banner {
+  margin: 8px 16px 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--tip-bg, rgba(255, 168, 0, 0.12));
+  color: var(--tip-color);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.perps-tab.feed-stale {
+  .card-value .value,
+  .position-pnl,
+  .market-price .price,
+  .market-price .change {
+    opacity: 0.45;
+  }
+}
+
+// 保证金率来自哪个池:聚合口径下这个标注不是装饰,是这个数字的含义
+.ratio-dex {
+  margin-left: 4px;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--tip-bg, rgba(0, 0, 0, 0.06));
+  color: var(--tip-color);
+  font-size: 10px;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+// HIP-3 市场靠徽标区分,而不是把 dex 前缀塞进名字里
+.dex-badge {
+  margin-left: 4px;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--tip-bg, rgba(0, 0, 0, 0.06));
+  color: var(--tip-color);
+  font-size: 10px;
+  line-height: 14px;
+  text-transform: uppercase;
+}
+
+// 标记价不是可成交价,行内必须说清楚它是什么
+.mark-tag {
+  margin-left: 4px;
+  color: var(--tip-color);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+// 排序基准:与筛选是两回事,所以样式上也不做成互斥的分类 chip
+.sort-chip {
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: var(--tip-bg, rgba(0, 0, 0, 0.04));
+  color: var(--tip-color);
+  font-size: 12px;
+  line-height: 16px;
+  cursor: pointer;
+
+  &.active {
+    background: var(--title-color);
+    color: #fff;
+  }
+
+  .arrow {
+    margin-left: 2px;
+  }
+}
+
+// 置顶区与排序区之间要有明确分隔,否则置顶行看起来像排序错了
+.pinned-divider {
+  height: 8px;
+  margin: 0 16px;
+  border-top: 1px solid var(--line-color, rgba(0, 0, 0, 0.06));
+}
+
+.load-more {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 8px 16px 16px;
+  padding: 8px 0;
+  border: 1px solid var(--line-color, rgba(0, 0, 0, 0.08));
+  border-radius: 8px;
+  background: transparent;
+  color: var(--tip-color);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+// 骨架行:首屏给出列表的形状,而不是一片空白加转圈
+.market-skeleton {
+  padding: 0 16px;
+
+  .skeleton-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 0;
+  }
+
+  .skeleton-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+  }
+
+  .skeleton-lines {
+    flex: 1;
+  }
+
+  .skeleton-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .skeleton-logo,
+  i {
+    display: block;
+    background: var(--tip-bg, rgba(0, 0, 0, 0.06));
+    animation: perps-skeleton 1.4s ease-in-out infinite;
+  }
+
+  i {
+    height: 10px;
+    border-radius: 5px;
+    margin: 3px 0;
+
+    &.wide {
+      width: 72px;
+    }
+    &.narrow {
+      width: 48px;
+    }
+  }
+}
+
+@keyframes perps-skeleton {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
 }

@@ -1,4 +1,4 @@
-import { encode } from '@msgpack/msgpack';
+import { Encoder } from '@msgpack/msgpack';
 import { ethers } from 'ethers';
 
 import { PerpsSignature } from '@popup/_lib/perps';
@@ -76,6 +76,54 @@ function concatBytes(...parts: Uint8Array[]): Uint8Array {
 }
 
 /**
+ * @msgpack/msgpack 2.x cannot encode bigint. Patch only its integer dispatch so
+ * protocol uint64 values survive; every other value continues through the
+ * library's normal encoder.
+ *
+ * msgpack integers must use the narrowest format that holds the value — that is
+ * what the official Python SDK emits and what the exchange re-encodes before
+ * checking the signature, so widening an order id to 0xcf would change the
+ * action hash and the recovered signer with it. Anything a double can hold
+ * exactly therefore goes back through the library's own minimal encoder; only
+ * values above 2^53 need the explicit uint64, which is already their narrowest
+ * form.
+ */
+const MAX_SAFE_BIGINT = BigInt(Number.MAX_SAFE_INTEGER);
+const MIN_SAFE_BIGINT = BigInt(Number.MIN_SAFE_INTEGER);
+const MIN_INT64 = -(1n << 63n);
+const MAX_UINT64 = (1n << 64n) - 1n;
+
+function encodeHyperliquidAction(action: any): Uint8Array {
+  const encoder = new Encoder() as any;
+  const encodeNormally = encoder.doEncode.bind(encoder);
+  encoder.doEncode = (object: unknown, depth: number): void => {
+    if (typeof object === 'bigint') {
+      if (object < MIN_INT64 || object > MAX_UINT64) {
+        throw new RangeError('Hyperliquid integer is out of range');
+      }
+      if (object >= MIN_SAFE_BIGINT && object <= MAX_SAFE_BIGINT) {
+        encodeNormally(Number(object), depth);
+        return;
+      }
+      if (object < 0n) {
+        encoder.writeU8(0xd3);
+        encoder.ensureBufferSizeToWrite(8);
+        encoder.view.setBigInt64(encoder.pos, object);
+        encoder.pos += 8;
+        return;
+      }
+      encoder.writeU8(0xcf);
+      encoder.ensureBufferSizeToWrite(8);
+      encoder.view.setBigUint64(encoder.pos, object);
+      encoder.pos += 8;
+      return;
+    }
+    encodeNormally(object, depth);
+  };
+  return encoder.encode(action);
+}
+
+/**
  * Hash an L1 action exactly as the official Python SDK does:
  * msgpack(action) || uint64(nonce) || no-vault marker.
  */
@@ -84,7 +132,11 @@ export function hyperliquidActionHash(
   nonce: number
 ): string {
   return ethers.keccak256(
-    concatBytes(encode(action), nonceBytes(nonce), new Uint8Array([0]))
+    concatBytes(
+      encodeHyperliquidAction(action),
+      nonceBytes(nonce),
+      new Uint8Array([0])
+    )
   );
 }
 

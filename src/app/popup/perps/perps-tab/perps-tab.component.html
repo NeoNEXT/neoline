@@ -1,4 +1,9 @@
-<div class="perps-tab">
+<div class="perps-tab" [class.feed-stale]="feedStale">
+  <!-- 行情连接不健康:保留最后值,但明确标记为非实时 -->
+  <div class="stale-banner" *ngIf="feedStale">
+    {{ "perpsFeedStale" | translate | async }}
+    <span *ngIf="lastUpdatedLabel">· {{ lastUpdatedLabel }}</span>
+  </div>
   <!-- 合约账户卡：净值 + 保证金 + 资金操作 -->
   <div class="account-card">
     <p class="account-warning" *ngIf="unsupportedAccountMode">
@@ -7,11 +12,15 @@
     <p class="account-warning" *ngIf="accountLoadError">
       {{ "perpsLoadFailed" | translate | async }}
     </p>
+    <p class="account-warning" *ngIf="aggregateIncomplete">
+      {{ "perpsAggregateIncomplete" | translate | async }}
+    </p>
     <div class="card-top">
       <span class="label">{{ "perpsAccountValue" | translate | async }}</span>
-      <span class="label" *ngIf="accountEquity && marginRatio !== null">
+      <span class="label" *ngIf="hasEquity && marginRatioExact !== null">
         {{ "perpsMarginRatio" | translate | async }}
-        <span class="ratio">{{ marginRatio | number: "1.0-2" }}%</span>
+        <span class="ratio">{{ marginRatioExact | number: "1.0-2" }}%</span>
+        <span class="ratio-dex" *ngIf="marginRatioDex">{{ marginRatioDex }}</span>
       </span>
     </div>
     <!--
@@ -21,27 +30,27 @@
       below) so an untransferable balance never understates the margin ratio.
     -->
     <div class="card-value" *ngIf="!unsupportedAccountMode && !accountLoadError">
-      <span class="value">{{ formatUsd(accountEquity) }}</span>
+      <span class="value">{{ formatUsd(accountEquityExact) }}</span>
     </div>
     <div class="card-margin" *ngIf="!unsupportedAccountMode && !accountLoadError">
       {{ "perpsAvailableMargin" | translate | async }}
-      {{ formatUsd(availableMargin) }}
+      {{ formatUsd(availableMarginExact) }}
       ·
       {{ "perpsUsedMargin" | translate | async }}
-      {{ formatUsd(usedMargin) }}
+      {{ formatUsd(usedMarginExact) }}
     </div>
-    <div class="card-spot" *ngIf="separateSpotUsdc">
+    <div class="card-spot" *ngIf="hasSeparateSpotUsdc">
       {{ "perpsSpotSeparate" | translate | async }}
-      {{ formatUsd(separateSpotUsdc) }}
+      {{ formatUsd(separateSpotUsdcExact) }}
       <button (click)="toFunding('transfer')">
         {{ "perpsTransferToPerps" | translate | async }}
       </button>
     </div>
     <div class="card-actions">
-      <button class="primary" [disabled]="unsupportedAccountMode" (click)="toFunding('deposit')">
+      <button class="primary" [disabled]="globalActionsDisabled" (click)="toFunding('deposit')">
         {{ "perpsDeposit" | translate | async }}
       </button>
-      <button class="ghost" [disabled]="unsupportedAccountMode" (click)="toFunding('withdraw')">
+      <button class="ghost" [disabled]="globalActionsDisabled" (click)="toFunding('withdraw')">
         {{ "perpsWithdraw" | translate | async }}
       </button>
       <button class="plain" (click)="toHistory()">
@@ -66,17 +75,18 @@
       >
         <div class="position-head">
           <img
-            *ngIf="coinLogo(position.coin)"
-            [src]="coinLogo(position.coin)"
+            *ngIf="coinLogo(position.symbol)"
+            [src]="coinLogo(position.symbol)"
             alt=""
           />
           <span
             class="letter-logo"
-            *ngIf="!coinLogo(position.coin)"
-            [style.background]="coinColor(position.coin)"
-            >{{ position.coin.charAt(0) }}</span
+            *ngIf="!coinLogo(position.symbol)"
+            [style.background]="coinColor(position.symbol)"
+            >{{ position.symbol.charAt(0) }}</span
           >
-          <span class="coin">{{ position.coin }}</span>
+          <span class="coin">{{ position.symbol }}</span>
+          <span class="dex-badge" *ngIf="position.dex">{{ position.dex }}</span>
           <span class="side-chip" [class.short]="!position.isLong">
             {{
               (position.isLong ? "perpsLong" : "perpsShort") | translate | async
@@ -84,20 +94,26 @@
             {{ position.leverage }}x
           </span>
         </div>
-        <div class="position-pnl" [class.negative]="position.unrealizedPnl < 0">
-          {{ formatSignedUsd(position.unrealizedPnl) }}
+        <div class="position-pnl" [class.negative]="isNegative(position.unrealizedPnlExact)">
+          {{ formatSignedUsd(position.unrealizedPnlExact) }}
           <span class="percent">{{
-            formatSignedPercent(position.returnOnEquity * 100, 1)
+            formatSignedPercent(returnOnEquityPercent(position), 1)
           }}</span>
         </div>
         <div class="position-meta">
-          {{ position.szi > 0 ? position.szi : -position.szi }}
-          {{ position.coin }} · {{ "perpsEntry" | translate | async }}
-          {{ formatPrice(position.entryPx) }}
-          <ng-container *ngIf="position.liquidationPx">
-            · {{ "perpsLiq" | translate | async }}
-            {{ formatPrice(position.liquidationPx) }}
-          </ng-container>
+          {{ positionSize(position) }}
+          {{ position.symbol }} · {{ "perpsEntry" | translate | async }}
+          {{ formatPrice(position.entryPxExact, marketFor(position)?.szDecimals) }}
+          · {{ "perpsLiq" | translate | async }}
+          <ng-container *ngIf="position.liquidationPxExact">{{
+            formatPrice(
+              position.liquidationPxExact,
+              marketFor(position)?.szDecimals
+            )
+          }}</ng-container>
+          <ng-container *ngIf="!position.liquidationPxExact">{{
+            "perpsNoLiquidationPrice" | translate | async
+          }}</ng-container>
         </div>
         <div class="position-actions">
           <button class="plain" (click)="addToPosition(position); $event.stopPropagation()">
@@ -112,21 +128,24 @@
   </ng-container>
 
   <!-- 空状态：引导入金（净值含现货，真正无资金时才提示） -->
-  <div class="fund-prompt" *ngIf="!hasPositions && !accountEquity">
+  <div class="fund-prompt" *ngIf="!hasPositions && !hasEquity">
     <p>{{ "perpsFundPrompt" | translate | async }}</p>
   </div>
 
-  <!-- 市场筛选 chips -->
-  <div class="market-filter">
+  <!-- 排序基准 + 搜索。这里没有预设筛选：筛选和排序是两个维度，
+       把它们塞进同一组互斥 chip 会让「只看 Neo 且按涨幅排」无法表达。 -->
+  <div class="market-controls">
     <ng-container *ngIf="!searching">
       <span
-        class="chip"
-        *ngFor="let item of filters"
-        [class.active]="filter === item.key"
-        [class.neo]="item.key === 'neo'"
-        (click)="setFilter(item.key)"
+        class="sort-chip"
+        *ngFor="let item of sortKeys"
+        [class.active]="sortKey === item.key"
+        (click)="setSortKey(item.key)"
       >
         {{ item.label | translate | async }}
+        <span class="arrow" *ngIf="sortKey === item.key">{{
+          sortDirection === "desc" ? "↓" : "↑"
+        }}</span>
       </span>
     </ng-container>
     <input
@@ -134,7 +153,7 @@
       class="search-input"
       type="text"
       [(ngModel)]="keyword"
-      (ngModelChange)="applyFilter()"
+      (ngModelChange)="onKeywordChange()"
       [placeholder]="'perpsSearchMarket' | translate | async"
       autofocus
     />
@@ -147,37 +166,72 @@
     />
   </div>
 
-  <!-- 市场列表 -->
-  <div class="market-loading" *ngIf="loading">
-    <loading-dot></loading-dot>
-  </div>
-  <div
-    class="market-row"
-    *ngFor="let market of visibleMarkets"
-    (click)="toMarket(market.coin)"
-  >
-    <img *ngIf="coinLogo(market.coin)" [src]="coinLogo(market.coin)" alt="" />
-    <span
-      class="letter-logo"
-      *ngIf="!coinLogo(market.coin)"
-      [style.background]="coinColor(market.coin)"
-      >{{ market.coin.charAt(0) }}</span
-    >
-    <div class="market-name">
-      <div class="coin">
-        {{ market.coin }} <span class="leverage">{{ market.maxLeverage }}x</span>
-      </div>
-      <div class="volume">{{ formatCompactUsd(market.dayVolume) }}</div>
-    </div>
-    <div class="market-price">
-      <div class="price">${{ formatPrice(market.midPx) }}</div>
-      <div class="change" [class.negative]="market.changePercent < 0">
-        {{ formatSignedPercent(market.changePercent) }}
-      </div>
+  <!-- 加载中：骨架行占位，而不是把整片区域留空 -->
+  <div class="market-skeleton" *ngIf="loading">
+    <div class="skeleton-row" *ngFor="let row of skeletonRows">
+      <span class="skeleton-logo"></span>
+      <span class="skeleton-lines">
+        <i class="wide"></i>
+        <i class="narrow"></i>
+      </span>
+      <span class="skeleton-price">
+        <i class="wide"></i>
+        <i class="narrow"></i>
+      </span>
     </div>
   </div>
 
-  <p class="market-empty" *ngIf="!loading && visibleMarkets.length === 0">
+  <!-- 置顶区：收藏与 Neo 生态，不参与排序，与下方明确分隔 -->
+  <ng-container *ngIf="!loading && pinnedMarkets.length > 0">
+    <ng-container
+      *ngFor="let market of pinnedMarkets; trackBy: trackByKey"
+      [ngTemplateOutlet]="marketRow"
+      [ngTemplateOutletContext]="{ $implicit: market }"
+    ></ng-container>
+    <div class="pinned-divider"></div>
+  </ng-container>
+
+  <ng-container
+    *ngFor="let market of visibleMarkets; trackBy: trackByKey"
+    [ngTemplateOutlet]="marketRow"
+    [ngTemplateOutletContext]="{ $implicit: market }"
+  ></ng-container>
+
+  <button class="load-more" *ngIf="hasMore" (click)="loadMore()">
+    {{ "perpsLoadMore" | translate | async }}
+  </button>
+
+  <p class="market-empty" *ngIf="!loading && totalMarketCount === 0">
     {{ (marketLoadError ? "perpsLoadFailed" : "perpsNoMarkets") | translate | async }}
   </p>
+  <ng-template #marketRow let-market>
+    <div class="market-row" (click)="toMarket(market.coin)">
+      <img *ngIf="coinLogo(market.symbol)" [src]="coinLogo(market.symbol)" alt="" />
+      <span
+        class="letter-logo"
+        *ngIf="!coinLogo(market.symbol)"
+        [style.background]="coinColor(market.symbol)"
+        >{{ market.symbol.charAt(0) }}</span
+      >
+      <div class="market-name">
+        <div class="coin">
+          {{ market.symbol }}
+          <span class="dex-badge" *ngIf="market.dex">{{ market.dex }}</span>
+          <span class="leverage">{{ market.maxLeverage }}x</span>
+        </div>
+        <div class="volume">{{ formatCompactUsd(market.dayVolumeExact) }}</div>
+      </div>
+      <div class="market-price">
+        <div class="price">
+          ${{ formatPrice(listPrice(market), market.szDecimals, !usingMarkPrice(market)) }}
+          <span class="mark-tag" *ngIf="usingMarkPrice(market)">{{
+            "perpsMarkPriceTag" | translate | async
+          }}</span>
+        </div>
+        <div class="change" [class.negative]="isNegative(market.changePercentExact)">
+          {{ formatSignedPercent(market.changePercentExact) }}
+        </div>
+      </div>
+    </div>
+  </ng-template>
 </div>

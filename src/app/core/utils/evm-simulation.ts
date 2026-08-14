@@ -47,8 +47,8 @@ const abiCoder = ethers.AbiCoder.defaultAbiCoder();
  * dry-run the call even when the real account can't cover the value + gas.
  * Without this, swaps from an unfunded/low-balance account fail with
  * `insufficient funds` (-38014) and the simulation reports nothing instead of
- * the contract's real revert reason — matching MetaMask's behaviour. ~79 billion
- * ETH (2^96 wei), comfortably above any value + gas the call could require.
+ * the contract's real revert reason. ~79 billion ETH (2^96 wei), comfortably
+ * above any value + gas the call could require.
  */
 const SIMULATION_SENDER_BALANCE = '0x1000000000000000000000000';
 
@@ -125,9 +125,9 @@ export function parseRevertReason(error: any): string | undefined {
   const stripped = message
     .replace(/^execution reverted:?\s*/i, '')
     // Geth sometimes appends the raw ABI-encoded return data (e.g.
-    // "...: 0x08c379a0…"); drop it so we show just the decoded reason, like
-    // MetaMask. Require ≥8 hex digits so a short hex value that is genuinely
-    // part of the reason (e.g. "bad nonce 0x1a2b") is kept, not truncated.
+    // "...: 0x08c379a0…"); drop it so we show just the decoded reason. Require
+    // ≥8 hex digits so a short hex value that is genuinely part of the reason
+    // (e.g. "bad nonce 0x1a2b") is kept, not truncated.
     .replace(/:?\s*0x[0-9a-fA-F]{8,}\s*$/, '')
     .trim();
   if (stripped) {

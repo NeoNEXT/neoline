@@ -65,6 +65,7 @@
     "jsonschema": "^1.4.1",
     "lightweight-charts": "4.2.3",
     "likloadm-ethereum-cryptography": "^1.0.20",
+    "lossless-json": "4.2.0",
     "mathjs": "^7.0.1",
     "multiformats": "^13.1.0",
     "path-browserify": "^1.0.1",

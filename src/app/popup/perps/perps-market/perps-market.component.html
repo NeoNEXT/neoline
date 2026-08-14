@@ -9,20 +9,21 @@
         stroke-linecap="round"
       />
     </svg>
-    <img class="coin-logo" *ngIf="coinLogo(coin)" [src]="coinLogo(coin)" alt="" />
+    <img class="coin-logo" *ngIf="coinLogo(symbol)" [src]="coinLogo(symbol)" alt="" />
     <span
       class="letter-logo"
-      *ngIf="!coinLogo(coin)"
-      [style.background]="coinColor(coin)"
-      >{{ coin.charAt(0) }}</span
+      *ngIf="!coinLogo(symbol)"
+      [style.background]="coinColor(symbol)"
+      >{{ symbol.charAt(0) }}</span
     >
     <div class="title">
       <div class="name">
-        {{ coin }}
+        {{ symbol }}
+        <span class="dex-badge" *ngIf="market?.dex">{{ market.dex }}</span>
         <span class="leverage" *ngIf="market">{{ market.maxLeverage }}x</span>
       </div>
       <div class="subtitle">
-        {{ coin }}-USDC {{ "perps" | translate | async }}
+        {{ symbol }}-USDC {{ "perps" | translate | async }}
       </div>
     </div>
     <svg
@@ -43,11 +44,11 @@
 
   <!-- 大字价格 -->
   <div class="price-block">
-    <span class="price">${{ market ? formatPrice(displayPrice) : "--" }}</span>
+    <span class="price">${{ formatPrice(displayPrice, market?.szDecimals, usingMid) }}</span>
     <span
       class="change"
       *ngIf="market"
-      [class.negative]="displayChangePercent < 0"
+      [class.negative]="isNegative(displayChangePercent)"
     >
       {{ formatSignedPercent(displayChangePercent) }}
     </span>
@@ -98,7 +99,7 @@
     <div class="row">
       <span class="label">{{ "perpsDayVolumeFull" | translate | async }}</span>
       <span class="value">{{
-        market ? formatCompactUsd(market.dayVolume) : "--"
+        formatCompactUsd(market?.dayVolumeExact)
       }}</span>
     </div>
     <div class="row">
@@ -109,7 +110,7 @@
         </tooltip>
       </span>
       <span class="value">{{
-        market ? formatCompactUsd(market.openInterest) : "--"
+        formatCompactUsd(market?.openInterestExact)
       }}</span>
     </div>
     <div class="row">
@@ -120,7 +121,7 @@
         </tooltip>
       </span>
       <span class="value">
-        <span class="funding" [class.negative]="market?.funding < 0">{{
+        <span class="funding" [class.negative]="isNegative(market?.fundingExact)">{{
           fundingPercent
         }}</span>
         <span class="countdown">({{ fundingCountdown }})</span>
@@ -134,7 +135,7 @@
         </tooltip>
       </span>
       <span class="value"
-        >${{ market ? formatPrice(market.oraclePx) : "--" }}</span
+        >${{ formatPrice(market?.oraclePxExact, market?.szDecimals) }}</span
       >
     </div>
   </div>
@@ -149,14 +150,14 @@
         {{ fillIsBuy(fill) ? "↗" : "↘" }}
       </div>
       <div class="fill-info">
-        <div class="dir">{{ fillLabel(fill) }} {{ fill.coin }}</div>
+        <div class="dir">{{ fillLabel(fill) }} {{ symbol }}</div>
         <div class="time">{{ fillTime(fill) }}</div>
       </div>
       <div class="fill-size">
-        {{ fill.sz }} {{ fill.coin }}<br />
-        <small>${{ formatPrice(+fill.px) }}</small>
+        {{ fillSize(fill) }} {{ symbol }}<br />
+        <small>${{ formatPrice(fill.px, market?.szDecimals) }}</small>
         <small *ngIf="fill.fee"> · {{ "perpsFee" | translate | async }} {{ fill.fee }} {{ fill.feeToken || "USDC" }}</small>
-        <small *ngIf="+fill.closedPnl"> · PnL {{ formatSignedUsd(+fill.closedPnl) }}</small>
+        <small *ngIf="+fill.closedPnl"> · PnL {{ formatSignedUsd(fill.closedPnl) }}</small>
       </div>
     </div>
   </ng-container>

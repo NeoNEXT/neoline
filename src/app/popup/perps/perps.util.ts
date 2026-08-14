@@ -6,6 +6,24 @@ import {
   PerpsOrderSide,
   PerpsPosition,
 } from '@popup/_lib/perps';
+import BigNumber from 'bignumber.js';
+
+/**
+ * What a formatter accepts: a protocol-precision decimal string, or the absence
+ * of one. Formatters are the render boundary — the only place a decimal string
+ * may become a JavaScript number, and only to be turned straight into text.
+ */
+export type PerpsExactValue = BigNumber.Value | null | undefined;
+
+/** Shown wherever a value is genuinely absent, so it never reads as zero. */
+export const MISSING_DISPLAY = '--';
+
+function isMissing(value: PerpsExactValue): boolean {
+  if (value === null || value === undefined || value === '') {
+    return true;
+  }
+  return !new BigNumber(value).isFinite();
+}
 
 /** Coins that ship with a bundled logo; everything else falls back to a letter chip. */
 const LOCAL_COIN_LOGOS = {
@@ -42,74 +60,187 @@ export function coinColor(coin: string): string {
   return FALLBACK_COLORS[hash % FALLBACK_COLORS.length];
 }
 
-/** 1_490_000_000 -> "$1.49B" */
-export function formatCompactUsd(value: number): string {
-  const n = Number(value) || 0;
-  const abs = Math.abs(n);
-  if (abs >= 1e9) {
-    return `$${(n / 1e9).toFixed(2)}B`;
+/**
+ * Volume and open interest, in magnitude bands: 1_490_000_000 -> "$1.49B".
+ *
+ * Every band carries the same two decimals and drops trailing zeros, so a row
+ * reading "$1.7B" sits beside one reading "$90.5K" without the two looking like
+ * they were measured differently.
+ */
+export function formatCompactUsd(value: PerpsExactValue): string {
+  if (isMissing(value)) {
+    return MISSING_DISPLAY;
   }
-  if (abs >= 1e6) {
-    return `$${(n / 1e6).toFixed(2)}M`;
-  }
-  if (abs >= 1e3) {
-    return `$${Math.round(n / 1e3)}K`;
-  }
-  return `$${n.toFixed(2)}`;
+  const amount = new BigNumber(value);
+  const abs = amount.absoluteValue();
+  const sign = amount.isNegative() ? '-' : '';
+  const band = COMPACT_BANDS.find((item) =>
+    abs.isGreaterThanOrEqualTo(item.threshold)
+  );
+  const scaled = band ? abs.dividedBy(band.threshold) : abs;
+  return `${sign}$${stripTrailingZeros(scaled.toFixed(2))}${
+    band ? band.suffix : ''
+  }`;
+}
+
+const COMPACT_BANDS = [
+  { threshold: new BigNumber('1e12'), suffix: 'T' },
+  { threshold: new BigNumber('1e9'), suffix: 'B' },
+  { threshold: new BigNumber('1e6'), suffix: 'M' },
+  { threshold: new BigNumber('1e3'), suffix: 'K' },
+];
+
+function stripTrailingZeros(text: string): string {
+  return text.includes('.')
+    ? text.replace(/\.?0+$/, '')
+    : text;
 }
 
 /**
- * Prices span many orders of magnitude (BTC at 64000, kPEPE at 0.008), so the
- * precision follows the magnitude rather than a fixed number of decimals.
+ * Decimal places a market can actually quote.
+ *
+ * Hyperliquid ticks perp prices at `6 - szDecimals` decimals, so that — not a
+ * table of magnitude bands — is what decides the precision worth showing: BTC
+ * (`szDecimals` 5) quotes one decimal, PUMP (`szDecimals` 0) quotes six. A mid
+ * is the average of two ticks and so may carry one decimal more than a tick.
+ *
+ * Without a market to consult the value is left exactly as the exchange sent
+ * it: it is already tick-quantised, and inventing a cap here would round away
+ * a digit the exchange considers real.
  */
-export function priceDecimals(price: number): number {
-  const abs = Math.abs(Number(price) || 0);
-  if (abs >= 10000) {
-    return 0;
+export function priceDecimals(
+  price: PerpsExactValue,
+  szDecimals?: number,
+  isMid = false
+): number {
+  const fraction = (isMissing(price) ? '0' : new BigNumber(price).toFixed())
+    .split('.')[1];
+  const actual = fraction ? fraction.length : 0;
+  if (szDecimals === undefined) {
+    return actual;
   }
-  if (abs >= 100) {
-    return 2;
-  }
-  if (abs >= 1) {
-    return 4;
-  }
-  return 6;
+  // The tick is a ceiling, not a target: padding $294 out to "294.0000" claims
+  // a precision the price does not have, while a value that somehow exceeds the
+  // tick is the one case the ceiling has to bite.
+  const cap =
+    Math.max(0, PERPS_PRICE_MAX_DECIMALS - szDecimals) + (isMid ? 1 : 0);
+  return Math.min(actual, cap);
 }
 
-export function formatPrice(price: number): string {
-  const n = Number(price) || 0;
-  return n.toLocaleString('en-US', {
-    minimumFractionDigits: priceDecimals(n),
-    maximumFractionDigits: priceDecimals(n),
-  });
+/** Hyperliquid quotes perp prices at up to six decimals, less `szDecimals`. */
+const PERPS_PRICE_MAX_DECIMALS = 6;
+
+/**
+ * A price without its currency symbol — templates supply the `$`.
+ *
+ * Formatted from the protocol decimal itself rather than from a float of it,
+ * and never truncated to a significant-figure count: BTC at `63393.5` reads
+ * "63,393.5" here exactly as it does on Hyperliquid, where rounding to five
+ * figures would have shown "63,394" and quietly disagreed with the exchange.
+ */
+export function formatPrice(
+  price: PerpsExactValue,
+  szDecimals?: number,
+  isMid = false
+): string {
+  if (isMissing(price)) {
+    return MISSING_DISPLAY;
+  }
+  const decimals = priceDecimals(price, szDecimals, isMid);
+  const value = new BigNumber(price).decimalPlaces(
+    decimals,
+    BigNumber.ROUND_HALF_UP
+  );
+  const [whole, fraction] = value.absoluteValue().toFixed(decimals).split('.');
+  const grouped = Number(whole).toLocaleString('en-US');
+  const sign = value.isNegative() ? '-' : '';
+  return `${sign}${stripTrailingZeros(
+    fraction ? `${grouped}.${fraction}` : grouped
+  )}`;
 }
 
-export function formatUsd(value: number, decimals = 2): string {
-  const n = Number(value) || 0;
+/**
+ * Money that is a balance rather than a price: two decimals, except that a
+ * whole amount drops the `.00`, which keeps $13.40 intact while showing $100
+ * rather than $100.00.
+ */
+export function formatUsd(value: PerpsExactValue, decimals = 2): string {
+  if (isMissing(value)) {
+    return MISSING_DISPLAY;
+  }
+  const n = new BigNumber(value).toNumber();
   const sign = n < 0 ? '-' : '';
-  return `${sign}$${Math.abs(n).toLocaleString('en-US', {
+  const formatted = Math.abs(n).toLocaleString('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
-  })}`;
+  });
+  return `${sign}$${formatted.replace(/\.00$/, '')}`;
 }
 
 /** Signed money, e.g. "+$21.75" — used for PnL where the sign carries meaning. */
-export function formatSignedUsd(value: number, decimals = 2): string {
-  const n = Number(value) || 0;
+export function formatSignedUsd(value: PerpsExactValue, decimals = 2): string {
+  if (isMissing(value)) {
+    return MISSING_DISPLAY;
+  }
+  const n = new BigNumber(value).toNumber();
   return `${n >= 0 ? '+' : '-'}$${Math.abs(n).toLocaleString('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   })}`;
 }
 
-export function formatSignedPercent(value: number, decimals = 2): string {
-  const n = Number(value) || 0;
-  return `${n >= 0 ? '+' : ''}${n.toFixed(decimals)}%`;
+/**
+ * A signed change, e.g. "+0.34%". A move too small to survive rounding reads as
+ * a flat "0.00%": the plus is withheld once the rendered number is zero, so a
+ * market that has not moved does not claim to be up.
+ */
+export function formatSignedPercent(
+  value: PerpsExactValue,
+  decimals = 2
+): string {
+  if (isMissing(value)) {
+    return MISSING_DISPLAY;
+  }
+  const n = new BigNumber(value).toNumber();
+  const text = n.toFixed(decimals);
+  return `${Number(text) > 0 ? '+' : ''}${text}%`;
+}
+
+/**
+ * A position or order size. Hyperliquid rounds sizes to the market's lot
+ * precision, so that is the precision worth showing, with trailing zeros
+ * dropped. Without a market to consult, the magnitude decides, which keeps
+ * small sizes readable without padding whole ones.
+ */
+export function formatSize(
+  size: BigNumber.Value,
+  szDecimals?: number
+): string {
+  const value = new BigNumber(size || 0);
+  if (!value.isFinite() || value.isZero()) {
+    return '0';
+  }
+  const strip = (text: string) =>
+    text.includes('.') ? text.replace(/\.?0+$/, '') : text;
+  if (szDecimals !== undefined) {
+    return strip(value.toFixed(Math.max(0, szDecimals)));
+  }
+  const abs = value.absoluteValue();
+  if (abs.isLessThan(0.01)) {
+    return strip(value.toFixed(6));
+  }
+  if (abs.isLessThan(1)) {
+    return strip(value.toFixed(4));
+  }
+  return strip(value.toFixed(2));
 }
 
 /** Format a fractional fee rate for display, e.g. 0.000405 -> "0.0405%". */
-export function formatFeeRatePercent(value: number): string {
-  const percent = (Number(value) || 0) * 100;
+export function formatFeeRatePercent(value: PerpsExactValue): string {
+  if (isMissing(value)) {
+    return MISSING_DISPLAY;
+  }
+  const percent = new BigNumber(value).times(100).toNumber();
   return `${percent.toFixed(6).replace(/\.?0+$/, '')}%`;
 }
 
@@ -125,55 +256,48 @@ export function formatFillTime(time: number): string {
   )}:${pad2(date.getMinutes())}`;
 }
 
-/** Size rounded to the market's lot precision, as Hyperliquid requires. */
-export function roundSize(size: number, szDecimals: number): number {
-  const factor = Math.pow(10, szDecimals);
-  const scaledSize = (Number(size) || 0) * factor;
-  // Multiplying an exact lot boundary can land a few ulps below its integer
-  // (for example 0.0255 * 1e4 -> 254.99999999999997). Compensate only for
-  // floating-point representation noise so genuine sub-lot values still floor.
-  const tolerance =
-    Number.EPSILON * Math.max(1, Math.abs(scaledSize)) * 4;
-  return Math.floor(scaledSize + tolerance) / factor;
-}
-
 /**
  * Estimate price impact by consuming the live book in execution order.
  * Returns null when the visible book cannot fill the whole order.
  */
 export function estimateMarketSlippagePercent(
   book: PerpsOrderBook,
-  size: number,
+  size: BigNumber.Value,
   isBuy: boolean
 ): number | null {
-  if (!book || !Number.isFinite(size) || size <= 0) {
+  const requested = new BigNumber(size || 0);
+  if (!book || !requested.isFinite() || !requested.isGreaterThan(0)) {
     return null;
   }
-  const bestBid = book.bids[0]?.price;
-  const bestAsk = book.asks[0]?.price;
+  const bestBid = book.bids[0]?.priceExact ?? book.bids[0]?.price;
+  const bestAsk = book.asks[0]?.priceExact ?? book.asks[0]?.price;
   if (!bestBid || !bestAsk) {
     return null;
   }
-  const midPrice = (bestBid + bestAsk) / 2;
+  const midPrice = new BigNumber(bestBid).plus(bestAsk).dividedBy(2);
   const levels = isBuy ? book.asks : book.bids;
-  let remaining = size;
-  let notional = 0;
+  let remaining = requested;
+  let notional = new BigNumber(0);
   for (const level of levels) {
-    const filled = Math.min(remaining, level.size);
-    notional += filled * level.price;
-    remaining -= filled;
-    if (remaining <= 1e-12) {
+    const levelSize = new BigNumber(level.sizeExact ?? level.size);
+    const filled = BigNumber.minimum(remaining, levelSize);
+    notional = notional.plus(filled.times(level.priceExact ?? level.price));
+    remaining = remaining.minus(filled);
+    if (remaining.isZero()) {
       break;
     }
   }
-  if (remaining > 1e-12) {
+  if (remaining.isGreaterThan(0)) {
     return null;
   }
-  const averagePrice = notional / size;
+  const averagePrice = notional.dividedBy(requested);
   const directionAdjustedImpact = isBuy
-    ? averagePrice - midPrice
-    : midPrice - averagePrice;
-  return Math.max(0, (directionAdjustedImpact / midPrice) * 100);
+    ? averagePrice.minus(midPrice)
+    : midPrice.minus(averagePrice);
+  return BigNumber.maximum(
+    0,
+    directionAdjustedImpact.dividedBy(midPrice).times(100)
+  ).toNumber();
 }
 
 /**
@@ -199,9 +323,9 @@ export function leverageTiers(maxLeverage: number): number[] {
 export function availableToTradeForSide(
   data: PerpsActiveAssetData,
   side: PerpsOrderSide
-): number {
+): string {
   if (!data) {
-    return 0;
+    return '0';
   }
   return data.availableToTrade[side === 'long' ? 0 : 1];
 }
@@ -214,10 +338,13 @@ export function availableToTradeForSide(
  * `availableToTrade`, so deducting a fee here would just undershoot its number.
  */
 export function collateralToNotional(
-  collateral: number,
+  collateral: BigNumber.Value,
   leverage: number
 ): number {
-  return Math.max(0, collateral) * Math.max(1, leverage || 1);
+  const value = new BigNumber(collateral || 0);
+  return value.isFinite() && value.isGreaterThan(0)
+    ? value.times(Math.max(1, leverage || 1)).toNumber()
+    : 0;
 }
 
 /** Apply both account buying power and the exchange's per-asset size cap. */
@@ -226,17 +353,39 @@ export function maxOrderNotionalForSide(
   side: PerpsOrderSide,
   leverage: number,
   executionPrice = data?.markPx
-): number {
-  const notional = collateralToNotional(
-    availableToTradeForSide(data, side),
-    leverage
-  );
+): BigNumber {
+  const collateral = new BigNumber(availableToTradeForSide(data, side));
+  const notional = collateral.isFinite() && collateral.isGreaterThan(0)
+    ? collateral.times(Math.max(1, leverage || 1))
+    : new BigNumber(0);
   if (!data) {
     return notional;
   }
+  const price = new BigNumber(executionPrice || 0);
+  if (!price.isFinite() || !price.isGreaterThan(0)) {
+    return notional;
+  }
   const sideIndex = side === 'long' ? 0 : 1;
-  const positionCap = data.maxTradeSzs[sideIndex] * executionPrice;
-  return positionCap > 0 ? Math.min(notional, positionCap) : notional;
+  const positionCap = new BigNumber(data.maxTradeSzs[sideIndex]).times(price);
+  // Zero is an authoritative per-side capacity, not a missing value. Only an
+  // unavailable execution price above skips conversion from base size to USD.
+  return positionCap.isFinite() && positionCap.isGreaterThanOrEqualTo(0)
+    ? BigNumber.minimum(notional, positionCap)
+    : notional;
+}
+
+/** Floor a decimal base size to the market lot without passing through Number. */
+export function sizeAtLot(
+  size: BigNumber.Value,
+  szDecimals: number
+): string {
+  const value = new BigNumber(size || 0);
+  if (!value.isFinite() || !value.isGreaterThan(0)) {
+    return '0';
+  }
+  return value
+    .decimalPlaces(Math.max(0, szDecimals), BigNumber.ROUND_FLOOR)
+    .toFixed();
 }
 
 /**
@@ -246,14 +395,20 @@ export function maxOrderNotionalForSide(
  * the raw buying power — at 10x on 4.80 USDC that is 47.95, not 48.00.
  */
 export function notionalAtLotSize(
-  notional: number,
-  price: number,
+  notional: BigNumber.Value,
+  price: BigNumber.Value,
   szDecimals: number
 ): number {
-  if (!price || !Number.isFinite(price)) {
-    return notional;
+  const priceValue = new BigNumber(price || 0);
+  const notionalValue = new BigNumber(notional || 0);
+  if (!priceValue.isFinite() || !priceValue.isGreaterThan(0)) {
+    return notionalValue.toNumber();
   }
-  return roundSize(notional / price, szDecimals) * price;
+  return new BigNumber(
+    sizeAtLot(notionalValue.dividedBy(priceValue), szDecimals)
+  )
+    .times(priceValue)
+    .toNumber();
 }
 
 /**
@@ -265,55 +420,72 @@ export function notionalAtLotSize(
  */
 export function previewClosePosition(params: {
   position: PerpsPosition;
-  notional: number;
+  /** Requested close notional in USD; ignored when `fullClose` is set. */
+  notionalExact: BigNumber.Value;
   szDecimals: number;
   /** Hyperliquid's own taker fee rate. */
-  feeRate: number;
+  feeRate: BigNumber.Value;
   /** NeoLine's builder fee rate; zero when no builder is configured. */
-  builderFeeRate?: number;
+  builderFeeRate?: BigNumber.Value;
   fullClose: boolean;
 }): {
-  size: number;
-  releasedMargin: number;
-  fee: number;
-  protocolFee: number;
-  builderFee: number;
+  sizeExact: string;
+  releasedMarginExact: string;
+  feeExact: string;
+  protocolFeeExact: string;
+  builderFeeExact: string;
 } {
   const {
     position,
-    notional,
+    notionalExact,
     szDecimals,
     feeRate,
     builderFeeRate = 0,
     fullClose,
   } = params;
-  const positionSize = Math.abs(position?.szi || 0);
-  const positionValue = Math.abs(position?.positionValue || 0);
-  if (!positionSize || !positionValue) {
+  const positionSize = new BigNumber(position?.sziExact ?? 0).absoluteValue();
+  const positionValue = new BigNumber(
+    position?.positionValueExact ?? 0
+  ).absoluteValue();
+  if (!positionSize.isGreaterThan(0) || !positionValue.isGreaterThan(0)) {
     return {
-      size: 0,
-      releasedMargin: 0,
-      fee: 0,
-      protocolFee: 0,
-      builderFee: 0,
+      sizeExact: '0',
+      releasedMarginExact: '0',
+      feeExact: '0',
+      protocolFeeExact: '0',
+      builderFeeExact: '0',
     };
   }
   const requestedFraction = fullClose
-    ? 1
-    : Math.max(0, Math.min(1, notional / positionValue));
-  const size = fullClose
-    ? positionSize
-    : roundSize(positionSize * requestedFraction, szDecimals);
-  const actualFraction = Math.min(1, size / positionSize);
-  const closedValue = positionValue * actualFraction;
-  const protocolFee = closedValue * feeRate;
-  const builderFee = closedValue * builderFeeRate;
+    ? new BigNumber(1)
+    : BigNumber.minimum(
+        1,
+        BigNumber.maximum(
+          0,
+          new BigNumber(notionalExact || 0).dividedBy(positionValue)
+        )
+      );
+  const sizeExact = fullClose
+    ? positionSize.toFixed()
+    : sizeAtLot(positionSize.times(requestedFraction), szDecimals);
+  // The lot floor above can only shrink the request, so the realised fraction
+  // is what the fee and released margin must follow — not what was asked for.
+  const actualFraction = BigNumber.minimum(
+    1,
+    new BigNumber(sizeExact).dividedBy(positionSize)
+  );
+  const closedValue = positionValue.times(actualFraction);
+  const protocolFee = closedValue.times(feeRate || 0);
+  const builderFee = closedValue.times(builderFeeRate || 0);
   return {
-    size,
-    releasedMargin: Math.abs(position.marginUsed || 0) * actualFraction,
-    fee: protocolFee + builderFee,
-    protocolFee,
-    builderFee,
+    sizeExact,
+    releasedMarginExact: new BigNumber(position.marginUsedExact ?? 0)
+      .absoluteValue()
+      .times(actualFraction)
+      .toFixed(),
+    feeExact: protocolFee.plus(builderFee).toFixed(),
+    protocolFeeExact: protocolFee.toFixed(),
+    builderFeeExact: builderFee.toFixed(),
   };
 }
 
@@ -329,49 +501,64 @@ export function previewClosePosition(params: {
 export function previewOrder(params: {
   market: PerpsMarket;
   /** Expected entry price; limit orders must not use the current mid price. */
-  executionPrice?: number;
-  notional: number;
+  executionPriceExact?: BigNumber.Value | null;
+  notionalExact: BigNumber.Value;
   leverage: number;
   isLong: boolean;
   /** Taker fee rate as a fraction, e.g. 0.00045 for 4.5bps. */
-  feeRate: number;
+  feeRate: BigNumber.Value;
   /** NeoLine's builder fee rate; zero when no builder is configured. */
-  builderFeeRate?: number;
+  builderFeeRate?: BigNumber.Value;
 }): PerpsOrderPreview {
   const {
     market,
-    executionPrice,
-    notional,
+    executionPriceExact,
+    notionalExact,
     leverage,
     isLong,
     feeRate,
     builderFeeRate = 0,
   } = params;
-  const price = executionPrice || market.midPx || market.markPx;
-  const lev = Math.max(1, leverage);
-  const margin = notional / lev;
-  const size = price ? roundSize(notional / price, market.szDecimals) : 0;
+  // A missing two-sided book is not a licence to substitute mark price: the
+  // mark can sit outside executable liquidity and must never define an order.
+  const price = new BigNumber(executionPriceExact ?? market.midPxExact ?? 0);
+  const notional = new BigNumber(notionalExact || 0);
+  const lev = new BigNumber(Math.max(1, leverage));
+  const hasPrice = price.isFinite() && price.isGreaterThan(0);
+  const sizeExact = hasPrice
+    ? sizeAtLot(notional.dividedBy(price), market.szDecimals)
+    : '0';
 
   // Maintenance margin fraction is half the initial margin at MAX leverage,
   // regardless of the leverage the user picked for this order.
-  const maintenanceFraction = 1 / (2 * market.maxLeverage);
+  const maintenanceFraction = new BigNumber(1).dividedBy(
+    new BigNumber(2).times(market.maxLeverage)
+  );
   const side = isLong ? 1 : -1;
-  const liquidationPx =
-    price *
-    (1 -
-      (side * (1 / lev - maintenanceFraction)) /
-        (1 - side * maintenanceFraction));
+  const numerator = new BigNumber(1)
+    .dividedBy(lev)
+    .minus(maintenanceFraction)
+    .times(side);
+  const denominator = new BigNumber(1).minus(maintenanceFraction.times(side));
+  const liquidationPx = price.times(
+    new BigNumber(1).minus(numerator.dividedBy(denominator))
+  );
 
-  const protocolFee = notional * feeRate;
-  const builderFee = notional * builderFeeRate;
+  const protocolFee = notional.times(feeRate || 0);
+  const builderFee = notional.times(builderFeeRate || 0);
 
   return {
-    notional,
-    margin,
-    size,
-    liquidationPx: liquidationPx > 0 ? liquidationPx : 0,
-    fee: protocolFee + builderFee,
-    protocolFee,
-    builderFee,
+    notionalExact: notional.toFixed(),
+    marginExact: notional.dividedBy(lev).toFixed(),
+    sizeExact,
+    // No positive estimate means there is nothing to quote. Null says that;
+    // zero would claim the position liquidates at a price of nothing.
+    liquidationPxExact:
+      hasPrice && liquidationPx.isGreaterThan(0)
+        ? liquidationPx.toFixed()
+        : null,
+    feeExact: protocolFee.plus(builderFee).toFixed(),
+    protocolFeeExact: protocolFee.toFixed(),
+    builderFeeExact: builderFee.toFixed(),
   };
 }

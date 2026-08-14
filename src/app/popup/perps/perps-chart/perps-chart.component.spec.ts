@@ -69,4 +69,15 @@ describe('PerpsChartComponent initial viewport', () => {
 
     expect(update.calls.mostRecent().args[0].value).toBe(360);
   });
+
+  it('multiplies protocol decimals before projecting chart coordinates', () => {
+    const setData = jasmine.createSpy('setData');
+    const component = new PerpsChartComponent(null);
+    (component as any).candleSeries = { setData: jasmine.createSpy('setData') };
+    (component as any).volumeSeries = { setData };
+
+    (component as any).setAllData([candle('0.1', '0.2')]);
+
+    expect(setData.calls.mostRecent().args[0][0].value).toBe(0.02);
+  });
 });

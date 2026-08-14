@@ -32,7 +32,7 @@ export const PERPS_HIP3_DEXES: {
   testnet: ['neol'],
 };
 
-/** Markets pinned to the top of the list and used by the "Neo 生态" filter. */
+/** Markets pinned above the sorted market list, alongside favourites. */
 export const PERPS_NEO_COINS = ['NEO', 'GAS'];
 
 export interface PerpsDepositConfig {
@@ -87,6 +87,8 @@ export const PERPS_MIN_DEPOSIT = 5;
 export const PERPS_MIN_WITHDRAW = 2;
 /** Hyperliquid rejects ordinary and partial-close orders below this notional. */
 export const PERPS_MIN_ORDER_NOTIONAL = 10;
+/** Safety reserve applied only when the user chooses Max / 100%. */
+export const PERPS_MAX_ORDER_BUFFER_FRACTION = 0.005;
 /** Flat fee Hyperliquid charges on withdrawals, in USDC. */
 export const PERPS_WITHDRAW_FEE = 1;
 
@@ -100,8 +102,8 @@ export const PERPS_WITHDRAW_FEE = 1;
  * it names, so approving more than is charged would leave headroom to raise the
  * fee without asking again.
  */
-export const PERPS_BUILDER_FEE_RATE = 0;
-export const PERPS_BUILDER_FEE_TENTHS_BPS = 0;
+export const PERPS_BUILDER_FEE_TENTHS_BPS = 45;
+export const PERPS_BUILDER_FEE_RATE = PERPS_BUILDER_FEE_TENTHS_BPS / 100000;
 export const PERPS_BUILDER_MAX_FEE_RATE = '0.045%';
 
 /**
@@ -120,22 +122,33 @@ export const PERPS_BUILDER_ADDRESS: { mainnet: string; testnet: string } = {
 
 /**
  * Slippage tolerance for market orders, in percent. A market order is an IOC
- * limit priced this far through the mark, so the bounds are shared by the form
- * and by the service that builds the order — a UI-only maximum would be clamped
- * away without the user noticing.
+ * limit priced this far through the book mid, so the bounds are shared by the
+ * form and by the service that builds the order — a UI-only maximum would be
+ * clamped away without the user noticing.
  *
- * The 100% ceiling matches Hyperliquid's own dialog, which accepts values up to
- * 100.00. It is deliberately permissive: at 100% the IOC limit sits at twice
- * (or zero times) the mark, which just means "fill me against whatever the book
- * holds".
+ * The 0.1–10% range is deliberately tighter than Hyperliquid's own dialog, which
+ * accepts anything up to 100.00 — at that ceiling the IOC limit sits at twice
+ * (or zero times) the mid, which amounts to "fill me against whatever the book
+ * holds". Ten percent is already far wider than any liquid market needs, so the
+ * cap costs nothing on a legitimate order and catches a mistyped tolerance
+ * before it is signed.
  */
 export const PERPS_MIN_SLIPPAGE_PERCENT = 0.1;
 export const PERPS_MAX_SLIPPAGE_PERCENT = 10;
 export const PERPS_DEFAULT_SLIPPAGE_PERCENT = 3;
 
-export type PerpsMarketFilter = 'all' | 'neo' | 'major' | 'gainers';
+/**
+ * What the market list can be ordered by.
+ *
+ * Both figures are visible on every row. A sort the user cannot see the basis
+ * of — funding rate, say, which lives on the market detail — produces an order
+ * that reads as arbitrary, so it is not offered here.
+ */
+export type PerpsMarketSortKey = 'volume' | 'change';
+export type PerpsSortDirection = 'desc' | 'asc';
 
-export const PERPS_MAJOR_COINS = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'DOGE'];
+/** Rows materialised per batch; the list is long enough to need batching. */
+export const PERPS_MARKET_PAGE_SIZE = 30;
 
 export const PERPS_CANDLE_INTERVALS = [
   '1m',
@@ -147,6 +160,13 @@ export const PERPS_CANDLE_INTERVALS = [
   '1d',
 ] as const;
 export type PerpsCandleInterval = typeof PERPS_CANDLE_INTERVALS[number];
+
+/**
+ * Whether the live feed can be trusted right now. `stale` keeps the last values
+ * on screen but marks them as no longer live; it is not an error state, and it
+ * clears itself the moment the feed is healthy again.
+ */
+export type PerpsConnectionState = 'connecting' | 'live' | 'stale';
 
 /** Raw `universe` entry from the `meta` info request. */
 export interface PerpsUniverseItem {
@@ -170,40 +190,61 @@ export interface PerpsAssetCtx {
   impactPxs: string[] | null;
 }
 
-/** A market as consumed by the UI: universe entry joined with its context. */
+/**
+ * A market as consumed by the UI: universe entry joined with its context.
+ *
+ * Every value the exchange quotes is kept as the decimal string it arrived as.
+ * There is deliberately no `number` twin: a float copy is the field callers
+ * reach for by accident, and rounding it once is enough to misprice an order.
+ * Convert at the render boundary instead, and never write the result back.
+ */
 export interface PerpsMarket {
+  /** Market key `dex:symbol`; symbols alone are not unique across HIP-3 DEXes. */
+  key: string;
   /** Hyperliquid asset index, required when placing orders. */
   assetId: number;
   /** Empty for the canonical DEX; otherwise the HIP-3 deployer DEX name. */
-  dex?: string;
+  dex: string;
   /** Index inside this market's own DEX metadata, used by live context arrays. */
-  dexAssetIndex?: number;
+  dexAssetIndex: number;
+  /** Protocol coin; HIP-3 markets carry a `dex:` prefix. Identity, not display. */
   coin: string;
+  /** Coin without its DEX prefix. Display, search and icon matching only. */
+  symbol: string;
   szDecimals: number;
   maxLeverage: number;
   /** The exchange rejects cross-margin leverage updates for this market. */
   onlyIsolated: boolean;
-  markPx: number;
+  markPxExact: string;
   /**
    * Book mid, and the reference every market order is priced from. Hyperliquid's
    * own front end sizes and prices against the mid rather than the mark: the
    * mark is an oracle-weighted figure that can sit outside the spread, which
    * would push an IOC limit further through the book than the tolerance implies.
-   * Falls back to the mark when the exchange reports no mid (an empty book).
+   * `null` when the market has no two-sided book — an absent price, never zero.
+   * Trading code must require it and never fall back to the mark.
    */
-  midPx: number;
-  oraclePx: number;
-  prevDayPx: number;
-  /** Percent change over the last 24h, e.g. -3.12 */
-  changePercent: number;
-  dayVolume: number;
-  openInterest: number;
-  /** Hourly funding rate as a fraction, e.g. 0.0000125 */
-  funding: number;
+  midPxExact: string | null;
+  oraclePxExact: string;
+  prevDayPxExact: string;
+  /**
+   * Percent change over the last 24h, e.g. `"-3.12"`. `null` when it cannot be
+   * computed from one price kind — market statistics unavailable, not `0`.
+   */
+  changePercentExact: string | null;
+  dayVolumeExact: string;
+  openInterestSizeExact: string;
+  openInterestExact: string;
+  /** Hourly funding rate as a fraction, e.g. `"0.0000125"` */
+  fundingExact: string;
 }
 
 export interface PerpsOrderBookLevel {
+  priceExact?: string;
+  sizeExact?: string;
+  /** Ephemeral UI projection. Never use for order construction. */
   price: number;
+  /** Ephemeral UI projection. Never use for order construction. */
   size: number;
 }
 
@@ -229,19 +270,35 @@ export interface PerpsCandle {
   n: number;
 }
 
+/**
+ * An open position, in the precision the exchange reports it.
+ *
+ * `sziExact` is the protocol-level truth for close direction and maximum
+ * closable size, so no float twin exists for any of these values — see
+ * `PerpsMarket` for the reasoning.
+ */
 export interface PerpsPosition {
+  /** Market key `dex:symbol`, matching `PerpsMarket.key`. */
+  key: string;
+  /** Empty for the canonical DEX; otherwise the HIP-3 deployer DEX name. */
+  dex: string;
+  /** Protocol coin; HIP-3 positions carry a `dex:` prefix. */
   coin: string;
+  /** Coin without its DEX prefix. Display and icon matching only. */
+  symbol: string;
   /** Signed size: positive is long, negative is short. */
-  szi: number;
-  entryPx: number;
-  positionValue: number;
-  unrealizedPnl: number;
-  /** Return on equity as a fraction, e.g. 0.142 */
-  returnOnEquity: number;
-  liquidationPx: number;
+  sziExact: string;
+  entryPxExact: string;
+  positionValueExact: string;
+  unrealizedPnlExact: string;
+  /** Return on equity as a fraction, e.g. `"0.142"` */
+  returnOnEquityExact: string;
+  /** `null` for positions that cannot be liquidated at any price. */
+  liquidationPxExact: string | null;
+  /** Whole-number leverage setting; exact as a `number`, unlike a price. */
   leverage: number;
   leverageType: 'cross' | 'isolated';
-  marginUsed: number;
+  marginUsedExact: string;
   isLong: boolean;
 }
 
@@ -254,10 +311,11 @@ export interface PerpsActiveAssetData {
     value: number;
     rawUsd?: number;
   };
-  /** Maximum order size in base-asset units. */
-  maxTradeSzs: [number, number];
-  /** Maximum order notional in USDC for each direction. */
-  availableToTrade: [number, number];
+  /** Maximum order size in base-asset units, preserved from the API decimal. */
+  maxTradeSzs: [string, string];
+  /** Available collateral in USDC for each direction, preserved exactly. */
+  availableToTrade: [string, string];
+  markPxExact?: string;
   markPx: number;
 }
 
@@ -273,27 +331,25 @@ export interface PerpsAccount {
   unified: boolean;
   /** Raw account abstraction value returned by Hyperliquid. */
   abstractionMode: PerpsAccountMode;
+  /** The DEX this snapshot covers; empty for the canonical clearinghouse. */
+  dex: string;
   /** Perps clearinghouse equity — only meaningful for a standard account. */
-  accountValue: number;
+  accountValueExact: string;
   /** Collateral equity available to this account mode. */
-  totalBalance: number;
-  totalMarginUsed: number;
-  totalNtlPos: number;
+  totalBalanceExact: string;
+  totalMarginUsedExact: string;
+  totalNtlPosExact: string;
   /**
    * Liquidation-risk ratio as a percentage. Unified/portfolio accounts require
    * an all-DEX calculation and therefore leave this unset for now.
    */
-  marginRatio: number | null;
+  marginRatioExact: string | null;
   /** Free perps collateral to open positions or withdraw (standard account). */
-  withdrawable: number;
-  /** Exact decimal wire value; `withdrawable` is its display/calculation projection. */
   withdrawableExact: string;
   /**
    * Free collateral available for orders or withdrawal. Unified/portfolio
    * accounts fold in free spot USDC; standard accounts remain perps-only.
    */
-  availableBalance: number;
-  /** Exact decimal value used when a funding action submits MAX. */
   availableBalanceExact: string;
   /**
    * Total USDC in the spot balance (token index 0). This is the cross-margin
@@ -301,14 +357,49 @@ export interface PerpsAccount {
    * separate wallet that must be transferred into perps before it can trade, so
    * it must not be folded into the perps equity.
    */
-  spotUsdc: number;
-  /** Exact decimal value used when a Spot → Perps transfer submits MAX. */
   spotUsdcExact: string;
-  /** Portion of `spotUsdc` reserved as margin (its hold); meaningful when unified. */
-  spotUsdcHold: number;
-  /** Exact hold retained across clearinghouse websocket updates. */
+  /** Portion of spot USDC reserved as margin (its hold); meaningful when unified. */
   spotUsdcHoldExact: string;
   positions: PerpsPosition[];
+}
+
+/**
+ * The account as the home page shows it: one row per figure, assembled from one
+ * snapshot per DEX.
+ *
+ * Summing is a display convenience. The pools behind these totals are margined
+ * and liquidated independently, which is why the margin ratio is not summed —
+ * a pool one tick from liquidation disappears inside a healthy-looking total.
+ */
+export interface PerpsAggregatedAccount {
+  unified: boolean;
+  abstractionMode: PerpsAccountMode;
+  /** Sums over every DEX that reported. */
+  accountValueExact: string;
+  totalBalanceExact: string;
+  totalMarginUsedExact: string;
+  totalNtlPosExact: string;
+  withdrawableExact: string;
+  availableBalanceExact: string;
+  /**
+   * The spot wallet, which is account-wide rather than per DEX. It is read from
+   * the canonical snapshot alone; adding it up per DEX would count one balance
+   * as many times as there are DEXes.
+   */
+  spotUsdcExact: string;
+  spotUsdcHoldExact: string;
+  /** The riskiest pool's margin ratio, and which DEX that pool belongs to. */
+  marginRatioExact: string | null;
+  marginRatioDex: string | null;
+  /** Every open position across DEXes; each carries the DEX it belongs to. */
+  positions: PerpsPosition[];
+  /**
+   * DEXes whose snapshot could not be read. Non-empty means the sums above
+   * cover only part of the account and must be presented as incomplete.
+   */
+  missingDexes: string[];
+  /** The per-DEX snapshots, so an action can be routed back to its own pool. */
+  byDex: PerpsAccount[];
 }
 
 export type PerpsAccountMode =
@@ -331,13 +422,13 @@ export interface PerpsFill {
   fee: string;
   feeToken?: string;
   builderFee?: string;
-  oid?: number;
-  tid?: number;
+  oid?: string;
+  tid?: string;
 }
 
 export interface PerpsOpenOrder {
   coin: string;
-  oid: number;
+  oid: string;
   side: 'B' | 'A';
   limitPx: string;
   sz: string;
@@ -381,6 +472,12 @@ export interface PerpsLedgerUpdate {
 
 export type PerpsOrderSide = 'long' | 'short';
 export type PerpsOrderType = 'market' | 'limit';
+export type PerpsTradeIntent =
+  | 'open'
+  | 'increase'
+  | 'reduce'
+  | 'close'
+  | 'reverse';
 
 export interface PerpsSignature {
   r: string;
@@ -389,10 +486,26 @@ export interface PerpsSignature {
 }
 
 export interface PerpsOrderRequest {
+  /** Protocol coin identifier used by REST/WS and signing. */
+  coin: string;
+  /** Stable `(dex, coin)` identity; symbols alone are not globally unique. */
+  marketKey: string;
+  /** Explicit semantic operation; reverse targets a new opposite position. */
+  intent?: PerpsTradeIntent;
   assetId: number;
   isBuy: boolean;
-  price: number;
-  size: number;
+  /** Price the user reviewed, kept exact until the wire price is derived. */
+  price: string | number;
+  /** Decimal base size; the service floors it to szDecimals before signing. */
+  size: string;
+  /**
+   * USD intent frozen on review. For market orders the service fetches a fresh
+   * two-sided L2 book immediately before signing and recomputes base size from
+   * this amount. Omit only for an explicit base-asset quantity intent.
+   */
+  notionalExact?: string;
+  /** Full closes keep the exact position quantity instead of rescaling by USD. */
+  fullClose?: boolean;
   szDecimals: number;
   maxLeverage: number;
   leverage: number;
@@ -402,6 +515,10 @@ export interface PerpsOrderRequest {
   reduceOnly: boolean;
   /** False for isolated-only markets and existing isolated positions. */
   isCross: boolean;
+  /** Exchange-side setting used to avoid signing an identical update. */
+  currentLeverage?: PerpsActiveAssetData['leverage'];
+  /** Stable 16-byte id reused while this exact intent is unresolved. */
+  cloid?: string;
 }
 
 export interface PerpsExchangeResponse {
@@ -411,8 +528,8 @@ export interface PerpsExchangeResponse {
     data?: {
       statuses?: Array<
         | 'success'
-        | { resting: { oid: number } }
-        | { filled: { totalSz: string; avgPx: string; oid: number } }
+        | { resting: { oid: string } }
+        | { filled: { totalSz: string; avgPx: string; oid: string } }
         | { error: string }
       >;
     };
@@ -420,18 +537,43 @@ export interface PerpsExchangeResponse {
   error?: string;
 }
 
+export type PerpsOrderExecutionStatus =
+  | 'filled'
+  | 'partial'
+  | 'resting'
+  | 'unfilled'
+  | 'rejected'
+  | 'unknown';
+
+export interface PerpsOrderExecutionResult {
+  status: PerpsOrderExecutionStatus;
+  cloid: string;
+  orderId?: string;
+  submittedSizeExact: string;
+  filledSizeExact: string;
+  remainingSizeExact: string;
+  averagePriceExact?: string;
+  error?: string;
+  raw?: PerpsExchangeResponse;
+}
+
+/** Estimated position risk for an order under review, at protocol precision. */
 export interface PerpsOrderPreview {
   /** Notional position size in USD. */
-  notional: number;
+  notionalExact: string;
   /** Collateral locked by the position. */
-  margin: number;
+  marginExact: string;
   /** Size in base units of the coin. */
-  size: number;
-  liquidationPx: number;
+  sizeExact: string;
+  /**
+   * Estimated liquidation price. `null` when no positive estimate exists —
+   * never `0`, which would read as "liquidates at zero".
+   */
+  liquidationPxExact: string | null;
   /** Everything the fill costs: exchange fee plus builder fee. */
-  fee: number;
+  feeExact: string;
   /** Hyperliquid's own taker fee. */
-  protocolFee: number;
+  protocolFeeExact: string;
   /** NeoLine's builder fee; zero when no builder address is configured. */
-  builderFee: number;
+  builderFeeExact: string;
 }

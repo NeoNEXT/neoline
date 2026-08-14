@@ -2,11 +2,23 @@ import { HttpClient } from '@angular/common/http';
 import { fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 
-import { PERPS_MAX_SLIPPAGE_PERCENT } from '@popup/_lib/perps';
+import {
+  PerpsAccount,
+  PERPS_BUILDER_FEE_TENTHS_BPS,
+  PERPS_MAX_SLIPPAGE_PERCENT,
+} from '@popup/_lib/perps';
 import {
   HyperliquidService,
+  PerpsLeverageChangeRequiredError,
+  PerpsMarketDataUnavailableError,
   resolvePerpsTestnet,
 } from './hyperliquid.service';
+
+const MARKET_IDENTITY = {
+  coin: 'ETH',
+  marketKey: 'hl:ETH',
+  cloid: '0x00000000000000000000000000000001',
+};
 
 describe('resolvePerpsTestnet', () => {
   it('uses the configured network in local builds', () => {
@@ -74,47 +86,156 @@ describe('HyperliquidService account balances', () => {
     expect(http.post).toHaveBeenCalledTimes(2);
   });
 
-  it('updates leverage before placing an opening market order', fakeAsync(() => {
+  it('queries an ambiguous order by cloid', () => {
     http.post.and.returnValue(
-      of({ status: 'ok', response: { type: 'default' } }) as any
+      of({
+        status: 'order',
+        order: { status: 'open', order: { oid: '9007199254740993' } },
+      }) as any
     );
+    let result: any;
 
     service
-      .placeOrder(
+      .getOrderStatus('0xABC', MARKET_IDENTITY.cloid)
+      .subscribe((value) => (result = value));
+
+    expect(http.post).toHaveBeenCalledWith(
+      jasmine.any(String),
+      {
+        type: 'orderStatus',
+        user: '0xabc',
+        oid: MARKET_IDENTITY.cloid,
+      },
+      jasmine.any(Object)
+    );
+    expect(result.status).toBe('order');
+  });
+
+  it('requires a separately confirmed leverage update before opening', () => {
+    expect(() =>
+      service.placeOrder(
         '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
         {
+          ...MARKET_IDENTITY,
           assetId: 3,
           isBuy: true,
           price: 100,
-          size: 1.25,
+          size: '1.25',
           szDecimals: 2,
           maxLeverage: 20,
           leverage: 5,
           orderType: 'market',
           slippagePercent: 1.5,
           reduceOnly: false,
-          isCross: true,
+          isCross: false,
+        }
+      )
+    ).toThrowError(PerpsLeverageChangeRequiredError);
+    expect(http.post).not.toHaveBeenCalled();
+  });
+
+  it('updates isolated leverage as an independent action', fakeAsync(() => {
+    http.post.and.returnValue(
+      of({ status: 'ok', response: { type: 'default' } }) as any
+    );
+
+    service
+      .updateLeverage(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        3,
+        5,
+        20
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    expect(http.post.calls.mostRecent().args[1].action).toEqual({
+      type: 'updateLeverage',
+      asset: 3,
+      isCross: false,
+      leverage: 5,
+    });
+  }));
+
+  it('converts isolated margin changes to exact signed micro-USDC', fakeAsync(() => {
+    http.post.and.returnValue(
+      of({ status: 'ok', response: { type: 'default' } }) as any
+    );
+
+    service
+      .updateIsolatedMargin(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        3,
+        true,
+        '-1.000001'
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    const body = JSON.parse(http.post.calls.mostRecent().args[1]);
+    expect(body.action).toEqual({
+      type: 'updateIsolatedMargin',
+      asset: 3,
+      isBuy: true,
+      ntli: -1000001,
+    });
+  }));
+
+  it('places an opening order directly when leverage and margin mode match', fakeAsync(() => {
+    http.post.and.returnValue(
+      of({ status: 'ok', response: { type: 'order' } }) as any
+    );
+
+    service
+      .placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          ...MARKET_IDENTITY,
+          assetId: 3,
+          isBuy: true,
+          price: 100,
+          size: '1.25',
+          szDecimals: 2,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'market',
+          slippagePercent: 1.5,
+          reduceOnly: false,
+          isCross: false,
+          currentLeverage: { type: 'isolated', value: 5 },
         }
       )
       .subscribe();
     flushMicrotasks();
 
     const actions = http.post.calls.allArgs().map((args) => args[1].action);
-    expect(actions[0]).toEqual({
-      type: 'updateLeverage',
-      asset: 3,
-      isCross: true,
-      leverage: 5,
-    });
-    expect(actions[1].orders[0]).toEqual({
-      a: 3,
-      b: true,
-      p: '101.5',
-      s: '1.25',
-      r: false,
-      t: { limit: { tif: 'Ioc' } },
-    });
+    expect(actions).toHaveSize(1);
+    expect(actions[0].type).toBe('order');
   }));
+
+  it('does not combine a leverage update and order into one operation', () => {
+    expect(() =>
+      service.placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          ...MARKET_IDENTITY,
+          assetId: 3,
+          isBuy: true,
+          price: 100,
+          size: '1.25',
+          szDecimals: 2,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'market',
+          slippagePercent: 1.5,
+          reduceOnly: false,
+          isCross: false,
+          currentLeverage: { type: 'isolated', value: 3 },
+        }
+      )
+    ).toThrowError(PerpsLeverageChangeRequiredError);
+    expect(http.post).not.toHaveBeenCalled();
+  });
 
   it('places a reduce-only limit order without changing leverage', fakeAsync(() => {
     http.post.and.returnValue(
@@ -125,10 +246,11 @@ describe('HyperliquidService account balances', () => {
       .placeOrder(
         '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
         {
+          ...MARKET_IDENTITY,
           assetId: 1,
           isBuy: false,
           price: 123.456,
-          size: 0.5,
+          size: '0.5',
           szDecimals: 3,
           maxLeverage: 20,
           leverage: 5,
@@ -149,8 +271,63 @@ describe('HyperliquidService account balances', () => {
       s: '0.5',
       r: true,
       t: { limit: { tif: 'Gtc' } },
+      c: MARKET_IDENTITY.cloid,
     });
   }));
+
+  it('rounds the submitted size down to szDecimals', fakeAsync(() => {
+    http.post.and.returnValue(
+      of({ status: 'ok', response: { type: 'order' } }) as any
+    );
+
+    service
+      .placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          ...MARKET_IDENTITY,
+          assetId: 1,
+          isBuy: true,
+          price: 100,
+          size: '0.025599999999999999',
+          szDecimals: 4,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'limit',
+          slippagePercent: 1,
+          reduceOnly: true,
+          isCross: true,
+        }
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    expect(http.post.calls.mostRecent().args[1].action.orders[0].s).toBe(
+      '0.0255'
+    );
+  }));
+
+  it('refuses a size that floors below the market lot', () => {
+    expect(() =>
+      service.placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          ...MARKET_IDENTITY,
+          assetId: 1,
+          isBuy: true,
+          price: 100,
+          size: '0.0004',
+          szDecimals: 3,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'limit',
+          slippagePercent: 1,
+          reduceOnly: true,
+          isCross: true,
+        }
+      )
+    ).toThrowError('Order size is below the market lot size');
+    expect(http.post).not.toHaveBeenCalled();
+  });
 
   it('honours a slippage tolerance above the old 5% ceiling', fakeAsync(() => {
     http.post.and.returnValue(
@@ -161,10 +338,11 @@ describe('HyperliquidService account balances', () => {
       .placeOrder(
         '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
         {
+          ...MARKET_IDENTITY,
           assetId: 3,
           isBuy: true,
           price: 100,
-          size: 1,
+          size: '1',
           szDecimals: 2,
           maxLeverage: 20,
           leverage: 5,
@@ -180,6 +358,262 @@ describe('HyperliquidService account balances', () => {
     expect(http.post.calls.mostRecent().args[1].action.orders[0].p).toBe('108');
   }));
 
+  it('refreshes L2 and recomputes a reviewed USD market intent', fakeAsync(() => {
+    const now = 1_700_000_000_000;
+    spyOn(Date, 'now').and.returnValue(now);
+    http.post.and.callFake(((_url: string, body: any) => {
+      if (body.type === 'l2Book') {
+        return of({
+          coin: 'ETH',
+          time: now,
+          levels: [
+            [{ px: '99', sz: '10' }],
+            [{ px: '101', sz: '10' }],
+          ],
+        }) as any;
+      }
+      return of({ status: 'ok', response: { type: 'order' } }) as any;
+    }) as any);
+
+    service
+      .placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          ...MARKET_IDENTITY,
+          assetId: 3,
+          isBuy: true,
+          price: '100',
+          size: '9',
+          notionalExact: '125',
+          fullClose: false,
+          szDecimals: 2,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'market',
+          slippagePercent: 1,
+          reduceOnly: true,
+          isCross: false,
+        }
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    const order = http.post.calls.mostRecent().args[1].action.orders[0];
+    expect(order.s).toBe('1.25');
+    expect(order.p).toBe('101');
+    expect(order.c).toBe(MARKET_IDENTITY.cloid);
+  }));
+
+  it('refuses a stale L2 snapshot before signing a market order', fakeAsync(() => {
+    const now = 1_700_000_000_000;
+    spyOn(Date, 'now').and.returnValue(now);
+    http.post.and.returnValue(
+      of({
+        coin: 'ETH',
+        time: now - 10_001,
+        levels: [
+          [{ px: '99', sz: '10' }],
+          [{ px: '101', sz: '10' }],
+        ],
+      }) as any
+    );
+    let failure: unknown;
+
+    service
+      .placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          ...MARKET_IDENTITY,
+          assetId: 3,
+          isBuy: true,
+          price: '100',
+          size: '1',
+          notionalExact: '100',
+          fullClose: false,
+          szDecimals: 2,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'market',
+          slippagePercent: 1,
+          reduceOnly: true,
+          isCross: false,
+        }
+      )
+      .subscribe({ error: (error) => (failure = error) });
+    flushMicrotasks();
+
+    expect(failure).toEqual(jasmine.any(PerpsMarketDataUnavailableError));
+    expect(http.post).toHaveBeenCalledTimes(1);
+  }));
+
+  it('distinguishes partial fills from complete fills', () => {
+    const result = (service as any).parseOrderExecution(
+      {
+        status: 'ok',
+        response: {
+          type: 'order',
+          data: {
+            statuses: [
+              { filled: { totalSz: '0.4', avgPx: '101.25', oid: '42' } },
+            ],
+          },
+        },
+      },
+      '1',
+      MARKET_IDENTITY.cloid
+    );
+
+    expect(result.status).toBe('partial');
+    expect(result.filledSizeExact).toBe('0.4');
+    expect(result.remainingSizeExact).toBe('0.6');
+    expect(result.averagePriceExact).toBe('101.25');
+  });
+
+  it('returns unknown instead of retrying after a signed transport failure', fakeAsync(() => {
+    http.post.and.returnValue(
+      throwError(() => new Error('network timeout')) as any
+    );
+    let result: any;
+
+    service
+      .placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          ...MARKET_IDENTITY,
+          assetId: 3,
+          isBuy: true,
+          price: '100',
+          size: '1',
+          szDecimals: 2,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'limit',
+          slippagePercent: 1,
+          reduceOnly: true,
+          isCross: false,
+        }
+      )
+      .subscribe((value) => (result = value));
+    flushMicrotasks();
+
+    expect(result.status).toBe('unknown');
+    expect(result.cloid).toBe(MARKET_IDENTITY.cloid);
+    expect(result.error).toBe('network timeout');
+    expect(http.post).toHaveBeenCalledTimes(1);
+  }));
+
+  it('refreshes exact position size before signing a full close', fakeAsync(() => {
+    const now = Date.now();
+    spyOn(service, 'getOrderBook').and.returnValue(
+      of({
+        coin: 'ETH',
+        time: now,
+        bids: [{ priceExact: '99', sizeExact: '10', price: 99, size: 10 }],
+        asks: [
+          { priceExact: '101', sizeExact: '10', price: 101, size: 10 },
+        ],
+      })
+    );
+    spyOn(service, 'getAccount').and.returnValue(
+      of({
+        positions: [
+          { key: 'hl:ETH', coin: 'ETH', sziExact: '0.75', szi: 0.75 },
+        ],
+      } as any)
+    );
+    http.post.and.returnValue(
+      of({ status: 'ok', response: { type: 'order' } }) as any
+    );
+
+    service
+      .placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          ...MARKET_IDENTITY,
+          assetId: 3,
+          isBuy: false,
+          price: '100',
+          size: '1',
+          fullClose: true,
+          szDecimals: 2,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'market',
+          slippagePercent: 1,
+          reduceOnly: true,
+          isCross: false,
+        }
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    expect(service.getAccount).toHaveBeenCalledWith(
+      '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
+      true
+    );
+    expect(http.post.calls.mostRecent().args[1].action.orders[0].s).toBe(
+      '0.75'
+    );
+  }));
+
+  it('submits P plus N for an explicit net reverse', fakeAsync(() => {
+    const now = Date.now();
+    spyOn(service, 'getOrderBook').and.returnValue(
+      of({
+        coin: 'ETH',
+        time: now,
+        bids: [{ priceExact: '99', sizeExact: '10', price: 99, size: 10 }],
+        asks: [
+          { priceExact: '101', sizeExact: '10', price: 101, size: 10 },
+        ],
+      })
+    );
+    spyOn(service, 'getAccount').and.returnValue(
+      of({
+        positions: [
+          {
+            key: 'hl:ETH',
+            coin: 'ETH',
+            sziExact: '-0.75',
+            szi: -0.75,
+            leverageType: 'isolated',
+          },
+        ],
+      } as any)
+    );
+    http.post.and.returnValue(
+      of({ status: 'ok', response: { type: 'order' } }) as any
+    );
+
+    service
+      .placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          ...MARKET_IDENTITY,
+          intent: 'reverse',
+          assetId: 3,
+          isBuy: true,
+          price: '100',
+          size: '1.25',
+          notionalExact: '125',
+          fullClose: false,
+          szDecimals: 2,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'market',
+          slippagePercent: 1,
+          reduceOnly: false,
+          isCross: false,
+          currentLeverage: { type: 'isolated', value: 5 },
+        }
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    expect(http.post.calls.mostRecent().args[1].action.orders[0].s).toBe('2');
+    expect(http.post.calls.mostRecent().args[1].action.orders[0].r).toBeFalse();
+  }));
+
   it('never rounds an IOC buy above its maximum slippage price', fakeAsync(() => {
     http.post.and.returnValue(
       of({ status: 'ok', response: { type: 'order' } }) as any
@@ -191,10 +625,11 @@ describe('HyperliquidService account balances', () => {
       .placeOrder(
         '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
         {
+          ...MARKET_IDENTITY,
           assetId: 3,
           isBuy: true,
           price: mid,
-          size: 0.01,
+          size: '0.01',
           szDecimals: 4,
           maxLeverage: 20,
           leverage: 5,
@@ -226,10 +661,11 @@ describe('HyperliquidService account balances', () => {
       .placeOrder(
         '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
         {
+          ...MARKET_IDENTITY,
           assetId: 3,
           isBuy: false,
           price: mid,
-          size: 0.01,
+          size: '0.01',
           szDecimals: 4,
           maxLeverage: 20,
           leverage: 5,
@@ -250,6 +686,94 @@ describe('HyperliquidService account balances', () => {
     );
   }));
 
+  it('never rounds a limit buy above the price the user typed', fakeAsync(() => {
+    http.post.and.returnValue(
+      of({ status: 'ok', response: { type: 'order' } }) as any
+    );
+    // Five significant figures leave two decimals here, so 9.87654321 has to
+    // land on 9.87 rather than the nearer 9.88.
+    const limitPrice = 9.87654321;
+
+    service
+      .placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          ...MARKET_IDENTITY,
+          assetId: 3,
+          isBuy: true,
+          price: limitPrice,
+          size: '1',
+          szDecimals: 4,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'limit',
+          slippagePercent: 3,
+          reduceOnly: true,
+          isCross: false,
+        }
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    expect(http.post.calls.mostRecent().args[1].action.orders[0].p).toBe(
+      '9.87'
+    );
+  }));
+
+  it('never rounds a limit sell below the price the user typed', fakeAsync(() => {
+    http.post.and.returnValue(
+      of({ status: 'ok', response: { type: 'order' } }) as any
+    );
+    const limitPrice = 9.87104321;
+
+    service
+      .placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          ...MARKET_IDENTITY,
+          assetId: 3,
+          isBuy: false,
+          price: limitPrice,
+          size: '1',
+          szDecimals: 4,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'limit',
+          slippagePercent: 3,
+          reduceOnly: true,
+          isCross: false,
+        }
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    expect(http.post.calls.mostRecent().args[1].action.orders[0].p).toBe(
+      '9.88'
+    );
+  }));
+
+  it('refuses a price that floors below the market tick', () => {
+    expect(() =>
+      service.placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          ...MARKET_IDENTITY,
+          assetId: 3,
+          isBuy: true,
+          price: 0.0000004,
+          size: '1',
+          szDecimals: 1,
+          maxLeverage: 20,
+          leverage: 5,
+          orderType: 'limit',
+          slippagePercent: 3,
+          reduceOnly: true,
+          isCross: false,
+        }
+      )
+    ).toThrowError(/tick size/);
+  });
+
   it('clamps a tolerance beyond the configured ceiling', fakeAsync(() => {
     http.post.and.returnValue(
       of({ status: 'ok', response: { type: 'order' } }) as any
@@ -259,10 +783,11 @@ describe('HyperliquidService account balances', () => {
       .placeOrder(
         '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
         {
+          ...MARKET_IDENTITY,
           assetId: 3,
           isBuy: true,
           price: 100,
-          size: 1,
+          size: '1',
           szDecimals: 2,
           maxLeverage: 20,
           leverage: 5,
@@ -284,27 +809,17 @@ describe('HyperliquidService account balances', () => {
     ).toBeCloseTo(ceiling, 8);
   }));
 
-  it('uses isolated leverage for an isolated-only market', fakeAsync(() => {
+  it('always writes leverage in isolated mode', fakeAsync(() => {
     http.post.and.returnValue(
       of({ status: 'ok', response: { type: 'default' } }) as any
     );
 
     service
-      .placeOrder(
+      .updateLeverage(
         '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          assetId: 7,
-          isBuy: true,
-          price: 1,
-          size: 10,
-          szDecimals: 0,
-          maxLeverage: 3,
-          leverage: 2,
-          orderType: 'market',
-          slippagePercent: 5,
-          reduceOnly: false,
-          isCross: false,
-        }
+        7,
+        2,
+        3
       )
       .subscribe();
     flushMicrotasks();
@@ -377,6 +892,7 @@ describe('HyperliquidService account balances', () => {
         { type: 'metaAndAssetCtxs', dex: 'neol' },
       ]);
       expect(markets[0].coin).toBe('neol:NEO');
+      expect(markets[0].key).toBe('neol:NEO');
       expect(markets[0].dex).toBe('neol');
       // `neol` remains at registry index 2 even though index 1 is unsupported.
       expect(markets[0].assetId).toBe(120000);
@@ -418,11 +934,11 @@ describe('HyperliquidService account balances', () => {
         data: { user: '0xabc', orders },
       }),
     });
-    expect(updates).toHaveBeenCalledWith(orders);
+    expect(updates).toHaveBeenCalledWith([{ oid: '42', coin: 'ETH' }]);
     expect(http.post).not.toHaveBeenCalled();
   });
 
-  it('reads the mid price and falls back to the mark when the book is empty', (done) => {
+  it('does not substitute mark price when a book side is empty', (done) => {
     http.post.and.returnValue(
       of([
         {
@@ -458,10 +974,16 @@ describe('HyperliquidService account balances', () => {
     service.getMarkets().subscribe((markets) => {
       const eth = markets.find((market) => market.coin === 'ETH');
       const cashcat = markets.find((market) => market.coin === 'CASHCAT');
-      expect(eth.midPx).toBe(1899.5);
-      expect(cashcat.midPx).toBe(1);
+      expect(eth.midPxExact).toBe('1899.5');
+      // An absent mid is null, never zero: zero is a price, absence is not.
+      expect(cashcat.midPxExact).toBeNull();
       // The 24h change follows the displayed mid, not the mark beside it.
-      expect(eth.changePercent).toBeCloseTo(((1899.5 - 1800) / 1800) * 100, 8);
+      expect(Number(eth.changePercentExact)).toBeCloseTo(
+        ((1899.5 - 1800) / 1800) * 100,
+        8
+      );
+      // No mid means no change to quote — market statistics unavailable.
+      expect(cashcat.changePercentExact).toBeNull();
       done();
     });
   });
@@ -475,10 +997,11 @@ describe('HyperliquidService account balances', () => {
       .placeOrder(
         '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
         {
+          ...MARKET_IDENTITY,
           assetId: 3,
           isBuy: true,
           price: 100,
-          size: 1,
+          size: '1',
           szDecimals: 2,
           maxLeverage: 20,
           leverage: 5,
@@ -498,7 +1021,10 @@ describe('HyperliquidService account balances', () => {
     ).toBeUndefined();
   }));
 
-  it('omits a configured builder when the configured fee is zero', fakeAsync(() => {
+  // The address is the only switch: a configured builder always charges the
+  // fee. Emptying `PERPS_BUILDER_ADDRESS` is what turns it off, so these cover
+  // the on-state that the empty-address test above cannot reach.
+  it('attaches a configured builder and approves the fee once per account', fakeAsync(() => {
     const builder = '0x000000000000000000000000000000000000beef';
     spyOnProperty(service, 'builderAddress', 'get').and.returnValue(builder);
     http.post.and.callFake(((_url: string, body: any) => {
@@ -510,10 +1036,11 @@ describe('HyperliquidService account balances', () => {
     }) as any);
 
     const request = {
+      ...MARKET_IDENTITY,
       assetId: 3,
       isBuy: true,
       price: 100,
-      size: 1,
+      size: '1',
       szDecimals: 2,
       maxLeverage: 20,
       leverage: 5,
@@ -529,24 +1056,32 @@ describe('HyperliquidService account balances', () => {
     flushMicrotasks();
 
     const bodies = http.post.calls.allArgs().map((args) => args[1]);
-    expect(bodies.length).toBe(1);
-    expect(bodies[0].action.builder).toBeUndefined();
+    expect(bodies.length).toBe(3);
+    expect(bodies[0].type).toBe('maxBuilderFee');
+    expect(bodies[1].action.type).toBe('approveBuilderFee');
+    expect(bodies[2].action.builder).toEqual({
+      b: builder,
+      f: PERPS_BUILDER_FEE_TENTHS_BPS,
+    });
 
-    // A disabled fee never needs an approval round trip.
+    // The approval is remembered for the session: the next order signs once.
     http.post.calls.reset();
     service.placeOrder(key, request).subscribe();
     flushMicrotasks();
 
     expect(http.post).toHaveBeenCalledTimes(1);
-    expect(http.post.calls.mostRecent().args[1].action.builder).toBeUndefined();
+    expect(http.post.calls.mostRecent().args[1].action.builder).toEqual({
+      b: builder,
+      f: PERPS_BUILDER_FEE_TENTHS_BPS,
+    });
   }));
 
-  it('does not query approval state when the configured fee is zero', fakeAsync(() => {
+  it('skips the approval when the account already authorised the fee', fakeAsync(() => {
     const builder = '0x000000000000000000000000000000000000beef';
     spyOnProperty(service, 'builderAddress', 'get').and.returnValue(builder);
     http.post.and.callFake(((_url: string, body: any) => {
       if (body.type === 'maxBuilderFee') {
-        return of(45) as any;
+        return of(PERPS_BUILDER_FEE_TENTHS_BPS) as any;
       }
       return of({ status: 'ok', response: { type: 'default' } }) as any;
     }) as any);
@@ -555,10 +1090,11 @@ describe('HyperliquidService account balances', () => {
       .placeOrder(
         '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
         {
+          ...MARKET_IDENTITY,
           assetId: 3,
           isBuy: true,
           price: 100,
-          size: 1,
+          size: '1',
           szDecimals: 2,
           maxLeverage: 20,
           leverage: 5,
@@ -572,9 +1108,13 @@ describe('HyperliquidService account balances', () => {
     flushMicrotasks();
 
     const bodies = http.post.calls.allArgs().map((args) => args[1]);
-    expect(bodies.length).toBe(1);
-    expect(bodies[0].action.type).toBe('order');
-    expect(bodies[0].action.builder).toBeUndefined();
+    expect(bodies.length).toBe(2);
+    expect(bodies[0].type).toBe('maxBuilderFee');
+    expect(bodies[1].action.type).toBe('order');
+    expect(bodies[1].action.builder).toEqual({
+      b: builder,
+      f: PERPS_BUILDER_FEE_TENTHS_BPS,
+    });
   }));
 
   it('loads frontend open orders and cancels by asset and order id', fakeAsync(() => {
@@ -599,22 +1139,84 @@ describe('HyperliquidService account balances', () => {
 
     let orders;
     service.getOpenOrders('0xABC').subscribe((value) => (orders = value));
-    expect(orders[0].oid).toBe(42);
+    expect(orders[0].oid).toBe('42');
 
     service
       .cancelOrder(
         '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
         3,
-        42
+        '42'
       )
       .subscribe();
     flushMicrotasks();
 
-    expect(http.post.calls.mostRecent().args[1].action).toEqual({
-      type: 'cancel',
-      cancels: [{ a: 3, o: 42 }],
-    });
+    expect(http.post.calls.mostRecent().args[1]).toContain(
+      '"cancels":[{"a":3,"o":42}]'
+    );
   }));
+
+  it('preserves uint64 order and trade ids through websocket decoding', () => {
+    spyOn<any>(service, 'send');
+    const updates = jasmine.createSpy('updates');
+    service.watchUserFills('0xABC').subscribe(updates);
+
+    (service as any).handleMessage({
+      data:
+        '{"channel":"userFills","data":{"user":"0xabc","fills":' +
+        '[{"oid":18446744073709551615,"tid":1125899906842623}]}}',
+    });
+
+    expect(updates).toHaveBeenCalledWith({
+      user: '0xabc',
+      fills: [
+        { oid: '18446744073709551615', tid: '1125899906842623' },
+      ],
+    });
+  });
+
+  it('preserves uint64 ids in raw REST JSON before model conversion', () => {
+    http.post.and.returnValue(
+      of(
+        '[{"coin":"ETH","oid":18446744073709551615,"side":"B",' +
+          '"limitPx":"1800","sz":"0.1","origSz":"0.2",' +
+          '"timestamp":1,"orderType":"Limit","reduceOnly":false}]'
+      ) as any
+    );
+
+    let orders;
+    service.getOpenOrders('0xABC').subscribe((value) => (orders = value));
+
+    expect(orders[0].oid).toBe('18446744073709551615');
+  });
+
+  it('signs and submits a uint64 order id without a Number conversion', fakeAsync(() => {
+    http.post.and.returnValue(
+      of({ status: 'ok', response: { type: 'default' } }) as any
+    );
+
+    service
+      .cancelOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        3,
+        '18446744073709551615'
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    expect(http.post.calls.mostRecent().args[1]).toContain(
+      '"o":18446744073709551615'
+    );
+  }));
+
+  it('rejects an order id above uint64 before signing', () => {
+    expect(() =>
+      service.cancelOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        3,
+        '18446744073709551616'
+      )
+    ).toThrowError('Hyperliquid order id exceeds uint64');
+  });
 
   it('signs a spot to perps USDC class transfer', fakeAsync(() => {
     http.post.and.returnValue(
@@ -669,6 +1271,8 @@ describe('HyperliquidService account balances', () => {
     }) as any);
 
     service.getAccount('0xABC').subscribe((account) => {
+      expect(account.accountValueExact).toBe('9007199254740993.000001');
+      expect(account.totalBalanceExact).toBe('9007199254740993.000001');
       expect(account.withdrawableExact).toBe('9007199254740993.000001');
       expect(account.availableBalanceExact).toBe('9007199254740993.000001');
       expect(account.spotUsdcExact).toBe('9007199254740993.000002');
@@ -715,11 +1319,11 @@ describe('HyperliquidService account balances', () => {
 
     service.getAccount('0xABC').subscribe((account) => {
       expect(account.unified).toBeTrue();
-      expect(account.totalBalance).toBeCloseTo(999.91, 8);
-      expect(account.availableBalance).toBeCloseTo(998.01, 8);
-      expect(account.withdrawable).toBe(0);
-      expect(account.totalMarginUsed).toBe(0.96);
-      expect(account.marginRatio).toBeNull();
+      expect(account.totalBalanceExact).toBe('999.91');
+      expect(account.availableBalanceExact).toBe('998.01');
+      expect(account.withdrawableExact).toBe('0');
+      expect(account.totalMarginUsedExact).toBe('0.96');
+      expect(account.marginRatioExact).toBeNull();
       done();
     });
   });
@@ -729,10 +1333,14 @@ describe('HyperliquidService account balances', () => {
 
     service.getAccount('0xABC').subscribe((account) => {
       expect(account.unified).toBeFalse();
-      expect(account.totalBalance).toBeCloseTo(1.9, 8);
-      expect(account.availableBalance).toBe(0);
-      expect(account.spotUsdc).toBeCloseTo(998.97, 8);
-      expect(account.marginRatio).toBeCloseTo((0.48 / 1.9) * 100, 8);
+      expect(account.totalBalanceExact).toBe('1.9');
+      expect(account.availableBalanceExact).toBe('0');
+      expect(account.spotUsdcExact).toBe('998.97');
+      expect(Number(account.marginRatioExact)).toBeCloseTo(
+        (0.48 / 1.9) * 100,
+        8
+      );
+      expect(account.marginRatioExact).toMatch(/^25\.2631578947/);
       done();
     });
   });
@@ -763,7 +1371,7 @@ describe('HyperliquidService account balances', () => {
     }) as any);
 
     service.getAccount('0xABC').subscribe((account) => {
-      expect(account.marginRatio).toBe(2.5);
+      expect(account.marginRatioExact).toBe('2.5');
       done();
     });
   });
@@ -829,8 +1437,12 @@ describe('HyperliquidService account balances', () => {
     );
 
     service.getOrderBook('ETH').subscribe((book) => {
-      expect(book.bids).toEqual([{ price: 99, size: 2 }]);
-      expect(book.asks).toEqual([{ price: 101, size: 3 }]);
+      expect(book.bids).toEqual([
+        { price: 99, size: 2, priceExact: '99', sizeExact: '2' },
+      ]);
+      expect(book.asks).toEqual([
+        { price: 101, size: 3, priceExact: '101', sizeExact: '3' },
+      ]);
 
       spyOn<any>(service, 'send');
       const eth = jasmine.createSpy('eth');
@@ -868,8 +1480,8 @@ describe('HyperliquidService account balances', () => {
         user: '0xabc',
         coin: 'ETH',
       });
-      expect(data.maxTradeSzs).toEqual([0.5323, 0.5223]);
-      expect(data.availableToTrade).toEqual([1008.75, 989.78]);
+      expect(data.maxTradeSzs).toEqual(['0.5323', '0.5223']);
+      expect(data.availableToTrade).toEqual(['1008.75', '989.78']);
       expect(data.markPx).toBe(1895);
       done();
     });
@@ -949,8 +1561,8 @@ describe('HyperliquidService account balances', () => {
         },
       });
 
-      expect(updated.totalBalance).toBeCloseTo(1199.9, 8);
-      expect(updated.availableBalance).toBe(1198);
+      expect(updated.totalBalanceExact).toBe('1199.9');
+      expect(updated.availableBalanceExact).toBe('1198');
       expect(http.post).toHaveBeenCalledTimes(3);
       done();
     });
@@ -973,9 +1585,9 @@ describe('HyperliquidService account balances', () => {
         },
       });
 
-      expect(updated.accountValue).toBe(5);
-      expect(updated.totalMarginUsed).toBe(2);
-      expect(updated.spotUsdc).toBeCloseTo(998.97, 8);
+      expect(updated.accountValueExact).toBe('5');
+      expect(updated.totalMarginUsedExact).toBe('2');
+      expect(updated.spotUsdcExact).toBe('998.97');
       expect(http.post).toHaveBeenCalledTimes(3);
       done();
     });
@@ -1024,7 +1636,7 @@ describe('HyperliquidService account balances', () => {
     tick(3001);
     service.getAccount('0xABC').subscribe((value) => (account = value));
 
-    expect(account.totalBalance).toBeCloseTo(1199.9, 8);
+    expect(account.totalBalanceExact).toBe('1199.9');
     expect(http.post).toHaveBeenCalledTimes(4);
   }));
 
@@ -1041,45 +1653,184 @@ describe('HyperliquidService account balances', () => {
     ).toBe(1);
   });
 
-  it('uses assetId to merge main dex websocket market contexts', () => {
-    const markets: any[] = [
-      { assetId: 1, coin: 'SECOND', dayVolume: 0 },
-      { assetId: 0, coin: 'FIRST', dayVolume: 0 },
-    ];
-
-    const updated = service.updateMarketsFromAssetContexts(markets, {
-      ctxs: [
-        [
-          '',
-          [
-            {
-              markPx: '10',
-              oraclePx: '11',
-              prevDayPx: '8',
-              dayNtlVlm: '100',
-              openInterest: '2',
-              funding: '0.001',
-            },
-            {
-              markPx: '20',
-              oraclePx: '21',
-              prevDayPx: '10',
-              dayNtlVlm: '200',
-              openInterest: '3',
-              funding: '0.002',
-            },
-          ],
-        ],
-      ],
+  describe('cross-DEX aggregation', () => {
+    const snapshot = (
+      dex: string,
+      overrides: Partial<PerpsAccount> = {}
+    ): PerpsAccount => ({
+      unified: false,
+      abstractionMode: 'disabled',
+      dex,
+      accountValueExact: '0',
+      totalBalanceExact: '0',
+      totalMarginUsedExact: '0',
+      totalNtlPosExact: '0',
+      marginRatioExact: null,
+      withdrawableExact: '0',
+      availableBalanceExact: '0',
+      spotUsdcExact: '0',
+      spotUsdcHoldExact: '0',
+      positions: [],
+      ...overrides,
     });
+
+    it('sums balances at protocol precision', () => {
+      const aggregate = service.aggregateAccounts([
+        snapshot('', {
+          accountValueExact: '0.1',
+          totalBalanceExact: '0.1',
+          totalMarginUsedExact: '0.07',
+        }),
+        snapshot('neol', {
+          accountValueExact: '0.2',
+          totalBalanceExact: '0.2',
+          totalMarginUsedExact: '0.14',
+        }),
+      ]);
+
+      // 0.1 + 0.2 through a float is 0.30000000000000004.
+      expect(aggregate.totalBalanceExact).toBe('0.3');
+      expect(aggregate.totalMarginUsedExact).toBe('0.21');
+    });
+
+    it('reports the riskiest pool ratio, never a ratio of the sums', () => {
+      const aggregate = service.aggregateAccounts([
+        snapshot('', {
+          accountValueExact: '1000',
+          totalMarginUsedExact: '10',
+          marginRatioExact: '1',
+        }),
+        snapshot('neol', {
+          accountValueExact: '10',
+          totalMarginUsedExact: '9',
+          marginRatioExact: '90',
+        }),
+      ]);
+
+      // Summing would read as ~1.9% and hide a pool about to be liquidated.
+      expect(aggregate.marginRatioExact).toBe('90');
+      expect(aggregate.marginRatioDex).toBe('neol');
+    });
+
+    it('counts the account-wide spot wallet once', () => {
+      const aggregate = service.aggregateAccounts([
+        snapshot('', { spotUsdcExact: '500', spotUsdcHoldExact: '20' }),
+        snapshot('neol'),
+      ]);
+
+      expect(aggregate.spotUsdcExact).toBe('500');
+      expect(aggregate.spotUsdcHoldExact).toBe('20');
+    });
+
+    it('keeps each position on its own DEX and records what is missing', () => {
+      const aggregate = service.aggregateAccounts(
+        [
+          snapshot('', {
+            positions: [{ key: 'hl:ETH', dex: '', coin: 'ETH' } as any],
+          }),
+          snapshot('neol', {
+            positions: [
+              { key: 'neol:IWM', dex: 'neol', coin: 'neol:IWM' } as any,
+            ],
+          }),
+        ],
+        ['broken']
+      );
+
+      expect(aggregate.positions.map((p) => p.key)).toEqual([
+        'hl:ETH',
+        'neol:IWM',
+      ]);
+      expect(aggregate.missingDexes).toEqual(['broken']);
+    });
+
+    it('routes a clearinghouse frame to the DEX that sent it', () => {
+      const aggregate = service.aggregateAccounts([
+        snapshot('', { accountValueExact: '100' }),
+        snapshot('neol', { accountValueExact: '5' }),
+      ]);
+
+      const updated = service.updateAggregatedFromClearinghouseState(
+        aggregate,
+        {
+          user: '0xabc',
+          dex: 'neol',
+          clearinghouseState: {
+            marginSummary: {
+              accountValue: '7',
+              totalMarginUsed: '0',
+              totalNtlPos: '0',
+            },
+            withdrawable: '7',
+            assetPositions: [],
+          },
+        }
+      );
+
+      const canonical = updated.byDex.find((item) => item.dex === '');
+      const neol = updated.byDex.find((item) => item.dex === 'neol');
+      expect(canonical.accountValueExact).toBe('100');
+      expect(neol.accountValueExact).toBe('7');
+      expect(updated.accountValueExact).toBe('107');
+    });
+  });
+
+  it('merges a dex context frame by universe index, not list position', () => {
+    // The list is volume-sorted, so a market's position in it says nothing
+    // about which context belongs to it; only `dexAssetIndex` does.
+    const markets: any[] = [
+      { key: 'hl:SECOND', dex: '', dexAssetIndex: 1, coin: 'SECOND' },
+      { key: 'hl:FIRST', dex: '', dexAssetIndex: 0, coin: 'FIRST' },
+      { key: 'neol:OTHER', dex: 'neol', dexAssetIndex: 0, coin: 'neol:OTHER' },
+    ];
+    const other = markets[2];
+
+    const updated = service.mergeDexAssetContexts(markets, '', [
+      {
+        markPx: '10',
+        midPx: '10',
+        oraclePx: '11',
+        prevDayPx: '8',
+        dayNtlVlm: '100',
+        openInterest: '2',
+        funding: '0.001',
+      },
+      {
+        markPx: '20',
+        midPx: '20',
+        oraclePx: '21',
+        prevDayPx: '10',
+        dayNtlVlm: '200',
+        openInterest: '3',
+        funding: '0.002',
+      },
+    ] as any);
 
     const first = updated.find((market) => market.coin === 'FIRST');
     const second = updated.find((market) => market.coin === 'SECOND');
-    expect(first.markPx).toBe(10);
-    expect(first.openInterest).toBe(20);
-    expect(second.markPx).toBe(20);
-    expect(second.openInterest).toBe(60);
-    expect(updated[0].coin).toBe('SECOND');
+    expect(first.markPxExact).toBe('10');
+    expect(first.openInterestExact).toBe('20');
+    expect(second.markPxExact).toBe('20');
+    expect(second.openInterestExact).toBe('60');
+    // A price update must not reorder the list under the user's finger.
+    expect(updated.map((market) => market.coin)).toEqual([
+      'SECOND',
+      'FIRST',
+      'neol:OTHER',
+    ]);
+    // Another DEX's markets are not even re-created, so `trackBy` sees no churn.
+    expect(updated[2]).toBe(other);
+  });
+
+  it('leaves markets untouched when a frame has no context for them', () => {
+    const markets: any[] = [
+      { key: 'hl:ONLY', dex: '', dexAssetIndex: 7, coin: 'ONLY' },
+    ];
+
+    expect(service.mergeDexAssetContexts(markets, '', [] as any)).toBe(markets);
+    expect(service.mergeDexAssetContexts(markets, 'neol', [{}] as any)[0]).toBe(
+      markets[0]
+    );
   });
 
   it('refreshes the market REST snapshot after its TTL', fakeAsync(() => {
@@ -1193,7 +1944,7 @@ describe('HyperliquidService account balances', () => {
     service.getAccount('0xABC').subscribe((value) => (account = value));
 
     expect(spotAttempts).toBe(2);
-    expect(account.spotUsdc).toBe(10);
+    expect(account.spotUsdcExact).toBe('10');
   }));
 
   it('does not keep a failed account mode in the 30-minute cache', fakeAsync(() => {

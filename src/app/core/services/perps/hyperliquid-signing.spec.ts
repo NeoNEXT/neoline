@@ -33,6 +33,42 @@ describe('Hyperliquid signing', () => {
     );
   });
 
+  it('encodes an order id above 2^53 as the standard msgpack uint64', () => {
+    const oid = 18446744073709551615n;
+    expect(
+      hyperliquidActionHash(
+        { type: 'cancel', cancels: [{ a: 0, o: oid }] },
+        1710000000123
+      )
+    ).toBe(
+      '0x37c8177a5be217ee61571a108963956e924026cb181bbdd390f7681f49734f2d'
+    );
+  });
+
+  /**
+   * msgpack integers must take their narrowest format or the exchange, which
+   * re-encodes the action before checking the signature, computes a different
+   * hash and recovers a different signer. Plain numbers already go through the
+   * library's minimal encoder, so a bigint of the same value must hash to
+   * exactly the same thing.
+   */
+  it('hashes a representable order id the same as a plain number', () => {
+    const nonce = 1710000000123;
+    [0, 42, 77738308, 4294967295, 4294967296, 34567890123].forEach((oid) => {
+      expect(
+        hyperliquidActionHash(
+          { type: 'cancel', cancels: [{ a: 0, o: BigInt(oid) }] },
+          nonce
+        )
+      ).toBe(
+        hyperliquidActionHash(
+          { type: 'cancel', cancels: [{ a: 0, o: oid }] },
+          nonce
+        )
+      );
+    });
+  });
+
   it('signs an L1 action as the wallet agent', async () => {
     const nonce = 1710000000123;
     const signature = await signHyperliquidL1Action(

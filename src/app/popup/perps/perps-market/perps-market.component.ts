@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
+import BigNumber from 'bignumber.js';
 import { Unsubscribable } from 'rxjs';
 
 import { AppState } from '@/app/reduers';
@@ -21,6 +22,7 @@ import {
   formatPrice,
   formatSignedPercent,
   formatSignedUsd,
+  formatSize,
   pad2,
   priceDecimals,
 } from '../perps.util';
@@ -103,12 +105,27 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   }
 
   get priceDecimals(): number {
-    // MetaMask keeps high-value market axes compact (1879.0 rather than
-    // 1879.00). This input only affects the chart axis; header/order precision
-    // remains unchanged.
-    return Math.abs(this.displayPrice) >= 100
-      ? 1
-      : priceDecimals(this.displayPrice);
+    // The axis follows the market's own tick, so it cannot show a precision
+    // the exchange never quotes, nor disagree with the header above it.
+    return priceDecimals(
+      this.displayPrice,
+      this.market?.szDecimals,
+      this.usingMid
+    );
+  }
+
+  /**
+   * The name to show. The route carries the protocol coin, which on a HIP-3
+   * market is prefixed with its DEX; that prefix belongs in the badge beside
+   * the name, not inside it.
+   */
+  get symbol(): string {
+    return this.market?.symbol ?? this.coin;
+  }
+
+  /** Whether the header price is the book mid rather than the mark fallback. */
+  get usingMid(): boolean {
+    return !!this.market?.midPxExact;
   }
 
   /**
@@ -121,13 +138,13 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
    * Mark and oracle stay where they belong — margin, liquidation and funding —
    * with the oracle shown on its own row in the stats card below.
    */
-  get displayPrice(): number {
-    return this.market?.midPx || this.market?.markPx || 0;
+  get displayPrice(): string | null {
+    return this.market?.midPxExact ?? this.market?.markPxExact ?? null;
   }
 
   /** Quoted off the same price shown beside it, against yesterday's close. */
-  get displayChangePercent(): number {
-    return this.market?.changePercent || 0;
+  get displayChangePercent(): string | null {
+    return this.market?.changePercentExact ?? null;
   }
 
   /** Funding is quoted per hour; show it the way Hyperliquid's own UI does. */
@@ -135,7 +152,12 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     if (!this.market) {
       return '--';
     }
-    return `${(this.market.funding * 100).toFixed(4)}%`;
+    return `${new BigNumber(this.market.fundingExact).times(100).toFixed(4)}%`;
+  }
+
+  /** Sign test for a decimal string, which a template cannot do with `< 0`. */
+  isNegative(value: string | null): boolean {
+    return value !== null && new BigNumber(value).isLessThan(0);
   }
 
   /** Funding settles on the hour; count down to the next boundary. */
@@ -282,6 +304,10 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
 
   fillTime(fill: PerpsFill): string {
     return formatFillTime(fill.time);
+  }
+
+  fillSize(fill: PerpsFill): string {
+    return formatSize(fill.sz, this.market?.szDecimals);
   }
 
   learnBasics() {

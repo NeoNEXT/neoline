@@ -42,7 +42,7 @@
           <div class="time">{{ time(order.timestamp) }}</div>
         </div>
         <div class="fill-amount">
-          <div class="size">{{ order.sz }} {{ order.coin }}</div>
+          <div class="size">{{ size(order.sz, order.coin) }} {{ order.coin }}</div>
           <div class="price">${{ formatPrice(+order.limitPx) }}</div>
         </div>
         <button
@@ -74,7 +74,7 @@
           <div class="time">{{ fillTime(fill) }}</div>
         </div>
         <div class="fill-amount">
-          <div class="size">{{ fill.sz }} {{ fill.coin }}</div>
+          <div class="size">{{ size(fill.sz, fill.coin) }} {{ fill.coin }}</div>
           <div class="price">${{ formatPrice(+fill.px) }}</div>
           <div class="price" *ngIf="fill.fee">
             {{ "perpsFee" | translate | async }}: {{ fill.fee }} {{ fill.feeToken || "USDC" }}
@@ -111,7 +111,9 @@
           <div class="time">{{ time(item.statusTimestamp) }}</div>
         </div>
         <div class="fill-amount">
-          <div class="size">{{ item.order.origSz }} {{ item.order.coin }}</div>
+          <div class="size">
+            {{ size(item.order.origSz, item.order.coin) }} {{ item.order.coin }}
+          </div>
           <div class="price">${{ formatPrice(+item.order.limitPx) }}</div>
         </div>
       </div>

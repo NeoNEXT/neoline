@@ -16,18 +16,19 @@ import {
   ISeriesApi,
   UTCTimestamp,
 } from 'lightweight-charts';
+import BigNumber from 'bignumber.js';
 import { PerpsCandle } from '@popup/_lib/perps';
 
 /** Colors shared by both themes; grid/text colors are read from CSS variables. */
 const UP_COLOR = '#06ccab';
 const DOWN_COLOR = '#fa5555';
 const VOLUME_ALPHA = '59'; // 35% opacity suffix for 8-digit hex colors
-/** Keep candles close to MetaMask's visual density at extension width. */
+/** Candles stay legible at extension width up to about this many on screen. */
 const INITIAL_VISIBLE_BARS = 30;
 const RIGHT_OFFSET_BARS = 2;
 
 /**
- * Candlestick + volume chart backed by TradingView lightweight-charts.
+ * Candlestick + volume chart backed by the lightweight-charts library.
  *
  * The public contract is unchanged from the original SVG implementation:
  * candles in, sized chart out. Incremental updates go through `series.update`
@@ -181,8 +182,8 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
 
   /**
    * `fitContent` compressed the complete candle snapshot into one screen. Start
-   * at a readable MetaMask-like density instead, while leaving later live ticks
-   * and user zoom/scroll untouched.
+   * at a readable density instead, while leaving later live ticks and user
+   * zoom/scroll untouched.
    */
   private showRecentBars(dataLength: number) {
     const lastIndex = dataLength - 1;
@@ -196,10 +197,10 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     this.candleSeries.setData(
       data.map((c) => ({
         time: this.toChartTime(c.t),
-        open: Number(c.o),
-        high: Number(c.h),
-        low: Number(c.l),
-        close: Number(c.c),
+        open: this.chartNumber(c.o),
+        high: this.chartNumber(c.h),
+        low: this.chartNumber(c.l),
+        close: this.chartNumber(c.c),
       }))
     );
     this.volumeSeries.setData(
@@ -215,10 +216,10 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     const time = this.toChartTime(c.t);
     this.candleSeries.update({
       time,
-      open: Number(c.o),
-      high: Number(c.h),
-      low: Number(c.l),
-      close: Number(c.c),
+      open: this.chartNumber(c.o),
+      high: this.chartNumber(c.h),
+      low: this.chartNumber(c.l),
+      close: this.chartNumber(c.c),
     });
     this.volumeSeries.update({
       time,
@@ -229,14 +230,28 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
 
   /** Hyperliquid candle volume is base-asset size; chart it as USD notional. */
   private volumeUsd(c: PerpsCandle): number {
-    const value = Number(c.v) * Number(c.c);
-    return Number.isFinite(value) && value >= 0 ? value : 0;
+    const value = new BigNumber(c.v).times(c.c);
+    return value.isFinite() && value.isGreaterThanOrEqualTo(0)
+      ? value.toNumber()
+      : 0;
   }
 
   private volumeColor(c: PerpsCandle): string {
     return (
-      (Number(c.c) >= Number(c.o) ? UP_COLOR : DOWN_COLOR) + VOLUME_ALPHA
+      (new BigNumber(c.c).isGreaterThanOrEqualTo(c.o)
+        ? UP_COLOR
+        : DOWN_COLOR) + VOLUME_ALPHA
     );
+  }
+
+  /**
+   * Protocol decimals stay as strings/BigNumber through every calculation.
+   * lightweight-charts accepts only IEEE-754 numbers, so conversion happens
+   * once at this rendering boundary; chart coordinates never feed trading.
+   */
+  private chartNumber(value: string): number {
+    const decimal = new BigNumber(value);
+    return decimal.isFinite() ? decimal.toNumber() : 0;
   }
 
   /**

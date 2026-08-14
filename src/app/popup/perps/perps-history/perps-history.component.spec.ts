@@ -10,7 +10,7 @@ describe('PerpsHistoryComponent order direction', () => {
     reduceOnly: boolean
   ): PerpsOpenOrder => ({
     coin: 'ETH',
-    oid: 1,
+    oid: '1',
     side,
     limitPx: '2000',
     sz: '1',

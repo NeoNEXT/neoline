@@ -8,21 +8,21 @@
         stroke-linecap="round"
       />
     </svg>
-    <img *ngIf="coinLogo(coin)" [src]="coinLogo(coin)" alt="" />
+    <img *ngIf="coinLogo(symbol)" [src]="coinLogo(symbol)" alt="" />
     <span
       class="letter-logo"
-      *ngIf="!coinLogo(coin)"
+      *ngIf="!coinLogo(symbol)"
       [style.background]="coinColor(coin)"
-      >{{ coin.charAt(0) }}</span
+      >{{ symbol.charAt(0) }}</span
     >
-    <div class="pair">{{ coin }}-USDC</div>
-    <span class="price">${{ market ? formatPrice(market.midPx) : "--" }}</span>
+    <div class="pair">{{ symbol }}-USDC</div>
+    <span class="price">${{ formatPrice(market?.midPxExact, market?.szDecimals, true) }}</span>
     <span
       class="change"
       *ngIf="market"
-      [class.negative]="market.changePercent < 0"
+      [class.negative]="isNegative(market.changePercentExact)"
     >
-      {{ formatSignedPercent(market.changePercent) }}
+      {{ formatSignedPercent(market.changePercentExact) }}
     </span>
   </div>
 
@@ -50,7 +50,15 @@
       {{
         (position.isLong ? "perpsLong" : "perpsShort") | translate | async
       }}
-      · {{ positionSize | number: "1.0-8" }} {{ coin }}
+      · {{ formattedPositionSize }} {{ symbol }}
+    </b>
+  </div>
+
+  <div class="close-position" *ngIf="reverseMode">
+    <span>{{ "perpsReversePosition" | translate | async }}</span>
+    <b [class.short]="!position.isLong">
+      {{ (position.isLong ? "perpsLong" : "perpsShort") | translate | async }}
+      · {{ formattedPositionSize }} {{ symbol }}
     </b>
   </div>
 
@@ -141,6 +149,9 @@
       <span>%</span>
     </label>
   </div>
+  <p class="risk-tip" *ngIf="nearMarginLimit">
+    {{ "perpsNearMarginLimit" | translate | async }}
+  </p>
 
   <!-- 杠杆滑块 -->
   <ng-container *ngIf="!closeMode">
@@ -151,6 +162,9 @@
         {{ market.maxLeverage }}x</span
       >
     </div>
+    <p class="margin-mode-tip">
+      {{ "perpsIsolatedOnly" | translate | async }}
+    </p>
     <div class="range-control leverage-range">
       <input
         type="range"
@@ -185,6 +199,14 @@
   <!-- 预估 -->
   <div class="summary" *ngIf="preview">
     <div class="row" *ngIf="!closeMode">
+      <span class="label">{{ "perpsTheoreticalBuyingPower" | translate | async }}</span>
+      <span class="value">{{ formatUsd(theoreticalBuyingPower) }}</span>
+    </div>
+    <div class="row" *ngIf="!closeMode">
+      <span class="label">{{ "perpsBufferedMax" | translate | async }}</span>
+      <span class="value">{{ formatUsd(bufferedMaxOrderNotional.toNumber()) }}</span>
+    </div>
+    <div class="row" *ngIf="!closeMode">
       <span class="label">
         {{ "perpsLiqPrice" | translate | async }}
         <tooltip
@@ -194,7 +216,7 @@
           <img src="assets/images/common/tooltip.svg" alt="" />
         </tooltip>
       </span>
-      <span class="value">${{ formatPrice(preview.liquidationPx) }}</span>
+      <span class="value">${{ formatPrice(preview.liquidationPxExact, market?.szDecimals) }}</span>
     </div>
     <div class="row">
       <span class="label">
@@ -214,7 +236,7 @@
           <img src="assets/images/common/tooltip.svg" alt="" />
         </tooltip>
       </span>
-      <span class="value">{{ formatUsd(preview.margin) }}</span>
+      <span class="value">{{ formatUsd(preview.marginExact) }}</span>
     </div>
     <div class="row">
       <span class="label">
@@ -276,6 +298,9 @@
   <p class="error-tip" *ngIf="unsupportedAccountMode">
     {{ "perpsPortfolioUnsupported" | translate | async }}
   </p>
+  <p class="error-tip" *ngIf="crossPositionUnsupported">
+    {{ "perpsCrossPositionUnsupported" | translate | async }}
+  </p>
   <p class="error-tip" *ngIf="accountLoadError">
     {{ "perpsLoadFailed" | translate | async }}
   </p>
@@ -290,7 +315,7 @@
       [disabled]="!canSubmit"
       (click)="reviewing ? submit() : review()"
     >
-      {{ ctaLabel | translate | async }} {{ coin }}
+      {{ ctaLabel | translate | async }} {{ symbol }}
       <ng-container *ngIf="!closeMode"> · {{ leverage }}x</ng-container>
     </button>
   </div>

@@ -154,7 +154,11 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   }
 
   get showTransfer(): boolean {
-    return !!this.account && !this.account.unified && this.account.spotUsdc > 0;
+    return (
+      !!this.account &&
+      !this.account.unified &&
+      new BigNumber(this.account.spotUsdcExact).isGreaterThan(0)
+    );
   }
 
   get unsupportedAccountMode(): boolean {
@@ -166,9 +170,8 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     return this.isDeposit
       ? this.walletBalanceExact
       : this.isTransfer
-      ? this.account?.spotUsdcExact ?? String(this.account?.spotUsdc || 0)
-      : this.account?.availableBalanceExact ??
-          String(this.account?.availableBalance || 0);
+      ? this.account?.spotUsdcExact ?? '0'
+      : this.account?.availableBalanceExact ?? '0';
   }
 
   get amountNumber(): number {

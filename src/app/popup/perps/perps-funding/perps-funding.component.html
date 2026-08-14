@@ -46,11 +46,11 @@
       </ng-container>
       <ng-container *ngIf="isWithdraw">
         {{ "perpsAvailableBalance" | translate | async }}
-        {{ formatUsd(account?.availableBalance || 0) }}
+        {{ formatUsd(account?.availableBalanceExact) }}
       </ng-container>
       <ng-container *ngIf="isTransfer">
         {{ "perpsSpotBalance" | translate | async }}
-        {{ formatUsd(account?.spotUsdc || 0) }}
+        {{ formatUsd(account?.spotUsdcExact) }}
       </ng-container>
     </div>
 

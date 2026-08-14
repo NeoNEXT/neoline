@@ -1814,18 +1814,6 @@
   "perpsFundPrompt": {
     "message": "무기한 선물 계좌에 입금하면 거래를 시작할 수 있습니다."
   },
-  "perpsFilterAll": {
-    "message": "전체"
-  },
-  "perpsFilterNeo": {
-    "message": "Neo 생태계"
-  },
-  "perpsFilterMajor": {
-    "message": "주요 코인"
-  },
-  "perpsFilterGainers": {
-    "message": "상승률"
-  },
   "perpsSearchMarket": {
     "message": "마켓 검색"
   },
@@ -2066,6 +2054,27 @@
   "perpsLoadFailed": {
     "message": "Hyperliquid 데이터를 불러올 수 없습니다. 연결을 확인하고 다시 시도하세요."
   },
+  "perpsFeedStale": {
+    "message": "데이터 연결 끊김 · 마지막 가격 표시 중"
+  },
+  "perpsLoadMore": {
+    "message": "더 보기"
+  },
+  "perpsSortChange": {
+    "message": "24시간 변동"
+  },
+  "perpsSortVolume": {
+    "message": "24시간 거래대금"
+  },
+  "perpsNoLiquidationPrice": {
+    "message": "청산가 없음"
+  },
+  "perpsMarkPriceTag": {
+    "message": "마크"
+  },
+  "perpsAggregateIncomplete": {
+    "message": "일부 DEX 데이터를 가져오지 못했습니다. 합계는 계정의 일부만 반영합니다."
+  },
   "perpsOrderCanceled": {
     "message": "주문이 취소되었습니다."
   },
@@ -2093,6 +2102,31 @@
   "perpsAutoClose": {
     "message": "자동 청산"
   },
+  "perpsIsolatedOnly": {
+    "message": "증거금 모드: 격리 (NeoLine은 격리 주문만 지원합니다)"
+  },
+  "perpsCrossPositionUnsupported": {
+    "message": "이 시장에 교차 증거금 포지션이 있습니다. NeoLine은 격리 주문만 지원하므로 포지션을 추가할 수 없습니다."
+  },
+  "perpsLeverageUpdatedReviewAgain": { "message": "레버리지가 업데이트되었습니다. 갱신된 주문을 다시 검토한 후 제출하세요." },
+  "perpsOrderFilled": { "message": "주문이 전부 체결되었습니다." },
+  "perpsOrderPartiallyFilled": { "message": "주문이 일부 체결되었습니다. 다시 시도하기 전에 남은 포지션을 확인하세요." },
+  "perpsOrderResting": { "message": "지정가 주문이 등록되었습니다." },
+  "perpsOrderUnfilled": { "message": "시장가 주문이 체결되지 않았습니다. 자동 재시도하지 않았습니다." },
+  "perpsMarketChangedReviewAgain": { "message": "시장이 변했거나 최신 유동성을 확인할 수 없습니다. 주문을 다시 검토하세요." },
+  "perpsOrderRejected": {
+    "message": "주문이 거부되었습니다. 현재 시장 및 계정 상태를 확인하세요."
+  },
+  "perpsOrderUnknown": {
+    "message": "주문 상태를 확인할 수 없습니다. 미체결 주문과 체결 내역을 갱신하기 전에는 다시 시도하지 마세요."
+  },
+  "perpsOrderStatusResolved": { "message": "주문 상태를 복구하고 계정 데이터를 갱신했습니다." },
+  "perpsReversePosition": { "message": "기존 포지션 반전" },
+  "perpsReverseToLong": { "message": "롱으로 반전" },
+  "perpsReverseToShort": { "message": "숏으로 반전" },
+  "perpsTheoreticalBuyingPower": { "message": "이론상 구매력" },
+  "perpsBufferedMax": { "message": "최대 주문(0.5% 예비금)" },
+  "perpsNearMarginLimit": { "message": "이 금액은 Max 예비금을 사용하므로 증거금이 변하면 거래소에서 거부될 수 있습니다." },
   "confirm": {
     "message": "확인"
   }
