@@ -72,13 +72,19 @@ export class PopupApproveDialogComponent implements OnInit {
   }
 
   private getTxParams() {
-    if (!this.inputAmount) return;
-    const amount = new BigNumber(this.inputAmount).toFixed();
+    const approveAmount = this.getApproveAmount();
+    if (approveAmount === null) {
+      // 输入被清空时必须一并清掉交易数据，否则确认时会沿用上一次编码的数量。
+      this.txParams = undefined;
+      return;
+    }
     const approveData = this.evmTxService.getApproveERC20Data({
       assetAddress: this.data.asset.asset_id,
       toAddress: this.data.spender,
-      approveAmount: ethers.parseUnits(amount, this.data.asset.decimals),
+      approveAmount,
     });
+    // 数据没变就保留原对象，避免白白触发一次 gas 重新估算。
+    if (this.txParams?.data === approveData) return;
     this.txParams = {
       from: this.fromAddress,
       to: this.data.asset.asset_id,
@@ -86,15 +92,32 @@ export class PopupApproveDialogComponent implements OnInit {
     };
   }
 
+  private getApproveAmount(): bigint | null {
+    const amount = new BigNumber(this.inputAmount);
+    if (amount.isNaN() || amount.isNegative()) return null;
+    return ethers.parseUnits(
+      amount
+        .decimalPlaces(this.data.asset.decimals, BigNumber.ROUND_DOWN)
+        .toFixed(),
+      this.data.asset.decimals
+    );
+  }
+
   useDappApproveAmount() {
-    this.inputAmount = this.data.amount;
-    this.checkInputAmountIsBig();
-    this.initTip = false;
+    this.setInputAmount(this.data.amount);
   }
 
   useMaxApproveAmount() {
-    this.inputAmount = this.data.asset.balance;
-    this.inputAmountIsBig = false;
+    this.setInputAmount(this.data.asset.balance);
+  }
+
+  // 快捷按钮不会走 input 事件，需要取消待执行的防抖并立即重新编码交易数据，
+  // 否则 data 里仍然是旧的授权数量。
+  private setInputAmount(amount: string) {
+    this.inputAmountSub?.unsubscribe();
+    this.inputAmount = amount;
+    this.checkInputAmountIsBig();
+    this.getTxParams();
     this.initTip = false;
   }
 
@@ -162,6 +185,10 @@ export class PopupApproveDialogComponent implements OnInit {
   }
 
   async confirm() {
+    // 输入是防抖的，此刻 data 可能还没跟上用户刚输入的数量，确认前先同步一次。
+    this.inputAmountSub?.unsubscribe();
+    this.getTxParams();
+    if (!this.txParams || !this.nonceInfo) return;
     const sendTxParams = this.evmTxService.getTxParams(
       this.txParams,
       this.neoXFeeInfo,

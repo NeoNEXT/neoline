@@ -145,7 +145,7 @@
     <div class="params-data" *ngIf="showDetail">
       <p class="title">{{ "data" | translate | async }}</p>
       <p>Function: Approve</p>
-      <p>{{ txParams.data }}</p>
+      <p>{{ txParams?.data }}</p>
     </div>
   </div>
 
@@ -155,7 +155,7 @@
     </button>
     <button
       class="confirm"
-      [ngClass]="{ disabled: !nonceInfo || insufficientFunds }"
+      [ngClass]="{ disabled: !nonceInfo || insufficientFunds || !txParams }"
       (click)="confirm()"
     >
       {{ "Approve" | translate | async }}
