@@ -102,6 +102,17 @@ export const BRIDGE_TOKENS_TESTNET: { neo3: Asset[]; neox: Asset[] } = {
   ],
 };
 
+/**
+ * Estimating the fee needs a well-formed recipient before the user has picked
+ * one. Both of these are the zero script hash + 1 on their chain — the Neo3 one
+ * only looks like a wallet because N3 addresses are base58-encoded script
+ * hashes. Neither is anybody's account, and no deposit is ever sent to them.
+ */
+export const BRIDGE_FEE_PROBE_ADDRESS = {
+  Neo3: 'NL1Frwvb3jo8sWyqN6NCfwg2o2Y2pQ9ttT',
+  NeoX: '0x0000000000000000000000000000000000000001',
+};
+
 export const BridgeParams = {
   [BridgeNetwork.MainNet]: {
     n3BridgeContract: '0xbb19cfc864b73159277e1fd39694b3fd5fc613d2',

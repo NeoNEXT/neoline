@@ -21,6 +21,7 @@ import {
   EvmTransactionParams,
   GAS3_CONTRACT,
   getErrorMessage,
+  isScriptFaultError,
   N3MainnetNetwork,
   N3TestnetNetwork,
   RpcNetwork,
@@ -49,8 +50,12 @@ import {
   PopupBridgeProgressDialogComponent,
   PopupSelectAddressDialogComponent,
 } from '../_dialogs';
-import { BridgeParams } from '../_lib/bridge';
-import { hasEnoughGasForBridgeFees } from './bridge-fee';
+import { BRIDGE_FEE_PROBE_ADDRESS, BridgeParams } from '../_lib/bridge';
+import {
+  getMaxBridgeAmount,
+  hasEnoughGasForBridgeFees,
+  isValidBridgeBalance,
+} from './bridge-fee';
 
 @Component({
   templateUrl: 'bridge.component.html',
@@ -75,6 +80,8 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     maxBridge: string;
   };
   private gasBalance: string;
+  private bridgeAssetBalancePromise: Promise<void>;
+  private isMaxBridgeAmount = false;
 
   getSourceTxReceiptInterval;
   getTargetTxReceiptInterval;
@@ -99,6 +106,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   isApproving = false;
 
   private accountSub: Unsubscribable;
+  private bridgeContextKey: string;
   private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   chainType: ChainType;
   n3Network: RpcNetwork;
@@ -129,7 +137,20 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
       this.neo3WalletArr = state.neo3WalletArr;
       this.neoXWalletArr = state.neoXWalletArr;
-      this.initData();
+      // Every action on the account slice emits a new reference, including
+      // wallet edits this page does not care about. Reinitialising on those
+      // would reset bridgeAsset to the first one while the amount the user
+      // typed for the old asset stays in the field.
+      const contextKey = [
+        this.chainType,
+        this.currentWallet?.accounts[0]?.address,
+        this.n3Network?.chainId,
+        this.neoXNetwork?.chainId,
+      ].join('/');
+      if (contextKey !== this.bridgeContextKey) {
+        this.bridgeContextKey = contextKey;
+        this.initData();
+      }
     });
   }
 
@@ -172,6 +193,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   }
 
   private initData() {
+    this.resetFeeEstimates();
     if (this.chainType === 'Neo3') {
       this.currentBridgeNetwork =
         this.n3Network.chainId === N3MainnetNetwork.chainId
@@ -189,18 +211,30 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       .subscribe(async (res) => {
         this.bridgeAssetList = this.chainType === 'Neo3' ? res.neo3 : res.neox;
         this.bridgeAsset = this.bridgeAssetList[0];
-        this.bridgeService
-          .getBridgeInfo(
-            this.chainType,
-            this.currentBridgeNetwork,
-            this.bridgeAsset
-          )
-          .subscribe((res) => {
-            this.bridgeInfo = res;
-          });
+        this.loadBridgeInfo();
         // balance
-        await this.getBridgeAssetBalance();
+        this.bridgeAssetBalancePromise = this.getBridgeAssetBalance();
+        await this.bridgeAssetBalancePromise;
       });
+  }
+
+  /**
+   * The fee and the deposit limits gate every amount check on this page, so a
+   * failed lookup has to be visible rather than leaving bridgeInfo undefined
+   * and the page silently half-working.
+   */
+  private loadBridgeInfo() {
+    this.bridgeService
+      .getBridgeInfo(this.chainType, this.currentBridgeNetwork, this.bridgeAsset)
+      .subscribe(
+        (res) => {
+          this.bridgeInfo = res;
+        },
+        () => {
+          this.bridgeInfo = undefined;
+          this.globalService.snackBarTip('getBridgeInfoFailed');
+        }
+      );
   }
 
   private getAssetRate() {
@@ -252,11 +286,13 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   }
 
   private async calculateNeoXFee() {
+    this.neoXFeeInfo = undefined;
     const txParams = this.bridgeService.getNeoXTxParams({
       bridgeAsset: this.bridgeAsset,
-      bridgeAmount: this.bridgeAmount ?? this.bridgeInfo.minBridge,
+      // resetData clears the field to '', which ?? would let through as an amount.
+      bridgeAmount: this.bridgeAmount || this.bridgeInfo.minBridge,
       fromAddress: this.currentWallet.accounts[0].address,
-      toAddress: this.toAddress ?? 'NL1Frwvb3jo8sWyqN6NCfwg2o2Y2pQ9ttT', // 0x0000000000000000000000000000000000000001
+      toAddress: this.toAddress || BRIDGE_FEE_PROBE_ADDRESS.Neo3,
       bridgeFee: this.bridgeInfo.bridgeFee,
       currentBridgeNetwork: this.currentBridgeNetwork,
     });
@@ -278,9 +314,10 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   private calculateNeoN3Fee() {
     const { invokeArgs, signers } = this.bridgeService.getNeoN3TxParams({
       bridgeAsset: this.bridgeAsset,
-      bridgeAmount: this.bridgeAmount ?? this.bridgeInfo.minBridge,
+      // resetData clears the field to '', which ?? would let through as an amount.
+      bridgeAmount: this.bridgeAmount || this.bridgeInfo.minBridge,
       fromAddress: this.currentWallet.accounts[0].address,
-      toAddress: this.toAddress ?? '0x0000000000000000000000000000000000000001',
+      toAddress: this.toAddress || BRIDGE_FEE_PROBE_ADDRESS.NeoX,
       bridgeFee: this.bridgeInfo.bridgeFee,
       currentBridgeNetwork: this.currentBridgeNetwork,
     });
@@ -304,6 +341,17 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   }
 
   async bridgeAll() {
+    try {
+      await this.bridgeAssetBalancePromise;
+    } catch {
+      this.globalService.snackBarTip('balanceLack');
+      return;
+    }
+    if (!isValidBridgeBalance(this.bridgeAsset.balance)) {
+      this.globalService.snackBarTip('balanceLack');
+      return;
+    }
+
     if (this.bridgeAsset.symbol !== 'GAS') {
       this.bridgeAmount = this.bridgeAsset.balance;
     } else if (this.chainType === 'Neo3') {
@@ -322,27 +370,41 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
           this.globalService.snackBarTip('balanceLack');
         }
       };
-      if (this.systemFee) {
-        getAllAmount();
-      } else {
-        this.calculateNeoN3Fee().subscribe(
-          () => {
-            getAllAmount();
-          },
-          () => {
-            this.bridgeAmount = this.bridgeAsset.balance;
-          }
-        );
+      if (!this.systemFee) {
+        // The fee probe deposits minBridge, so a balance that cannot even cover
+        // the fees already known here would only come back as a VM FAULT.
+        if (
+          !hasEnoughGasForBridgeFees(
+            this.bridgeAsset.balance,
+            this.bridgeInfo.bridgeFee,
+            this.priorityFee
+          )
+        ) {
+          this.globalService.snackBarTip('balanceLack');
+          return;
+        }
+        try {
+          await this.calculateNeoN3Fee().toPromise();
+        } catch (error) {
+          // FAULT means the node answered and the deposit script itself aborted
+          // — here the balance falling short — not that the network is down.
+          this.globalService.snackBarTip(
+            isScriptFaultError(error) ? 'balanceLack' : 'EstimateFeeNetworkError'
+          );
+          return;
+        }
       }
+      getAllAmount();
     } else {
-      if (!this.neoXFeeInfo) {
-        await this.calculateNeoXFee();
-      }
-      const tAmount = new BigNumber(this.bridgeAsset.balance).minus(
-        this.neoXFeeInfo.estimateGas
+      await this.calculateNeoXFee();
+      if (!this.neoXFeeInfo) return;
+      const tAmount = getMaxBridgeAmount(
+        this.bridgeAsset.balance,
+        this.neoXFeeInfo.estimateGas,
+        this.bridgeAsset.bridgeDecimals
       );
-      if (tAmount.comparedTo(0) > 0) {
-        this.bridgeAmount = tAmount.dp(this.bridgeAsset.decimals, 1).toFixed();
+      if (new BigNumber(tAmount).comparedTo(0) > 0) {
+        this.bridgeAmount = tAmount;
       } else {
         this.bridgeAmount = '0';
         this.globalService.snackBarTip('balanceLack');
@@ -351,6 +413,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     this.bridgeAmount = new BigNumber(this.bridgeAmount)
       .dp(this.bridgeAsset.bridgeDecimals, 1)
       .toFixed();
+    this.isMaxBridgeAmount = true;
     this.checkShowApprove();
     this.getAssetRate();
   }
@@ -555,9 +618,36 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
           .minus(this.bridgeAmount)
           .minus(this.neoXFeeInfo.estimateGas);
         if (tAmount.comparedTo(0) < 0) {
-          this.globalService.snackBarTip(
-            `${this.notification.content.insufficientSystemFee} ${this.bridgeAmount}`
-          );
+          if (this.isMaxBridgeAmount) {
+            const maxAmount = getMaxBridgeAmount(
+              this.bridgeAsset.balance,
+              this.neoXFeeInfo.estimateGas,
+              this.bridgeAsset.bridgeDecimals
+            );
+            if (
+              new BigNumber(maxAmount).comparedTo(this.bridgeInfo.minBridge) < 0
+            ) {
+              this.globalService.snackBarTip(
+                `${this.notification.content.insufficientSystemFee} ${this.bridgeAmount}`
+              );
+              this.loading = false;
+              return;
+            }
+            this.bridgeAmount = maxAmount;
+            this.neoXTxParams = this.bridgeService.getNeoXTxParams({
+              bridgeAsset: this.bridgeAsset,
+              bridgeAmount: this.bridgeAmount,
+              fromAddress: this.currentWallet.accounts[0].address,
+              toAddress: this.toAddress,
+              bridgeFee: this.bridgeInfo.bridgeFee,
+              currentBridgeNetwork: this.currentBridgeNetwork,
+            });
+            this.showConfirmPage = true;
+          } else {
+            this.globalService.snackBarTip(
+              `${this.notification.content.insufficientSystemFee} ${this.bridgeAmount}`
+            );
+          }
         } else {
           this.showConfirmPage = true;
         }
@@ -796,6 +886,19 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     this.initData();
     this.bridgeAmount = '';
     this.toAddress = '';
+    this.isMaxBridgeAmount = false;
+  }
+
+  /**
+   * A fee estimate only holds for one asset on one network, and bridgeAll()
+   * reuses it for the MAX amount as long as systemFee is set, so it has to go
+   * whenever either of those changes.
+   */
+  private resetFeeEstimates() {
+    this.systemFee = undefined;
+    this.networkFee = undefined;
+    this.networkFeeWithoutPriorityFee = undefined;
+    this.neoXFeeInfo = undefined;
   }
 
   private handleCreateNeo3TxError(error) {
@@ -881,18 +984,13 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   async selectBridgeAsset(asset: Asset) {
     this.bridgeAsset = asset;
     this.bridgeAmount = '';
+    this.isMaxBridgeAmount = false;
     this.isShowAssetList = false;
-    this.bridgeService
-      .getBridgeInfo(
-        this.chainType,
-        this.currentBridgeNetwork,
-        this.bridgeAsset
-      )
-      .subscribe((res) => {
-        this.bridgeInfo = res;
-      });
+    this.resetFeeEstimates();
+    this.loadBridgeInfo();
     this.checkShowApprove();
-    await this.getBridgeAssetBalance();
+    this.bridgeAssetBalancePromise = this.getBridgeAssetBalance();
+    await this.bridgeAssetBalancePromise;
   }
 
   checkBridgeAmount(event) {
@@ -906,6 +1004,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     }
     event.target.value = value.replace(regex, '$1');
     this.bridgeAmount = event.target.value;
+    this.isMaxBridgeAmount = false;
     this.getAssetRate();
     this.checkShowApprove();
   }

@@ -35,6 +35,8 @@ interface NotificationContent {
   exceedDepositLimit: string;
   exceedWithdrawalLimit: string;
   exceedBridgeCapacity: string;
+  EstimateFeeNetworkError: string;
+  getBridgeInfoFailed: string;
 }
 
 @Injectable()
@@ -75,6 +77,10 @@ export class NotificationService {
     exceedDepositLimit: 'Exceeding the maximum deposit limit',
     exceedWithdrawalLimit: 'Exceeding the maximum withdrawal limit',
     exceedBridgeCapacity: 'Bridge capacity is not enough, remaining',
+    EstimateFeeNetworkError:
+      'Network error: unable to fetch the gas fee right now. Please try again later.',
+    getBridgeInfoFailed:
+      'Unable to load the bridge fee and limits. Please try again later.',
   };
   private CN: NotificationContent = {
     close: '关闭',
@@ -110,6 +116,8 @@ export class NotificationService {
     exceedDepositLimit: '超过最大存入值',
     exceedWithdrawalLimit: '超过最大取出值',
     exceedBridgeCapacity: '跨链桥容量不足，剩余可存入',
+    EstimateFeeNetworkError: '网络异常，暂时无法获取手续费，请稍后重试。',
+    getBridgeInfoFailed: '暂时无法获取跨链手续费和限额，请稍后重试。',
   };
   private JA: NotificationContent = {
     close: '閉じる',
@@ -147,6 +155,10 @@ export class NotificationService {
     exceedDepositLimit: '最大入金制限を超えています',
     exceedWithdrawalLimit: '最大出金制限を超えています',
     exceedBridgeCapacity: 'ブリッジの残り容量が不足しています。残り',
+    EstimateFeeNetworkError:
+      'ネットワークエラー：現在ガス料金を取得できません。後でもう一度お試しください。',
+    getBridgeInfoFailed:
+      'ブリッジの手数料と上限を取得できません。後でもう一度お試しください。',
   };
   private KO: NotificationContent = {
     close: '닫기',
@@ -183,6 +195,10 @@ export class NotificationService {
     exceedDepositLimit: '최대 입금 한도를 초과했습니다',
     exceedWithdrawalLimit: '최대 출금 한도를 초과했습니다',
     exceedBridgeCapacity: '브리지 잔여 한도가 부족합니다. 잔여',
+    EstimateFeeNetworkError:
+      '네트워크 오류: 현재 가스 수수료를 가져올 수 없습니다. 나중에 다시 시도해 주세요.',
+    getBridgeInfoFailed:
+      '브리지 수수료와 한도를 가져올 수 없습니다. 나중에 다시 시도해 주세요.',
   };
   constructor(private settingState: SettingState) {
     this.content = this.EN;

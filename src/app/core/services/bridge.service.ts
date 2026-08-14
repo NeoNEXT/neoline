@@ -151,8 +151,9 @@ export class BridgeService {
     maxBridge: string;
   }> {
     const assetId = asset.asset_id;
-    if (this.depositInfo?.[network]?.[assetId]?.bridgeFee !== undefined) {
-      return of(this.depositInfo[network][assetId]);
+    const cached = this.depositInfo?.[network]?.[assetId];
+    if (cached) {
+      return of(cached);
     }
     const contractParams =
       assetId === GAS3_CONTRACT ? [] : [{ type: 'Hash160', value: assetId }];
@@ -194,35 +195,33 @@ export class BridgeService {
       ])
       .pipe(
         map(([feeRes, minRes, maxRes]) => {
-          if (!this.depositInfo[network]) {
-            this.depositInfo[network] = {};
+          const info = {
+            bridgeFee: feeRes.result
+              ? new BigNumber(handleNeo3StackNumberValue(feeRes.result))
+                  .shiftedBy(-8)
+                  .toFixed()
+              : '',
+            minBridge: minRes.result
+              ? new BigNumber(handleNeo3StackNumberValue(minRes.result))
+                  .shiftedBy(-asset.decimals)
+                  .toFixed()
+              : '',
+            maxBridge: maxRes.result
+              ? new BigNumber(handleNeo3StackNumberValue(maxRes.result))
+                  .shiftedBy(-asset.decimals)
+                  .toFixed()
+              : '',
+          };
+          // Caching a partial answer would pin the empty strings for the rest
+          // of the session, since the probe above only checks that an entry
+          // exists. Leave it uncached so the next call retries.
+          if (info.bridgeFee && info.minBridge && info.maxBridge) {
+            if (!this.depositInfo[network]) {
+              this.depositInfo[network] = {};
+            }
+            this.depositInfo[network][assetId] = info;
           }
-          if (!this.depositInfo[network][assetId]) {
-            this.depositInfo[network][assetId] = {
-              bridgeFee: '',
-              minBridge: '',
-              maxBridge: '',
-            };
-          }
-          if (feeRes.result) {
-            const fee = handleNeo3StackNumberValue(feeRes.result);
-            this.depositInfo[network][assetId].bridgeFee = new BigNumber(fee)
-              .shiftedBy(-8)
-              .toFixed();
-          }
-          if (minRes.result) {
-            const min = handleNeo3StackNumberValue(minRes.result);
-            this.depositInfo[network][assetId].minBridge = new BigNumber(min)
-              .shiftedBy(-asset.decimals)
-              .toFixed();
-          }
-          if (maxRes.result) {
-            const max = handleNeo3StackNumberValue(maxRes.result);
-            this.depositInfo[network][assetId].maxBridge = new BigNumber(max)
-              .shiftedBy(-asset.decimals)
-              .toFixed();
-          }
-          return this.depositInfo[network][assetId];
+          return info;
         })
       );
   }
@@ -386,59 +385,46 @@ export class BridgeService {
     minBridge: string;
     maxBridge: string;
   }> {
-    if (
-      this.withdrawInfo?.[network]?.[asset.asset_id]?.bridgeFee !== undefined
-    ) {
-      return Promise.resolve(this.withdrawInfo[network][asset.asset_id]);
+    // Only a filled-in entry is ever stored, so a lookup that is still in
+    // flight or that failed can never be served back as though it were real
+    // data — an empty bridgeFee reaches ethers.parseUnits and throws.
+    const cached = this.withdrawInfo?.[network]?.[asset.asset_id];
+    if (cached) {
+      return Promise.resolve(cached);
     }
     const contract = new ethers.Contract(
       BridgeParams[network].neoXBridgeContract,
       abiNeoXBridgeNeo3,
       this.provider
     );
-    if (!this.withdrawInfo[network]) {
-      this.withdrawInfo[network] = {};
-    }
-    if (!this.withdrawInfo[network][asset.asset_id]) {
-      this.withdrawInfo[network][asset.asset_id] = {
-        bridgeFee: '',
-        minBridge: '',
-        maxBridge: '',
+    const isNative = asset.asset_id === ETH_SOURCE_ASSET_HASH;
+    const request = isNative
+      ? contract.nativeBridge()
+      : contract.tokenBridges(asset.asset_id);
+    return request.then((res) => {
+      // The fee is denominated in NeoX GAS on both paths, the amounts in the
+      // asset's own decimals.
+      const bridgeFee = new BigNumber(res.config.fee).shiftedBy(-18).toFixed();
+      const amountDecimals = isNative ? 18 : asset.decimals;
+      const minAmount = new BigNumber(res.config.minAmount).shiftedBy(
+        -amountDecimals
+      );
+      const info = {
+        bridgeFee,
+        // Withdrawing native GAS pays the fee out of the amount itself.
+        minBridge: isNative
+          ? minAmount.plus(bridgeFee).toFixed()
+          : minAmount.toFixed(),
+        maxBridge: new BigNumber(res.config.maxAmount)
+          .shiftedBy(-amountDecimals)
+          .toFixed(),
       };
-    }
-    if (asset.asset_id === ETH_SOURCE_ASSET_HASH) {
-      return contract.nativeBridge().then((res) => {
-        this.withdrawInfo[network][ETH_SOURCE_ASSET_HASH].bridgeFee =
-          new BigNumber(res.config.fee).shiftedBy(-18).toFixed();
-        this.withdrawInfo[network][ETH_SOURCE_ASSET_HASH].minBridge =
-          new BigNumber(res.config.minAmount)
-            .shiftedBy(-18)
-            .plus(this.withdrawInfo[network][ETH_SOURCE_ASSET_HASH].bridgeFee)
-            .toFixed();
-        this.withdrawInfo[network][ETH_SOURCE_ASSET_HASH].maxBridge =
-          new BigNumber(res.config.maxAmount).shiftedBy(-18).toFixed();
-        return this.withdrawInfo[network][ETH_SOURCE_ASSET_HASH];
-      });
-    } else {
-      return contract.tokenBridges(asset.asset_id).then((res) => {
-        this.withdrawInfo[network][asset.asset_id].bridgeFee = new BigNumber(
-          res.config.fee
-        )
-          .shiftedBy(-18)
-          .toFixed();
-        this.withdrawInfo[network][asset.asset_id].minBridge = new BigNumber(
-          res.config.minAmount
-        )
-          .shiftedBy(-asset.decimals)
-          .toFixed();
-        this.withdrawInfo[network][asset.asset_id].maxBridge = new BigNumber(
-          res.config.maxAmount
-        )
-          .shiftedBy(-asset.decimals)
-          .toFixed();
-        return this.withdrawInfo[network][asset.asset_id];
-      });
-    }
+      if (!this.withdrawInfo[network]) {
+        this.withdrawInfo[network] = {};
+      }
+      this.withdrawInfo[network][asset.asset_id] = info;
+      return info;
+    });
   }
   getTransactionReceipt(hash: string, rpcUrl: string) {
     const tempProvider = new ethers.JsonRpcProvider(rpcUrl);
@@ -447,14 +433,21 @@ export class BridgeService {
 
   getNonceFromTransactionReceipt(receipt: any, asset: Asset) {
     const iface = new ethers.Interface(BRIDGE_EVENTS_ABI);
-    for (let log of receipt.logs) {
-      const decoded = iface.parseLog({ data: log.data, topics: log.topics });
-      if (!decoded) continue;
-      const eventName =
-        asset.asset_id === ETH_SOURCE_ASSET_HASH
-          ? 'NativeWithdrawal'
-          : 'TokenWithdrawal';
-      if (decoded.name === eventName) {
+    const eventName =
+      asset.asset_id === ETH_SOURCE_ASSET_HASH
+        ? 'NativeWithdrawal'
+        : 'TokenWithdrawal';
+    for (const log of receipt.logs ?? []) {
+      let decoded: ethers.LogDescription;
+      try {
+        decoded = iface.parseLog({ data: log.data, topics: log.topics });
+      } catch {
+        // A log from another contract can match a topic and still not fit the
+        // ABI. Throwing here would strand the caller: it has already stopped
+        // polling by the time this runs, so nothing would advance the tx state.
+        continue;
+      }
+      if (decoded?.name === eventName) {
         return new BigNumber(decoded.args.nonce).toNumber();
       }
     }
