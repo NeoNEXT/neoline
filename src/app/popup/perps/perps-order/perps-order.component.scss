@@ -15,16 +15,10 @@
     flex-shrink: 0;
   }
 
-  > img,
-  > .letter-logo {
+  > perps-coin-logo {
     width: 30px;
     height: 30px;
-  }
-  > img {
-    object-fit: contain;
-  }
-  > .letter-logo {
-    border-radius: 50%;
+    font-size: 14px;
   }
 
   .pair {
@@ -532,12 +526,3 @@
   }
 }
 
-.letter-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-family: NeverMind-DemiBold;
-  font-size: 14px;
-  flex-shrink: 0;
-}

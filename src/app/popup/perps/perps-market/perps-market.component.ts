@@ -15,8 +15,6 @@ import {
   PerpsMarket,
 } from '@popup/_lib/perps';
 import {
-  coinColor,
-  coinLogo,
   formatCompactUsd,
   formatFillTime,
   formatPrice,
@@ -64,8 +62,6 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   private countdownTimer: any;
 
   //#region template helpers
-  coinLogo = coinLogo;
-  coinColor = coinColor;
   formatPrice = formatPrice;
   formatCompactUsd = formatCompactUsd;
   formatSignedPercent = formatSignedPercent;

@@ -11,6 +11,7 @@ import { PerpsOrderComponent } from './perps-order/perps-order.component';
 import { PerpsFundingComponent } from './perps-funding/perps-funding.component';
 import { PerpsHistoryComponent } from './perps-history/perps-history.component';
 import { PerpsChartComponent } from './perps-chart/perps-chart.component';
+import { PerpsCoinLogoComponent } from './perps-coin-logo/perps-coin-logo.component';
 import { PopupPerpsSlippageDialogComponent } from '@popup/_dialogs/perps-slippage/perps-slippage.dialog';
 
 @NgModule({
@@ -21,6 +22,7 @@ import { PopupPerpsSlippageDialogComponent } from '@popup/_dialogs/perps-slippag
     PerpsFundingComponent,
     PerpsHistoryComponent,
     PerpsChartComponent,
+    PerpsCoinLogoComponent,
     PopupPerpsSlippageDialogComponent,
   ],
   imports: [CommonModule, FormsModule, ShareModule, PerpsRoutingModule],

@@ -16,16 +16,10 @@
     margin-top: 10px;
   }
 
-  .coin-logo,
-  .letter-logo {
+  perps-coin-logo {
     width: 40px;
     height: 40px;
-  }
-  .coin-logo {
-    object-fit: contain;
-  }
-  .letter-logo {
-    border-radius: 50%;
+    font-size: 16px;
   }
 
   .title {
@@ -309,16 +303,6 @@
       color: var(--error-color);
     }
   }
-}
-
-.letter-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-family: NeverMind-DemiBold;
-  font-size: 16px;
-  flex-shrink: 0;
 }
 
 .dex-badge {

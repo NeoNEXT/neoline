@@ -9,13 +9,7 @@
         stroke-linecap="round"
       />
     </svg>
-    <img class="coin-logo" *ngIf="coinLogo(symbol)" [src]="coinLogo(symbol)" alt="" />
-    <span
-      class="letter-logo"
-      *ngIf="!coinLogo(symbol)"
-      [style.background]="coinColor(symbol)"
-      >{{ symbol.charAt(0) }}</span
-    >
+    <perps-coin-logo [symbol]="symbol"></perps-coin-logo>
     <div class="title">
       <div class="name">
         {{ symbol }}

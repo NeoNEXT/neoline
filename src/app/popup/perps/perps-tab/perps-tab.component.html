@@ -74,17 +74,7 @@
         (click)="toMarket(position.coin)"
       >
         <div class="position-head">
-          <img
-            *ngIf="coinLogo(position.symbol)"
-            [src]="coinLogo(position.symbol)"
-            alt=""
-          />
-          <span
-            class="letter-logo"
-            *ngIf="!coinLogo(position.symbol)"
-            [style.background]="coinColor(position.symbol)"
-            >{{ position.symbol.charAt(0) }}</span
-          >
+          <perps-coin-logo [symbol]="position.symbol"></perps-coin-logo>
           <span class="coin">{{ position.symbol }}</span>
           <span class="dex-badge" *ngIf="position.dex">{{ position.dex }}</span>
           <span class="side-chip" [class.short]="!position.isLong">
@@ -206,13 +196,7 @@
   </p>
   <ng-template #marketRow let-market>
     <div class="market-row" (click)="toMarket(market.coin)">
-      <img *ngIf="coinLogo(market.symbol)" [src]="coinLogo(market.symbol)" alt="" />
-      <span
-        class="letter-logo"
-        *ngIf="!coinLogo(market.symbol)"
-        [style.background]="coinColor(market.symbol)"
-        >{{ market.symbol.charAt(0) }}</span
-      >
+      <perps-coin-logo [symbol]="market.symbol"></perps-coin-logo>
       <div class="market-name">
         <div class="coin">
           {{ market.symbol }}

@@ -19,8 +19,6 @@ import {
   PERPS_NEO_COINS,
 } from '@popup/_lib/perps';
 import {
-  coinColor,
-  coinLogo,
   formatCompactUsd,
   formatPrice,
   formatSignedPercent,
@@ -87,8 +85,6 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   private accountRequestId = 0;
 
   //#region template helpers
-  coinLogo = coinLogo;
-  coinColor = coinColor;
   formatCompactUsd = formatCompactUsd;
   formatPrice = formatPrice;
   formatUsd = formatUsd;

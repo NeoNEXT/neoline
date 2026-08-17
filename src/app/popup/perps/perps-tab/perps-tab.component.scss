@@ -141,18 +141,10 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    img,
-    .letter-logo {
+    perps-coin-logo {
       width: 28px;
       height: 28px;
-    }
-    // Bundled marks (NEO/GAS) are bare glyphs, not round badges: contain them
-    // instead of cropping to a circle, which cut off their edges.
-    img {
-      object-fit: contain;
-    }
-    .letter-logo {
-      border-radius: 50%;
+      font-size: 13px;
     }
     .coin {
       font-family: NeverMind-Medium;
@@ -293,16 +285,10 @@
     background: var(--hover-color);
   }
 
-  > img,
-  > .letter-logo {
+  > perps-coin-logo {
     width: 36px;
     height: 36px;
-  }
-  > img {
-    object-fit: contain;
-  }
-  > .letter-logo {
-    border-radius: 50%;
+    font-size: 15px;
   }
 
   .market-name {
@@ -353,16 +339,6 @@
   text-align: center;
   font-size: 13px;
   color: var(--tip-color);
-}
-
-.letter-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-family: NeverMind-DemiBold;
-  font-size: 15px;
-  flex-shrink: 0;
 }
 
 // 非实时:保留最后值,但让每个报价读起来都不像实时数据

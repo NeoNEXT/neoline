@@ -37,8 +37,6 @@ import {
   PERPS_MIN_SLIPPAGE_PERCENT,
 } from '@popup/_lib/perps';
 import {
-  coinColor,
-  coinLogo,
   availableToTradeForSide,
   collateralToNotional,
   estimateMarketSlippagePercent,
@@ -86,8 +84,6 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   readonly minOrderNotional = PERPS_MIN_ORDER_NOTIONAL;
 
   //#region template helpers
-  coinLogo = coinLogo;
-  coinColor = coinColor;
   formatPrice = formatPrice;
   formatUsd = formatUsd;
   formatSignedPercent = formatSignedPercent;

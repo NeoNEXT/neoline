@@ -25,7 +25,7 @@ function isMissing(value: PerpsExactValue): boolean {
   return !new BigNumber(value).isFinite();
 }
 
-/** Coins that ship with a bundled logo; everything else falls back to a letter chip. */
+/** Coins whose mark ships with the wallet, so it renders without a network round trip. */
 const LOCAL_COIN_LOGOS = {
   NEO: 'assets/images/token/neo.png',
   GAS: 'assets/images/token/gas.svg',
@@ -47,8 +47,41 @@ const FALLBACK_COLORS = [
   '#ff5c5c',
 ];
 
+/**
+ * Hyperliquid's own coin marks, which cover the canonical DEX's listings.
+ *
+ * A miss here is not a `404`: unknown coins answer `200` with the Hyperliquid
+ * app's HTML shell, so the only observable miss is the image failing to decode.
+ * Callers must fall back on the image's `error` event, never on a status check.
+ */
+const REMOTE_COIN_LOGO_PREFIX = 'https://app.hyperliquid.xyz/coins/';
+
+/**
+ * The mark's name on the CDN, whose path segments are case-sensitive.
+ *
+ * A leading `k` is Hyperliquid's 1000x contract-size prefix, not part of the
+ * asset: `kPEPE` is quoted in 1000-PEPE lots and wears PEPE's mark. Real
+ * symbols are uppercase, so a lowercase `k` in front of one is unambiguous.
+ */
+function coinMarkName(coin: string): string {
+  return /^k[A-Z0-9]/.test(coin) ? coin.slice(1) : coin.toUpperCase();
+}
+
+/**
+ * The market's mark: bundled asset first, then Hyperliquid's CDN. Returns `''`
+ * only for an absent symbol — a coin the CDN does not carry still returns a URL,
+ * and resolves to the letter chip when that image fails to load.
+ */
 export function coinLogo(coin: string): string {
-  return LOCAL_COIN_LOGOS[coin?.toUpperCase()] || '';
+  if (!coin) {
+    return '';
+  }
+  const local = LOCAL_COIN_LOGOS[coin.toUpperCase()];
+  if (local) {
+    return local;
+  }
+  const name = encodeURIComponent(coinMarkName(coin));
+  return `${REMOTE_COIN_LOGO_PREFIX}${name}.svg`;
 }
 
 /** Stable per-coin colour so a market keeps the same chip between renders. */

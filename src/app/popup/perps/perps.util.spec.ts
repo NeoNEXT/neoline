@@ -1,5 +1,6 @@
 import {
   availableToTradeForSide,
+  coinLogo,
   collateralToNotional,
   estimateMarketSlippagePercent,
   formatCompactUsd,
@@ -19,6 +20,29 @@ import {
 import { PerpsMarket, PerpsPosition } from '@popup/_lib/perps';
 
 describe('perps utilities', () => {
+  // Hyperliquid lists 232 perps against 7 bundled marks, so the CDN is the
+  // normal path and the bundled map is the exception, not the other way round.
+  it('resolves a coin mark, preferring the bundled asset', () => {
+    expect(coinLogo('NEO')).toBe('assets/images/token/neo.png');
+    expect(coinLogo('BTC')).toBe('https://app.hyperliquid.xyz/coins/BTC.svg');
+    expect(coinLogo('')).toBe('');
+    expect(coinLogo(undefined)).toBe('');
+  });
+
+  // The CDN's path segments are case-sensitive: `btc.svg` is not `BTC.svg`.
+  it('asks the CDN in the casing it answers to', () => {
+    expect(coinLogo('btc')).toBe('https://app.hyperliquid.xyz/coins/BTC.svg');
+  });
+
+  // `k` is the 1000x contract-size prefix, not part of the asset: kPEPE is
+  // quoted in 1000-PEPE lots and the CDN files its mark under PEPE.
+  it('drops the k multiplier prefix before asking for a mark', () => {
+    expect(coinLogo('kPEPE')).toBe('https://app.hyperliquid.xyz/coins/PEPE.svg');
+    expect(coinLogo('kBONK')).toBe('https://app.hyperliquid.xyz/coins/BONK.svg');
+    // Not a multiplier: real symbols are uppercase throughout.
+    expect(coinLogo('KAITO')).toBe('https://app.hyperliquid.xyz/coins/KAITO.svg');
+  });
+
   it('formats dynamic fee rates without floating-point noise', () => {
     expect(formatFeeRatePercent(0.00045)).toBe('0.045%');
     expect(formatFeeRatePercent(0.000405)).toBe('0.0405%');

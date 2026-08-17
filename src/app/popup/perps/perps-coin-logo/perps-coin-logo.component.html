@@ -1,0 +1,2 @@
+<img *ngIf="src" [src]="src" alt="" (error)="onLoadError()" />
+<span class="letter" *ngIf="!src" [style.background]="color">{{ letter }}</span>

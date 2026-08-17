@@ -8,13 +8,7 @@
         stroke-linecap="round"
       />
     </svg>
-    <img *ngIf="coinLogo(symbol)" [src]="coinLogo(symbol)" alt="" />
-    <span
-      class="letter-logo"
-      *ngIf="!coinLogo(symbol)"
-      [style.background]="coinColor(coin)"
-      >{{ symbol.charAt(0) }}</span
-    >
+    <perps-coin-logo [symbol]="symbol"></perps-coin-logo>
     <div class="pair">{{ symbol }}-USDC</div>
     <span class="price">${{ formatPrice(market?.midPxExact, market?.szDecimals, true) }}</span>
     <span
