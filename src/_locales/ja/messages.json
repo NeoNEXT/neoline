@@ -2084,27 +2084,6 @@
   "perpsOrderCanceled": {
     "message": "注文を取り消しました。"
   },
-  "perpsTransferToPerps": {
-    "message": "無期限先物へ移動"
-  },
-  "perpsSpotBalance": {
-    "message": "現物残高"
-  },
-  "perpsHyperliquidSpot": {
-    "message": "Hyperliquid 現物口座"
-  },
-  "perpsFrom": {
-    "message": "移動元"
-  },
-  "perpsTo": {
-    "message": "移動先"
-  },
-  "perpsAccount": {
-    "message": "無期限先物口座"
-  },
-  "perpsTransferSubmitted": {
-    "message": "現物 USDC を無期限先物口座へ移動しました。"
-  },
   "perpsAutoClose": {
     "message": "自動決済"
   },

@@ -262,8 +262,8 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
 
   /**
    * Spot USDC held outside perps under a standard account: real balance, but it
-   * needs a Spot→Perps transfer before it can back a position, so it is surfaced
-   * separately instead of inflating the perps equity above.
+   * cannot back a position until it is moved into perps, which NeoLine does not
+   * do. It is surfaced separately rather than inflating the perps equity above.
    */
   get separateSpotUsdcExact(): string {
     return this.account && !this.account.unified
@@ -337,7 +337,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl('/popup/perps/markets');
   }
 
-  toFunding(tab: 'deposit' | 'withdraw' | 'transfer') {
+  toFunding(tab: 'deposit' | 'withdraw') {
     if (this.unsupportedAccountMode) {
       return;
     }

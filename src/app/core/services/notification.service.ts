@@ -41,7 +41,6 @@ interface NotificationContent {
   perpsOrderCanceled: string;
   perpsDepositSubmitted: string;
   perpsWithdrawSuccess: string;
-  perpsTransferSubmitted: string;
   perpsSigningUnavailable: string;
 }
 
@@ -91,7 +90,6 @@ export class NotificationService {
     perpsOrderCanceled: 'Order canceled.',
     perpsDepositSubmitted: 'Deposit submitted.',
     perpsWithdrawSuccess: 'Withdrawal successful.',
-    perpsTransferSubmitted: 'Transfer submitted.',
     perpsSigningUnavailable:
       'This wallet does not support Hyperliquid typed-data signing yet.',
   };
@@ -135,7 +133,6 @@ export class NotificationService {
     perpsOrderCanceled: '订单已撤销。',
     perpsDepositSubmitted: '入金交易已提交。',
     perpsWithdrawSuccess: '提现成功。',
-    perpsTransferSubmitted: '划转已提交。',
     perpsSigningUnavailable: '该钱包暂不支持 Hyperliquid 类型化数据签名。',
   };
   private JA: NotificationContent = {
@@ -182,7 +179,6 @@ export class NotificationService {
     perpsOrderCanceled: '注文をキャンセルしました。',
     perpsDepositSubmitted: '入金を送信しました。',
     perpsWithdrawSuccess: '出金に成功しました。',
-    perpsTransferSubmitted: '振替を送信しました。',
     perpsSigningUnavailable:
       'このウォレットはHyperliquidの型付きデータ署名にまだ対応していません。',
   };
@@ -229,7 +225,6 @@ export class NotificationService {
     perpsOrderCanceled: '주문을 취소했습니다.',
     perpsDepositSubmitted: '입금을 제출했습니다.',
     perpsWithdrawSuccess: '출금에 성공했습니다.',
-    perpsTransferSubmitted: '이체를 제출했습니다.',
     perpsSigningUnavailable:
       '이 지갑은 아직 Hyperliquid 형식화 데이터 서명을 지원하지 않습니다.',
   };

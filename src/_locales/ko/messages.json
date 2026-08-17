@@ -2084,27 +2084,6 @@
   "perpsOrderCanceled": {
     "message": "주문이 취소되었습니다."
   },
-  "perpsTransferToPerps": {
-    "message": "무기한 선물로 이동"
-  },
-  "perpsSpotBalance": {
-    "message": "현물 잔액"
-  },
-  "perpsHyperliquidSpot": {
-    "message": "Hyperliquid 현물 계정"
-  },
-  "perpsFrom": {
-    "message": "보내는 곳"
-  },
-  "perpsTo": {
-    "message": "받는 곳"
-  },
-  "perpsAccount": {
-    "message": "무기한 선물 계정"
-  },
-  "perpsTransferSubmitted": {
-    "message": "현물 USDC가 무기한 선물 계정으로 이동되었습니다."
-  },
   "perpsAutoClose": {
     "message": "자동 청산"
   },

@@ -47,7 +47,7 @@ describe('PerpsFundingComponent amount boundaries', () => {
     expect(component.canSubmit).toBeFalse();
   });
 
-  it('uses the Hyperliquid wire precision for withdrawals and transfers', () => {
+  it('uses the Hyperliquid wire precision for withdrawals', () => {
     component.tab = 'withdraw';
     component.amount = '2.00000001';
 
@@ -64,24 +64,6 @@ describe('PerpsFundingComponent amount boundaries', () => {
       abstractionMode: 'default',
       availableBalance: 9007199254740994,
       availableBalanceExact: '9007199254740993.000001',
-    } as any;
-    component.accountLoading = false;
-
-    component.setMax();
-
-    expect(component.amount).toBe('9007199254740993.000001');
-    expect((component as any).submissionAmount).toBe(
-      '9007199254740993.000001'
-    );
-    expect(component.exceedsBalance).toBeFalse();
-  });
-
-  it('preserves exact spot MAX for a signed class transfer', () => {
-    component.tab = 'transfer';
-    component.account = {
-      abstractionMode: 'default',
-      spotUsdc: 9007199254740994,
-      spotUsdcExact: '9007199254740993.000001',
     } as any;
     component.accountLoading = false;
 

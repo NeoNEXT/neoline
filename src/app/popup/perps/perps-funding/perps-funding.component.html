@@ -18,14 +18,6 @@
     <div class="tab" [class.active]="isWithdraw" (click)="setTab('withdraw')">
       {{ "perpsWithdraw" | translate | async }}
     </div>
-    <div
-      class="tab"
-      *ngIf="showTransfer || isTransfer"
-      [class.active]="isTransfer"
-      (click)="setTab('transfer')"
-    >
-      {{ "perpsTransferToPerps" | translate | async }}
-    </div>
   </div>
 
   <div class="amount-area">
@@ -47,10 +39,6 @@
       <ng-container *ngIf="isWithdraw">
         {{ "perpsAvailableBalance" | translate | async }}
         {{ formatUsd(account?.availableBalanceExact) }}
-      </ng-container>
-      <ng-container *ngIf="isTransfer">
-        {{ "perpsSpotBalance" | translate | async }}
-        {{ formatUsd(account?.spotUsdcExact) }}
       </ng-container>
     </div>
 
@@ -87,10 +75,7 @@
     <div class="asset-info">
       <div class="symbol">{{ token.symbol }}</div>
       <div class="meta">
-        <ng-container *ngIf="!isTransfer">{{ token.chainName }}</ng-container>
-        <ng-container *ngIf="isTransfer">
-          {{ "perpsHyperliquidSpot" | translate | async }}
-        </ng-container>
+        {{ token.chainName }}
         <ng-container *ngIf="isDeposit">
           · {{ "perpsBalance" | translate | async }}
           {{ walletBalance | number: "1.2-2" }}
@@ -122,20 +107,6 @@
       <div class="row">
         <span class="label">{{ "perpsYouReceive" | translate | async }}</span>
         <span class="value">{{ formatUsd(receiveAmount) }}</span>
-      </div>
-    </ng-container>
-    <ng-container *ngIf="isTransfer">
-      <div class="row">
-        <span class="label">{{ "perpsFrom" | translate | async }}</span>
-        <span class="value">{{ "perpsHyperliquidSpot" | translate | async }}</span>
-      </div>
-      <div class="row">
-        <span class="label">{{ "perpsTo" | translate | async }}</span>
-        <span class="value">{{ "perpsAccount" | translate | async }}</span>
-      </div>
-      <div class="row">
-        <span class="label">{{ "perpsProviderFee" | translate | async }}</span>
-        <span class="value">{{ formatUsd(0) }}</span>
       </div>
     </ng-container>
   </div>
@@ -170,14 +141,7 @@
 
   <div class="submit-wrap">
     <button [disabled]="!canSubmit" (click)="submit()">
-      {{
-        (isDeposit
-          ? "perpsDeposit"
-          : isTransfer
-          ? "perpsTransferToPerps"
-          : "perpsWithdraw"
-        ) | translate | async
-      }}
+      {{ (isDeposit ? "perpsDeposit" : "perpsWithdraw") | translate | async }}
       <ng-container *ngIf="amount"> {{ formatUsd(amountNumber) }}</ng-container>
     </button>
   </div>

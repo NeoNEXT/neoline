@@ -23,7 +23,7 @@ import {
 } from '@popup/_lib/perps';
 import { formatUsd } from '../perps.util';
 
-type FundingTab = 'deposit' | 'withdraw' | 'transfer';
+type FundingTab = 'deposit' | 'withdraw';
 
 /**
  * Combined deposit / withdraw screen for the perps account.
@@ -77,8 +77,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     const tab = this.route.snapshot.queryParams.tab;
     if (tab === 'withdraw') {
       this.tab = 'withdraw';
-    } else if (tab === 'transfer') {
-      this.tab = 'transfer';
     }
     this.accountSub = this.store.select('account').subscribe((state) => {
       const address = state.currentWallet?.accounts[0]?.address;
@@ -149,18 +147,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     return this.tab === 'withdraw';
   }
 
-  get isTransfer(): boolean {
-    return this.tab === 'transfer';
-  }
-
-  get showTransfer(): boolean {
-    return (
-      !!this.account &&
-      !this.account.unified &&
-      new BigNumber(this.account.spotUsdcExact).isGreaterThan(0)
-    );
-  }
-
   get unsupportedAccountMode(): boolean {
     return this.account?.abstractionMode === 'portfolioMargin';
   }
@@ -169,8 +155,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   private get maxAmountExact(): string {
     return this.isDeposit
       ? this.walletBalanceExact
-      : this.isTransfer
-      ? this.account?.spotUsdcExact ?? '0'
       : this.account?.availableBalanceExact ?? '0';
   }
 
@@ -191,9 +175,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
 
   get belowMinimum(): boolean {
     if (!this.hasPositiveAmount) {
-      return false;
-    }
-    if (this.isTransfer) {
       return false;
     }
     return new BigNumber(this.amount).isLessThan(this.minimumAmount);
@@ -302,12 +283,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
       );
       const request: Observable<unknown> = this.isDeposit
         ? this.hyperliquid.deposit(privateKey, this.submissionAmount)
-        : this.isTransfer
-        ? this.hyperliquid.transferUsdClass(
-            privateKey,
-            this.submissionAmount,
-            true
-          )
         : this.hyperliquid.withdraw(
             privateKey,
             this.address,
@@ -317,11 +292,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
         next: () => {
           this.submitting = false;
           this.global.snackBarTip(
-            this.isDeposit
-              ? 'perpsDepositSubmitted'
-              : this.isTransfer
-              ? 'perpsTransferSubmitted'
-              : 'perpsWithdrawSuccess'
+            this.isDeposit ? 'perpsDepositSubmitted' : 'perpsWithdrawSuccess'
           );
           this.amount = null;
           this.activePreset = null;

@@ -2084,27 +2084,6 @@
   "perpsOrderCanceled": {
     "message": "订单已撤销。"
   },
-  "perpsTransferToPerps": {
-    "message": "转入合约"
-  },
-  "perpsSpotBalance": {
-    "message": "现货余额"
-  },
-  "perpsHyperliquidSpot": {
-    "message": "Hyperliquid 现货账户"
-  },
-  "perpsFrom": {
-    "message": "转出"
-  },
-  "perpsTo": {
-    "message": "转入"
-  },
-  "perpsAccount": {
-    "message": "合约账户"
-  },
-  "perpsTransferSubmitted": {
-    "message": "现货 USDC 已转入合约账户。"
-  },
   "perpsAutoClose": {
     "message": "自动止盈止损"
   },

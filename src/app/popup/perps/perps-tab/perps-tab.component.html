@@ -42,9 +42,6 @@
     <div class="card-spot" *ngIf="hasSeparateSpotUsdc">
       {{ "perpsSpotSeparate" | translate | async }}
       {{ formatUsd(separateSpotUsdcExact) }}
-      <button (click)="toFunding('transfer')">
-        {{ "perpsTransferToPerps" | translate | async }}
-      </button>
     </div>
     <div class="card-actions">
       <button class="primary" [disabled]="globalActionsDisabled" (click)="toFunding('deposit')">

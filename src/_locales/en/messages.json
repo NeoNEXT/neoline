@@ -2084,27 +2084,6 @@
   "perpsOrderCanceled": {
     "message": "Order canceled."
   },
-  "perpsTransferToPerps": {
-    "message": "Move to Perps"
-  },
-  "perpsSpotBalance": {
-    "message": "Spot balance"
-  },
-  "perpsHyperliquidSpot": {
-    "message": "Hyperliquid Spot"
-  },
-  "perpsFrom": {
-    "message": "From"
-  },
-  "perpsTo": {
-    "message": "To"
-  },
-  "perpsAccount": {
-    "message": "Perps account"
-  },
-  "perpsTransferSubmitted": {
-    "message": "Spot USDC was moved to the Perps account."
-  },
   "perpsAutoClose": {
     "message": "Auto-close"
   },

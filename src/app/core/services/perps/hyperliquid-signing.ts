@@ -36,15 +36,6 @@ const WITHDRAW_TYPES = {
   ],
 };
 
-const USD_CLASS_TRANSFER_TYPES = {
-  'HyperliquidTransaction:UsdClassTransfer': [
-    { name: 'hyperliquidChain', type: 'string' },
-    { name: 'amount', type: 'string' },
-    { name: 'toPerp', type: 'bool' },
-    { name: 'nonce', type: 'uint64' },
-  ],
-};
-
 const APPROVE_BUILDER_FEE_TYPES = {
   'HyperliquidTransaction:ApproveBuilderFee': [
     { name: 'hyperliquidChain', type: 'string' },
@@ -227,29 +218,6 @@ export async function signHyperliquidApproveBuilderFee(
   const signature = await new ethers.Wallet(privateKey).signTypedData(
     USER_DOMAIN,
     APPROVE_BUILDER_FEE_TYPES,
-    action
-  );
-  return { action, signature: splitSignature(signature) };
-}
-
-export async function signHyperliquidUsdClassTransfer(
-  privateKey: string,
-  amount: string,
-  toPerp: boolean,
-  nonce: number,
-  isMainnet: boolean
-): Promise<{ action: any; signature: PerpsSignature }> {
-  const action = {
-    type: 'usdClassTransfer',
-    signatureChainId: ethers.toQuantity(USER_SIGNATURE_CHAIN_ID),
-    hyperliquidChain: isMainnet ? 'Mainnet' : 'Testnet',
-    amount,
-    toPerp,
-    nonce,
-  };
-  const signature = await new ethers.Wallet(privateKey).signTypedData(
-    USER_DOMAIN,
-    USD_CLASS_TRANSFER_TYPES,
     action
   );
   return { action, signature: splitSignature(signature) };

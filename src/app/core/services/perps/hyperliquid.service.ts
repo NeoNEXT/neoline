@@ -62,7 +62,6 @@ import { environment } from '@/environments/environment';
 import {
   signHyperliquidApproveBuilderFee,
   signHyperliquidL1Action,
-  signHyperliquidUsdClassTransfer,
   signHyperliquidWithdraw,
 } from './hyperliquid-signing';
 
@@ -841,29 +840,6 @@ export class HyperliquidService {
         privateKey,
         destination,
         amountWire,
-        nonce,
-        !this.isTestnet
-      )
-    ).pipe(
-      switchMap(({ action, signature }) =>
-        this.postExchange(action, signature, nonce)
-      ),
-      tap(() => this.clearAccountCache())
-    );
-  }
-
-  /** Move USDC between Hyperliquid Spot and Perps for standard accounts. */
-  transferUsdClass(
-    privateKey: string,
-    amount: string,
-    toPerp: boolean
-  ): Observable<PerpsExchangeResponse> {
-    const nonce = this.nextNonce();
-    return from(
-      signHyperliquidUsdClassTransfer(
-        privateKey,
-        this.floatToWire(amount),
-        toPerp,
         nonce,
         !this.isTestnet
       )
