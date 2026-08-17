@@ -20,18 +20,24 @@ import { coinColor, coinLogo } from '../perps.util';
 })
 export class PerpsCoinLogoComponent implements OnChanges {
   /**
-   * Display symbol, never the protocol `coin`: a `dex:` prefix matches no mark
-   * and would give two HIP-3 markets of the same asset different letter chips.
+   * Display symbol. Drives the letter chip and its colour, so a HIP-3 market
+   * falls back to `S` for SNDK rather than to the `x` of its `xyz:` prefix.
    */
   @Input() symbol: string;
+  /**
+   * Protocol coin, which is what the CDN keys marks by. Defaults to the symbol,
+   * which is the same string on the canonical DEX; HIP-3 callers must pass it,
+   * or their markets resolve to a bare symbol the CDN does not carry.
+   */
+  @Input() coin: string;
 
   src = '';
   color = '';
   letter = '';
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.symbol) {
-      this.src = coinLogo(this.symbol);
+    if (changes.symbol || changes.coin) {
+      this.src = coinLogo(this.coin || this.symbol);
       this.color = coinColor(this.symbol);
       this.letter = (this.symbol || '').charAt(0).toUpperCase();
     }

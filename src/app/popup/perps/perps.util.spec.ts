@@ -20,18 +20,38 @@ import {
 import { PerpsMarket, PerpsPosition } from '@popup/_lib/perps';
 
 describe('perps utilities', () => {
-  // Hyperliquid lists 232 perps against 7 bundled marks, so the CDN is the
-  // normal path and the bundled map is the exception, not the other way round.
+  // Hyperliquid lists 232 perps against a handful of bundled marks, so the CDN
+  // is the normal path and the bundled map is the exception, not the reverse.
   it('resolves a coin mark, preferring the bundled asset', () => {
-    expect(coinLogo('NEO')).toBe('assets/images/token/neo.png');
+    expect(coinLogo('ETH')).toBe('assets/images/token/eth.webp');
     expect(coinLogo('BTC')).toBe('https://app.hyperliquid.xyz/coins/BTC.svg');
     expect(coinLogo('')).toBe('');
     expect(coinLogo(undefined)).toBe('');
   });
 
+  // The Neo pair were bundled before the CDN was wired up; they are drawn there
+  // like every other row, so the local copies no longer stand in for them.
+  it('takes the Neo markets from the CDN like any other coin', () => {
+    expect(coinLogo('NEO')).toBe('https://app.hyperliquid.xyz/coins/NEO.svg');
+    expect(coinLogo('GAS')).toBe('https://app.hyperliquid.xyz/coins/GAS.svg');
+  });
+
   // The CDN's path segments are case-sensitive: `btc.svg` is not `BTC.svg`.
   it('asks the CDN in the casing it answers to', () => {
     expect(coinLogo('btc')).toBe('https://app.hyperliquid.xyz/coins/BTC.svg');
+  });
+
+  // A HIP-3 mark is filed under the whole protocol coin. The bare symbol gets
+  // the app's HTML shell, and re-casing the lowercase DEX name misses too.
+  it('keeps the dex prefix, untouched, for a HIP-3 market', () => {
+    expect(coinLogo('xyz:SNDK')).toBe(
+      'https://app.hyperliquid.xyz/coins/xyz%3ASNDK.svg'
+    );
+    // Natural gas on a HIP-3 dex keeps its own mark, not Neo GAS's.
+    expect(coinLogo('flx:GAS')).toBe(
+      'https://app.hyperliquid.xyz/coins/flx%3AGAS.svg'
+    );
+    expect(coinLogo('GAS')).toBe('https://app.hyperliquid.xyz/coins/GAS.svg');
   });
 
   // `k` is the 1000x contract-size prefix, not part of the asset: kPEPE is

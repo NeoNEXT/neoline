@@ -28,8 +28,8 @@ export const PERPS_HIP3_DEXES: {
   mainnet: string[];
   testnet: string[];
 } = {
-  mainnet: [],
-  testnet: ['neol'],
+  mainnet: ['xyz'],
+  testnet: ['xyz'],
 };
 
 /** Markets pinned above the sorted market list, alongside favourites. */
@@ -145,7 +145,6 @@ export const PERPS_DEFAULT_SLIPPAGE_PERCENT = 3;
  * that reads as arbitrary, so it is not offered here.
  */
 export type PerpsMarketSortKey = 'volume' | 'change';
-export type PerpsSortDirection = 'desc' | 'asc';
 
 /** Rows materialised per batch; the list is long enough to need batching. */
 export const PERPS_MARKET_PAGE_SIZE = 30;

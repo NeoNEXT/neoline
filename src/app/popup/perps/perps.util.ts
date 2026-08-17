@@ -25,10 +25,13 @@ function isMissing(value: PerpsExactValue): boolean {
   return !new BigNumber(value).isFinite();
 }
 
-/** Coins whose mark ships with the wallet, so it renders without a network round trip. */
+/**
+ * Coins whose mark ships with the wallet, so it renders without a network round
+ * trip. NEO and GAS are deliberately absent: Hyperliquid carries both, in the
+ * same drawing style as every other row, and the bundled pair were the odd ones
+ * out. Only keep an entry here for a coin the CDN gets wrong or does not have.
+ */
 const LOCAL_COIN_LOGOS = {
-  NEO: 'assets/images/token/neo.png',
-  GAS: 'assets/images/token/gas.svg',
   ETH: 'assets/images/token/eth.webp',
   BNB: 'assets/images/token/bnb.webp',
   AVAX: 'assets/images/token/avax.webp',
@@ -68,13 +71,24 @@ function coinMarkName(coin: string): string {
 }
 
 /**
- * The market's mark: bundled asset first, then Hyperliquid's CDN. Returns `''`
- * only for an absent symbol — a coin the CDN does not carry still returns a URL,
- * and resolves to the letter chip when that image fails to load.
+ * The market's mark: bundled asset first, then Hyperliquid's CDN.
+ *
+ * Keyed by the protocol `coin`, not the display symbol — a HIP-3 market's mark
+ * lives under its full `dex:SYMBOL` name (`xyz:SNDK.svg`), and the bare symbol
+ * gets nothing. The prefix is part of the path and is passed through untouched:
+ * the DEX name is lowercase while the symbol is upper, so re-casing either half
+ * misses. That also keeps `flx:GAS` (natural gas) away from the bundled GAS
+ * mark, which is a different asset that happens to share a symbol.
+ *
+ * Returns `''` only for an absent coin. A coin the CDN does not carry still
+ * returns a URL, and resolves to the letter chip when that image fails to load.
  */
 export function coinLogo(coin: string): string {
   if (!coin) {
     return '';
+  }
+  if (coin.includes(':')) {
+    return `${REMOTE_COIN_LOGO_PREFIX}${encodeURIComponent(coin)}.svg`;
   }
   const local = LOCAL_COIN_LOGOS[coin.toUpperCase()];
   if (local) {

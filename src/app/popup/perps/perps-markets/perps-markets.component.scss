@@ -1,0 +1,45 @@
+.perps-markets {
+  min-height: 100vh;
+  background: var(--body-background-color);
+  padding-bottom: 24px;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 16px 0;
+  padding: 0 12px;
+  height: 38px;
+  border: 1px solid var(--border-color);
+  border-radius: 19px;
+
+  img {
+    width: 15px;
+    opacity: 0.6;
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--title-color);
+    font-family: NeverMind-Regular;
+    font-size: 14px;
+    outline: none;
+
+    &::placeholder {
+      color: var(--tip-color);
+    }
+  }
+
+  // Clearing the keyword is one tap; retyping a symbol on a phone keyboard is not.
+  .clear {
+    padding: 0 2px;
+    color: var(--tip-color);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+  }
+}

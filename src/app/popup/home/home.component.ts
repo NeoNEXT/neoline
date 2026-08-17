@@ -2,7 +2,7 @@ import { Component, OnInit, Type } from '@angular/core';
 import { SettingState } from '@/app/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   ChainType,
   RpcNetwork,
@@ -45,6 +45,7 @@ export class PopupHomeComponent implements OnInit {
   allWallet: Array<Wallet2 | Wallet3 | EvmWalletJSON> = [];
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private settingState: SettingState,
     private dialog: MatDialog,
     private store: Store<AppState>
@@ -66,6 +67,11 @@ export class PopupHomeComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Coming back from a perps sub-page: reopen the tab the user left from,
+    // instead of dropping them on assets and making them find perps again.
+    if (this.route.snapshot.queryParams.tab === 'perps') {
+      this.showPerps();
+    }
     this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });

@@ -1,0 +1,16 @@
+<div class="perps-markets">
+  <nav title="perpsMarketsTitle" backUrl="/popup/home?tab=perps"></nav>
+
+  <div class="search-bar">
+    <img theme src="assets/images/common/search.svg" alt="" />
+    <input
+      #search
+      type="text"
+      [(ngModel)]="keyword"
+      [placeholder]="'perpsSearchMarket' | translate | async"
+    />
+    <span class="clear" *ngIf="keyword" (click)="keyword = ''">×</span>
+  </div>
+
+  <perps-market-list [keyword]="keyword" [showSort]="true"></perps-market-list>
+</div>

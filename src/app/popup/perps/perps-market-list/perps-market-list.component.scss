@@ -1,0 +1,217 @@
+.market-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 22px 12px;
+}
+
+// 排序基准:与筛选是两回事,所以下拉里只有排序基准,没有分类
+.sort-select-wrap {
+  position: relative;
+}
+
+.sort-select {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--line-color);
+  color: var(--title-color);
+  font-size: 13px;
+  line-height: 18px;
+  cursor: pointer;
+
+  img {
+    width: 8px;
+  }
+}
+
+.sort-menu {
+  position: absolute;
+  left: 0;
+  top: 38px;
+  z-index: 20;
+  min-width: 128px;
+  padding: 4px 0;
+  border-radius: 8px;
+  background: var(--body-background-color);
+  box-shadow: var(--popups-box-shadow);
+
+  li {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    color: var(--title-color);
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--hover-color);
+    }
+
+    &.active {
+      color: var(--theme-color);
+    }
+  }
+}
+
+.market-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 24px;
+  border-bottom: 1px solid var(--line-color);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--hover-color);
+  }
+
+  > perps-coin-logo {
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
+  }
+
+  .market-name {
+    width: 92px;
+    .coin {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: NeverMind-Medium;
+      font-size: 14px;
+      color: var(--title-color);
+    }
+    .leverage {
+      font-size: 10px;
+      color: var(--sub-title-color);
+    }
+    .volume {
+      font-size: 11px;
+      color: var(--sub-title-color);
+      margin-top: 5px;
+    }
+  }
+
+  .market-price {
+    text-align: right;
+    flex: 1;
+    .price {
+      font-size: 14px;
+      color: var(--title-color);
+    }
+    .change {
+      font-size: 12px;
+      color: var(--theme-color);
+      margin-top: 5px;
+      &.negative {
+        color: var(--error-color);
+      }
+    }
+  }
+}
+
+// 非实时:保留最后值,但让每个报价读起来都不像实时数据
+.market-list.feed-stale {
+  .market-price .price,
+  .market-price .change {
+    opacity: 0.45;
+  }
+}
+
+// 标记价不是可成交价,行内必须说清楚它是什么
+.mark-tag {
+  margin-left: 4px;
+  color: var(--tip-color);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+// 置顶区与排序区之间要有明确分隔,否则置顶行看起来像排序错了
+.pinned-divider {
+  height: 8px;
+  margin: 0 16px;
+  border-top: 1px solid var(--line-color, rgba(0, 0, 0, 0.06));
+}
+
+.load-more {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 8px 16px 16px;
+  padding: 8px 0;
+  border: 1px solid var(--line-color, rgba(0, 0, 0, 0.08));
+  border-radius: 8px;
+  background: transparent;
+  color: var(--tip-color);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.market-empty {
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--tip-color);
+}
+
+// 骨架行:首屏给出列表的形状,而不是一片空白加转圈
+.market-skeleton {
+  padding: 0 16px;
+
+  .skeleton-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 0;
+  }
+
+  .skeleton-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+  }
+
+  .skeleton-lines {
+    flex: 1;
+  }
+
+  .skeleton-price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .skeleton-logo,
+  i {
+    display: block;
+    background: var(--tip-bg, rgba(0, 0, 0, 0.06));
+    animation: perps-skeleton 1.4s ease-in-out infinite;
+  }
+
+  i {
+    height: 10px;
+    border-radius: 5px;
+    margin: 3px 0;
+
+    &.wide {
+      width: 72px;
+    }
+    &.narrow {
+      width: 48px;
+    }
+  }
+}
+
+@keyframes perps-skeleton {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}

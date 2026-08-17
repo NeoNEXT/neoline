@@ -7,11 +7,17 @@ img,
 .letter {
   width: 100%;
   height: 100%;
+  border-radius: 50%;
 }
 
-// Marks are bare glyphs, not round badges: contain them instead of cropping to
-// a circle, which cut off their edges.
+// Two kinds of mark arrive here and CSS cannot tell them apart: bare glyphs on
+// transparency (NEO, GAS, XRP) and full-bleed square artwork (SNDK, SP500,
+// INTC). Cropping the first kind to a circle cuts its edges off — `contain`
+// makes a mark touch the box on its long axis, and the circle is well inside
+// the box there. So every mark is inset into a neutral chip instead: nothing is
+// ever clipped, and the row reads as one set of round badges either way.
 img {
+  background: var(--line-color);
   object-fit: contain;
 }
 
@@ -19,7 +25,6 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
   color: #fff;
   font-family: NeverMind-DemiBold;
 }

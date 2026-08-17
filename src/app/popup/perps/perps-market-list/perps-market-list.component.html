@@ -1,0 +1,87 @@
+<div class="market-list" [class.feed-stale]="feedStale">
+  <!-- 排序基准。这里没有预设筛选：筛选和排序是两个维度，
+       把它们塞进同一个下拉会让「只看 Neo 且按涨幅排」无法表达。 -->
+  <div class="market-controls" *ngIf="showSort">
+    <div class="sort-select-wrap">
+      <span class="sort-select" (click)="sortMenuOpen = !sortMenuOpen">
+        {{ sortKeyLabel | translate | async }}
+        <img theme src="assets/images/common/triangle-fill.svg" alt="" />
+      </span>
+      <ul class="sort-menu" *ngIf="sortMenuOpen">
+        <li
+          *ngFor="let item of sortKeys"
+          [class.active]="sortKey === item.key"
+          (click)="setSortKey(item.key)"
+        >
+          {{ item.label | translate | async }}
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 加载中：骨架行占位，而不是把整片区域留空 -->
+  <div class="market-skeleton" *ngIf="loading">
+    <div class="skeleton-row" *ngFor="let row of skeletonRows">
+      <span class="skeleton-logo"></span>
+      <span class="skeleton-lines">
+        <i class="wide"></i>
+        <i class="narrow"></i>
+      </span>
+      <span class="skeleton-price">
+        <i class="wide"></i>
+        <i class="narrow"></i>
+      </span>
+    </div>
+  </div>
+
+  <!-- 置顶区：收藏与 Neo 生态，不参与排序，与下方明确分隔 -->
+  <ng-container *ngIf="!loading && pinnedMarkets.length > 0">
+    <ng-container
+      *ngFor="let market of pinnedMarkets; trackBy: trackByKey"
+      [ngTemplateOutlet]="marketRow"
+      [ngTemplateOutletContext]="{ $implicit: market }"
+    ></ng-container>
+    <div class="pinned-divider"></div>
+  </ng-container>
+
+  <ng-container
+    *ngFor="let market of visibleMarkets; trackBy: trackByKey"
+    [ngTemplateOutlet]="marketRow"
+    [ngTemplateOutletContext]="{ $implicit: market }"
+  ></ng-container>
+
+  <button class="load-more" *ngIf="hasMore" (click)="loadMore()">
+    {{ "perpsLoadMore" | translate | async }}
+  </button>
+
+  <p class="market-empty" *ngIf="!loading && totalMarketCount === 0">
+    {{ (marketLoadError ? "perpsLoadFailed" : "perpsNoMarkets") | translate | async }}
+  </p>
+
+  <ng-template #marketRow let-market>
+    <div class="market-row" (click)="toMarket(market.coin)">
+      <perps-coin-logo
+        [symbol]="market.symbol"
+        [coin]="market.coin"
+      ></perps-coin-logo>
+      <div class="market-name">
+        <div class="coin">
+          {{ market.symbol }}
+          <span class="leverage">{{ market.maxLeverage }}x</span>
+        </div>
+        <div class="volume">{{ formatCompactUsd(market.dayVolumeExact) }}</div>
+      </div>
+      <div class="market-price">
+        <div class="price">
+          ${{ formatPrice(listPrice(market), market.szDecimals, !usingMarkPrice(market)) }}
+          <span class="mark-tag" *ngIf="usingMarkPrice(market)">{{
+            "perpsMarkPriceTag" | translate | async
+          }}</span>
+        </div>
+        <div class="change" [class.negative]="isNegative(market.changePercentExact)">
+          {{ formatSignedPercent(market.changePercentExact) }}
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</div>

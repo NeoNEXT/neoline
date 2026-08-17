@@ -8,7 +8,7 @@
         stroke-linecap="round"
       />
     </svg>
-    <perps-coin-logo [symbol]="symbol"></perps-coin-logo>
+    <perps-coin-logo [symbol]="symbol" [coin]="coin"></perps-coin-logo>
     <div class="pair">{{ symbol }}-USDC</div>
     <span class="price">${{ formatPrice(market?.midPxExact, market?.szDecimals, true) }}</span>
     <span

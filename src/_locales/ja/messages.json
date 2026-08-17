@@ -1817,6 +1817,12 @@
   "perpsSearchMarket": {
     "message": "銘柄を検索"
   },
+  "perpsMarketsTitle": {
+    "message": "マーケット"
+  },
+  "perpsExploreMarkets": {
+    "message": "マーケットを探す"
+  },
   "perpsNoMarkets": {
     "message": "該当する銘柄がありません"
   },
@@ -2108,25 +2114,51 @@
   "perpsCrossPositionUnsupported": {
     "message": "この市場にはクロスマージンのポジションがあります。NeoLine は分離注文のみ対応しているため、追加注文はできません。"
   },
-  "perpsLeverageUpdatedReviewAgain": { "message": "レバレッジを更新しました。更新後の注文内容を再確認してから送信してください。" },
-  "perpsOrderFilled": { "message": "注文は全て約定しました。" },
-  "perpsOrderPartiallyFilled": { "message": "注文は一部約定しました。再試行前に残りのポジションを確認してください。" },
-  "perpsOrderResting": { "message": "指値注文を発注しました。" },
-  "perpsOrderUnfilled": { "message": "成行注文は約定しませんでした。自動再試行は行っていません。" },
-  "perpsMarketChangedReviewAgain": { "message": "市場が変動したか、最新の流動性を取得できません。注文を再確認してください。" },
+  "perpsLeverageUpdatedReviewAgain": {
+    "message": "レバレッジを更新しました。更新後の注文内容を再確認してから送信してください。"
+  },
+  "perpsOrderFilled": {
+    "message": "注文は全て約定しました。"
+  },
+  "perpsOrderPartiallyFilled": {
+    "message": "注文は一部約定しました。再試行前に残りのポジションを確認してください。"
+  },
+  "perpsOrderResting": {
+    "message": "指値注文を発注しました。"
+  },
+  "perpsOrderUnfilled": {
+    "message": "成行注文は約定しませんでした。自動再試行は行っていません。"
+  },
+  "perpsMarketChangedReviewAgain": {
+    "message": "市場が変動したか、最新の流動性を取得できません。注文を再確認してください。"
+  },
   "perpsOrderRejected": {
     "message": "注文が拒否されました。現在の市場と口座の状態を確認してください。"
   },
   "perpsOrderUnknown": {
     "message": "注文状態が不明です。未決注文と約定履歴を更新するまで再試行しないでください。"
   },
-  "perpsOrderStatusResolved": { "message": "注文状態を復元し、口座データを更新しました。" },
-  "perpsReversePosition": { "message": "既存ポジションを反転" },
-  "perpsReverseToLong": { "message": "ロングへ反転" },
-  "perpsReverseToShort": { "message": "ショートへ反転" },
-  "perpsTheoreticalBuyingPower": { "message": "理論上の購入余力" },
-  "perpsBufferedMax": { "message": "最大注文（0.5% を確保）" },
-  "perpsNearMarginLimit": { "message": "この金額は Max の確保分を使用するため、証拠金が変動すると拒否される場合があります。" },
+  "perpsOrderStatusResolved": {
+    "message": "注文状態を復元し、口座データを更新しました。"
+  },
+  "perpsReversePosition": {
+    "message": "既存ポジションを反転"
+  },
+  "perpsReverseToLong": {
+    "message": "ロングへ反転"
+  },
+  "perpsReverseToShort": {
+    "message": "ショートへ反転"
+  },
+  "perpsTheoreticalBuyingPower": {
+    "message": "理論上の購入余力"
+  },
+  "perpsBufferedMax": {
+    "message": "最大注文（0.5% を確保）"
+  },
+  "perpsNearMarginLimit": {
+    "message": "この金額は Max の確保分を使用するため、証拠金が変動すると拒否される場合があります。"
+  },
   "confirm": {
     "message": "確認"
   }

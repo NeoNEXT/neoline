@@ -5,21 +5,14 @@ import BigNumber from 'bignumber.js';
 import { Unsubscribable } from 'rxjs';
 
 import { AppState } from '@/app/reduers';
-import { ChromeService } from '@/app/core';
-import { STORAGE_NAME } from '@popup/_lib';
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
 import {
   PerpsAggregatedAccount,
   PerpsConnectionState,
   PerpsMarket,
-  PerpsMarketSortKey,
   PerpsPosition,
-  PerpsSortDirection,
-  PERPS_MARKET_PAGE_SIZE,
-  PERPS_NEO_COINS,
 } from '@popup/_lib/perps';
 import {
-  formatCompactUsd,
   formatPrice,
   formatSignedPercent,
   formatSignedUsd,
@@ -38,43 +31,20 @@ import {
 })
 export class PerpsTabComponent implements OnInit, OnDestroy {
   address: string;
-  loading = true;
   accountLoadError = false;
-  marketLoadError = false;
 
   account: PerpsAggregatedAccount;
+  /**
+   * Reported by the embedded market list, and used only to size positions at
+   * their own market's precision — this tab does not own the market feed.
+   */
   markets: PerpsMarket[] = [];
-  /** Markets kept at the top: favourites and the Neo ecosystem. */
-  pinnedMarkets: PerpsMarket[] = [];
-  /** The rows below the pinned block, in ordering-snapshot order. */
-  visibleMarkets: PerpsMarket[] = [];
-
-  sortKey: PerpsMarketSortKey = 'volume';
-  sortDirection: PerpsSortDirection = 'desc';
-  readonly sortKeys: { key: PerpsMarketSortKey; label: string }[] = [
-    { key: 'volume', label: 'perpsSortVolume' },
-    { key: 'change', label: 'perpsSortChange' },
-  ];
-
-  searching = false;
-  keyword = '';
-
-  /** How many rows of the snapshot are materialised so far. */
-  visibleCount = PERPS_MARKET_PAGE_SIZE;
-  readonly skeletonRows = new Array(6);
-
-  private favorites: string[] = [];
-  /** The frozen row order; see `resnapshot`. */
-  private orderedKeys: string[] = [];
-  private pinnedKeys: string[] = [];
-  private renderTimer: any;
 
   /** Feed health, shown as a banner and by dimming every quoted value. */
   connectionState: PerpsConnectionState = 'connecting';
   marketFeedAt: number | null = null;
 
   private accountSub: Unsubscribable;
-  private marketsSub: Unsubscribable;
   private spotStateSub: Unsubscribable;
   private clearinghouseStateSubs: Unsubscribable[] = [];
   private connectionSub: Unsubscribable;
@@ -85,7 +55,6 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   private accountRequestId = 0;
 
   //#region template helpers
-  formatCompactUsd = formatCompactUsd;
   formatPrice = formatPrice;
   formatUsd = formatUsd;
   formatSignedUsd = formatSignedUsd;
@@ -95,8 +64,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private store: Store<AppState>,
-    private hyperliquid: HyperliquidService,
-    private chrome: ChromeService
+    private hyperliquid: HyperliquidService
   ) {}
 
   ngOnInit() {
@@ -112,19 +80,15 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.watchMarkets();
     this.watchFeedHealth();
-    this.loadListPreferences();
   }
 
   ngOnDestroy() {
     this.accountSub?.unsubscribe();
-    this.marketsSub?.unsubscribe();
     this.spotStateSub?.unsubscribe();
     this.unwatchClearinghouseState();
     this.connectionSub?.unsubscribe();
     this.feedAtSub?.unsubscribe();
-    clearTimeout(this.renderTimer);
   }
 
   /**
@@ -148,42 +112,6 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
           this.loadAccount();
         }
       });
-  }
-
-  /** Merge bursts of frames into one repaint, ~250ms apart at most. */
-  private scheduleRender() {
-    if (this.renderTimer) {
-      return;
-    }
-    this.renderTimer = setTimeout(() => {
-      this.renderTimer = undefined;
-      this.renderRows();
-    }, 250);
-  }
-
-  private watchMarkets() {
-    this.marketsSub = this.hyperliquid.watchMarkets().subscribe({
-      next: (markets) => {
-        const known = new Set(this.orderedKeys.concat(this.pinnedKeys));
-        const changed =
-          known.size !== markets.length ||
-          markets.some((market) => !known.has(market.key));
-        this.markets = markets;
-        // A new or delisted market has to enter the order; a price move must
-        // not. Coalesce the rest so several DEX frames repaint once.
-        if (changed) {
-          this.resnapshot();
-        } else {
-          this.scheduleRender();
-        }
-        this.loading = false;
-        this.marketLoadError = false;
-      },
-      error: () => {
-        this.loading = false;
-        this.marketLoadError = true;
-      },
-    });
   }
 
   private loadAccount() {
@@ -270,134 +198,6 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   private unwatchClearinghouseState() {
     this.clearinghouseStateSubs.forEach((sub) => sub.unsubscribe());
     this.clearinghouseStateSubs = [];
-  }
-
-  setSortKey(key: PerpsMarketSortKey) {
-    // Tapping the active key flips direction, the way a sortable column does.
-    this.sortDirection =
-      this.sortKey === key && this.sortDirection === 'desc' ? 'asc' : 'desc';
-    this.sortKey = key;
-    this.chrome.setStorage(STORAGE_NAME.perpsMarketSort, {
-      key: this.sortKey,
-      direction: this.sortDirection,
-    });
-    this.resnapshot();
-  }
-
-  toggleSearch() {
-    this.searching = !this.searching;
-    if (!this.searching && this.keyword) {
-      this.keyword = '';
-    }
-    this.resnapshot();
-  }
-
-  onKeywordChange() {
-    this.resnapshot();
-  }
-
-  loadMore() {
-    this.visibleCount += PERPS_MARKET_PAGE_SIZE;
-    this.renderRows();
-  }
-
-  get hasMore(): boolean {
-    return this.orderedKeys.length > this.visibleCount;
-  }
-
-  get totalMarketCount(): number {
-    return this.orderedKeys.length + this.pinnedKeys.length;
-  }
-
-  /**
-   * Recompute the ordering snapshot.
-   *
-   * Called only from the things a user does — arriving, searching, changing the
-   * sort, refreshing — never from a price update. Between these calls the row
-   * order is frozen, so a market cannot climb past the one the user is reaching
-   * for, and a tap lands where it was aimed.
-   */
-  private resnapshot() {
-    const keyword = this.keyword.trim().toUpperCase();
-    const matches = (market: PerpsMarket) =>
-      !keyword || market.symbol.toUpperCase().includes(keyword);
-    const pinned = this.markets.filter(
-      (market) => this.isPinned(market) && matches(market)
-    );
-    const rest = this.markets.filter(
-      (market) => !this.isPinned(market) && matches(market)
-    );
-    this.pinnedKeys = pinned.map((market) => market.key);
-    this.orderedKeys = [...rest].sort(this.comparator()).map((m) => m.key);
-    this.visibleCount = PERPS_MARKET_PAGE_SIZE;
-    this.renderRows();
-  }
-
-  /**
-   * Materialise rows from the frozen key order.
-   *
-   * Prices change by replacing market objects, so the rows are looked up afresh
-   * — but always in snapshot order, which is what keeps a live update from
-   * becoming a reshuffle.
-   */
-  private renderRows() {
-    const byKey = new Map(this.markets.map((market) => [market.key, market]));
-    this.pinnedMarkets = this.pinnedKeys
-      .map((key) => byKey.get(key))
-      .filter(Boolean);
-    this.visibleMarkets = this.orderedKeys
-      .slice(0, this.visibleCount)
-      .map((key) => byKey.get(key))
-      .filter(Boolean);
-  }
-
-  private comparator(): (a: PerpsMarket, b: PerpsMarket) => number {
-    const sign = this.sortDirection === 'desc' ? 1 : -1;
-    if (this.sortKey === 'change') {
-      return (a, b) => {
-        // A market with no computable change has no place in a ranking by
-        // change: it sinks to the bottom either way rather than posing as 0%.
-        if (a.changePercentExact === null || b.changePercentExact === null) {
-          return a.changePercentExact === b.changePercentExact
-            ? 0
-            : a.changePercentExact === null
-            ? 1
-            : -1;
-        }
-        return (
-          sign *
-          new BigNumber(b.changePercentExact).comparedTo(a.changePercentExact)
-        );
-      };
-    }
-    return (a, b) =>
-      sign * new BigNumber(b.dayVolumeExact).comparedTo(a.dayVolumeExact);
-  }
-
-  /** Favourites and the Neo ecosystem sit above the sorted list. */
-  private isPinned(market: PerpsMarket): boolean {
-    return (
-      this.favorites.includes(market.coin) ||
-      PERPS_NEO_COINS.includes(market.symbol)
-    );
-  }
-
-  isFavorite(market: PerpsMarket): boolean {
-    return this.favorites.includes(market.coin);
-  }
-
-  private loadListPreferences() {
-    this.chrome.getStorage(STORAGE_NAME.perpsFavorites).subscribe((list) => {
-      this.favorites = Array.isArray(list) ? list : [];
-      this.resnapshot();
-    });
-    this.chrome.getStorage(STORAGE_NAME.perpsMarketSort).subscribe((saved) => {
-      if (saved?.key === 'volume' || saved?.key === 'change') {
-        this.sortKey = saved.key;
-        this.sortDirection = saved.direction === 'asc' ? 'asc' : 'desc';
-        this.resnapshot();
-      }
-    });
   }
 
   /** Collateral equity for the active account mode. */
@@ -492,33 +292,9 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     return `${Math.floor(seconds / 60)}m`;
   }
 
-  /**
-   * The price a market row shows: the book mid, or the mark when no two-sided
-   * book exists. The row labels which one it is — a mark is not a price anyone
-   * can trade at, and letting it pass for one is how a user reads an untradeable
-   * market as a tradeable one.
-   */
-  listPrice(market: PerpsMarket): string | null {
-    return market.midPxExact ?? market.markPxExact ?? null;
-  }
-
-  /** True when the row is quoting the mark because the book has no mid. */
-  usingMarkPrice(market: PerpsMarket): boolean {
-    return !market.midPxExact && !!market.markPxExact;
-  }
-
   /** A position's market, located by key so HIP-3 namesakes stay distinct. */
   marketFor(position: PerpsPosition): PerpsMarket {
     return this.markets.find((item) => item.key === position.key);
-  }
-
-  /**
-   * Rows are identified by market key, so a price update rewrites the numbers
-   * in place instead of tearing down and rebuilding every row — which is what
-   * reloads each coin logo and loses the user's scroll position.
-   */
-  trackByKey(_index: number, market: PerpsMarket): string {
-    return market.key;
   }
 
   /** Sign test for a decimal string, which a template cannot do with `< 0`. */
@@ -557,8 +333,8 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     );
   }
 
-  toMarket(coin: string) {
-    this.router.navigateByUrl(`/popup/perps/market/${coin}`);
+  toMarkets() {
+    this.router.navigateByUrl('/popup/perps/markets');
   }
 
   toFunding(tab: 'deposit' | 'withdraw' | 'transfer') {

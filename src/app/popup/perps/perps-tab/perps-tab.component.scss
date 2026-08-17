@@ -219,126 +219,36 @@
   }
 }
 
-.market-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 22px 22px 12px;
-
-  .chip {
-    font-size: 13px;
-    color: var(--sub-title-color);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 5px 13px;
-    cursor: pointer;
-    white-space: nowrap;
-
-    &.neo {
-      color: var(--theme-color);
-      border-color: var(--theme-color);
-    }
-
-    &.active {
-      color: var(--btn-title-color);
-      background: var(--title-color);
-      border-color: var(--title-color);
-    }
-  }
-
-  .search-input {
-    flex: 1;
-    height: 30px;
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 0 14px;
-    background: transparent;
-    color: var(--title-color);
-    font-family: NeverMind-Regular;
-    font-size: 13px;
-    outline: none;
-  }
-
-  .search-icon {
-    width: 15px;
-    margin-left: auto;
-    opacity: 0.6;
-    cursor: pointer;
-  }
+// 仓位卡上的 DEX 标注:各 DEX 的抵押品与清算相互独立,操作也必须路由回原 DEX,
+// 所以这里必须看得出仓位属于哪一个
+.dex-badge {
+  margin-left: 4px;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--tip-bg, rgba(0, 0, 0, 0.06));
+  color: var(--tip-color);
+  font-size: 10px;
+  line-height: 14px;
+  text-transform: uppercase;
 }
 
-.market-loading {
-  display: flex;
-  justify-content: center;
-  padding: 24px 0;
-}
-
-.market-row {
+// 市场页的入口。首页只展示排在前面的市场,搜索和排序都在那一页上
+.explore-entry {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 11px 24px;
-  border-bottom: 1px solid var(--line-color);
+  justify-content: space-between;
+  margin: 8px 16px 12px;
+  padding: 0 16px;
+  height: 48px;
+  border-radius: 8px;
+  background: var(--perps-card-bg);
+  color: var(--title-color);
+  font-size: 14px;
   cursor: pointer;
 
   &:hover {
     background: var(--hover-color);
   }
-
-  > perps-coin-logo {
-    width: 36px;
-    height: 36px;
-    font-size: 15px;
-  }
-
-  .market-name {
-    width: 92px;
-    .coin {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-family: NeverMind-Medium;
-      font-size: 14px;
-      color: var(--title-color);
-    }
-    .leverage {
-      font-size: 10px;
-      color: var(--sub-title-color);
-    }
-    .volume {
-      font-size: 11px;
-      color: var(--sub-title-color);
-      margin-top: 5px;
-    }
-  }
-
-  .sparkline {
-    flex-shrink: 0;
-  }
-
-  .market-price {
-    text-align: right;
-    flex: 1;
-    .price {
-      font-size: 14px;
-      color: var(--title-color);
-    }
-    .change {
-      font-size: 12px;
-      color: var(--theme-color);
-      margin-top: 5px;
-      &.negative {
-        color: var(--error-color);
-      }
-    }
-  }
-}
-
-.market-empty {
-  padding: 24px;
-  text-align: center;
-  font-size: 13px;
-  color: var(--tip-color);
 }
 
 // 非实时:保留最后值,但让每个报价读起来都不像实时数据
@@ -354,9 +264,7 @@
 
 .perps-tab.feed-stale {
   .card-value .value,
-  .position-pnl,
-  .market-price .price,
-  .market-price .change {
+  .position-pnl {
     opacity: 0.45;
   }
 }
@@ -373,120 +281,3 @@
   text-transform: uppercase;
 }
 
-// HIP-3 市场靠徽标区分,而不是把 dex 前缀塞进名字里
-.dex-badge {
-  margin-left: 4px;
-  padding: 0 4px;
-  border-radius: 3px;
-  background: var(--tip-bg, rgba(0, 0, 0, 0.06));
-  color: var(--tip-color);
-  font-size: 10px;
-  line-height: 14px;
-  text-transform: uppercase;
-}
-
-// 标记价不是可成交价,行内必须说清楚它是什么
-.mark-tag {
-  margin-left: 4px;
-  color: var(--tip-color);
-  font-size: 10px;
-  font-weight: 400;
-}
-
-// 排序基准:与筛选是两回事,所以样式上也不做成互斥的分类 chip
-.sort-chip {
-  padding: 4px 10px;
-  border-radius: 12px;
-  background: var(--tip-bg, rgba(0, 0, 0, 0.04));
-  color: var(--tip-color);
-  font-size: 12px;
-  line-height: 16px;
-  cursor: pointer;
-
-  &.active {
-    background: var(--title-color);
-    color: #fff;
-  }
-
-  .arrow {
-    margin-left: 2px;
-  }
-}
-
-// 置顶区与排序区之间要有明确分隔,否则置顶行看起来像排序错了
-.pinned-divider {
-  height: 8px;
-  margin: 0 16px;
-  border-top: 1px solid var(--line-color, rgba(0, 0, 0, 0.06));
-}
-
-.load-more {
-  display: block;
-  width: calc(100% - 32px);
-  margin: 8px 16px 16px;
-  padding: 8px 0;
-  border: 1px solid var(--line-color, rgba(0, 0, 0, 0.08));
-  border-radius: 8px;
-  background: transparent;
-  color: var(--tip-color);
-  font-size: 13px;
-  cursor: pointer;
-}
-
-// 骨架行:首屏给出列表的形状,而不是一片空白加转圈
-.market-skeleton {
-  padding: 0 16px;
-
-  .skeleton-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 0;
-  }
-
-  .skeleton-logo {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-  }
-
-  .skeleton-lines {
-    flex: 1;
-  }
-
-  .skeleton-price {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-  }
-
-  .skeleton-logo,
-  i {
-    display: block;
-    background: var(--tip-bg, rgba(0, 0, 0, 0.06));
-    animation: perps-skeleton 1.4s ease-in-out infinite;
-  }
-
-  i {
-    height: 10px;
-    border-radius: 5px;
-    margin: 3px 0;
-
-    &.wide {
-      width: 72px;
-    }
-    &.narrow {
-      width: 48px;
-    }
-  }
-}
-
-@keyframes perps-skeleton {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.45;
-  }
-}

@@ -1817,6 +1817,12 @@
   "perpsSearchMarket": {
     "message": "搜索市场"
   },
+  "perpsMarketsTitle": {
+    "message": "市场"
+  },
+  "perpsExploreMarkets": {
+    "message": "探索市场"
+  },
   "perpsNoMarkets": {
     "message": "没有找到市场"
   },
@@ -2108,25 +2114,51 @@
   "perpsCrossPositionUnsupported": {
     "message": "该市场存在全仓持仓。NeoLine 仅支持逐仓订单，无法在此加仓。"
   },
-  "perpsLeverageUpdatedReviewAgain": { "message": "杠杆已更新，请重新检查刷新后的订单再提交。" },
-  "perpsOrderFilled": { "message": "订单已全部成交。" },
-  "perpsOrderPartiallyFilled": { "message": "订单部分成交，重试前请检查剩余持仓。" },
-  "perpsOrderResting": { "message": "限价单已挂单。" },
-  "perpsOrderUnfilled": { "message": "市价单未成交，未自动重试。" },
-  "perpsMarketChangedReviewAgain": { "message": "市场已变化或无法取得最新流动性，请重新检查订单。" },
+  "perpsLeverageUpdatedReviewAgain": {
+    "message": "杠杆已更新，请重新检查刷新后的订单再提交。"
+  },
+  "perpsOrderFilled": {
+    "message": "订单已全部成交。"
+  },
+  "perpsOrderPartiallyFilled": {
+    "message": "订单部分成交，重试前请检查剩余持仓。"
+  },
+  "perpsOrderResting": {
+    "message": "限价单已挂单。"
+  },
+  "perpsOrderUnfilled": {
+    "message": "市价单未成交，未自动重试。"
+  },
+  "perpsMarketChangedReviewAgain": {
+    "message": "市场已变化或无法取得最新流动性，请重新检查订单。"
+  },
   "perpsOrderRejected": {
     "message": "订单被拒绝，请检查当前市场与账户状态。"
   },
   "perpsOrderUnknown": {
     "message": "订单状态未知，请在刷新挂单与成交记录前不要重试。"
   },
-  "perpsOrderStatusResolved": { "message": "已恢复订单状态，并刷新账户数据。" },
-  "perpsReversePosition": { "message": "反手现有仓位" },
-  "perpsReverseToLong": { "message": "反手做多" },
-  "perpsReverseToShort": { "message": "反手做空" },
-  "perpsTheoreticalBuyingPower": { "message": "理论购买力" },
-  "perpsBufferedMax": { "message": "Max 下单金额（保留 0.5%）" },
-  "perpsNearMarginLimit": { "message": "该金额会使用 Max 安全预留，保证金变化时可能被交易场所拒绝。" },
+  "perpsOrderStatusResolved": {
+    "message": "已恢复订单状态，并刷新账户数据。"
+  },
+  "perpsReversePosition": {
+    "message": "反手现有仓位"
+  },
+  "perpsReverseToLong": {
+    "message": "反手做多"
+  },
+  "perpsReverseToShort": {
+    "message": "反手做空"
+  },
+  "perpsTheoreticalBuyingPower": {
+    "message": "理论购买力"
+  },
+  "perpsBufferedMax": {
+    "message": "Max 下单金额（保留 0.5%）"
+  },
+  "perpsNearMarginLimit": {
+    "message": "该金额会使用 Max 安全预留，保证金变化时可能被交易场所拒绝。"
+  },
   "confirm": {
     "message": "确认"
   }

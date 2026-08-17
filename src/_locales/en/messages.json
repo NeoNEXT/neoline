@@ -1817,6 +1817,12 @@
   "perpsSearchMarket": {
     "message": "Search markets"
   },
+  "perpsMarketsTitle": {
+    "message": "Markets"
+  },
+  "perpsExploreMarkets": {
+    "message": "Explore markets"
+  },
   "perpsNoMarkets": {
     "message": "No markets found"
   },
@@ -2108,25 +2114,51 @@
   "perpsCrossPositionUnsupported": {
     "message": "This market has an open cross-margin position. NeoLine cannot increase it because only isolated orders are supported."
   },
-  "perpsLeverageUpdatedReviewAgain": { "message": "Leverage was updated. Review the refreshed order before submitting." },
-  "perpsOrderFilled": { "message": "Order filled." },
-  "perpsOrderPartiallyFilled": { "message": "Order partially filled. Check the remaining position before retrying." },
-  "perpsOrderResting": { "message": "Limit order placed and resting." },
-  "perpsOrderUnfilled": { "message": "Market order was not filled. No retry was sent." },
-  "perpsMarketChangedReviewAgain": { "message": "The market changed or fresh liquidity is unavailable. Review the order again." },
+  "perpsLeverageUpdatedReviewAgain": {
+    "message": "Leverage was updated. Review the refreshed order before submitting."
+  },
+  "perpsOrderFilled": {
+    "message": "Order filled."
+  },
+  "perpsOrderPartiallyFilled": {
+    "message": "Order partially filled. Check the remaining position before retrying."
+  },
+  "perpsOrderResting": {
+    "message": "Limit order placed and resting."
+  },
+  "perpsOrderUnfilled": {
+    "message": "Market order was not filled. No retry was sent."
+  },
+  "perpsMarketChangedReviewAgain": {
+    "message": "The market changed or fresh liquidity is unavailable. Review the order again."
+  },
   "perpsOrderRejected": {
     "message": "Order rejected. Check the current market and account state."
   },
   "perpsOrderUnknown": {
     "message": "Order status is unknown. Do not retry until open orders and fills are refreshed."
   },
-  "perpsOrderStatusResolved": { "message": "Order status was recovered. Account data has been refreshed." },
-  "perpsReversePosition": { "message": "Reverse existing position" },
-  "perpsReverseToLong": { "message": "Reverse to Long" },
-  "perpsReverseToShort": { "message": "Reverse to Short" },
-  "perpsTheoreticalBuyingPower": { "message": "Theoretical buying power" },
-  "perpsBufferedMax": { "message": "Max order (0.5% reserve)" },
-  "perpsNearMarginLimit": { "message": "This amount uses the Max reserve and may be rejected if margin changes." },
+  "perpsOrderStatusResolved": {
+    "message": "Order status was recovered. Account data has been refreshed."
+  },
+  "perpsReversePosition": {
+    "message": "Reverse existing position"
+  },
+  "perpsReverseToLong": {
+    "message": "Reverse to Long"
+  },
+  "perpsReverseToShort": {
+    "message": "Reverse to Short"
+  },
+  "perpsTheoreticalBuyingPower": {
+    "message": "Theoretical buying power"
+  },
+  "perpsBufferedMax": {
+    "message": "Max order (0.5% reserve)"
+  },
+  "perpsNearMarginLimit": {
+    "message": "This amount uses the Max reserve and may be rejected if margin changes."
+  },
   "confirm": {
     "message": "Confirm"
   }
