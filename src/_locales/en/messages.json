@@ -1940,8 +1940,68 @@
   "perpsWalletBalance": {
     "message": "Wallet balance"
   },
-  "perpsAvailableBalance": {
-    "message": "Available balance"
+  "perpsArrivalDeposit": {
+    "message": "about 1 min (estimate)"
+  },
+  "perpsArrivalWithdraw": {
+    "message": "about 5 min (estimate)"
+  },
+  "perpsEstimated": {
+    "message": "estimate"
+  },
+  "perpsNetwork": {
+    "message": "Network"
+  },
+  "perpsRecipient": {
+    "message": "Recipient"
+  },
+  "perpsRetry": {
+    "message": "Retry"
+  },
+  "perpsConfirmDepositTitle": {
+    "message": "Confirm deposit"
+  },
+  "perpsDepositChainNotice": {
+    "message": "This transaction is sent on {{chain}} and its network fee is paid in {{symbol}} on that chain."
+  },
+  "perpsDepositIrreversible": {
+    "message": "Sent to the Hyperliquid bridge contract. This transfer cannot be recalled."
+  },
+  "perpsPortfolioMarginNoDeposit": {
+    "message": "Deposits are unavailable for portfolio-margin accounts. Withdrawals still work; use the Hyperliquid frontend to manage this account."
+  },
+  "perpsBalanceUnknown": {
+    "message": "Could not read your balance on the deposit chain."
+  },
+  "perpsWithdrawableUnknown": {
+    "message": "Could not read your withdrawable balance."
+  },
+  "perpsRefreshFailed": {
+    "message": "Could not confirm the latest balance, so nothing was sent. Try again."
+  },
+  "perpsBalanceMoved": {
+    "message": "Your balance changed. Check the amount and confirm again."
+  },
+  "perpsEnterAmount": {
+    "message": "Enter an amount"
+  },
+  "perpsGasShortfall": {
+    "message": "Not enough {{symbol}} on {{chain}} to pay the network fee."
+  },
+  "perpsDepositAwaitingChain": {
+    "message": "Deposit sent, waiting for chain confirmation"
+  },
+  "perpsDepositAwaitingCredit": {
+    "message": "Confirmed on chain, waiting for the bridge to credit it"
+  },
+  "perpsDepositNotCredited": {
+    "message": "On chain but not credited yet — check the transaction below"
+  },
+  "perpsDismiss": {
+    "message": "Dismiss"
+  },
+  "perpsWithdrawable": {
+    "message": "Withdrawable"
   },
   "perpsBalance": {
     "message": "balance"

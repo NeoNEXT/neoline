@@ -1940,8 +1940,68 @@
   "perpsWalletBalance": {
     "message": "ウォレット残高"
   },
-  "perpsAvailableBalance": {
-    "message": "利用可能残高"
+  "perpsArrivalDeposit": {
+    "message": "約 1 分（予定）"
+  },
+  "perpsArrivalWithdraw": {
+    "message": "約 5 分（予定）"
+  },
+  "perpsEstimated": {
+    "message": "概算"
+  },
+  "perpsNetwork": {
+    "message": "ネットワーク"
+  },
+  "perpsRecipient": {
+    "message": "送金先"
+  },
+  "perpsRetry": {
+    "message": "再試行"
+  },
+  "perpsConfirmDepositTitle": {
+    "message": "入金の確認"
+  },
+  "perpsDepositChainNotice": {
+    "message": "この取引は {{chain}} 上で送信され、ネットワーク手数料は同チェーンの {{symbol}} で支払われます。"
+  },
+  "perpsDepositIrreversible": {
+    "message": "Hyperliquid のブリッジ契約へ送金します。この送金は取り消せません。"
+  },
+  "perpsPortfolioMarginNoDeposit": {
+    "message": "ポートフォリオマージン口座への入金には未対応です。出金は利用できます。口座全体の管理は Hyperliquid 公式フロントエンドをご利用ください。"
+  },
+  "perpsBalanceUnknown": {
+    "message": "入金チェーン上の残高を取得できませんでした。"
+  },
+  "perpsWithdrawableUnknown": {
+    "message": "出金可能額を取得できませんでした。"
+  },
+  "perpsRefreshFailed": {
+    "message": "最新の残高を確認できなかったため、何も送信していません。再試行してください。"
+  },
+  "perpsBalanceMoved": {
+    "message": "残高が変動しました。金額を確認して再度実行してください。"
+  },
+  "perpsEnterAmount": {
+    "message": "数量を入力してください"
+  },
+  "perpsGasShortfall": {
+    "message": "{{chain}} 上の {{symbol}} がネットワーク手数料に足りません。"
+  },
+  "perpsDepositAwaitingChain": {
+    "message": "入金を送信、チェーンの確認待ち"
+  },
+  "perpsDepositAwaitingCredit": {
+    "message": "チェーン上で確認済み、ブリッジの反映待ち"
+  },
+  "perpsDepositNotCredited": {
+    "message": "チェーン上にありますが未反映です。下のトランザクションで確認できます"
+  },
+  "perpsDismiss": {
+    "message": "閉じる"
+  },
+  "perpsWithdrawable": {
+    "message": "出金可能額"
   },
   "perpsBalance": {
     "message": "残高"

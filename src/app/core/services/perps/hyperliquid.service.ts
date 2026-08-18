@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import {
   Observable,
   Subject,
@@ -59,6 +59,10 @@ import {
   PERPS_MIN_SLIPPAGE_PERCENT,
 } from '@popup/_lib/perps';
 import { environment } from '@/environments/environment';
+import {
+  isNonceRejection,
+  PerpsNonceAllocator,
+} from './perps-nonce';
 import {
   signHyperliquidApproveBuilderFee,
   signHyperliquidL1Action,
@@ -193,7 +197,12 @@ export class HyperliquidService {
   >();
   /** Accounts whose builder-fee approval this session has already confirmed. */
   private builderFeeApproved = new Set<string>();
-  private lastNonce = 0;
+  /**
+   * Nonces are tracked per signer by the exchange, so they are allocated per
+   * signer here too. The allocator is a plain object rather than a service so
+   * it can move into the background executor unchanged.
+   */
+  private readonly nonces = new PerpsNonceAllocator();
 
   constructor(private http: HttpClient) {}
 
@@ -292,7 +301,7 @@ export class HyperliquidService {
 
   /** Sign the one-time approval letting our builder charge its fee. */
   approveBuilderFee(privateKey: string): Observable<PerpsExchangeResponse> {
-    const nonce = this.nextNonce();
+    const nonce = this.nextNonce(privateKey);
     return from(
       signHyperliquidApproveBuilderFee(
         privateKey,
@@ -471,10 +480,8 @@ export class HyperliquidService {
       : false;
   }
 
-  private nextNonce(): number {
-    const now = Date.now();
-    this.lastNonce = Math.max(now, this.lastNonce + 1);
-    return this.lastNonce;
+  private nextNonce(privateKey: string): number {
+    return this.nonces.next(ethers.computeAddress(privateKey));
   }
 
   createCloid(): string {
@@ -503,7 +510,7 @@ export class HyperliquidService {
     action: any,
     allowItemErrors = false
   ): Observable<PerpsExchangeResponse> {
-    const nonce = this.nextNonce();
+    const nonce = this.nextNonce(privateKey);
     return from(
       signHyperliquidL1Action(privateKey, action, nonce, !this.isTestnet)
     ).pipe(
@@ -833,45 +840,57 @@ export class HyperliquidService {
     destination: string,
     amount: string
   ): Observable<PerpsExchangeResponse> {
-    const nonce = this.nextNonce();
     const amountWire = this.floatToWire(amount);
-    return from(
-      signHyperliquidWithdraw(
-        privateKey,
-        destination,
-        amountWire,
-        nonce,
-        !this.isTestnet
+    return this.withNonceRetry(privateKey, (nonce) =>
+      from(
+        signHyperliquidWithdraw(
+          privateKey,
+          destination,
+          amountWire,
+          nonce,
+          !this.isTestnet
+        )
+      ).pipe(
+        switchMap(({ action, signature }) =>
+          this.postExchange(action, signature, nonce)
+        )
       )
-    ).pipe(
-      switchMap(({ action, signature }) =>
-        this.postExchange(action, signature, nonce)
-      ),
-      tap(() => this.clearAccountCache())
-    );
+    ).pipe(tap(() => this.clearAccountCache()));
   }
 
-  /** Send native USDC to Bridge2 from the same address that will be credited. */
-  deposit(privateKey: string, amount: string): Observable<string> {
-    const config = this.depositConfig;
-    return from(
-      (async () => {
-        const provider = new ethers.JsonRpcProvider(config.rpc);
-        const signer = new ethers.Wallet(privateKey, provider);
-        const token = new ethers.Contract(
-          config.address,
-          ['function transfer(address to, uint256 amount) returns (bool)'],
-          signer
-        );
-        const transaction = await token.transfer(
-          config.bridgeAddress,
-          ethers.parseUnits(this.floatToWire(amount), config.decimals)
-        );
-        await transaction.wait();
-        this.clearAccountCache();
-        return transaction.hash as string;
-      })()
-    );
+  /**
+   * Sign and send, re-signing once if the exchange refuses the nonce itself.
+   *
+   * Safe precisely because the exchange answered: a refusal means nothing was
+   * executed, so a second attempt cannot duplicate the action. A lost or failed
+   * response is the opposite case — the action may have run — and is rethrown
+   * untouched for the caller to resolve as an unknown execution.
+   */
+  private withNonceRetry(
+    privateKey: string,
+    build: (nonce: number) => Observable<PerpsExchangeResponse>
+  ): Observable<PerpsExchangeResponse> {
+    const attempt = (
+      remaining: number
+    ): Observable<PerpsExchangeResponse> =>
+      build(this.nextNonce(privateKey)).pipe(
+        catchError((error) => {
+          if (remaining > 0 && this.isDeterministicNonceRejection(error)) {
+            return attempt(remaining - 1);
+          }
+          throw error;
+        })
+      );
+    return attempt(1);
+  }
+
+  private isDeterministicNonceRejection(error: unknown): boolean {
+    // A transport failure is not an answer; the action's fate is unknown and it
+    // must never be signed again on our own initiative.
+    if (error instanceof HttpErrorResponse) {
+      return false;
+    }
+    return isNonceRejection(error);
   }
 
   /**

@@ -1940,8 +1940,68 @@
   "perpsWalletBalance": {
     "message": "钱包余额"
   },
-  "perpsAvailableBalance": {
-    "message": "可用余额"
+  "perpsArrivalDeposit": {
+    "message": "约 1 分钟（预计）"
+  },
+  "perpsArrivalWithdraw": {
+    "message": "约 5 分钟（预计）"
+  },
+  "perpsEstimated": {
+    "message": "预计"
+  },
+  "perpsNetwork": {
+    "message": "网络"
+  },
+  "perpsRecipient": {
+    "message": "收款方"
+  },
+  "perpsRetry": {
+    "message": "重试"
+  },
+  "perpsConfirmDepositTitle": {
+    "message": "确认存入"
+  },
+  "perpsDepositChainNotice": {
+    "message": "这笔交易在 {{chain}} 上发出，网络费用由该链上的 {{symbol}} 支付。"
+  },
+  "perpsDepositIrreversible": {
+    "message": "转入 Hyperliquid 桥合约，该转账无法撤回。"
+  },
+  "perpsPortfolioMarginNoDeposit": {
+    "message": "组合保证金账户暂不支持存入。提取仍然可用；完整账户管理请使用 Hyperliquid 官方前端。"
+  },
+  "perpsBalanceUnknown": {
+    "message": "无法读取你在存入链上的余额。"
+  },
+  "perpsWithdrawableUnknown": {
+    "message": "无法读取可提余额。"
+  },
+  "perpsRefreshFailed": {
+    "message": "无法取得最新余额，未发起任何操作，请重试。"
+  },
+  "perpsBalanceMoved": {
+    "message": "余额已发生变化，请核对金额后再次确认。"
+  },
+  "perpsEnterAmount": {
+    "message": "请输入金额"
+  },
+  "perpsGasShortfall": {
+    "message": "{{chain}} 上的 {{symbol}} 不足以支付网络费用。"
+  },
+  "perpsDepositAwaitingChain": {
+    "message": "存入已发送，等待链上确认"
+  },
+  "perpsDepositAwaitingCredit": {
+    "message": "已在链上确认，等待桥入账"
+  },
+  "perpsDepositNotCredited": {
+    "message": "已上链但尚未入账，可用下方交易哈希查询"
+  },
+  "perpsDismiss": {
+    "message": "知道了"
+  },
+  "perpsWithdrawable": {
+    "message": "可提余额"
   },
   "perpsBalance": {
     "message": "余额"

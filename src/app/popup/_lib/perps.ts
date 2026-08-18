@@ -37,9 +37,19 @@ export const PERPS_NEO_COINS = ['NEO', 'GAS'];
 
 export interface PerpsDepositConfig {
   chainId: number;
-  rpc: string;
+  /**
+   * Endpoints for the deposit chain, tried in order.
+   *
+   * Unlike the RPC list on a wallet network, the user never chose these: the
+   * deposit chain is an implementation detail of the bridge, so rotating away
+   * from a dead endpoint is not swapping out a node the user picked. Every
+   * entry must serve the same chain id, which is checked before use.
+   */
+  rpcUrls: string[];
   chainName: string;
   symbol: string;
+  /** The chain's own currency — what the network fee is actually paid in. */
+  nativeSymbol: string;
   decimals: number;
   /** ERC-20 the bridge credits — any other token sent to it is lost. */
   address: string;
@@ -59,30 +69,54 @@ export const PERPS_DEPOSIT_CONFIG: {
 } = {
   mainnet: {
     chainId: 42161,
-    rpc: 'https://arb1.arbitrum.io/rpc',
+    rpcUrls: [
+      'https://arb1.arbitrum.io/rpc',
+      'https://arbitrum-one-rpc.publicnode.com',
+      'https://arbitrum.drpc.org',
+    ],
     chainName: 'Arbitrum',
     symbol: 'USDC',
+    nativeSymbol: 'ETH',
     decimals: 6,
     address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
     bridgeAddress: '0x2df1c51E09aECF9cacB7bc98cB1742757f163dF7',
   },
   testnet: {
     chainId: 421614,
-    rpc: 'https://sepolia-rollup.arbitrum.io/rpc',
+    rpcUrls: [
+      'https://sepolia-rollup.arbitrum.io/rpc',
+      'https://arbitrum-sepolia-rpc.publicnode.com',
+    ],
     chainName: 'Arbitrum Sepolia',
     symbol: 'USDC',
+    nativeSymbol: 'ETH',
     decimals: 6,
     address: '0x1baAbB04529D43a73232B713C0FE471f7c7334d5',
     bridgeAddress: '0x08cfc1B6b2dCF36A1480b99353A354AA8AC56f89',
   },
 };
 
+/**
+ * Funding thresholds, kept together because they are exchange rules rather
+ * than interface choices — scattering them across screens is how one copy ends
+ * up disagreeing with another.
+ *
+ * SOURCE, checked 2026-08-18: the Hyperliquid documentation no longer publishes
+ * these figures on the onboarding or bridge pages, and the full-text export
+ * does not contain them either. The values below are carried over from earlier
+ * documentation and are NOT currently verifiable against a primary source.
+ * They gate real money — a deposit under the bridge minimum is not credited and
+ * cannot be recovered — so they must be re-verified against Hyperliquid before
+ * this ships to mainnet, and the actual fee charged must be read back from the
+ * exchange ledger rather than assumed from the constant.
+ */
+
 /** Bridge2 only credits native Circle USDC on Arbitrum; below this the deposit is lost. */
 export const PERPS_MIN_DEPOSIT = 5;
 /**
- * Not published in the Bridge2 docs the way the deposit floor is; it follows
- * from `PERPS_WITHDRAW_FEE` — the flat fee is taken out of the amount, so a
- * smaller withdrawal would leave the user with nothing.
+ * Follows from `PERPS_WITHDRAW_FEE` rather than from a published floor: the
+ * flat fee comes out of the amount, so anything smaller leaves the user with
+ * nothing.
  */
 export const PERPS_MIN_WITHDRAW = 2;
 /** Hyperliquid rejects ordinary and partial-close orders below this notional. */
@@ -91,6 +125,65 @@ export const PERPS_MIN_ORDER_NOTIONAL = 10;
 export const PERPS_MAX_ORDER_BUFFER_FRACTION = 0.005;
 /** Flat fee Hyperliquid charges on withdrawals, in USDC. */
 export const PERPS_WITHDRAW_FEE = 1;
+
+/**
+ * How often the funding screen re-reads the source-chain token balance.
+ *
+ * The perps account arrives over a websocket, but the wallet's own balance sits
+ * on another chain with no such feed, so it is polled. Fifteen seconds is short
+ * enough that a deposit made elsewhere shows up while the screen is open, and
+ * long enough not to hammer a public RPC while the user types.
+ */
+export const PERPS_WALLET_BALANCE_POLL_MS = 15000;
+
+/**
+ * Resilience policy for the deposit chain's public endpoints.
+ *
+ * The numbers follow MetaMask's own `RpcService`, which retries four times with
+ * exponential backoff before giving up on an endpoint. Its retriable set is
+ * reproduced in the deposit chain service: transient transport failures only,
+ * never a business error, and nothing at all while the browser reports itself
+ * offline.
+ */
+export const PERPS_CHAIN_MAX_RETRIES = 4;
+export const PERPS_CHAIN_RETRY_BASE_MS = 250;
+export const PERPS_CHAIN_REQUEST_TIMEOUT_MS = 10000;
+/**
+ * How long a deposit is watched for its receipt before the screen stops waiting.
+ *
+ * Reaching it is not a failure: the transaction is broadcast and may confirm
+ * later, so it becomes a pending deposit rather than an error.
+ */
+export const PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS = 90000;
+
+/** How often a pending deposit is re-checked, and how long it is followed. */
+export const PERPS_PENDING_DEPOSIT_POLL_MS = 10000;
+export const PERPS_PENDING_DEPOSIT_MAX_MS = 300000;
+
+/**
+ * A bridge deposit that has been broadcast but whose funds are not yet usable.
+ *
+ * Persisted, because the popup closing must not lose sight of money in flight.
+ * It holds public transaction parameters only — never a key, a password or
+ * anything that could be replayed.
+ */
+export interface PerpsPendingDeposit {
+  /** Which deposit chain this was sent on, so a network switch cannot confuse it. */
+  chainId: number;
+  /** The sending address, which is also the address the bridge credits. */
+  address: string;
+  amountExact: string;
+  hash: string;
+  startedAt: number;
+  /** True once the transfer has a receipt on the deposit chain. */
+  chainConfirmed: boolean;
+  /**
+   * Withdrawable balance before the deposit was sent. The credit has landed
+   * when the account rises above it, which is the only signal the exchange
+   * gives that the bridge is done.
+   */
+  withdrawableBeforeExact: string;
+}
 
 /**
  * NeoLine's builder fee, charged by Hyperliquid on top of its own taker/maker

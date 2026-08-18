@@ -20,6 +20,33 @@
     </div>
   </div>
 
+  <!-- The feed decides whether these figures are current; say so either way. -->
+  <div class="stale-note" *ngIf="feedStale && isWithdraw">
+    {{ "perpsFeedStale" | translate | async }}
+  </div>
+
+  <!-- Money that has left the wallet but is not yet spendable. Two facts, shown
+       as two facts: on chain, and credited by the bridge. -->
+  <div class="pending-deposit" *ngFor="let deposit of pending">
+    <div class="pending-line">
+      <span class="state">
+        {{
+          (isStalled(deposit)
+            ? "perpsDepositNotCredited"
+            : deposit.chainConfirmed
+            ? "perpsDepositAwaitingCredit"
+            : "perpsDepositAwaitingChain"
+          ) | translate | async
+        }}
+      </span>
+      <span class="amount">${{ formatBalance(deposit.amountExact) }}</span>
+    </div>
+    <div class="pending-hash">{{ deposit.hash }}</div>
+    <span class="dismiss" *ngIf="isStalled(deposit)" (click)="dismissPending(deposit)">
+      {{ "perpsDismiss" | translate | async }}
+    </span>
+  </div>
+
   <div class="amount-area">
     <div class="amount-input">
       <span class="prefix">$</span>
@@ -34,34 +61,32 @@
     <div class="balance-tip">
       <ng-container *ngIf="isDeposit">
         {{ "perpsWalletBalance" | translate | async }}
-        {{ walletBalance | number: "1.2-2" }} {{ token.symbol }}
+        {{ formatBalance(walletBalanceExact) }} {{ token.symbol }}
       </ng-container>
       <ng-container *ngIf="isWithdraw">
-        {{ "perpsAvailableBalance" | translate | async }}
-        {{ formatUsd(account?.availableBalanceExact) }}
+        {{ "perpsWithdrawable" | translate | async }}
+        ${{ formatBalance(account?.withdrawableExact) }}
       </ng-container>
-    </div>
-
-    <div class="preset-row" *ngIf="isDeposit">
-      <span
-        *ngFor="let preset of depositPresets"
-        [class.active]="activePreset === preset"
-        (click)="setPreset(preset)"
-        >${{ preset }}</span
-      >
-      <span [class.active]="activePreset === -1" (click)="setMax()">
-        {{ "perpsMaxFunding" | translate | async }}
+      <span class="retry" *ngIf="!maxAmountKnown" (click)="reload()">
+        {{ "perpsRetry" | translate | async }}
       </span>
     </div>
 
-    <div class="preset-row" *ngIf="!isDeposit">
+    <!-- Percentages of the real balance: a fixed amount on a screen whose
+         balance may be zero or unknown can only produce an error. -->
+    <div class="preset-row">
       <span
-        *ngFor="let percent of withdrawPercents"
+        *ngFor="let percent of presetPercents"
         [class.active]="activePreset === percent"
+        [class.disabled]="!maxAmountKnown"
         (click)="setPercent(percent)"
         >{{ percent }}%</span
       >
-      <span [class.active]="activePreset === -1" (click)="setMax()">
+      <span
+        [class.active]="activePreset === -1"
+        [class.disabled]="!maxAmountKnown"
+        (click)="setMax()"
+      >
         {{ "perpsMaxFunding" | translate | async }}
       </span>
     </div>
@@ -78,21 +103,35 @@
         {{ token.chainName }}
         <ng-container *ngIf="isDeposit">
           · {{ "perpsBalance" | translate | async }}
-          {{ walletBalance | number: "1.2-2" }}
+          {{ formatBalance(walletBalanceExact) }}
         </ng-container>
       </div>
     </div>
   </div>
 
+  <!-- The transaction happens on the bridge's chain, not the one the user has
+       selected, and it is that chain's currency that pays for it. -->
+  <p class="chain-notice" *ngIf="isDeposit">
+    {{
+      "perpsDepositChainNotice"
+        | translate: { chain: token.chainName, symbol: token.nativeSymbol }
+        | async
+    }}
+  </p>
+
   <div class="detail-rows">
     <ng-container *ngIf="isDeposit">
       <div class="row">
         <span class="label">{{ "perpsArrivalTime" | translate | async }}</span>
-        <span class="value">~1 min</span>
+        <span class="value">
+          {{ "perpsArrivalDeposit" | translate | async }}
+        </span>
       </div>
       <div class="row">
         <span class="label">{{ "perpsNetworkFee" | translate | async }}</span>
-        <span class="value">~$0.02</span>
+        <span class="value">
+          {{ formatBalance(networkFeeExact, 6) }} {{ token.nativeSymbol }}
+        </span>
       </div>
     </ng-container>
     <ng-container *ngIf="isWithdraw">
@@ -102,47 +141,82 @@
       </div>
       <div class="row">
         <span class="label">{{ "perpsArrivalTime" | translate | async }}</span>
-        <span class="value">~5 min</span>
+        <span class="value">
+          {{ "perpsArrivalWithdraw" | translate | async }}
+        </span>
       </div>
       <div class="row">
-        <span class="label">{{ "perpsYouReceive" | translate | async }}</span>
-        <span class="value">{{ formatUsd(receiveAmount) }}</span>
+        <span class="label">
+          {{ "perpsYouReceive" | translate | async }}
+          <em>({{ "perpsEstimated" | translate | async }})</em>
+        </span>
+        <span class="value">{{ formatUsd(receiveAmountExact) }}</span>
       </div>
     </ng-container>
   </div>
 
-  <p class="error-tip" *ngIf="belowMinimum && isDeposit">
+  <!-- One reason, always shown while the control is dead. -->
+  <p class="error-tip" *ngIf="disabledReason">
     {{
-      "perpsBelowMinDeposit"
-        | translate: { amount: minDeposit, symbol: token.symbol }
-        | async
-    }}
-  </p>
-  <p class="error-tip" *ngIf="belowMinimum && isWithdraw">
-    {{
-      "perpsBelowMinWithdraw"
+      disabledReason
         | translate
-          : { amount: minWithdraw, symbol: token.symbol, fee: withdrawFee }
+          : {
+              amount: isDeposit ? minDeposit : minWithdraw,
+              symbol: isDeposit ? token.symbol : token.nativeSymbol,
+              fee: withdrawFee,
+              decimals: amountDecimals,
+              chain: token.chainName
+            }
         | async
     }}
-  </p>
-  <p class="error-tip" *ngIf="exceedsBalance">
-    {{ "perpsExceedsBalance" | translate | async }}
-  </p>
-  <p class="error-tip" *ngIf="amountExceedsPrecision">
-    {{ "perpsAmountPrecision" | translate: { decimals: amountDecimals } | async }}
-  </p>
-  <p class="error-tip" *ngIf="accountLoadError && !isDeposit">
-    {{ "perpsLoadFailed" | translate | async }}
-  </p>
-  <p class="error-tip" *ngIf="unsupportedAccountMode">
-    {{ "perpsPortfolioMarginUnsupported" | translate | async }}
   </p>
 
   <div class="submit-wrap">
-    <button [disabled]="!canSubmit" (click)="submit()">
+    <button [disabled]="!canSubmit" (click)="requestSubmit()">
       {{ (isDeposit ? "perpsDeposit" : "perpsWithdraw") | translate | async }}
-      <ng-container *ngIf="amount"> {{ formatUsd(amountNumber) }}</ng-container>
+      <ng-container *ngIf="amount"> {{ formatUsd(amount) }}</ng-container>
     </button>
+  </div>
+
+  <!-- A deposit leaves for a contract address the user cannot read, and cannot
+       be recalled. It gets one look before it goes. -->
+  <div class="confirm-sheet" *ngIf="confirming">
+    <div class="sheet">
+      <div class="sheet-title">
+        {{ "perpsConfirmDepositTitle" | translate | async }}
+      </div>
+      <div class="row">
+        <span class="label">{{ "perpsAmount" | translate | async }}</span>
+        <span class="value">{{ formatUsd(amount) }} {{ token.symbol }}</span>
+      </div>
+      <div class="row">
+        <span class="label">{{ "perpsNetwork" | translate | async }}</span>
+        <span class="value">{{ token.chainName }}</span>
+      </div>
+      <div class="row">
+        <span class="label">{{ "perpsRecipient" | translate | async }}</span>
+        <span class="value address">{{ token.bridgeAddress }}</span>
+      </div>
+      <div class="row">
+        <span class="label">
+          {{ "perpsNetworkFee" | translate | async }}
+          <em>({{ "perpsEstimated" | translate | async }})</em>
+        </span>
+        <span class="value">
+          {{ formatBalance(networkFeeExact, 6) }} {{ token.nativeSymbol }}
+        </span>
+      </div>
+      <p class="sheet-note">
+        {{ "perpsDepositIrreversible" | translate | async }}
+      </p>
+      <div class="sheet-actions">
+        <button class="ghost" (click)="cancelConfirm()">
+          {{ "cancel" | translate | async }}
+        </button>
+        <button class="primary" [disabled]="submitting" (click)="submit()">
+          {{ "confirm" | translate | async }}
+        </button>
+      </div>
+    </div>
   </div>
 </div>

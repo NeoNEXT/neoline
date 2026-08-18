@@ -40,6 +40,8 @@ interface NotificationContent {
   perpsOrderSubmitted: string;
   perpsOrderCanceled: string;
   perpsDepositSubmitted: string;
+  perpsDepositConfirmed: string;
+  perpsDepositStillPending: string;
   perpsWithdrawSuccess: string;
   perpsSigningUnavailable: string;
 }
@@ -88,7 +90,11 @@ export class NotificationService {
       'Unable to load the bridge fee and limits. Please try again later.',
     perpsOrderSubmitted: 'Perps order submitted.',
     perpsOrderCanceled: 'Order canceled.',
-    perpsDepositSubmitted: 'Deposit submitted.',
+    perpsDepositSubmitted: 'Deposit sent. Waiting for confirmation.',
+    perpsDepositConfirmed:
+      'Deposit confirmed on chain. The bridge credits it within about a minute.',
+    perpsDepositStillPending:
+      'Deposit is on chain but not confirmed yet. It may still land — check the transaction before sending another.',
     perpsWithdrawSuccess: 'Withdrawal successful.',
     perpsSigningUnavailable:
       'This wallet does not support Hyperliquid typed-data signing yet.',
@@ -131,7 +137,10 @@ export class NotificationService {
     getBridgeInfoFailed: '暂时无法获取跨链手续费和限额，请稍后重试。',
     perpsOrderSubmitted: '永续合约订单已提交。',
     perpsOrderCanceled: '订单已撤销。',
-    perpsDepositSubmitted: '入金交易已提交。',
+    perpsDepositSubmitted: '存入交易已发送，等待确认。',
+    perpsDepositConfirmed: '存入已在链上确认，桥通常约 1 分钟内入账。',
+    perpsDepositStillPending:
+      '存入已上链但尚未确认，仍可能成功。再次发送前请先查询该笔交易。',
     perpsWithdrawSuccess: '提现成功。',
     perpsSigningUnavailable: '该钱包暂不支持 Hyperliquid 类型化数据签名。',
   };
@@ -177,7 +186,11 @@ export class NotificationService {
       'ブリッジの手数料と上限を取得できません。後でもう一度お試しください。',
     perpsOrderSubmitted: '無期限先物注文を送信しました。',
     perpsOrderCanceled: '注文をキャンセルしました。',
-    perpsDepositSubmitted: '入金を送信しました。',
+    perpsDepositSubmitted: '入金を送信しました。確認を待っています。',
+    perpsDepositConfirmed:
+      'チェーン上で確認されました。ブリッジは約 1 分で反映します。',
+    perpsDepositStillPending:
+      '入金はチェーンに送信済みですが未確認です。成立する可能性があるため、再送前に取引を確認してください。',
     perpsWithdrawSuccess: '出金に成功しました。',
     perpsSigningUnavailable:
       'このウォレットはHyperliquidの型付きデータ署名にまだ対応していません。',
@@ -223,7 +236,11 @@ export class NotificationService {
       '브리지 수수료와 한도를 가져올 수 없습니다. 나중에 다시 시도해 주세요.',
     perpsOrderSubmitted: '무기한 선물 주문을 제출했습니다.',
     perpsOrderCanceled: '주문을 취소했습니다.',
-    perpsDepositSubmitted: '입금을 제출했습니다.',
+    perpsDepositSubmitted: '입금을 전송했습니다. 확인을 기다리는 중입니다.',
+    perpsDepositConfirmed:
+      '체인에서 확인되었습니다. 브리지가 약 1분 내에 반영합니다.',
+    perpsDepositStillPending:
+      '입금이 체인에 전송되었으나 아직 확인되지 않았습니다. 성사될 수 있으니 재전송 전에 거래를 확인하세요.',
     perpsWithdrawSuccess: '출금에 성공했습니다.',
     perpsSigningUnavailable:
       '이 지갑은 아직 Hyperliquid 형식화 데이터 서명을 지원하지 않습니다.',

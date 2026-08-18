@@ -10,6 +10,8 @@ import {
   formatSignedPercent,
   formatSize,
   formatUsd,
+  formatBalance,
+  MISSING_DISPLAY,
   maxOrderNotionalForSide,
   notionalAtLotSize,
   previewClosePosition,
@@ -117,6 +119,25 @@ describe('perps utilities', () => {
     expect(formatUsd(13.4)).toBe('$13.40');
     expect(formatUsd(1250.5)).toBe('$1,250.50');
     expect(formatUsd(-20)).toBe('-$20');
+  });
+
+  it('never renders a non-zero amount as zero', () => {
+    expect(formatUsd(0.004)).toBe('$<0.01');
+    expect(formatUsd('0.0000001')).toBe('$<0.01');
+    expect(formatUsd(-0.004)).toBe('-$<0.01');
+    // An actual zero is a zero, and a missing value is neither.
+    expect(formatUsd(0)).toBe('$0');
+    expect(formatUsd(null)).toBe(MISSING_DISPLAY);
+  });
+
+  it('rounds a spendable balance down, never up', () => {
+    // Rounding up would offer more than the wallet holds.
+    expect(formatBalance('10.999')).toBe('10.99');
+    expect(formatBalance('1234.5678')).toBe('1,234.56');
+    expect(formatBalance('100')).toBe('100.00');
+    expect(formatBalance('0.004')).toBe('<0.01');
+    expect(formatBalance('0')).toBe('0.00');
+    expect(formatBalance(null)).toBe(MISSING_DISPLAY);
   });
 
   it('withholds the plus sign from a change that rounds to zero', () => {

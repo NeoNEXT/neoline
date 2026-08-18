@@ -210,18 +210,53 @@ export function formatPrice(
  * Money that is a balance rather than a price: two decimals, except that a
  * whole amount drops the `.00`, which keeps $13.40 intact while showing $100
  * rather than $100.00.
+ *
+ * An amount too small to survive rounding reads as `<$0.01` rather than `$0`:
+ * a fee or a residue that exists is not the same fact as one that does not, and
+ * a user who is told `$0` has been told something untrue.
  */
 export function formatUsd(value: PerpsExactValue, decimals = 2): string {
   if (isMissing(value)) {
     return MISSING_DISPLAY;
   }
-  const n = new BigNumber(value).toNumber();
-  const sign = n < 0 ? '-' : '';
-  const formatted = Math.abs(n).toLocaleString('en-US', {
+  const amount = new BigNumber(value);
+  const sign = amount.isNegative() ? '-' : '';
+  const abs = amount.absoluteValue();
+  const smallest = new BigNumber(1).shiftedBy(-decimals);
+  if (abs.isGreaterThan(0) && abs.isLessThan(smallest)) {
+    return `${sign}$<${smallest.toFixed(decimals)}`;
+  }
+  const formatted = abs.toNumber().toLocaleString('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
   return `${sign}$${formatted.replace(/\.00$/, '')}`;
+}
+
+/**
+ * A spendable balance, rounded DOWN and without a currency symbol.
+ *
+ * Rounding a balance the usual way can show money that is not there: 10.999
+ * rendered as "11.00" invites an amount the transfer will reject. Callers add
+ * the `$` or the token symbol, since the same figure serves both. Dust still
+ * reads as `<0.01` rather than `0.00` — a balance that exists but cannot be
+ * expressed at this precision is not a zero balance.
+ */
+export function formatBalance(value: PerpsExactValue, decimals = 2): string {
+  if (isMissing(value)) {
+    return MISSING_DISPLAY;
+  }
+  const amount = new BigNumber(value);
+  const sign = amount.isNegative() ? '-' : '';
+  const abs = amount.absoluteValue();
+  const smallest = new BigNumber(1).shiftedBy(-decimals);
+  if (abs.isGreaterThan(0) && abs.isLessThan(smallest)) {
+    return `${sign}<${smallest.toFixed(decimals)}`;
+  }
+  const floored = abs.decimalPlaces(decimals, BigNumber.ROUND_FLOOR);
+  const [whole, fraction] = floored.toFixed(decimals).split('.');
+  const grouped = Number(whole).toLocaleString('en-US');
+  return `${sign}${fraction ? `${grouped}.${fraction}` : grouped}`;
 }
 
 /** Signed money, e.g. "+$21.75" — used for PnL where the sign carries meaning. */

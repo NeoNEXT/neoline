@@ -93,6 +93,12 @@
   .balance-tip {
     font-size: 13px;
     color: var(--sub-title-color);
+
+    .retry {
+      margin-left: 6px;
+      color: var(--theme-color);
+      cursor: pointer;
+    }
   }
 
   .preset-row {
@@ -111,6 +117,11 @@
       &.active {
         background: rgba(6, 204, 171, 0.12);
         color: var(--theme-color);
+      }
+
+      &.disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
       }
     }
   }
@@ -161,6 +172,10 @@
     font-size: 12px;
     .label {
       color: var(--sub-title-color);
+
+      em {
+        font-style: normal;
+      }
     }
     .value {
       color: var(--title-color);
@@ -193,5 +208,147 @@
       opacity: 0.4;
       cursor: not-allowed;
     }
+  }
+}
+
+.stale-note {
+  margin: 12px 22px 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--line-color);
+  font-size: 12px;
+  color: var(--sub-title-color);
+}
+
+.chain-notice {
+  padding: 10px 24px 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--sub-title-color);
+}
+
+/* The last look before an irreversible transfer, so it sits above everything. */
+.confirm-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+
+  .sheet {
+    width: 100%;
+    background: var(--body-background-color);
+    border-radius: 16px 16px 0 0;
+    padding: 20px 22px 22px;
+
+    .sheet-title {
+      font-family: NeverMind-Medium;
+      font-size: 16px;
+      color: var(--important-title-color);
+      margin-bottom: 12px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 8px 0;
+      font-size: 12px;
+
+      .label {
+        color: var(--sub-title-color);
+        flex-shrink: 0;
+
+        em {
+          font-style: normal;
+        }
+      }
+
+      .value {
+        color: var(--title-color);
+        text-align: right;
+        word-break: break-all;
+
+        &.address {
+          font-size: 11px;
+        }
+      }
+    }
+
+    .sheet-note {
+      margin-top: 10px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--sub-title-color);
+    }
+
+    .sheet-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 18px;
+
+      button {
+        flex: 1;
+        height: 44px;
+        border-radius: 24px;
+        border: none;
+        font-family: NeverMind-Medium;
+        font-size: 14px;
+        cursor: pointer;
+
+        &.ghost {
+          background: var(--line-color);
+          color: var(--title-color);
+        }
+
+        &.primary {
+          background: var(--theme-color);
+          color: var(--btn-title-color);
+        }
+
+        &:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+}
+
+.pending-deposit {
+  margin: 12px 22px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  font-size: 12px;
+
+  .pending-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+
+    .state {
+      color: var(--sub-title-color);
+    }
+
+    .amount {
+      color: var(--title-color);
+      flex-shrink: 0;
+    }
+  }
+
+  .pending-hash {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--tip-color);
+    word-break: break-all;
+  }
+
+  .dismiss {
+    display: inline-block;
+    margin-top: 8px;
+    color: var(--theme-color);
+    cursor: pointer;
   }
 }

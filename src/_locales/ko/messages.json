@@ -1940,8 +1940,68 @@
   "perpsWalletBalance": {
     "message": "지갑 잔액"
   },
-  "perpsAvailableBalance": {
-    "message": "사용 가능 잔액"
+  "perpsArrivalDeposit": {
+    "message": "약 1분(예상)"
+  },
+  "perpsArrivalWithdraw": {
+    "message": "약 5분(예상)"
+  },
+  "perpsEstimated": {
+    "message": "예상"
+  },
+  "perpsNetwork": {
+    "message": "네트워크"
+  },
+  "perpsRecipient": {
+    "message": "수취인"
+  },
+  "perpsRetry": {
+    "message": "다시 시도"
+  },
+  "perpsConfirmDepositTitle": {
+    "message": "입금 확인"
+  },
+  "perpsDepositChainNotice": {
+    "message": "이 거래는 {{chain}}에서 전송되며 네트워크 수수료는 해당 체인의 {{symbol}}로 지불됩니다."
+  },
+  "perpsDepositIrreversible": {
+    "message": "Hyperliquid 브리지 컨트랙트로 전송됩니다. 이 전송은 취소할 수 없습니다."
+  },
+  "perpsPortfolioMarginNoDeposit": {
+    "message": "포트폴리오 마진 계정은 입금을 지원하지 않습니다. 출금은 가능하며, 계정 전체 관리는 Hyperliquid 공식 프런트엔드를 이용하세요."
+  },
+  "perpsBalanceUnknown": {
+    "message": "입금 체인의 잔액을 읽지 못했습니다."
+  },
+  "perpsWithdrawableUnknown": {
+    "message": "출금 가능 금액을 읽지 못했습니다."
+  },
+  "perpsRefreshFailed": {
+    "message": "최신 잔액을 확인하지 못해 아무것도 전송하지 않았습니다. 다시 시도하세요."
+  },
+  "perpsBalanceMoved": {
+    "message": "잔액이 변경되었습니다. 금액을 확인하고 다시 진행하세요."
+  },
+  "perpsEnterAmount": {
+    "message": "금액을 입력하세요"
+  },
+  "perpsGasShortfall": {
+    "message": "{{chain}}의 {{symbol}}이(가) 네트워크 수수료를 지불하기에 부족합니다."
+  },
+  "perpsDepositAwaitingChain": {
+    "message": "입금 전송됨, 체인 확인 대기 중"
+  },
+  "perpsDepositAwaitingCredit": {
+    "message": "체인에서 확인됨, 브리지 반영 대기 중"
+  },
+  "perpsDepositNotCredited": {
+    "message": "체인에 있으나 아직 반영되지 않았습니다. 아래 거래로 확인하세요"
+  },
+  "perpsDismiss": {
+    "message": "확인"
+  },
+  "perpsWithdrawable": {
+    "message": "출금 가능 금액"
   },
   "perpsBalance": {
     "message": "잔액"
