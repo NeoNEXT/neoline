@@ -31,6 +31,7 @@ import {
   PerpsPosition,
   PERPS_BUILDER_FEE_RATE,
   PERPS_DEFAULT_SLIPPAGE_PERCENT,
+  PERPS_HOME_URL,
   PERPS_MAX_SLIPPAGE_PERCENT,
   PERPS_MAX_ORDER_BUFFER_FRACTION,
   PERPS_MIN_ORDER_NOTIONAL,
@@ -897,7 +898,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
               this.scheduleOrderReconciliation(result.cloid);
             }
             if (result.status === 'filled') {
-              this.router.navigateByUrl('/popup/home');
+              this.router.navigateByUrl(PERPS_HOME_URL);
             } else {
               this.reviewing = false;
               this.loadAccount();

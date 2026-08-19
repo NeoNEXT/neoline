@@ -26,12 +26,19 @@
   </div>
 
   <!-- Money that has left the wallet but is not yet spendable. Two facts, shown
-       as two facts: on chain, and credited by the bridge. -->
-  <div class="pending-deposit" *ngFor="let deposit of pending">
+       as two facts: on chain, and credited on HyperCore. A reverted transfer
+       is a third and final one — it is never going to be credited. -->
+  <div
+    class="pending-deposit"
+    [class.reverted]="deposit.reverted"
+    *ngFor="let deposit of pending"
+  >
     <div class="pending-line">
       <span class="state">
         {{
-          (isStalled(deposit)
+          (deposit.reverted
+            ? "perpsDepositReverted"
+            : isStalled(deposit)
             ? "perpsDepositNotCredited"
             : deposit.chainConfirmed
             ? "perpsDepositAwaitingCredit"
@@ -42,7 +49,11 @@
       <span class="amount">${{ formatBalance(deposit.amountExact) }}</span>
     </div>
     <div class="pending-hash">{{ deposit.hash }}</div>
-    <span class="dismiss" *ngIf="isStalled(deposit)" (click)="dismissPending(deposit)">
+    <span
+      class="dismiss"
+      *ngIf="deposit.reverted || isStalled(deposit)"
+      (click)="dismissPending(deposit)"
+    >
       {{ "perpsDismiss" | translate | async }}
     </span>
   </div>
@@ -54,7 +65,7 @@
         type="text"
         inputmode="decimal"
         [(ngModel)]="amount"
-        (ngModelChange)="onAmountChange()"
+        (input)="onAmountInput($event)"
         placeholder="0"
       />
     </div>
@@ -65,9 +76,11 @@
       </ng-container>
       <ng-container *ngIf="isWithdraw">
         {{ "perpsWithdrawable" | translate | async }}
-        ${{ formatBalance(account?.withdrawableExact) }}
+        <!-- The component's reading of it, not the raw account field: a unified
+             account's perps `withdrawable` is 0 however funded it is. -->
+        ${{ formatBalance(withdrawableExact) }}
       </ng-container>
-      <span class="retry" *ngIf="!maxAmountKnown" (click)="reload()">
+      <span class="retry" *ngIf="showRetry" (click)="reload()">
         {{ "perpsRetry" | translate | async }}
       </span>
     </div>
@@ -109,7 +122,7 @@
     </div>
   </div>
 
-  <!-- The transaction happens on the bridge's chain, not the one the user has
+  <!-- The transaction happens on the deposit chain, not the one the user has
        selected, and it is that chain's currency that pays for it. -->
   <p class="chain-notice" *ngIf="isDeposit">
     {{
@@ -136,8 +149,14 @@
     </ng-container>
     <ng-container *ngIf="isWithdraw">
       <div class="row">
-        <span class="label">{{ "perpsProviderFee" | translate | async }}</span>
-        <span class="value">{{ formatUsd(withdrawFee) }}</span>
+        <span class="label">{{ "perpsRouteFee" | translate | async }}</span>
+        <span class="value">
+          {{
+            withdrawFeeExact === null
+              ? ("perpsUnknownValue" | translate | async)
+              : formatUsd(withdrawFeeExact)
+          }}
+        </span>
       </div>
       <div class="row">
         <span class="label">{{ "perpsArrivalTime" | translate | async }}</span>
@@ -150,25 +169,20 @@
           {{ "perpsYouReceive" | translate | async }}
           <em>({{ "perpsEstimated" | translate | async }})</em>
         </span>
-        <span class="value">{{ formatUsd(receiveAmountExact) }}</span>
+        <span class="value">
+          {{
+            withdrawReceiveExact === null
+              ? ("perpsUnknownValue" | translate | async)
+              : formatUsd(withdrawReceiveExact)
+          }}
+        </span>
       </div>
     </ng-container>
   </div>
 
   <!-- One reason, always shown while the control is dead. -->
   <p class="error-tip" *ngIf="disabledReason">
-    {{
-      disabledReason
-        | translate
-          : {
-              amount: isDeposit ? minDeposit : minWithdraw,
-              symbol: isDeposit ? token.symbol : token.nativeSymbol,
-              fee: withdrawFee,
-              decimals: amountDecimals,
-              chain: token.chainName
-            }
-        | async
-    }}
+    {{ disabledReason | translate: disabledReasonParams | async }}
   </p>
 
   <div class="submit-wrap">
@@ -178,12 +192,18 @@
     </button>
   </div>
 
-  <!-- A deposit leaves for a contract address the user cannot read, and cannot
-       be recalled. It gets one look before it goes. -->
+  <!-- Both intents get one look before they go. A deposit leaves for a contract
+       address the user cannot read and cannot be recalled; a withdrawal is
+       priced by a fee its contract owner can change, and that price is what the
+       user is being asked to agree to. -->
   <div class="confirm-sheet" *ngIf="confirming">
     <div class="sheet">
       <div class="sheet-title">
-        {{ "perpsConfirmDepositTitle" | translate | async }}
+        {{
+          (isDeposit ? "perpsConfirmDepositTitle" : "perpsConfirmWithdrawTitle")
+            | translate
+            | async
+        }}
       </div>
       <div class="row">
         <span class="label">{{ "perpsAmount" | translate | async }}</span>
@@ -195,9 +215,22 @@
       </div>
       <div class="row">
         <span class="label">{{ "perpsRecipient" | translate | async }}</span>
-        <span class="value address">{{ token.bridgeAddress }}</span>
+        <span class="value address">{{
+          isDeposit ? token.cctp.extension : withdrawRecipient
+        }}</span>
       </div>
       <div class="row">
+        <span class="label">{{ "perpsRouteFee" | translate | async }}</span>
+        <span class="value">
+          {{
+            confirmFeeExact === null
+              ? ("perpsUnknownValue" | translate | async)
+              : formatUsd(confirmFeeExact)
+          }}
+          {{ confirmFeeExact === null ? "" : token.symbol }}
+        </span>
+      </div>
+      <div class="row" *ngIf="isDeposit">
         <span class="label">
           {{ "perpsNetworkFee" | translate | async }}
           <em>({{ "perpsEstimated" | translate | async }})</em>
@@ -206,14 +239,42 @@
           {{ formatBalance(networkFeeExact, 6) }} {{ token.nativeSymbol }}
         </span>
       </div>
+      <div class="row">
+        <span class="label">
+          {{ "perpsYouReceive" | translate | async }}
+          <em>({{ "perpsEstimated" | translate | async }})</em>
+        </span>
+        <span class="value">
+          {{
+            confirmReceiveExact === null
+              ? ("perpsUnknownValue" | translate | async)
+              : formatUsd(confirmReceiveExact)
+          }}
+        </span>
+      </div>
       <p class="sheet-note">
-        {{ "perpsDepositIrreversible" | translate | async }}
+        {{
+          (isDeposit ? "perpsDepositIrreversible" : "perpsWithdrawEstimateNote")
+            | translate
+            | async
+        }}
+      </p>
+      <!-- Preparing can settle a question the screen could not answer before the
+           sheet opened — a deposit's network fee is only known here — so the
+           reason has to be readable from inside the sheet too. The copy under
+           the form is behind this overlay. -->
+      <p class="error-tip" *ngIf="disabledReason">
+        {{ disabledReason | translate: disabledReasonParams | async }}
       </p>
       <div class="sheet-actions">
         <button class="ghost" (click)="cancelConfirm()">
           {{ "cancel" | translate | async }}
         </button>
-        <button class="primary" [disabled]="submitting" (click)="submit()">
+        <button
+          class="primary"
+          [disabled]="!canConfirm"
+          (click)="submit()"
+        >
           {{ "confirm" | translate | async }}
         </button>
       </div>

@@ -142,6 +142,9 @@
           <div class="size" [class.negative]="ledgerIsOut(item)">
             {{ ledgerAmount(item) }}
           </div>
+          <div class="price" *ngIf="ledgerFee(item) as fee">
+            {{ "perpsFee" | translate | async }}: {{ fee }}
+          </div>
         </div>
       </div>
       <p class="empty" *ngIf="transfers.length === 0">

@@ -1965,7 +1965,7 @@
     "message": "This transaction is sent on {{chain}} and its network fee is paid in {{symbol}} on that chain."
   },
   "perpsDepositIrreversible": {
-    "message": "Sent to the Hyperliquid bridge contract. This transfer cannot be recalled."
+    "message": "Sent to the CCTP contract, which credits your Hyperliquid account. This transfer cannot be recalled."
   },
   "perpsPortfolioMarginNoDeposit": {
     "message": "Deposits are unavailable for portfolio-margin accounts. Withdrawals still work; use the Hyperliquid frontend to manage this account."
@@ -2013,13 +2013,13 @@
     "message": "Network fee"
   },
   "perpsBelowMinDeposit": {
-    "message": "Amount is below the minimum of {{amount}} {{symbol}}. Required by the Hyperliquid bridge — smaller deposits are not credited and cannot be recovered."
+    "message": "Amount is below the minimum of {{amount}} {{symbol}} for deposits from this wallet."
   },
   "perpsBelowMinWithdraw": {
-    "message": "Amount is below the minimum of {{amount}} {{symbol}}. Hyperliquid takes a flat {{fee}} {{symbol}} fee out of every withdrawal, so a smaller amount would leave you with nothing."
+    "message": "Amount is below the minimum of {{amount}} {{symbol}}. The route takes {{fee}} {{symbol}} out of every withdrawal, and a smaller amount is refused where it is charged."
   },
-  "perpsProviderFee": {
-    "message": "Provider fee"
+  "perpsRouteFee": {
+    "message": "Route fee"
   },
   "perpsYouReceive": {
     "message": "You receive"
@@ -2092,6 +2092,15 @@
   },
   "perpsLedgerTransfer": {
     "message": "Transfer"
+  },
+  "perpsLedgerDeposit": {
+    "message": "Deposit"
+  },
+  "perpsLedgerWithdraw": {
+    "message": "Withdraw"
+  },
+  "perpsLedgerSend": {
+    "message": "Send"
   },
   "perpsStatusFilled": {
     "message": "Filled"
@@ -2170,6 +2179,42 @@
   },
   "perpsMarketChangedReviewAgain": {
     "message": "The market changed or fresh liquidity is unavailable. Review the order again."
+  },
+  "perpsFeeQuoteChangedReviewAgain": {
+    "message": "The fee quote changed. Review it again before submitting."
+  },
+  "perpsFeeQuoteUnknown": {
+    "message": "Could not read the current fee, so nothing was sent. Try again."
+  },
+  "perpsUnknownValue": {
+    "message": "Unknown"
+  },
+  "perpsConfirmWithdrawTitle": {
+    "message": "Confirm withdrawal"
+  },
+  "perpsWithdrawEstimateNote": {
+    "message": "The fee is a ceiling, so the amount that arrives can only be higher. The exchange ledger records what was actually charged."
+  },
+  "perpsWithdrawStatusUnknown": {
+    "message": "The exchange did not return a result, so it is unknown whether this withdrawal ran. Check your balance and the Hyperliquid ledger before sending it again."
+  },
+  "perpsWithdrawSuccess": {
+    "message": "Withdrawal submitted."
+  },
+  "perpsDepositSubmitted": {
+    "message": "Deposit sent. Waiting for the network to confirm it."
+  },
+  "perpsDepositConfirmed": {
+    "message": "Deposit confirmed on chain. Waiting for Hyperliquid to credit it."
+  },
+  "perpsDepositStillPending": {
+    "message": "Deposit not confirmed yet. It stays tracked here until it is credited."
+  },
+  "perpsDepositReverted": {
+    "message": "The deposit failed on chain. Nothing was transferred, but the network fee was still spent."
+  },
+  "perpsSigningUnavailable": {
+    "message": "This wallet type cannot sign Hyperliquid actions."
   },
   "perpsOrderRejected": {
     "message": "Order rejected. Check the current market and account state."

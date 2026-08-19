@@ -1,5 +1,6 @@
 import {
   availableToTradeForSide,
+  clampDecimals,
   coinLogo,
   collateralToNotional,
   estimateMarketSlippagePercent,
@@ -22,6 +23,24 @@ import {
 import { PerpsMarket, PerpsPosition } from '@popup/_lib/perps';
 
 describe('perps utilities', () => {
+  // The amount field runs this on every keystroke, so a digit the transfer
+  // cannot express never reaches the model in the first place.
+  it('cuts amount text to the decimals a transfer can carry', () => {
+    expect(clampDecimals('5.0000001', 6)).toBe('5.000000');
+    expect(clampDecimals('12.3456789012', 8)).toBe('12.34567890');
+    expect(clampDecimals('1.23', 6)).toBe('1.23');
+    // A decimal point on its own has to survive, or it could never be typed.
+    expect(clampDecimals('1.', 6)).toBe('1.');
+    // Everything an amount is not: a currency mark, a sign, a second point.
+    expect(clampDecimals('$12.5', 6)).toBe('12.5');
+    expect(clampDecimals('-1.5', 6)).toBe('1.5');
+    expect(clampDecimals('1.2.3', 6)).toBe('1.2');
+    expect(clampDecimals('abc', 6)).toBe('');
+    expect(clampDecimals('', 6)).toBe('');
+    // A whole-unit token takes no decimal point at all.
+    expect(clampDecimals('1.5', 0)).toBe('1');
+  });
+
   // Hyperliquid lists 232 perps against a handful of bundled marks, so the CDN
   // is the normal path and the bundled map is the exception, not the reverse.
   it('resolves a coin mark, preferring the bundled asset', () => {

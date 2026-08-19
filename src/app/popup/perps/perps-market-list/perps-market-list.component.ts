@@ -29,9 +29,9 @@ import { formatCompactUsd, formatPrice, formatSignedPercent } from '../perps.uti
  * The market list itself: sorting, pinning, paging and the rows.
  *
  * It is shared by the home tab and the markets page. Searching and sorting are
- * the markets page's job — the tab just links to it and follows whatever was
- * chosen there — so the keyword arrives as an input rather than being held
- * here, and the list stays the one place row order is decided.
+ * the markets page's job — the tab just links to it — so the keyword arrives as
+ * an input rather than being held here, and the list stays the one place row
+ * order is decided.
  */
 @Component({
   selector: 'perps-market-list',
@@ -42,8 +42,8 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
   /** Filter term. Empty shows everything. */
   @Input() keyword = '';
   /**
-   * Show the sort control. The home tab renders the list without one and just
-   * follows the saved preference — sorting is what the markets page is for.
+   * Show the sort control. Only the markets page does; the home tab's list is
+   * there to read as "the biggest markets", and it always ranks by volume.
    */
   @Input() showSort = false;
   /**
@@ -64,6 +64,12 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
   /** The rows below the pinned block, in ordering-snapshot order. */
   visibleMarkets: PerpsMarket[] = [];
 
+  /**
+   * How the list is ranked. Volume every time the list is built: a sort is a
+   * question the user is asking of the page in front of them, not a setting,
+   * and one carried over from a previous visit is an order they cannot see the
+   * reason for.
+   */
   sortKey: PerpsMarketSortKey = 'volume';
   readonly sortKeys: { key: PerpsMarketSortKey; label: string }[] = [
     { key: 'volume', label: 'perpsSortVolume' },
@@ -104,7 +110,7 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
     this.connectionSub = this.hyperliquid
       .watchConnectionState()
       .subscribe((state) => (this.connectionState = state));
-    this.loadListPreferences();
+    this.loadFavorites();
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -174,7 +180,6 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
   setSortKey(key: PerpsMarketSortKey) {
     this.sortKey = key;
     this.sortMenuOpen = false;
-    this.chrome.setStorage(STORAGE_NAME.perpsMarketSort, { key: this.sortKey });
     this.resnapshot();
   }
 
@@ -268,16 +273,11 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
     );
   }
 
-  private loadListPreferences() {
+  /** Favourites are a list the user curates, so they are the one thing kept. */
+  private loadFavorites() {
     this.chrome.getStorage(STORAGE_NAME.perpsFavorites).subscribe((list) => {
       this.favorites = Array.isArray(list) ? list : [];
       this.resnapshot();
-    });
-    this.chrome.getStorage(STORAGE_NAME.perpsMarketSort).subscribe((saved) => {
-      if (this.sortKeys.some((item) => item.key === saved?.key)) {
-        this.sortKey = saved.key;
-        this.resnapshot();
-      }
     });
   }
 

@@ -283,6 +283,13 @@
       color: var(--sub-title-color);
     }
 
+    // The sheet supplies its own gutters, so the tip drops the ones it carries
+    // under the form and sits on the same left edge as every row above it.
+    .error-tip {
+      padding: 0;
+      margin-top: 10px;
+    }
+
     .sheet-actions {
       display: flex;
       gap: 12px;

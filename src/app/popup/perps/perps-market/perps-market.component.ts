@@ -13,6 +13,7 @@ import {
   PerpsCandleInterval,
   PerpsFill,
   PerpsMarket,
+  PERPS_HOME_URL,
 } from '@popup/_lib/perps';
 import {
   formatCompactUsd,
@@ -315,7 +316,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   }
 
   back() {
-    this.router.navigateByUrl('/popup/home');
+    this.router.navigateByUrl(PERPS_HOME_URL);
   }
 
   toOrder(side: 'long' | 'short') {

@@ -160,6 +160,25 @@ describe('PerpsMarketListComponent', () => {
     expect(value.sortKeyLabel).toBe('perpsSortChange');
   });
 
+  it('opens on volume, and lets a sort go no further than the visit', () => {
+    const setStorage = jasmine.createSpy('setStorage');
+    const value = new PerpsMarketListComponent(null, null, {
+      getStorage: () => ({ subscribe: () => undefined }),
+      setStorage,
+    } as any);
+    value.showSort = true;
+
+    expect(value.sortKey).toBe('volume');
+
+    value.setSortKey('change');
+
+    // The choice holds while the page is open and is never written down: the
+    // next visit asks its own question rather than inheriting one the user
+    // cannot see the reason for.
+    expect(value.sortKey).toBe('change');
+    expect(setStorage).not.toHaveBeenCalled();
+  });
+
   it('batches a long market list instead of truncating it', () => {
     const value = component();
     // Testnet lists 157 tradable markets; the old list stopped at 30.

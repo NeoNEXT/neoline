@@ -317,6 +317,24 @@ export function formatSize(
   return strip(value.toFixed(2));
 }
 
+/**
+ * Amount text cut down to the decimals the destination can carry.
+ *
+ * This runs on every keystroke of an amount field, so a digit the transfer
+ * could not express never reaches the model: it is dropped as it is typed
+ * rather than accepted and then explained, the same way the transfer screen's
+ * amount field behaves. Anything after the last accepted decimal goes, along
+ * with a leading sign or currency mark and any second decimal point.
+ */
+export function clampDecimals(value: string, decimals: number): string {
+  const places = Math.max(0, Math.floor(decimals) || 0);
+  const fraction = places > 0 ? `(?:\\.\\d{0,${places}})?` : '';
+  return (value || '').replace(
+    new RegExp(`^\\D*(\\d*${fraction}).*`),
+    '$1'
+  );
+}
+
 /** Format a fractional fee rate for display, e.g. 0.000405 -> "0.0405%". */
 export function formatFeeRatePercent(value: PerpsExactValue): string {
   if (isMissing(value)) {

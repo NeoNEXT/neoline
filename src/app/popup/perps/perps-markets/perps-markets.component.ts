@@ -1,5 +1,7 @@
 import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 
+import { PERPS_HOME_URL } from '@popup/_lib/perps';
+
 /**
  * The markets page: search across every listed market, on its own screen.
  *
@@ -17,6 +19,7 @@ export class PerpsMarketsComponent implements AfterViewInit {
   @ViewChild('search') private searchInput: ElementRef<HTMLInputElement>;
 
   keyword = '';
+  readonly homeUrl = PERPS_HOME_URL;
 
   /**
    * Arriving here is always a decision to search, so the field takes focus

@@ -35,14 +35,21 @@ export const PERPS_HIP3_DEXES: {
 /** Markets pinned above the sorted market list, alongside favourites. */
 export const PERPS_NEO_COINS = ['NEO', 'GAS'];
 
+/**
+ * Where a perps sub-page returns to. Perps is a tab of the home screen rather
+ * than a route of its own, so the parameter is the only thing that tells home
+ * to reopen it instead of dropping the user back on assets.
+ */
+export const PERPS_HOME_URL = '/popup/home?tab=perps';
+
 export interface PerpsDepositConfig {
   chainId: number;
   /**
    * Endpoints for the deposit chain, tried in order.
    *
    * Unlike the RPC list on a wallet network, the user never chose these: the
-   * deposit chain is an implementation detail of the bridge, so rotating away
-   * from a dead endpoint is not swapping out a node the user picked. Every
+   * deposit chain is an implementation detail of the funding route, so rotating
+   * away from a dead endpoint is not swapping out a node the user picked. Every
    * entry must serve the same chain id, which is checked before use.
    */
   rpcUrls: string[];
@@ -51,17 +58,32 @@ export interface PerpsDepositConfig {
   /** The chain's own currency — what the network fee is actually paid in. */
   nativeSymbol: string;
   decimals: number;
-  /** ERC-20 the bridge credits — any other token sent to it is lost. */
-  address: string;
-  /** Bridge2 recipient that credits deposits to the transaction sender. */
-  bridgeAddress: string;
+  /** How USDC leaves this chain for HyperCore. */
+  cctp: PerpsCctpSourceConfig;
 }
 
 /**
- * Hyperliquid is funded only through Bridge2: on mainnet it credits native
- * Circle USDC sent on Arbitrum One (bridged USDC.e is ignored and cannot be
- * recovered); on testnet it credits the mock USDC2 token on Arbitrum Sepolia,
- * not the Circle faucet USDC.
+ * The CCTP side of a deposit chain.
+ *
+ * Kept as its own block through the migration because the retired route
+ * disagreed about which token is credited — on testnet Bridge2 took a mock
+ * USDC2 while CCTP burns Circle's own USDC — and sending one to the other is
+ * unrecoverable. Nothing reads the old fields now, but the grouping still says
+ * which protocol these addresses belong to.
+ */
+export interface PerpsCctpSourceConfig {
+  /** Circle's `CctpExtension`: authorisation and burn in one source transaction. */
+  extension: string;
+  /** Native Circle USDC — the only token the burn accepts. */
+  usdc: string;
+  /** CCTP domain of this chain, not its EVM chain id. */
+  sourceDomain: number;
+}
+
+/**
+ * Hyperliquid is funded through Circle's CCTP on Arbitrum: only native Circle
+ * USDC is burned, and bridged USDC.e sent to the same contracts is not
+ * recoverable.
  */
 export const PERPS_DEPOSIT_CONFIG: {
   mainnet: PerpsDepositConfig;
@@ -78,8 +100,11 @@ export const PERPS_DEPOSIT_CONFIG: {
     symbol: 'USDC',
     nativeSymbol: 'ETH',
     decimals: 6,
-    address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
-    bridgeAddress: '0x2df1c51E09aECF9cacB7bc98cB1742757f163dF7',
+    cctp: {
+      extension: '0xA95d9c1F655341597C94393fDdc30cf3c08E4fcE',
+      usdc: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+      sourceDomain: 3,
+    },
   },
   testnet: {
     chainId: 421614,
@@ -91,8 +116,11 @@ export const PERPS_DEPOSIT_CONFIG: {
     symbol: 'USDC',
     nativeSymbol: 'ETH',
     decimals: 6,
-    address: '0x1baAbB04529D43a73232B713C0FE471f7c7334d5',
-    bridgeAddress: '0x08cfc1B6b2dCF36A1480b99353A354AA8AC56f89',
+    cctp: {
+      extension: '0x8E4e3d0E95C1bEC4F3eC7F69aa48473E0Ab6eB8D',
+      usdc: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d',
+      sourceDomain: 3,
+    },
   },
 };
 
@@ -101,30 +129,133 @@ export const PERPS_DEPOSIT_CONFIG: {
  * than interface choices — scattering them across screens is how one copy ends
  * up disagreeing with another.
  *
- * SOURCE, checked 2026-08-18: the Hyperliquid documentation no longer publishes
- * these figures on the onboarding or bridge pages, and the full-text export
- * does not contain them either. The values below are carried over from earlier
- * documentation and are NOT currently verifiable against a primary source.
- * They gate real money — a deposit under the bridge minimum is not credited and
- * cannot be recovered — so they must be re-verified against Hyperliquid before
- * this ships to mainnet, and the actual fee charged must be read back from the
- * exchange ledger rather than assumed from the constant.
+ * SOURCE, verified 2026-08-18 against primary sources. The two Bridge2 figures
+ * below describe the route being retired; the CCTP route that replaces them
+ * quotes its fee per operation rather than publishing a constant, so no fee
+ * belongs in this file. Whatever the quote says, the amount actually taken is
+ * read back from the exchange ledger — a quote is a ceiling, not a receipt.
  */
 
-/** Bridge2 only credits native Circle USDC on Arbitrum; below this the deposit is lost. */
-export const PERPS_MIN_DEPOSIT = 5;
 /**
- * Follows from `PERPS_WITHDRAW_FEE` rather than from a published floor: the
- * flat fee comes out of the amount, so anything smaller leaves the user with
- * nothing.
+ * Product floor for a deposit, not a protocol rule.
+ *
+ * On Bridge2 this number was the point below which a deposit was silently lost.
+ * CCTP has no such threshold — Circle documents that deposits of any size are
+ * credited — so the floor survives only as a product decision to match
+ * Hyperliquid's own interface. Copy must not claim that a smaller deposit is
+ * lost, because on this route it is not. The protocol's own floor is the fee
+ * quote: below that the destination chain reverts.
  */
-export const PERPS_MIN_WITHDRAW = 2;
+export const PERPS_MIN_DEPOSIT = 5;
 /** Hyperliquid rejects ordinary and partial-close orders below this notional. */
 export const PERPS_MIN_ORDER_NOTIONAL = 10;
 /** Safety reserve applied only when the user chooses Max / 100%. */
 export const PERPS_MAX_ORDER_BUFFER_FRACTION = 0.005;
-/** Flat fee Hyperliquid charges on withdrawals, in USDC. */
-export const PERPS_WITHDRAW_FEE = 1;
+/**
+ * HyperEVM, read-only: the chain that prices a withdrawal.
+ *
+ * A withdrawal never becomes a transaction the user signs here — it is a signed
+ * exchange action, and HyperEVM only appears because the contract that decides
+ * the forwarding fee lives on it. The wallet reads that contract and nothing
+ * else on this chain.
+ */
+export const PERPS_HYPEREVM_CONFIG = {
+  mainnet: {
+    chainId: 999,
+    chainName: 'HyperEVM',
+    /** The deposit chain this pairs with; mixing the two strands funds. */
+    pairedDepositChainId: 42161,
+    rpcUrls: [
+      'https://rpc.hyperliquid.xyz/evm',
+      'https://hyperliquid.drpc.org',
+    ],
+    /** Prices the withdrawal and performs the burn; pausable and upgradeable. */
+    coreDepositWallet: '0x6B9E773128f453f5c2C60935Ee2DE2CBc5390A24',
+    /** Receives the deposit mint and forwards it to the HyperCore account. */
+    cctpForwarder: '0xb21D281DEdb17AE5B501F6AA8256fe38C4e45757',
+  },
+  testnet: {
+    chainId: 998,
+    chainName: 'HyperEVM Testnet',
+    pairedDepositChainId: 421614,
+    rpcUrls: ['https://rpc.hyperliquid-testnet.xyz/evm'],
+    coreDepositWallet: '0x0B80659a4076E9E93C7DbE0f10675A16a3e5C206',
+    cctpForwarder: '0x02e39ECb8368b41bF68FF99ff351aC9864e5E2a2',
+  },
+};
+
+/** CCTP domain of HyperEVM — the destination both directions are quoted against. */
+export const PERPS_CCTP_HYPEREVM_DOMAIN = 19;
+
+/**
+ * Circle's fee endpoint for the deposit direction, per network.
+ *
+ * Testnet quotes come from the sandbox Iris host. The two networks share
+ * source domain `3`, so a single URL would fetch mainnet rates on testnet and
+ * then send them as `maxFee` on a burn — the quote would be describing a
+ * different route than the one about to run.
+ *
+ * `forward=true&hyperCoreDeposit=true` is what makes the answer describe our
+ * route: without them the same path prices a plain HyperEVM transfer, whose fee
+ * is a different number that would be quoted to the user as if it were ours.
+ */
+export const PERPS_CCTP_FEE_API = {
+  mainnet: 'https://iris-api.circle.com/v2/burn/USDC/fees',
+  testnet: 'https://iris-api-sandbox.circle.com/v2/burn/USDC/fees',
+};
+
+/**
+ * HyperCore's user-exists precompile, read to decide whether Circle's new
+ * account fee applies to a deposit. It answers whether the account exists, not
+ * whether it has been activated — the one-time activation fee is Hyperliquid's
+ * and is not visible here.
+ */
+export const PERPS_CORE_USER_EXISTS_PRECOMPILE =
+  '0x0000000000000000000000000000000000000810';
+
+/**
+ * Gas limit carried by the HyperCore-to-HyperEVM leg of a withdrawal.
+ *
+ * Hyperliquid documents this transfer as costing 200k gas at the base gas price
+ * of the next HyperEVM block. It is not the user's own transaction — nobody
+ * signs an EVM transaction to withdraw — so this is the protocol's figure
+ * rather than something to estimate.
+ */
+export const PERPS_CORE_TO_EVM_GAS_LIMIT = 200000;
+
+/**
+ * Where on HyperCore a deposit lands: 0 is the perpetuals balance.
+ *
+ * The spot balance is `0xFFFFFFFF`, and this product never sends there — money
+ * credited to spot cannot be traded or withdrawn from inside NeoLine, so
+ * depositing to it would manufacture a stranded balance on purpose.
+ */
+export const PERPS_CCTP_DEX_PERPS = 0;
+
+/**
+ * How long a signed deposit authorisation stays usable.
+ *
+ * It has to outlive the confirmation dialog, and no longer: the authorisation
+ * lets the extension contract pull exactly this amount, so its window is the
+ * period in which a leaked signature would still be worth something.
+ */
+export const PERPS_DEPOSIT_AUTH_VALIDITY_SECONDS = 1800;
+
+/** Fast Transfer. The slower threshold is not offered, so it is not configurable. */
+export const PERPS_CCTP_FINALITY_FAST = 1000;
+
+/**
+ * Multiplier applied to the estimated gas limit of a CCTP deposit.
+ *
+ * Circle's own example uses the same 20%: an authorisation plus an external
+ * call estimates tightly, and a deposit that runs out of gas still burns what
+ * it used. The confirmation screen shows the network fee at this buffered
+ * limit, never the bare estimate — the figure a user is shown has to be the
+ * most they can be charged. Applied as tenths (12/10) so the multiply never
+ * goes through Number: `1.15 * 100` is not 115, and `BigInt` of that residue
+ * is a RangeError.
+ */
+export const PERPS_DEPOSIT_GAS_BUFFER = 1.2;
 
 /**
  * How often the funding screen re-reads the source-chain token balance.
@@ -175,12 +306,19 @@ export interface PerpsPendingDeposit {
   amountExact: string;
   hash: string;
   startedAt: number;
-  /** True once the transfer has a receipt on the deposit chain. */
+  /** True once the transfer has a receipt on the deposit chain with a successful status. */
   chainConfirmed: boolean;
   /**
-   * Withdrawable balance before the deposit was sent. The credit has landed
-   * when the account rises above it, which is the only signal the exchange
-   * gives that the bridge is done.
+   * True once the source-chain transaction is known to have reverted.
+   *
+   * A settled ending, not a slow one: the USDC was never burned, so no credit
+   * is coming and the record must stop reading as something still in flight.
+   */
+  reverted?: boolean;
+  /**
+   * Withdrawable balance before the deposit was sent, read the way the account
+   * mode says to read it. The credit has landed when that balance rises above
+   * this, which is the only signal the exchange gives that the bridge is done.
    */
   withdrawableBeforeExact: string;
 }
@@ -436,7 +574,12 @@ export interface PerpsAccount {
    * an all-DEX calculation and therefore leave this unset for now.
    */
   marginRatioExact: string | null;
-  /** Free perps collateral to open positions or withdraw (standard account). */
+  /**
+   * The perps clearinghouse's own `withdrawable`, which is free collateral for a
+   * standard account and 0 for a unified one however funded it is. A withdrawal
+   * ceiling must therefore be read through the account mode rather than taken
+   * from here directly.
+   */
   withdrawableExact: string;
   /**
    * Free collateral available for orders or withdrawal. Unified/portfolio
@@ -555,6 +698,8 @@ export interface PerpsLedgerUpdate {
     amount?: string;
     token?: string;
     fee?: string;
+    /** Token the fee is denominated in; absent rows are charged in USDC. */
+    feeToken?: string;
     /** accountClassTransfer only: spot -> perp when true. */
     toPerp?: boolean;
     destination?: string;

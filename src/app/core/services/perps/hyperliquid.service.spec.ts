@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
+import { ethers } from 'ethers';
 import { of, Subject, throwError } from 'rxjs';
 
 import {
@@ -7,8 +8,10 @@ import {
   PERPS_BUILDER_FEE_TENTHS_BPS,
   PERPS_MAX_SLIPPAGE_PERCENT,
 } from '@popup/_lib/perps';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   HyperliquidService,
+  isExchangeAnswer,
   PerpsLeverageChangeRequiredError,
   PerpsMarketDataUnavailableError,
   resolvePerpsTestnet,
@@ -870,11 +873,11 @@ describe('HyperliquidService account balances', () => {
         return of([
           null,
           { name: 'unsupported-one' },
-          { name: 'neol' },
+          { name: 'xyz' },
           { name: 'unsupported-two' },
         ]);
       }
-      if (body.type === 'metaAndAssetCtxs' && body.dex === 'neol') {
+      if (body.type === 'metaAndAssetCtxs' && body.dex === 'xyz') {
         return of([
           { universe: [{ name: 'NEO', szDecimals: 2, maxLeverage: 5 }] },
           [{ markPx: '10', midPx: '10', oraclePx: '10', prevDayPx: '9', dayNtlVlm: '100', openInterest: '2', funding: '0' }],
@@ -889,12 +892,12 @@ describe('HyperliquidService account balances', () => {
         .map((args) => args[1])
         .filter((body) => body.type === 'metaAndAssetCtxs' && body.dex);
       expect(dexRequests).toEqual([
-        { type: 'metaAndAssetCtxs', dex: 'neol' },
+        { type: 'metaAndAssetCtxs', dex: 'xyz' },
       ]);
-      expect(markets[0].coin).toBe('neol:NEO');
-      expect(markets[0].key).toBe('neol:NEO');
-      expect(markets[0].dex).toBe('neol');
-      // `neol` remains at registry index 2 even though index 1 is unsupported.
+      expect(markets[0].coin).toBe('xyz:NEO');
+      expect(markets[0].key).toBe('xyz:NEO');
+      expect(markets[0].dex).toBe('xyz');
+      // `xyz` remains at registry index 2 even though index 1 is unsupported.
       expect(markets[0].assetId).toBe(120000);
       done();
     });
@@ -1660,7 +1663,7 @@ describe('HyperliquidService account balances', () => {
           totalBalanceExact: '0.1',
           totalMarginUsedExact: '0.07',
         }),
-        snapshot('neol', {
+        snapshot('xyz', {
           accountValueExact: '0.2',
           totalBalanceExact: '0.2',
           totalMarginUsedExact: '0.14',
@@ -1679,7 +1682,7 @@ describe('HyperliquidService account balances', () => {
           totalMarginUsedExact: '10',
           marginRatioExact: '1',
         }),
-        snapshot('neol', {
+        snapshot('xyz', {
           accountValueExact: '10',
           totalMarginUsedExact: '9',
           marginRatioExact: '90',
@@ -1688,13 +1691,13 @@ describe('HyperliquidService account balances', () => {
 
       // Summing would read as ~1.9% and hide a pool about to be liquidated.
       expect(aggregate.marginRatioExact).toBe('90');
-      expect(aggregate.marginRatioDex).toBe('neol');
+      expect(aggregate.marginRatioDex).toBe('xyz');
     });
 
     it('counts the account-wide spot wallet once', () => {
       const aggregate = service.aggregateAccounts([
         snapshot('', { spotUsdcExact: '500', spotUsdcHoldExact: '20' }),
-        snapshot('neol'),
+        snapshot('xyz'),
       ]);
 
       expect(aggregate.spotUsdcExact).toBe('500');
@@ -1707,9 +1710,9 @@ describe('HyperliquidService account balances', () => {
           snapshot('', {
             positions: [{ key: 'hl:ETH', dex: '', coin: 'ETH' } as any],
           }),
-          snapshot('neol', {
+          snapshot('xyz', {
             positions: [
-              { key: 'neol:IWM', dex: 'neol', coin: 'neol:IWM' } as any,
+              { key: 'xyz:IWM', dex: 'xyz', coin: 'xyz:IWM' } as any,
             ],
           }),
         ],
@@ -1718,7 +1721,7 @@ describe('HyperliquidService account balances', () => {
 
       expect(aggregate.positions.map((p) => p.key)).toEqual([
         'hl:ETH',
-        'neol:IWM',
+        'xyz:IWM',
       ]);
       expect(aggregate.missingDexes).toEqual(['broken']);
     });
@@ -1726,14 +1729,14 @@ describe('HyperliquidService account balances', () => {
     it('routes a clearinghouse frame to the DEX that sent it', () => {
       const aggregate = service.aggregateAccounts([
         snapshot('', { accountValueExact: '100' }),
-        snapshot('neol', { accountValueExact: '5' }),
+        snapshot('xyz', { accountValueExact: '5' }),
       ]);
 
       const updated = service.updateAggregatedFromClearinghouseState(
         aggregate,
         {
           user: '0xabc',
-          dex: 'neol',
+          dex: 'xyz',
           clearinghouseState: {
             marginSummary: {
               accountValue: '7',
@@ -1747,9 +1750,9 @@ describe('HyperliquidService account balances', () => {
       );
 
       const canonical = updated.byDex.find((item) => item.dex === '');
-      const neol = updated.byDex.find((item) => item.dex === 'neol');
+      const xyz = updated.byDex.find((item) => item.dex === 'xyz');
       expect(canonical.accountValueExact).toBe('100');
-      expect(neol.accountValueExact).toBe('7');
+      expect(xyz.accountValueExact).toBe('7');
       expect(updated.accountValueExact).toBe('107');
     });
   });
@@ -1760,7 +1763,7 @@ describe('HyperliquidService account balances', () => {
     const markets: any[] = [
       { key: 'hl:SECOND', dex: '', dexAssetIndex: 1, coin: 'SECOND' },
       { key: 'hl:FIRST', dex: '', dexAssetIndex: 0, coin: 'FIRST' },
-      { key: 'neol:OTHER', dex: 'neol', dexAssetIndex: 0, coin: 'neol:OTHER' },
+      { key: 'xyz:OTHER', dex: 'xyz', dexAssetIndex: 0, coin: 'xyz:OTHER' },
     ];
     const other = markets[2];
 
@@ -1795,7 +1798,7 @@ describe('HyperliquidService account balances', () => {
     expect(updated.map((market) => market.coin)).toEqual([
       'SECOND',
       'FIRST',
-      'neol:OTHER',
+      'xyz:OTHER',
     ]);
     // Another DEX's markets are not even re-created, so `trackBy` sees no churn.
     expect(updated[2]).toBe(other);
@@ -1807,7 +1810,7 @@ describe('HyperliquidService account balances', () => {
     ];
 
     expect(service.mergeDexAssetContexts(markets, '', [] as any)).toBe(markets);
-    expect(service.mergeDexAssetContexts(markets, 'neol', [{}] as any)[0]).toBe(
+    expect(service.mergeDexAssetContexts(markets, 'xyz', [{}] as any)[0]).toBe(
       markets[0]
     );
   });
@@ -1829,7 +1832,7 @@ describe('HyperliquidService account balances', () => {
   it('reuses the DEX registry across market snapshot refreshes', fakeAsync(() => {
     http.post.and.callFake(((_url: string, body: any) =>
       body.type === 'perpDexs'
-        ? of([null, { name: 'neol' }])
+        ? of([null, { name: 'xyz' }])
         : of([{ universe: [] }, []])) as any);
 
     service.getMarkets().subscribe();
@@ -1848,7 +1851,7 @@ describe('HyperliquidService account balances', () => {
         registryAttempts += 1;
         return registryAttempts === 1
           ? throwError(() => new Error('temporary'))
-          : of([null, { name: 'neol' }]);
+          : of([null, { name: 'xyz' }]);
       }
       return of([{ universe: [] }, []]);
     }) as any);
@@ -1994,4 +1997,90 @@ describe('HyperliquidService account balances', () => {
     expect((service as any).activeSubs.size).toBe(0);
   });
 
+});
+
+describe('HyperliquidService withdrawals', () => {
+  const PRIVATE_KEY =
+    '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
+  const SIGNER = new ethers.Wallet(PRIVATE_KEY).address;
+  let http: jasmine.SpyObj<HttpClient>;
+  let service: HyperliquidService;
+
+  const exchangeOk = { status: 'ok', response: { type: 'default' } };
+
+  const sourceDexOfLastAction = () =>
+    http.post.calls.mostRecent().args[1].action.sourceDex;
+
+  beforeEach(() => {
+    http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
+    service = new HyperliquidService(http);
+  });
+
+  it('debits spot for a unified account, where that account keeps its USDC', fakeAsync(() => {
+    http.post.and.callFake((_url: string, body: any) =>
+      body?.type === 'userAbstraction'
+        ? (of('unifiedAccount') as any)
+        : (of(exchangeOk) as any)
+    );
+
+    service.withdraw(PRIVATE_KEY, SIGNER, '12.3').subscribe();
+    flushMicrotasks();
+
+    expect(http.post.calls.first().args[1]).toEqual({
+      type: 'userAbstraction',
+      user: SIGNER.toLowerCase(),
+    });
+    // The perps clearinghouse reports 0 for this account however funded it is,
+    // so a perps-sourced withdrawal is a withdrawal of nothing.
+    expect(sourceDexOfLastAction()).toBe('spot');
+  }));
+
+  it('debits perps for a standard account, whose spot is a separate wallet', fakeAsync(() => {
+    http.post.and.callFake((_url: string, body: any) =>
+      body?.type === 'userAbstraction'
+        ? (of('default') as any)
+        : (of(exchangeOk) as any)
+    );
+
+    service.withdraw(PRIVATE_KEY, SIGNER, '12.3').subscribe();
+    flushMicrotasks();
+
+    expect(sourceDexOfLastAction()).toBe('');
+  }));
+
+  it('falls back to perps when the account mode cannot be read', fakeAsync(() => {
+    http.post.and.callFake((_url: string, body: any) =>
+      body?.type === 'userAbstraction'
+        ? (throwError(() => new Error('mode unavailable')) as any)
+        : (of(exchangeOk) as any)
+    );
+
+    service.withdraw(PRIVATE_KEY, SIGNER, '12.3').subscribe();
+    flushMicrotasks();
+
+    // Guessing costs a rejection either way — the exchange refuses a debit the
+    // balance cannot cover — and this is the guess that cannot move money from
+    // a balance the user did not mean.
+    expect(sourceDexOfLastAction()).toBe('');
+  }));
+});
+
+describe('isExchangeAnswer', () => {
+  // The two ways a write can not succeed are not the same fact. One says
+  // nothing ran; the other says nobody knows.
+  it('counts anything thrown while reading a response as an answer', () => {
+    expect(isExchangeAnswer(new Error('Insufficient balance'))).toBeTrue();
+  });
+
+  it('counts a refusal the exchange issued as an answer', () => {
+    expect(
+      isExchangeAnswer(new HttpErrorResponse({ status: 422 }))
+    ).toBeTrue();
+  });
+
+  it('does not claim to know the result when the reply was lost', () => {
+    expect(isExchangeAnswer(new HttpErrorResponse({ status: 0 }))).toBeFalse();
+    expect(isExchangeAnswer(new HttpErrorResponse({ status: 502 }))).toBeFalse();
+    expect(isExchangeAnswer(new HttpErrorResponse({ status: 500 }))).toBeFalse();
+  });
 });

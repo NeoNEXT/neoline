@@ -1,6 +1,6 @@
 import { EMPTY, of, throwError } from 'rxjs';
 
-import { PerpsOpenOrder } from '@popup/_lib/perps';
+import { PerpsLedgerUpdate, PerpsOpenOrder } from '@popup/_lib/perps';
 
 import { PerpsHistoryComponent } from './perps-history.component';
 
@@ -68,5 +68,83 @@ describe('PerpsHistoryComponent order direction', () => {
     expect(rateLimited.loading).toBeFalse();
     expect(rateLimited.openOrders.length).toBe(1);
     expect((rateLimited as any).markets).toEqual([]);
+  });
+});
+
+describe('PerpsHistoryComponent ledger rows', () => {
+  const WALLET = '0x5be1a4c623a63498d78c08b8890a6e5dad6bf359';
+
+  const component = new PerpsHistoryComponent(null, null, null, null, null);
+  (component as any).address = WALLET;
+
+  const row = (delta: any): PerpsLedgerUpdate => ({
+    time: 1,
+    hash: '0x1',
+    delta,
+  });
+
+  it('names bridge rows deposit and withdraw', () => {
+    expect(component.ledgerTypeKey(row({ type: 'deposit', usdc: '9.0' }))).toBe(
+      'perpsLedgerDeposit'
+    );
+    expect(
+      component.ledgerTypeKey(row({ type: 'withdraw', usdc: '9.0', fee: '1.0' }))
+    ).toBe('perpsLedgerWithdraw');
+  });
+
+  it('names a spot transfer by which way the money moved', () => {
+    expect(
+      component.ledgerTypeKey(
+        row({
+          type: 'send',
+          user: '0x0b80659a4076e9e93c7dbe0f10675a16a3e5c206',
+          destination: WALLET,
+          amount: '4.8',
+        })
+      )
+    ).toBe('perpsLedgerDeposit');
+    expect(
+      component.ledgerTypeKey(
+        row({
+          type: 'send',
+          user: WALLET,
+          destination: '0x2000000000000000000000000000000000000000',
+          amount: '6.0',
+        })
+      )
+    ).toBe('perpsLedgerWithdraw');
+  });
+
+  it('names a peer-to-peer USDC transfer send on both ends', () => {
+    expect(
+      component.ledgerTypeKey(
+        row({
+          type: 'internalTransfer',
+          usdc: '1000.0',
+          user: '0xe973105a27e17350500926ae664dfcfe6006d924',
+          destination: WALLET,
+          fee: '1.0',
+        })
+      )
+    ).toBe('perpsLedgerSend');
+  });
+
+  it('leaves exotic ledger types to their raw Hyperliquid name', () => {
+    expect(component.ledgerTypeKey(row({ type: 'vaultCreate' }))).toBe('');
+  });
+
+  it('shows a fee only when one was actually charged', () => {
+    expect(component.ledgerFee(row({ type: 'withdraw', fee: '1.0' }))).toBe(
+      '1.0 USDC'
+    );
+    expect(
+      component.ledgerFee(
+        row({ type: 'send', fee: '0.000533', feeToken: 'USDC' })
+      )
+    ).toBe('0.000533 USDC');
+    expect(
+      component.ledgerFee(row({ type: 'send', fee: '0.0', feeToken: '' }))
+    ).toBe('');
+    expect(component.ledgerFee(row({ type: 'deposit', usdc: '9.0' }))).toBe('');
   });
 });

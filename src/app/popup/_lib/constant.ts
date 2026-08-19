@@ -42,7 +42,6 @@ export enum STORAGE_NAME {
   authAddress = 'authAddress',
   InvokeArgsArray = 'InvokeArgsArray', // dAPi N3 invoke args
   perpsFavorites = 'perpsFavorites', // starred perps markets
-  perpsMarketSort = 'perpsMarketSort', // market list sort key and direction
   perpsPendingDeposits = 'perpsPendingDeposits', // bridge deposits not yet credited
   isBackupLater = 'isBackupLater', // show backup tip if create wallet
   hasLoginAddress = 'hasLoginAddress', // has login address
@@ -173,10 +172,6 @@ export const STORAGE_VALUE_MESSAGE = {
   },
   perpsFavorites: {
     type: STORAGE_VALUE_TYPE.array,
-    isLocal: true,
-  },
-  perpsMarketSort: {
-    type: STORAGE_VALUE_TYPE.object,
     isLocal: true,
   },
   perpsPendingDeposits: {

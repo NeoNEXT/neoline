@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
+import BigNumber from 'bignumber.js';
 import { forkJoin, Observable, of, Subscription, Unsubscribable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -44,16 +45,27 @@ const ORDER_STATUS_LABELS = {
   triggered: 'perpsStatusTriggered',
 };
 
-/** Ledger rows reuse the deposit/withdraw wording from the balance card. */
+/**
+ * Hyperliquid's own activity table names the action rather than the ledger
+ * primitive, and this list follows it: the Arbitrum bridge reads deposit or
+ * withdraw, its peer-to-peer USDC action reads send whichever end of it this
+ * wallet is on, and moving collateral between the spot and perps balances
+ * reads transfer.
+ */
 const LEDGER_TYPE_LABELS = {
-  deposit: 'perpsDeposit',
-  withdraw: 'perpsWithdraw',
+  deposit: 'perpsLedgerDeposit',
+  withdraw: 'perpsLedgerWithdraw',
+  internalTransfer: 'perpsLedgerSend',
   accountClassTransfer: 'perpsLedgerTransfer',
-  internalTransfer: 'perpsLedgerTransfer',
-  spotTransfer: 'perpsLedgerTransfer',
   subAccountTransfer: 'perpsLedgerTransfer',
-  send: 'perpsLedgerTransfer',
 };
+
+/**
+ * Spot transfers carry no fixed label. They are how a HyperEVM or bridge
+ * transfer lands, so Hyperliquid names them by which way the money moved:
+ * inbound reads deposit, outbound reads withdraw.
+ */
+const DIRECTIONAL_LEDGER_TYPES = ['send', 'spotTransfer'];
 
 /** The popup only ever scrolls so far; older rows stay on the web UI. */
 const MAX_ARCHIVE_ROWS = 200;
@@ -348,7 +360,13 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
 
   /** i18n key for a ledger row, or '' for exotic types (vault, staking, ...). */
   ledgerTypeKey(update: PerpsLedgerUpdate): string {
-    return LEDGER_TYPE_LABELS[update.delta?.type] || '';
+    const type = update.delta?.type;
+    if (DIRECTIONAL_LEDGER_TYPES.indexOf(type) > -1) {
+      return this.ledgerIsOut(update)
+        ? 'perpsLedgerWithdraw'
+        : 'perpsLedgerDeposit';
+    }
+    return LEDGER_TYPE_LABELS[type] || '';
   }
 
   ledgerIsOut(update: PerpsLedgerUpdate): boolean {
@@ -378,6 +396,20 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     }
     const token = delta.usdc !== undefined ? 'USDC' : delta.token || '';
     return `${this.ledgerIsOut(update) ? '-' : '+'}${value} ${token}`.trim();
+  }
+
+  /**
+   * The fee charged on top of a ledger row, or '' when it carries none. A fee
+   * the protocol reports as zero is no fee: it stays off the row rather than
+   * reading as a charge of nothing.
+   */
+  ledgerFee(update: PerpsLedgerUpdate): string {
+    const delta = update.delta || ({} as any);
+    const fee = new BigNumber(delta.fee ?? NaN);
+    if (!fee.isFinite() || fee.isZero()) {
+      return '';
+    }
+    return `${delta.fee} ${delta.feeToken || 'USDC'}`.trim();
   }
 
 }

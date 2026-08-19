@@ -1965,7 +1965,7 @@
     "message": "この取引は {{chain}} 上で送信され、ネットワーク手数料は同チェーンの {{symbol}} で支払われます。"
   },
   "perpsDepositIrreversible": {
-    "message": "Hyperliquid のブリッジ契約へ送金します。この送金は取り消せません。"
+    "message": "CCTP コントラクトへ送金し、そこから Hyperliquid の口座に反映されます。この送金は取り消せません。"
   },
   "perpsPortfolioMarginNoDeposit": {
     "message": "ポートフォリオマージン口座への入金には未対応です。出金は利用できます。口座全体の管理は Hyperliquid 公式フロントエンドをご利用ください。"
@@ -2013,13 +2013,13 @@
     "message": "ネットワーク手数料"
   },
   "perpsBelowMinDeposit": {
-    "message": "最低額 {{amount}} {{symbol}} を下回っています。この下限は Hyperliquid ブリッジの要件です。これを下回る入金は反映されず、返金もできません。"
+    "message": "このウォレットの最低入金額 {{amount}} {{symbol}} を下回っています。"
   },
   "perpsBelowMinWithdraw": {
-    "message": "最低額 {{amount}} {{symbol}} を下回っています。Hyperliquid は出金ごとに {{fee}} {{symbol}} の手数料を差し引くため、これを下回ると受取額がなくなります。"
+    "message": "最低額 {{amount}} {{symbol}} を下回っています。この経路は出金ごとに {{fee}} {{symbol}} を差し引くため、これを下回ると手数料の段階で拒否されます。"
   },
-  "perpsProviderFee": {
-    "message": "プロバイダー手数料"
+  "perpsRouteFee": {
+    "message": "経路手数料"
   },
   "perpsYouReceive": {
     "message": "受取額"
@@ -2092,6 +2092,15 @@
   },
   "perpsLedgerTransfer": {
     "message": "振替"
+  },
+  "perpsLedgerDeposit": {
+    "message": "入金"
+  },
+  "perpsLedgerWithdraw": {
+    "message": "出金"
+  },
+  "perpsLedgerSend": {
+    "message": "送金"
   },
   "perpsStatusFilled": {
     "message": "約定済み"
@@ -2170,6 +2179,42 @@
   },
   "perpsMarketChangedReviewAgain": {
     "message": "市場が変動したか、最新の流動性を取得できません。注文を再確認してください。"
+  },
+  "perpsFeeQuoteChangedReviewAgain": {
+    "message": "手数料の見積もりが変わりました。送信する前にもう一度確認してください。"
+  },
+  "perpsFeeQuoteUnknown": {
+    "message": "現在の手数料を取得できないため、送信していません。もう一度お試しください。"
+  },
+  "perpsUnknownValue": {
+    "message": "不明"
+  },
+  "perpsConfirmWithdrawTitle": {
+    "message": "出金の確認"
+  },
+  "perpsWithdrawEstimateNote": {
+    "message": "手数料は上限のため、実際の着金額はこれ以上になります。実際の請求額は取引所の台帳が正となります。"
+  },
+  "perpsWithdrawStatusUnknown": {
+    "message": "取引所から結果が返らなかったため、この出金が実行されたかどうかは不明です。残高と Hyperliquid の台帳を確認してから、再送するか判断してください。"
+  },
+  "perpsWithdrawSuccess": {
+    "message": "出金を送信しました。"
+  },
+  "perpsDepositSubmitted": {
+    "message": "入金を送信しました。ネットワークの確認を待っています。"
+  },
+  "perpsDepositConfirmed": {
+    "message": "入金がチェーン上で確認されました。Hyperliquid への反映を待っています。"
+  },
+  "perpsDepositStillPending": {
+    "message": "入金はまだ確認されていません。反映されるまでここで追跡します。"
+  },
+  "perpsDepositReverted": {
+    "message": "入金トランザクションがチェーン上で失敗しました。資金は送られていませんが、ネットワーク手数料は消費されています。"
+  },
+  "perpsSigningUnavailable": {
+    "message": "このウォレット種別では Hyperliquid の操作に署名できません。"
   },
   "perpsOrderRejected": {
     "message": "注文が拒否されました。現在の市場と口座の状態を確認してください。"

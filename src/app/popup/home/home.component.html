@@ -101,7 +101,7 @@
       <div class="content">
         <span
           [class]="{ selected: selectedTabType === 'asset' }"
-          (click)="selectedTabType = 'asset'"
+          (click)="setTab('asset')"
         >
           {{ "assets" | translate | async }}
         </span>
@@ -114,7 +114,7 @@
         </span>
         <span
           [class]="{ selected: selectedTabType === 'NFT' }"
-          (click)="selectedTabType = 'NFT'"
+          (click)="setTab('NFT')"
         >
           {{
             chainType === "Neo3"
@@ -127,7 +127,7 @@
         <span
           *ngIf="chainType === 'NeoX'"
           [class]="{ selected: selectedTabType === 'activity' }"
-          (click)="selectedTabType = 'activity'"
+          (click)="setTab('activity')"
         >
           {{ "Activity" | translate | async }}
         </span>

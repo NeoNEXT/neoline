@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import {
   hyperliquidActionHash,
   signHyperliquidL1Action,
-  signHyperliquidWithdraw,
+  signHyperliquidSendToEvmWithData,
 } from './hyperliquid-signing';
 
 const PRIVATE_KEY =
@@ -102,12 +102,14 @@ describe('Hyperliquid signing', () => {
 
   it('builds and signs the user withdrawal payload', async () => {
     const nonce = 1710000000123;
-    const { action, signature } = await signHyperliquidWithdraw(
+    const { action, signature } = await signHyperliquidSendToEvmWithData(
       PRIVATE_KEY,
       ADDRESS,
       '12.3',
+      3,
       nonce,
-      true
+      true,
+      ''
     );
     const recovered = ethers.verifyTypedData(
       {
@@ -117,11 +119,17 @@ describe('Hyperliquid signing', () => {
         verifyingContract: ZERO_ADDRESS,
       },
       {
-        'HyperliquidTransaction:Withdraw': [
+        'HyperliquidTransaction:SendToEvmWithData': [
           { name: 'hyperliquidChain', type: 'string' },
-          { name: 'destination', type: 'string' },
+          { name: 'token', type: 'string' },
           { name: 'amount', type: 'string' },
-          { name: 'time', type: 'uint64' },
+          { name: 'sourceDex', type: 'string' },
+          { name: 'destinationRecipient', type: 'string' },
+          { name: 'addressEncoding', type: 'string' },
+          { name: 'destinationChainId', type: 'uint32' },
+          { name: 'gasLimit', type: 'uint64' },
+          { name: 'data', type: 'bytes' },
+          { name: 'nonce', type: 'uint64' },
         ],
       },
       action,
@@ -131,5 +139,79 @@ describe('Hyperliquid signing', () => {
     expect(action.signatureChainId).toBe('0x66eee');
     expect(action.hyperliquidChain).toBe('Mainnet');
     expect(recovered).toBe(ADDRESS);
+  });
+
+  it('debits the balance the caller named and lets the forwarder deliver it', async () => {
+    const { action } = await signHyperliquidSendToEvmWithData(
+      PRIVATE_KEY,
+      ADDRESS,
+      '12.3',
+      3,
+      1710000000123,
+      true,
+      ''
+    );
+
+    // Hook data of our own would drop the forwarding fee and leave the message
+    // for whoever claims it first on the destination chain.
+    expect(action.sourceDex).toBe('');
+    expect(action.data).toBe('0x');
+    expect(action.token).toBe('USDC');
+    expect(action.addressEncoding).toBe('hex');
+    expect(action.destinationRecipient).toBe(ADDRESS.toLowerCase());
+  });
+
+  it('debits spot when that is where the account keeps its USDC', async () => {
+    // A unified account's perps balance is reported as 0 however funded it is,
+    // so a perps-sourced withdrawal from one is a withdrawal of nothing.
+    const { action } = await signHyperliquidSendToEvmWithData(
+      PRIVATE_KEY,
+      ADDRESS,
+      '12.3',
+      3,
+      1710000000123,
+      true,
+      'spot'
+    );
+
+    expect(action.sourceDex).toBe('spot');
+  });
+
+  it('signs the empty hook data as bytes, not as the string "0x"', async () => {
+    const { action, signature } = await signHyperliquidSendToEvmWithData(
+      PRIVATE_KEY,
+      ADDRESS,
+      '12.3',
+      3,
+      1710000000123,
+      true,
+      ''
+    );
+    const domain = {
+      name: 'HyperliquidSignTransaction',
+      version: '1',
+      chainId: 421614,
+      verifyingContract: ZERO_ADDRESS,
+    };
+    const asString = {
+      'HyperliquidTransaction:SendToEvmWithData': [
+        { name: 'hyperliquidChain', type: 'string' },
+        { name: 'token', type: 'string' },
+        { name: 'amount', type: 'string' },
+        { name: 'sourceDex', type: 'string' },
+        { name: 'destinationRecipient', type: 'string' },
+        { name: 'addressEncoding', type: 'string' },
+        { name: 'destinationChainId', type: 'uint32' },
+        { name: 'gasLimit', type: 'uint64' },
+        { name: 'data', type: 'string' },
+        { name: 'nonce', type: 'uint64' },
+      ],
+    };
+
+    // Reading `data` as a string recovers a different signer, which is exactly
+    // how a wrong encoding reaches the exchange looking perfectly valid.
+    expect(ethers.verifyTypedData(domain, asString, action, signature)).not.toBe(
+      ADDRESS
+    );
   });
 });

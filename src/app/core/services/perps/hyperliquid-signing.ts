@@ -1,7 +1,10 @@
 import { Encoder } from '@msgpack/msgpack';
 import { ethers } from 'ethers';
 
-import { PerpsSignature } from '@popup/_lib/perps';
+import {
+  PerpsSignature,
+  PERPS_CORE_TO_EVM_GAS_LIMIT,
+} from '@popup/_lib/perps';
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 const USER_SIGNATURE_CHAIN_ID = 421614;
@@ -27,12 +30,24 @@ const AGENT_TYPES = {
   ],
 };
 
-const WITHDRAW_TYPES = {
-  'HyperliquidTransaction:Withdraw': [
+/**
+ * The withdrawal is a Core-to-EVM transfer carrying hook data, not the old
+ * bridge withdrawal. `data` is a dynamic type, so its EIP-712 encoding is the
+ * hash of the bytes rather than the bytes themselves — signing it as a string
+ * would produce a valid-looking signature that recovers to the wrong address.
+ */
+const SEND_TO_EVM_WITH_DATA_TYPES = {
+  'HyperliquidTransaction:SendToEvmWithData': [
     { name: 'hyperliquidChain', type: 'string' },
-    { name: 'destination', type: 'string' },
+    { name: 'token', type: 'string' },
     { name: 'amount', type: 'string' },
-    { name: 'time', type: 'uint64' },
+    { name: 'sourceDex', type: 'string' },
+    { name: 'destinationRecipient', type: 'string' },
+    { name: 'addressEncoding', type: 'string' },
+    { name: 'destinationChainId', type: 'uint32' },
+    { name: 'gasLimit', type: 'uint64' },
+    { name: 'data', type: 'bytes' },
+    { name: 'nonce', type: 'uint64' },
   ],
 };
 
@@ -158,36 +173,75 @@ export async function signHyperliquidL1Action(
   return splitSignature(signature);
 }
 
-export interface SignedWithdrawAction {
+/**
+ * Which HyperCore balance a withdrawal debits: `''` is the perps balance and
+ * `'spot'` is the spot balance. The two are not interchangeable — a standard
+ * account keeps them as separate wallets, and a unified account holds all of
+ * its USDC in spot while the perps clearinghouse reports figures the docs call
+ * not meaningful (`withdrawable` is 0 there however funded the account is).
+ * SOURCE: https://developers.circle.com/cctp/howtos/withdraw-usdc-from-hypercore-to-evm
+ */
+export type PerpsWithdrawSourceDex = '' | 'spot';
+
+export interface SignedSendToEvmWithDataAction {
   action: {
-    type: 'withdraw3';
+    type: 'sendToEvmWithData';
     signatureChainId: string;
     hyperliquidChain: 'Mainnet' | 'Testnet';
-    destination: string;
+    token: string;
     amount: string;
-    time: number;
+    sourceDex: PerpsWithdrawSourceDex;
+    destinationRecipient: string;
+    addressEncoding: 'hex';
+    destinationChainId: number;
+    gasLimit: number;
+    data: string;
+    nonce: number;
   };
   signature: PerpsSignature;
 }
 
-export async function signHyperliquidWithdraw(
+/**
+ * Withdraw USDC from HyperCore to the same address on another chain.
+ *
+ * `sourceDex` names the balance the exchange debits and belongs to the caller:
+ * it has to match the account's abstraction mode, and neither value is a safe
+ * default for the other. `data` is empty because that is what tells the
+ * forwarder to deliver the mint on its own. Anything else in `data` becomes
+ * user-supplied hook data: the forwarding fee stops being applied and the
+ * message has to be claimed on the destination chain by whoever gets there
+ * first.
+ *
+ * `destinationChainId` is the CCTP domain (3 for Arbitrum), not the EVM chain
+ * id. Circle's CoreDepositWallet natspec and the sendToEvmWithData guide both
+ * say so; the ABI name is the trap.
+ */
+export async function signHyperliquidSendToEvmWithData(
   privateKey: string,
-  destination: string,
+  destinationRecipient: string,
   amount: string,
+  destinationChainId: number,
   nonce: number,
-  isMainnet: boolean
-): Promise<SignedWithdrawAction> {
-  const action: SignedWithdrawAction['action'] = {
-    type: 'withdraw3',
+  isMainnet: boolean,
+  sourceDex: PerpsWithdrawSourceDex
+): Promise<SignedSendToEvmWithDataAction> {
+  const action: SignedSendToEvmWithDataAction['action'] = {
+    type: 'sendToEvmWithData',
     signatureChainId: ethers.toQuantity(USER_SIGNATURE_CHAIN_ID),
     hyperliquidChain: isMainnet ? 'Mainnet' : 'Testnet',
-    destination: destination.toLowerCase(),
+    token: 'USDC',
     amount,
-    time: nonce,
+    sourceDex,
+    destinationRecipient: destinationRecipient.toLowerCase(),
+    addressEncoding: 'hex',
+    destinationChainId,
+    gasLimit: PERPS_CORE_TO_EVM_GAS_LIMIT,
+    data: '0x',
+    nonce,
   };
   const signature = await new ethers.Wallet(privateKey).signTypedData(
     USER_DOMAIN,
-    WITHDRAW_TYPES,
+    SEND_TO_EVM_WITH_DATA_TYPES,
     action
   );
   return { action, signature: splitSignature(signature) };

@@ -4,69 +4,82 @@ import BigNumber from 'bignumber.js';
 
 import {
   PerpsDepositConfig,
-  PERPS_CHAIN_MAX_RETRIES,
-  PERPS_CHAIN_REQUEST_TIMEOUT_MS,
-  PERPS_CHAIN_RETRY_BASE_MS,
+  PERPS_CCTP_DEX_PERPS,
+  PERPS_CCTP_FINALITY_FAST,
+  PERPS_CCTP_HYPEREVM_DOMAIN,
+  PERPS_DEPOSIT_AUTH_VALIDITY_SECONDS,
+  PERPS_DEPOSIT_GAS_BUFFER,
+  PERPS_HYPEREVM_CONFIG,
 } from '@popup/_lib/perps';
+import { PerpsChainError, PerpsRpcService } from './perps-rpc';
 
-/** The bridge is funded by a plain transfer; nothing else is called on it. */
 const ERC20_ABI = [
   'function balanceOf(address owner) view returns (uint256)',
-  'function transfer(address to, uint256 amount) returns (bool)',
+  'function name() view returns (string)',
+  'function version() view returns (string)',
 ];
 
 /**
- * Why a deposit-chain call did not produce an answer.
+ * One call does the whole deposit: the extension pulls the USDC using the
+ * user's signed authorisation and burns it through CCTP in the same
+ * transaction. The separate approve that `TokenMessengerV2` would need is what
+ * this contract exists to avoid.
+ */
+const CCTP_EXTENSION_ABI = [
+  'function batchDepositForBurnWithAuth(' +
+    '(uint256 amount,uint256 authValidAfter,uint256 authValidBefore,bytes32 authNonce,uint8 v,bytes32 r,bytes32 s) receiveWithAuthorizationData,' +
+    '(uint256 amount,uint32 destinationDomain,bytes32 mintRecipient,bytes32 destinationCaller,uint256 maxFee,uint32 minFinalityThreshold,bytes hookData) depositForBurnData' +
+    ')',
+];
+
+const RECEIVE_WITH_AUTHORIZATION_TYPES = {
+  ReceiveWithAuthorization: [
+    { name: 'from', type: 'address' },
+    { name: 'to', type: 'address' },
+    { name: 'value', type: 'uint256' },
+    { name: 'validAfter', type: 'uint256' },
+    { name: 'validBefore', type: 'uint256' },
+    { name: 'nonce', type: 'bytes32' },
+  ],
+};
+
+/**
+ * What became of a deposit on the source chain.
  *
- * `unavailable` means no endpoint would answer — the question is still open and
- * the screen must say so rather than render a zero. `rejected` means an
- * endpoint answered and the answer was no, which is a fact worth showing.
+ * `pending` is not a failure and `reverted` is not a delay; the interface has
+ * to be able to say each of them.
  */
-export type PerpsChainFailure = 'unavailable' | 'rejected';
-
-export class PerpsChainError extends Error {
-  constructor(readonly failure: PerpsChainFailure, message: string) {
-    super(message);
-    this.name = 'PerpsChainError';
-  }
-}
+export type PerpsDepositOutcome = 'confirmed' | 'reverted' | 'pending';
 
 /**
- * Transient transport failures, taken from MetaMask's `RpcService`: connection
- * failures, truncated or non-JSON responses, gateway-class 5xx, timeouts and
- * connection resets. Everything else is an answer, not a hiccup, and retrying
- * it just asks a settled question again.
+ * A signed permission for the extension contract to take exactly this deposit.
+ *
+ * Held instead of the private key between estimating the fee and broadcasting:
+ * it authorises one amount, to one contract, for a bounded time, and it cannot
+ * be turned back into a key.
  */
-const RETRIABLE_CODES = new Set([
-  'ETIMEDOUT',
-  'ECONNRESET',
-  'TIMEOUT',
-  'NETWORK_ERROR',
-  'SERVER_ERROR',
-]);
-
-const RETRIABLE_STATUSES = new Set([502, 503, 504]);
-
-const RETRIABLE_MESSAGES = [
-  'network error',
-  'failed to fetch',
-  'networkerror when attempting to fetch resource',
-  'the network connection was lost',
-  'connection closed',
-  'load failed',
-];
+export interface PerpsDepositAuthorization {
+  from: string;
+  amountExact: string;
+  validAfter: number;
+  validBefore: number;
+  nonce: string;
+  v: number;
+  r: string;
+  s: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class PerpsDepositChainService {
-  private providers = new Map<string, ethers.JsonRpcProvider>();
+  constructor(private rpc: PerpsRpcService) {}
 
   /** Exact token balance, or a `PerpsChainError` when nobody would answer. */
   async tokenBalanceExact(
     config: PerpsDepositConfig,
     address: string
   ): Promise<string> {
-    return this.withEndpoint(config, async (provider) => {
-      const token = new ethers.Contract(config.address, ERC20_ABI, provider);
+    return this.rpc.withEndpoint(config, async (provider) => {
+      const token = new ethers.Contract(config.cctp.usdc, ERC20_ABI, provider);
       const balance = await token.balanceOf(address);
       return ethers.formatUnits(balance, config.decimals);
     });
@@ -77,165 +90,267 @@ export class PerpsDepositChainService {
     config: PerpsDepositConfig,
     address: string
   ): Promise<string> {
-    return this.withEndpoint(config, async (provider) => {
+    return this.rpc.withEndpoint(config, async (provider) => {
       const balance = await provider.getBalance(address);
       return ethers.formatEther(balance);
     });
   }
 
   /**
-   * What the deposit transaction will cost, in the chain's native currency.
+   * Sign the authorisation this deposit will be carried by.
    *
-   * Estimated against the real call rather than assumed: a hardcoded figure is
-   * a guess presented as a fact, and on a rollup the true cost moves with the
-   * L1 data fee.
+   * The token's EIP-712 name and version are read from the token rather than
+   * assumed. Getting either wrong produces a signature the contract rejects,
+   * which would surface as an unexplained failure at broadcast; reading them
+   * turns that into an ordinary unreachable-chain error instead.
    */
-  async transferFeeExact(
+  async authorizeDeposit(
     config: PerpsDepositConfig,
-    from: string,
+    privateKey: string,
     amountExact: string
+  ): Promise<PerpsDepositAuthorization> {
+    const wallet = new ethers.Wallet(privateKey);
+    const value = ethers.parseUnits(amountExact, config.decimals);
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const message = {
+      from: wallet.address,
+      to: config.cctp.extension,
+      value,
+      validAfter: 0,
+      validBefore: nowSeconds + PERPS_DEPOSIT_AUTH_VALIDITY_SECONDS,
+      nonce: ethers.hexlify(ethers.randomBytes(32)),
+    };
+
+    const domain = await this.rpc.withEndpoint(config, async (provider) => {
+      const token = new ethers.Contract(config.cctp.usdc, ERC20_ABI, provider);
+      const [name, version] = await Promise.all([
+        token.name(),
+        token.version(),
+      ]);
+      return {
+        name,
+        version,
+        chainId: config.chainId,
+        verifyingContract: config.cctp.usdc,
+      };
+    });
+
+    const signature = ethers.Signature.from(
+      await wallet.signTypedData(
+        domain,
+        RECEIVE_WITH_AUTHORIZATION_TYPES,
+        message
+      )
+    );
+
+    return {
+      from: wallet.address,
+      amountExact,
+      validAfter: message.validAfter,
+      validBefore: message.validBefore,
+      nonce: message.nonce,
+      v: signature.v,
+      r: signature.r,
+      s: signature.s,
+    };
+  }
+
+  /**
+   * What the deposit will cost in the chain's own currency, as a ceiling.
+   *
+   * Estimated against the real call rather than assumed — on a rollup the true
+   * cost moves with the L1 data fee — and then raised by the same 20% Circle's
+   * own example uses, because an authorisation plus an external call estimates
+   * tightly and a deposit that runs out of gas still burns what it spent. The
+   * buffered limit is both what gets sent and what the user is shown.
+   */
+  async depositFeeExact(
+    config: PerpsDepositConfig,
+    authorization: PerpsDepositAuthorization,
+    maxFeeExact: string
   ): Promise<string> {
-    return this.withEndpoint(config, async (provider) => {
-      const token = new ethers.Contract(config.address, ERC20_ABI, provider);
-      const value = ethers.parseUnits(amountExact, config.decimals);
-      const gasLimit = await token.transfer.estimateGas(
-        config.bridgeAddress,
-        value,
-        { from }
+    return this.rpc.withEndpoint(config, async (provider) => {
+      const extension = new ethers.Contract(
+        config.cctp.extension,
+        CCTP_EXTENSION_ABI,
+        provider
+      );
+      const gasLimit = await extension.batchDepositForBurnWithAuth.estimateGas(
+        ...this.callArguments(config, authorization, maxFeeExact),
+        { from: authorization.from }
       );
       const feeData = await provider.getFeeData();
       const perGas = feeData.maxFeePerGas ?? feeData.gasPrice;
       if (perGas === null || perGas === undefined) {
         throw new PerpsChainError('unavailable', 'No gas price available');
       }
-      return ethers.formatEther(gasLimit * perGas);
-    });
-  }
-
-  /** Broadcast the deposit and return its hash; it is not yet confirmed. */
-  async sendDeposit(
-    config: PerpsDepositConfig,
-    privateKey: string,
-    amountExact: string
-  ): Promise<string> {
-    return this.withEndpoint(config, async (provider) => {
-      const signer = new ethers.Wallet(privateKey, provider);
-      const token = new ethers.Contract(config.address, ERC20_ABI, signer);
-      const transaction = await token.transfer(
-        config.bridgeAddress,
-        ethers.parseUnits(amountExact, config.decimals)
-      );
-      return transaction.hash as string;
+      return ethers.formatEther(this.bufferedGas(gasLimit) * perGas);
     });
   }
 
   /**
-   * Whether the transaction has been mined, within the caller's patience.
+   * Broadcast the deposit and return its hash; it is not yet confirmed.
    *
-   * Returning `false` says only that it has not confirmed yet — the deposit is
-   * broadcast and may still land, so the caller must treat this as pending
-   * rather than failed.
+   * Signed once, then sent as fixed bytes. The endpoint rotation and retries
+   * underneath exist for reads, and a write handed to them directly would
+   * re-sign on every attempt: a response lost after the node accepted the
+   * transaction would come back as a second burn of the user's USDC. Pinning
+   * the nonce and the fees into one signature makes every resubmission the
+   * same transaction, which a node either already has or has yet to see.
    */
-  async isConfirmed(
+  async sendDeposit(
+    config: PerpsDepositConfig,
+    privateKey: string,
+    authorization: PerpsDepositAuthorization,
+    maxFeeExact: string
+  ): Promise<string> {
+    const signed = await this.rpc.withEndpoint(config, async (provider) => {
+      const signer = new ethers.Wallet(privateKey, provider);
+      const extension = new ethers.Contract(
+        config.cctp.extension,
+        CCTP_EXTENSION_ABI,
+        signer
+      );
+      const args = this.callArguments(config, authorization, maxFeeExact);
+      const request =
+        await extension.batchDepositForBurnWithAuth.populateTransaction(...args);
+      request.gasLimit = this.bufferedGas(
+        await extension.batchDepositForBurnWithAuth.estimateGas(...args, {
+          from: authorization.from,
+        })
+      );
+      return signer.signTransaction(await signer.populateTransaction(request));
+    });
+    return this.rpc.broadcast(config, signed);
+  }
+
+  /**
+   * What the deposit transaction did on the source chain, within the caller's
+   * patience.
+   *
+   * Three outcomes, because collapsing them loses the one that matters most.
+   * `pending` says only that it has not confirmed yet — the deposit is
+   * broadcast and may still land. `reverted` is the opposite: a receipt with a
+   * failed status is a settled answer, the USDC was never burned, and no
+   * HyperCore credit is ever coming. Reading the presence of a receipt as
+   * success puts a reverted deposit into an unending wait for a credit that
+   * cannot arrive.
+   */
+  async depositOutcome(
     config: PerpsDepositConfig,
     hash: string,
     timeoutMs: number
-  ): Promise<boolean> {
+  ): Promise<PerpsDepositOutcome> {
     try {
-      const receipt = await this.withEndpoint(config, (provider) =>
+      const receipt = await this.rpc.withEndpoint(config, (provider) =>
         provider.waitForTransaction(hash, 1, timeoutMs)
       );
-      return !!receipt;
+      if (!receipt) {
+        return 'pending';
+      }
+      return receipt.status === 1 ? 'confirmed' : 'reverted';
     } catch (error) {
       if (error instanceof PerpsChainError) {
-        return false;
+        return 'pending';
       }
       throw error;
     }
   }
 
   /**
-   * Run against each endpoint in turn, retrying only transport failures.
+   * The two structs the extension is called with.
    *
-   * These endpoints are the product's own choice rather than a network the user
-   * configured, so moving to the next one does not swap out a node they picked.
+   * `mintRecipient` and `destinationCaller` are both the forwarder on HyperEVM,
+   * never the user: the mint goes to the forwarder, which then credits the
+   * user's HyperCore account from the hook data. Either one pointing anywhere
+   * else strands the money permanently.
    */
-  private async withEndpoint<T>(
+  private callArguments(
     config: PerpsDepositConfig,
-    run: (provider: ethers.JsonRpcProvider) => Promise<T>
-  ): Promise<T> {
-    let lastError: unknown;
-    for (const url of config.rpcUrls) {
-      const provider = this.providerFor(config, url);
-      for (let attempt = 0; attempt <= PERPS_CHAIN_MAX_RETRIES; attempt++) {
-        try {
-          return await run(provider);
-        } catch (error) {
-          lastError = error;
-          if (!isRetriable(error)) {
-            throw new PerpsChainError(
-              'rejected',
-              (error as Error)?.message || 'Deposit chain call failed'
-            );
-          }
-          if (attempt < PERPS_CHAIN_MAX_RETRIES) {
-            await delay(PERPS_CHAIN_RETRY_BASE_MS * 2 ** attempt);
-          }
-        }
-      }
-    }
-    throw new PerpsChainError(
-      'unavailable',
-      (lastError as Error)?.message || 'No deposit chain endpoint responded'
+    authorization: PerpsDepositAuthorization,
+    maxFeeExact: string
+  ) {
+    const forwarder = ethers.zeroPadValue(
+      this.hyperEvmFor(config).cctpForwarder,
+      32
     );
+    const amount = ethers.parseUnits(
+      authorization.amountExact,
+      config.decimals
+    );
+    return [
+      {
+        amount,
+        authValidAfter: authorization.validAfter,
+        authValidBefore: authorization.validBefore,
+        authNonce: authorization.nonce,
+        v: authorization.v,
+        r: authorization.r,
+        s: authorization.s,
+      },
+      {
+        amount,
+        destinationDomain: PERPS_CCTP_HYPEREVM_DOMAIN,
+        mintRecipient: forwarder,
+        destinationCaller: forwarder,
+        maxFee: ethers.parseUnits(maxFeeExact, config.decimals),
+        minFinalityThreshold: PERPS_CCTP_FINALITY_FAST,
+        hookData: encodeForwardHookData(authorization.from),
+      },
+    ] as const;
   }
 
-  private providerFor(
-    config: PerpsDepositConfig,
-    url: string
-  ): ethers.JsonRpcProvider {
-    const key = `${config.chainId}:${url}`;
-    let provider = this.providers.get(key);
-    if (!provider) {
-      const request = new ethers.FetchRequest(url);
-      request.timeout = PERPS_CHAIN_REQUEST_TIMEOUT_MS;
-      // Pinning the network stops ethers probing chain id on every call, and
-      // makes a mismatched endpoint fail loudly instead of quietly serving
-      // another chain's state.
-      const network = new ethers.Network(config.chainName, config.chainId);
-      provider = new ethers.JsonRpcProvider(request, network, {
-        staticNetwork: network,
-      });
-      this.providers.set(key, provider);
+  private bufferedGas(estimate: bigint): bigint {
+    // Held as tenths so a buffer like 1.15 cannot go through Number into BigInt.
+    const tenths = new BigNumber(PERPS_DEPOSIT_GAS_BUFFER).times(10);
+    if (!tenths.isInteger() || !tenths.isPositive()) {
+      throw new Error('PERPS_DEPOSIT_GAS_BUFFER must be a positive multiple of 0.1');
     }
-    return provider;
+    return (estimate * BigInt(tenths.toFixed())) / 10n;
+  }
+
+  /**
+   * The HyperEVM side that belongs to this deposit chain.
+   *
+   * Matched explicitly and refused when it does not match, rather than falling
+   * back to one of them: the forwarder address chosen here becomes the mint
+   * recipient, and a testnet forwarder named in a mainnet burn sends real USDC
+   * somewhere nobody can retrieve it from.
+   */
+  private hyperEvmFor(config: PerpsDepositConfig) {
+    const paired = Object.values(PERPS_HYPEREVM_CONFIG).find(
+      (candidate) => candidate.pairedDepositChainId === config.chainId
+    );
+    if (!paired) {
+      throw new PerpsChainError(
+        'rejected',
+        `No HyperEVM forwarder is paired with chain ${config.chainId}`
+      );
+    }
+    return paired;
   }
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function isRetriable(error: any): boolean {
-  // Offline is a settled answer, not a hiccup: retrying cannot help and only
-  // delays telling the user what is actually wrong.
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-    return false;
-  }
-  if (error instanceof PerpsChainError) {
-    return false;
-  }
-  if (RETRIABLE_CODES.has(error?.code)) {
-    return true;
-  }
-  const status = Number(
-    error?.status ?? error?.info?.responseStatus?.toString?.().slice(0, 3)
-  );
-  if (RETRIABLE_STATUSES.has(status)) {
-    return true;
-  }
-  const message = String(error?.message || '').toLowerCase();
-  return RETRIABLE_MESSAGES.some((text) => message.includes(text));
+/**
+ * Hook data telling the forwarder which HyperCore account to credit.
+ *
+ * The layout is Circle's: a 24-byte `cctp-forward` marker, a version, the
+ * length of what follows, the recipient, and which HyperCore balance to credit.
+ * Only the perps balance is ever named here.
+ */
+export function encodeForwardHookData(
+  recipient: string,
+  destinationDex: number = PERPS_CCTP_DEX_PERPS
+): string {
+  const magic = ethers
+    .hexlify(ethers.toUtf8Bytes('cctp-forward'))
+    .slice(2)
+    .padEnd(48, '0');
+  const version = '00000000';
+  const dataLength = (24).toString(16).padStart(8, '0');
+  const address = recipient.slice(2).toLowerCase();
+  const dex = (destinationDex >>> 0).toString(16).padStart(8, '0');
+  return `0x${magic}${version}${dataLength}${address}${dex}`;
 }
 
 /** Whether an exact decimal covers another, without passing through Number. */
@@ -248,5 +363,7 @@ export function coversExact(
   }
   const have = new BigNumber(available);
   const need = new BigNumber(required);
-  return have.isFinite() && need.isFinite() && have.isGreaterThanOrEqualTo(need);
+  return (
+    have.isFinite() && need.isFinite() && have.isGreaterThanOrEqualTo(need)
+  );
 }

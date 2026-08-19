@@ -1965,7 +1965,7 @@
     "message": "这笔交易在 {{chain}} 上发出，网络费用由该链上的 {{symbol}} 支付。"
   },
   "perpsDepositIrreversible": {
-    "message": "转入 Hyperliquid 桥合约，该转账无法撤回。"
+    "message": "转入 CCTP 合约，由它把资金记入您的 Hyperliquid 账户。该转账无法撤回。"
   },
   "perpsPortfolioMarginNoDeposit": {
     "message": "组合保证金账户暂不支持存入。提取仍然可用；完整账户管理请使用 Hyperliquid 官方前端。"
@@ -2013,13 +2013,13 @@
     "message": "网络费用"
   },
   "perpsBelowMinDeposit": {
-    "message": "低于最低限额 {{amount}} {{symbol}}。该限额由 Hyperliquid 跨链桥要求，低于此金额的存入不会入账且无法找回。"
+    "message": "低于本钱包的最低存入限额 {{amount}} {{symbol}}。"
   },
   "perpsBelowMinWithdraw": {
-    "message": "低于最低限额 {{amount}} {{symbol}}。Hyperliquid 每笔提取都会扣除 {{fee}} {{symbol}} 手续费，低于此金额将无法到账。"
+    "message": "低于最低限额 {{amount}} {{symbol}}。该通道每笔提取都会扣除 {{fee}} {{symbol}}，低于此金额会在扣费环节被拒绝。"
   },
-  "perpsProviderFee": {
-    "message": "服务商费用"
+  "perpsRouteFee": {
+    "message": "通道费"
   },
   "perpsYouReceive": {
     "message": "您收到"
@@ -2092,6 +2092,15 @@
   },
   "perpsLedgerTransfer": {
     "message": "划转"
+  },
+  "perpsLedgerDeposit": {
+    "message": "存款"
+  },
+  "perpsLedgerWithdraw": {
+    "message": "提款"
+  },
+  "perpsLedgerSend": {
+    "message": "发送"
   },
   "perpsStatusFilled": {
     "message": "已成交"
@@ -2170,6 +2179,42 @@
   },
   "perpsMarketChangedReviewAgain": {
     "message": "市场已变化或无法取得最新流动性，请重新检查订单。"
+  },
+  "perpsFeeQuoteChangedReviewAgain": {
+    "message": "费用报价已变化。提交前请重新确认。"
+  },
+  "perpsFeeQuoteUnknown": {
+    "message": "无法读取当前费用，因此未发送。请重试。"
+  },
+  "perpsUnknownValue": {
+    "message": "未知"
+  },
+  "perpsConfirmWithdrawTitle": {
+    "message": "确认提款"
+  },
+  "perpsWithdrawEstimateNote": {
+    "message": "费用为上限，实际到账只会更多。实际扣费以交易所账本为准。"
+  },
+  "perpsWithdrawStatusUnknown": {
+    "message": "交易所未返回结果，本次提款是否已执行无法判定。请先核对余额与 Hyperliquid 账本，再决定是否重新发起。"
+  },
+  "perpsWithdrawSuccess": {
+    "message": "提款已提交。"
+  },
+  "perpsDepositSubmitted": {
+    "message": "存入已发送，等待链上确认。"
+  },
+  "perpsDepositConfirmed": {
+    "message": "存入已在链上确认，等待 Hyperliquid 入账。"
+  },
+  "perpsDepositStillPending": {
+    "message": "存入尚未确认，将在此处持续跟踪直到入账。"
+  },
+  "perpsDepositReverted": {
+    "message": "存入交易在链上失败。资金未转出，但网络费已消耗。"
+  },
+  "perpsSigningUnavailable": {
+    "message": "该钱包类型无法签署 Hyperliquid 操作。"
   },
   "perpsOrderRejected": {
     "message": "订单被拒绝，请检查当前市场与账户状态。"

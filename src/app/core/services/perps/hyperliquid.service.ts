@@ -66,7 +66,7 @@ import {
 import {
   signHyperliquidApproveBuilderFee,
   signHyperliquidL1Action,
-  signHyperliquidWithdraw,
+  signHyperliquidSendToEvmWithData,
 } from './hyperliquid-signing';
 
 export type PerpsNetwork = 'mainnet' | 'testnet';
@@ -95,6 +95,40 @@ export class PerpsPositionChangedError extends Error {
 interface HyperliquidUserFees {
   userCrossRate: string;
   activeReferralDiscount?: string;
+}
+
+/**
+ * A signed write whose result the client never learned.
+ *
+ * Not a failure: the exchange may well have executed the action, and the only
+ * honest thing the interface can say is that it does not know. Nothing may be
+ * re-signed off the back of one — a second signature is how one withdrawal
+ * becomes two.
+ */
+export class PerpsExecutionStatusUnknownError extends Error {
+  constructor(readonly reason?: unknown) {
+    super('Hyperliquid returned no decidable result');
+    this.name = 'PerpsExecutionStatusUnknownError';
+  }
+}
+
+/**
+ * Whether a failed write carries an answer from the exchange.
+ *
+ * Anything thrown while reading a response is an answer by definition — the
+ * body arrived and said no. An `HttpErrorResponse` is only an answer when its
+ * status is a refusal the exchange itself issued: a 4xx rejects the request
+ * before it runs, while a 5xx or a status of zero says the request may have
+ * been received and executed with the reply lost on the way back.
+ */
+export function isExchangeAnswer(error: any): boolean {
+  const transport =
+    error instanceof HttpErrorResponse || error?.name === 'HttpErrorResponse';
+  if (!transport) {
+    return true;
+  }
+  const status = Number(error?.status);
+  return Number.isFinite(status) && status >= 400 && status < 500;
 }
 
 export function resolvePerpsTestnet(
@@ -317,7 +351,7 @@ export class HyperliquidService {
     );
   }
 
-  /** Bridge2 funding chain/token matching the configured endpoint. */
+  /** Deposit chain/token matching the configured Perps endpoint. */
   get depositConfig(): PerpsDepositConfig {
     return this.isTestnet
       ? PERPS_DEPOSIT_CONFIG.testnet
@@ -835,27 +869,65 @@ export class HyperliquidService {
     };
   }
 
+  /**
+   * Withdraw from HyperCore to the same address on the deposit chain.
+   *
+   * The exchange debits HyperCore and the rest happens without the user: the
+   * amount crosses to HyperEVM, is burned through CCTP, and is delivered by the
+   * forwarder. None of those legs is a transaction the user signs or pays gas
+   * for, so this stays a single signed action from the caller's point of view.
+   *
+   * Which balance is debited follows the account's abstraction mode rather than
+   * a constant: a unified account keeps its USDC in spot, and asking that
+   * account for a perps-sourced withdrawal is asking it to debit a balance the
+   * exchange reports as zero. A mode that cannot be read falls back to perps,
+   * which is the safe end of the guess — the exchange refuses a debit the
+   * balance cannot cover, so a wrong guess costs a rejection, not a withdrawal
+   * taken from somewhere the user did not mean.
+   */
   withdraw(
     privateKey: string,
     destination: string,
     amount: string
   ): Observable<PerpsExchangeResponse> {
     const amountWire = this.floatToWire(amount);
-    return this.withNonceRetry(privateKey, (nonce) =>
-      from(
-        signHyperliquidWithdraw(
-          privateKey,
-          destination,
-          amountWire,
-          nonce,
-          !this.isTestnet
+    // Circle names this field chainId; the value is the CCTP domain of the
+    // destination (Arbitrum = 3), not the EVM chain id 42161. Passing the chain
+    // id sends the burn to a domain that does not exist.
+    // SOURCE: CoreDepositWallet natspec and
+    // https://developers.circle.com/cctp/howtos/withdraw-usdc-from-hypercore-to-evm
+    const destinationChainId = this.depositConfig.cctp.sourceDomain;
+    const signer = new ethers.Wallet(privateKey).address.toLowerCase();
+    return this.getAccountMode(signer).pipe(
+      switchMap((mode) =>
+        this.withNonceRetry(privateKey, (nonce) =>
+          from(
+            signHyperliquidSendToEvmWithData(
+              privateKey,
+              destination,
+              amountWire,
+              destinationChainId,
+              nonce,
+              !this.isTestnet,
+              this.isUnifiedMode(mode) ? 'spot' : ''
+            )
+          ).pipe(
+            switchMap(({ action, signature }) =>
+              this.postExchange(action, signature, nonce)
+            )
+          )
         )
-      ).pipe(
-        switchMap(({ action, signature }) =>
-          this.postExchange(action, signature, nonce)
-        )
-      )
-    ).pipe(tap(() => this.clearAccountCache()));
+      ),
+      tap(() => this.clearAccountCache()),
+      // A withdrawal moves principal, so the two ways it can not succeed have
+      // to stay apart all the way to the screen: an exchange that answered "no"
+      // executed nothing, while a response that never arrived may have.
+      catchError((error) => {
+        throw isExchangeAnswer(error)
+          ? error
+          : new PerpsExecutionStatusUnknownError(error);
+      })
+    );
   }
 
   /**

@@ -1965,7 +1965,7 @@
     "message": "이 거래는 {{chain}}에서 전송되며 네트워크 수수료는 해당 체인의 {{symbol}}로 지불됩니다."
   },
   "perpsDepositIrreversible": {
-    "message": "Hyperliquid 브리지 컨트랙트로 전송됩니다. 이 전송은 취소할 수 없습니다."
+    "message": "CCTP 컨트랙트로 전송되며, 여기서 Hyperliquid 계정에 반영됩니다. 이 전송은 취소할 수 없습니다."
   },
   "perpsPortfolioMarginNoDeposit": {
     "message": "포트폴리오 마진 계정은 입금을 지원하지 않습니다. 출금은 가능하며, 계정 전체 관리는 Hyperliquid 공식 프런트엔드를 이용하세요."
@@ -2013,13 +2013,13 @@
     "message": "네트워크 수수료"
   },
   "perpsBelowMinDeposit": {
-    "message": "최소 금액 {{amount}} {{symbol}}보다 적습니다. 이 한도는 Hyperliquid 브리지의 요구 사항입니다. 이보다 적은 금액은 입금되지 않으며 복구할 수 없습니다."
+    "message": "이 지갑의 최소 입금 금액 {{amount}} {{symbol}}보다 적습니다."
   },
   "perpsBelowMinWithdraw": {
-    "message": "최소 금액 {{amount}} {{symbol}}보다 적습니다. Hyperliquid는 출금할 때마다 {{fee}} {{symbol}} 수수료를 차감하므로 이보다 적으면 받을 금액이 없습니다."
+    "message": "최소 금액 {{amount}} {{symbol}}보다 적습니다. 이 경로는 출금할 때마다 {{fee}} {{symbol}}을 차감하므로 이보다 적으면 수수료 단계에서 거부됩니다."
   },
-  "perpsProviderFee": {
-    "message": "제공자 수수료"
+  "perpsRouteFee": {
+    "message": "경로 수수료"
   },
   "perpsYouReceive": {
     "message": "받는 금액"
@@ -2092,6 +2092,15 @@
   },
   "perpsLedgerTransfer": {
     "message": "이체"
+  },
+  "perpsLedgerDeposit": {
+    "message": "입금"
+  },
+  "perpsLedgerWithdraw": {
+    "message": "출금"
+  },
+  "perpsLedgerSend": {
+    "message": "보내기"
   },
   "perpsStatusFilled": {
     "message": "체결됨"
@@ -2170,6 +2179,42 @@
   },
   "perpsMarketChangedReviewAgain": {
     "message": "시장이 변했거나 최신 유동성을 확인할 수 없습니다. 주문을 다시 검토하세요."
+  },
+  "perpsFeeQuoteChangedReviewAgain": {
+    "message": "수수료 견적이 변경되었습니다. 제출하기 전에 다시 확인하세요."
+  },
+  "perpsFeeQuoteUnknown": {
+    "message": "현재 수수료를 확인할 수 없어 전송하지 않았습니다. 다시 시도하세요."
+  },
+  "perpsUnknownValue": {
+    "message": "알 수 없음"
+  },
+  "perpsConfirmWithdrawTitle": {
+    "message": "출금 확인"
+  },
+  "perpsWithdrawEstimateNote": {
+    "message": "수수료는 상한이므로 실제 도착 금액은 이보다 많을 수 있습니다. 실제 청구액은 거래소 장부를 따릅니다."
+  },
+  "perpsWithdrawStatusUnknown": {
+    "message": "거래소가 결과를 반환하지 않아 이 출금이 실행되었는지 알 수 없습니다. 잔액과 Hyperliquid 장부를 확인한 뒤 다시 보낼지 결정하세요."
+  },
+  "perpsWithdrawSuccess": {
+    "message": "출금을 제출했습니다."
+  },
+  "perpsDepositSubmitted": {
+    "message": "입금을 전송했습니다. 네트워크 확인을 기다리는 중입니다."
+  },
+  "perpsDepositConfirmed": {
+    "message": "입금이 체인에서 확인되었습니다. Hyperliquid 반영을 기다리는 중입니다."
+  },
+  "perpsDepositStillPending": {
+    "message": "입금이 아직 확인되지 않았습니다. 반영될 때까지 여기에서 계속 추적합니다."
+  },
+  "perpsDepositReverted": {
+    "message": "입금 트랜잭션이 체인에서 실패했습니다. 자금은 이동하지 않았지만 네트워크 수수료는 소모되었습니다."
+  },
+  "perpsSigningUnavailable": {
+    "message": "이 지갑 유형은 Hyperliquid 작업에 서명할 수 없습니다."
   },
   "perpsOrderRejected": {
     "message": "주문이 거부되었습니다. 현재 시장 및 계정 상태를 확인하세요."
