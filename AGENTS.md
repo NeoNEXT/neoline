@@ -19,7 +19,6 @@ NeoLine is an Angular + browser-extension wallet for Neo2, Neo3, and NeoX (EVM).
 - `npm run lint`: Angular ESLint checks.
 - `npm test`: Karma/Jasmine in Chrome.
 - `npm run test:ci`: headless CI tests (`ChromeHeadless`).
-- `npm run scan:dev-audit`: heuristic audit for i18n keys, module-scope constants, and direct storage access.
 - `npm run build:chrome` / `npm run build:firefox`: production + extension package build.
 - `npm run preview:firefox`: preview built Firefox extension.
 
@@ -40,7 +39,6 @@ Environment baseline: Node `>=16.20.1`, npm `~8.19.4`.
 - `src/app/reduers/`: NgRx reducers/state slices.
 - `cross-runtime/`: shared Neo/EVM dAPI constants, models, and error normalization consumed by both `src/` and `extension/`.
 - `extension/`: background scripts, dAPI/injection scripts, manifests.
-- `scripts/`: repository maintenance scripts such as `dev-audit.js`.
 - `src/_locales/`: i18n JSON (`en`, `zh_CN`, `ja`, `ko`).
 - Tests: colocated `*.spec.ts` files.
 

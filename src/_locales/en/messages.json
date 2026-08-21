@@ -1898,6 +1898,12 @@
   "perpsFeeTip": {
     "message": "NeoLine fee　{{neoLineFeeRate}}<br />Hyperliquid fee　{{hyperliquidFeeRate}}"
   },
+  "perpsFeeEstimateUnavailable": {
+    "message": "Not available"
+  },
+  "perpsFeeEstimateUnavailableTip": {
+    "message": "This DEX charges its own fee on top of the Hyperliquid rate and does not publish it. The fee actually taken is shown on the fill."
+  },
   "perpsSlippage": {
     "message": "Slippage"
   },
@@ -2253,7 +2259,7 @@
     "message": "Reverse to Short"
   },
   "perpsNearMarginLimit": {
-    "message": "This amount uses the Max reserve and may be rejected if margin changes."
+    "message": "This amount sits at the top of your buying power and may be rejected if margin moves."
   },
   "confirm": {
     "message": "Confirm"

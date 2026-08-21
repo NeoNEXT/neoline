@@ -1898,6 +1898,12 @@
   "perpsFeeTip": {
     "message": "NeoLine手数料　{{neoLineFeeRate}}<br />Hyperliquid手数料　{{hyperliquidFeeRate}}"
   },
+  "perpsFeeEstimateUnavailable": {
+    "message": "料率不明"
+  },
+  "perpsFeeEstimateUnavailableTip": {
+    "message": "このDEXはHyperliquidの料率に加えて独自の手数料を課しますが、公開されていません。実際の手数料は約定履歴で確認できます。"
+  },
   "perpsSlippage": {
     "message": "スリッページ"
   },
@@ -2253,7 +2259,7 @@
     "message": "ショートへ反転"
   },
   "perpsNearMarginLimit": {
-    "message": "この金額は Max の確保分を使用するため、証拠金が変動すると拒否される場合があります。"
+    "message": "この金額は利用可能な購買力の上限にあり、証拠金が変動すると拒否される場合があります。"
   },
   "confirm": {
     "message": "確認"

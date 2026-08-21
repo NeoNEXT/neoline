@@ -302,10 +302,13 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     return new BigNumber(position.returnOnEquityExact).times(100).toFixed();
   }
 
+  /**
+   * Positions are reported for every account mode, including Portfolio Margin
+   * whose account-level figures are not. Hiding them there hid the close button
+   * with them, which is the one action that must never depend on our ability to
+   * price the account.
+   */
   get hasPositions(): boolean {
-    if (this.unsupportedAccountMode) {
-      return false;
-    }
     return (this.account?.positions?.length || 0) > 0;
   }
 

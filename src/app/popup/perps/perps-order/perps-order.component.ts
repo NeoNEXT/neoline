@@ -394,8 +394,17 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return this.market?.midPxExact || '0';
   }
 
+  /**
+   * Portfolio Margin's perps clearinghouse figures are meaningless, so an order
+   * that adds risk cannot be sized or previewed on such an account. Closing is a
+   * different question: a reduce-only close reads the position, not the account
+   * numbers, and refusing it would leave the user holding risk they can only
+   * exit somewhere else.
+   */
   get unsupportedAccountMode(): boolean {
-    return this.account?.abstractionMode === 'portfolioMargin';
+    return (
+      !this.closeMode && this.account?.abstractionMode === 'portfolioMargin'
+    );
   }
 
   /** NeoLine opens isolated orders and cannot change a live cross position. */
@@ -479,6 +488,19 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
 
   get marginText(): string {
     return this.preview ? formatUsd(this.preview.marginExact) : NOT_APPLICABLE;
+  }
+
+  /**
+   * Whether this market's fee can be quoted at all.
+   *
+   * A HIP-3 DEX takes the deployer's own share on top of the account rate, and
+   * nothing in `userFees` reports it. Showing the canonical rate here would put
+   * a number on screen that is knowably too low, so the row says so instead.
+   * It does not block the order: the fee changes nothing about what is
+   * submitted, and the fill reports what was actually taken.
+   */
+  get feeEstimateUnavailable(): boolean {
+    return !!this.market?.dex;
   }
 
   /** Rate always, plus what it costs this order once one is sized. */

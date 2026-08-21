@@ -1898,6 +1898,12 @@
   "perpsFeeTip": {
     "message": "NeoLine 费用　{{neoLineFeeRate}}<br />Hyperliquid 费用　{{hyperliquidFeeRate}}"
   },
+  "perpsFeeEstimateUnavailable": {
+    "message": "暂无费率"
+  },
+  "perpsFeeEstimateUnavailableTip": {
+    "message": "该 DEX 在 Hyperliquid 费率之外自行加收费用，且未公开；实际扣费以成交记录为准。"
+  },
   "perpsSlippage": {
     "message": "滑点"
   },
@@ -2253,7 +2259,7 @@
     "message": "反手做空"
   },
   "perpsNearMarginLimit": {
-    "message": "该金额会使用 Max 安全预留，保证金变化时可能被交易场所拒绝。"
+    "message": "该金额已到可用购买力的顶端，保证金变动时可能被交易场所拒绝。"
   },
   "confirm": {
     "message": "确认"

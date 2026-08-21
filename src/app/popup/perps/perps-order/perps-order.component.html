@@ -230,19 +230,24 @@
         <tooltip
           placement="topLeft"
           [tip]="
-            'perpsFeeTip'
-              | translate
-                : {
-                    neoLineFeeRate: formattedBuilderFeeRate,
-                    hyperliquidFeeRate: formattedTakerFeeRate
-                  }
-              | async
+            (feeEstimateUnavailable
+              ? ('perpsFeeEstimateUnavailableTip' | translate | async)
+              : ('perpsFeeTip'
+                | translate
+                  : {
+                      neoLineFeeRate: formattedBuilderFeeRate,
+                      hyperliquidFeeRate: formattedTakerFeeRate
+                    }
+                | async))
           "
         >
           <img src="assets/images/common/tooltip.svg" alt="" />
         </tooltip>
       </span>
-      <span class="value">{{ feeText }}</span>
+      <span class="value" *ngIf="!feeEstimateUnavailable">{{ feeText }}</span>
+      <span class="value" *ngIf="feeEstimateUnavailable">{{
+        "perpsFeeEstimateUnavailable" | translate | async
+      }}</span>
     </div>
     <div class="row" *ngIf="orderType === 'market'">
       <span class="label">

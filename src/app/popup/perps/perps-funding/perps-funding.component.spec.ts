@@ -543,6 +543,32 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
     expect(component.confirming).toBeTrue();
   });
 
+  it('signs a withdrawal the route turned out to price cheaper', async () => {
+    component.amount = '50';
+    hyperliquid.getAccount.and.returnValue(of(account('100')));
+    (component as any).feeQuote.withdrawQuote = () =>
+      Promise.resolve({ feeExact: '0.5', maxFeeExact: '0.5' });
+
+    await component.submit();
+
+    // The user is paid more than the confirmation promised. Sending them back
+    // to agree to a better number is friction with no question behind it.
+    expect(hyperliquid.withdraw).toHaveBeenCalled();
+    expect(component.confirming).toBeFalse();
+  });
+
+  it('asks again when the route got more expensive than the quote shown', async () => {
+    component.amount = '50';
+    hyperliquid.getAccount.and.returnValue(of(account('100')));
+    (component as any).feeQuote.withdrawQuote = () =>
+      Promise.resolve({ feeExact: '2', maxFeeExact: '2' });
+
+    await component.submit();
+
+    expect(hyperliquid.withdraw).not.toHaveBeenCalled();
+    expect(component.confirming).toBeTrue();
+  });
+
   it('drops the refresh warnings as soon as the amount is edited', async () => {
     component.amount = '100';
     hyperliquid.getAccount.and.returnValue(of(account('87')));

@@ -23,4 +23,17 @@ describe('PerpsTabComponent', () => {
       value.marketFor({ key: 'neol:IWM', symbol: 'IWM' } as any)
     ).toBe(hip3);
   });
+
+  // The account card cannot price a portfolio-margin account, but the positions
+  // are real and so is the close button on them.
+  it('lists positions on a portfolio-margin account it cannot value', () => {
+    const value = component();
+    value.account = {
+      abstractionMode: 'portfolioMargin',
+      positions: [{ key: 'hl:ETH', symbol: 'ETH' }],
+    } as any;
+
+    expect(value.unsupportedAccountMode).toBeTrue();
+    expect(value.hasPositions).toBeTrue();
+  });
 });

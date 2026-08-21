@@ -1027,11 +1027,17 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
       }
       // The confirmed quote decided the arrival estimate and the floor this
       // amount had to clear; read it again rather than sign against a number
-      // that may have moved since the user agreed to it.
+      // that may have moved since the user agreed to it. Only a higher fee
+      // sends the user back: a lower one pays out more than the estimate
+      // promised, and asking them to re-approve a better number is friction
+      // without a question behind it.
       const shown = this.withdrawConfirmedQuote;
       const fresh = await this.feeQuote.withdrawQuote();
       this.withdrawQuote = fresh;
-      if (!shown || fresh.feeExact !== shown.feeExact) {
+      if (
+        !shown ||
+        new BigNumber(fresh.feeExact).isGreaterThan(shown.feeExact)
+      ) {
         this.submitting = false;
         this.withdrawConfirmedQuote = fresh;
         this.confirming = true;
@@ -1095,8 +1101,11 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
       // Read again rather than sign against the number the user was shown: the
       // forwarding fee is a contract variable, and the quote on the screen may
       // already be describing a different deposit than the one about to go.
+      // Only a higher fee goes back for confirmation — a lower one credits more
+      // than the screen promised, which is not a change the user has to agree
+      // to.
       const fresh = await this.feeQuote.depositQuote(amount, address);
-      if (fresh.feeExact !== confirmed.feeExact) {
+      if (new BigNumber(fresh.feeExact).isGreaterThan(confirmed.feeExact)) {
         this.submitting = false;
         this.depositQuote = fresh;
         this.confirming = true;

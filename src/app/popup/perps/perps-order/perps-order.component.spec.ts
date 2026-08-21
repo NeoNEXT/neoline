@@ -251,3 +251,54 @@ describe('PerpsOrderComponent amount boundaries', () => {
     expect(value.ctaLabel).toBe('perpsReverseToLong');
   });
 });
+
+describe('PerpsOrderComponent account modes', () => {
+  const component = () =>
+    new PerpsOrderComponent(
+      null,
+      null,
+      null,
+      null,
+      { builderAddress: '' } as any,
+      null,
+      null,
+      null
+    );
+
+  /**
+   * Portfolio Margin's account figures are unusable, so an order that adds risk
+   * cannot be sized or previewed. Closing reads the position instead, and a
+   * position the user cannot exit from here is the one outcome worth avoiding.
+   */
+  /**
+   * The deployer's share on a HIP-3 market is not reported anywhere, so the fee
+   * row must say so rather than quote the canonical rate — but it must not stop
+   * the order, which the fee does not change.
+   */
+  it('declines to quote a fee on a HIP-3 market without blocking the order', () => {
+    const value = component();
+
+    value.market = ethMarket({ key: 'hl:ETH', coin: 'ETH', symbol: 'ETH' });
+    expect(value.feeEstimateUnavailable).toBeFalse();
+
+    value.market = ethMarket({
+      key: 'xyz:ETH',
+      dex: 'xyz',
+      coin: 'xyz:ETH',
+      symbol: 'ETH',
+    });
+    expect(value.feeEstimateUnavailable).toBeTrue();
+    expect(value.unsupportedAccountMode).toBeFalse();
+  });
+
+  it('bars a portfolio-margin account from opening but not from closing', () => {
+    const value = component();
+    value.account = { abstractionMode: 'portfolioMargin' } as any;
+
+    expect(value.unsupportedAccountMode).toBeTrue();
+
+    value.closeMode = true;
+
+    expect(value.unsupportedAccountMode).toBeFalse();
+  });
+});
