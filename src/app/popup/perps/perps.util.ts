@@ -1,5 +1,6 @@
 import {
   PerpsActiveAssetData,
+  PerpsCandle,
   PerpsMarket,
   PerpsOrderBook,
   PerpsOrderPreview,
@@ -17,6 +18,15 @@ export type PerpsExactValue = BigNumber.Value | null | undefined;
 
 /** Shown wherever a value is genuinely absent, so it never reads as zero. */
 export const MISSING_DISPLAY = '--';
+
+/**
+ * Sign test for a protocol decimal, which a template cannot do with `< 0`.
+ *
+ * A missing value has no sign: `--` is not painted red.
+ */
+export function isNegativeExact(value: PerpsExactValue): boolean {
+  return !isMissing(value) && new BigNumber(value).isLessThan(0);
+}
 
 function isMissing(value: PerpsExactValue): boolean {
   if (value === null || value === undefined || value === '') {
@@ -137,7 +147,13 @@ const COMPACT_BANDS = [
   { threshold: new BigNumber('1e3'), suffix: 'K' },
 ];
 
-function stripTrailingZeros(text: string): string {
+/**
+ * Trailing zeros a fixed-decimal rendering added but the number does not have.
+ *
+ * Reserved digits are a capability of the scale, not a claim about this value:
+ * a market that can quote four decimals still shows $4 as "4".
+ */
+export function stripTrailingZeros(text: string): string {
   return text.includes('.')
     ? text.replace(/\.?0+$/, '')
     : text;
@@ -176,6 +192,49 @@ export function priceDecimals(
 
 /** Hyperliquid quotes perp prices at up to six decimals, less `szDecimals`. */
 const PERPS_PRICE_MAX_DECIMALS = 6;
+
+/**
+ * Decimal places the chart's price axis quotes.
+ *
+ * The axis has to be able to render every price this market can print, so it
+ * follows the market's tick alone — never the decimals the current price
+ * happens to carry. A mid that lands exactly on `1.68` has two of them, and an
+ * axis that copied that would flatten every candle between 1.6800 and 1.6900
+ * onto a single label. Without a market to consult, four decimals reads most
+ * perps sensibly.
+ */
+export function chartPriceDecimals(szDecimals?: number): number {
+  return szDecimals === undefined
+    ? 4
+    : Math.max(0, PERPS_PRICE_MAX_DECIMALS - szDecimals);
+}
+
+/**
+ * Fold a fresh snapshot into the candles already on screen.
+ *
+ * A socket that comes back streams the bar that is open now and nothing else,
+ * so every bar that closed while the feed was down is a hole the stream will
+ * never fill on its own. Merging by open time rather than replacing keeps the
+ * history the user paged in, and lets the newer copy of a bar win: a bar's
+ * final OHLCV differs from the last value that streamed while it was still
+ * open.
+ */
+export function mergeCandles(
+  existing: PerpsCandle[],
+  incoming: PerpsCandle[]
+): PerpsCandle[] {
+  if (!existing?.length) {
+    return incoming ? [...incoming] : [];
+  }
+  if (!incoming?.length) {
+    return existing;
+  }
+  const byTime = new Map<number, PerpsCandle>();
+  existing.forEach((candle) => byTime.set(candle.t, candle));
+  // Second, so an overlapping bar is taken from the snapshot.
+  incoming.forEach((candle) => byTime.set(candle.t, candle));
+  return Array.from(byTime.values()).sort((a, b) => a.t - b.t);
+}
 
 /**
  * A price without its currency symbol — templates supply the `$`.
@@ -333,6 +392,50 @@ export function clampDecimals(value: string, decimals: number): string {
     new RegExp(`^\\D*(\\d*${fraction}).*`),
     '$1'
   );
+}
+
+/**
+ * An hourly funding rate as a percentage, e.g. 0.000013 -> "0.0013%".
+ *
+ * Four decimals is a floor rather than a choice: funding is quoted in
+ * millionths, and a market charging 0.00003% is not the same fact as one
+ * charging nothing. A rate too small to reach the fourth decimal reads as
+ * `<0.0001%`, keeping its sign, rather than being flattened to `0.0000%`.
+ */
+export function formatFundingPercent(value: PerpsExactValue): string {
+  if (isMissing(value)) {
+    return MISSING_DISPLAY;
+  }
+  const percent = new BigNumber(value).times(100);
+  const abs = percent.absoluteValue();
+  const floor = new BigNumber(1).shiftedBy(-FUNDING_PERCENT_DECIMALS);
+  if (abs.isGreaterThan(0) && abs.isLessThan(floor)) {
+    return `${percent.isNegative() ? '-' : ''}<${floor.toFixed(
+      FUNDING_PERCENT_DECIMALS
+    )}%`;
+  }
+  return `${percent.toFixed(FUNDING_PERCENT_DECIMALS)}%`;
+}
+
+/** Funding is quoted in millionths, so a percentage needs four decimals. */
+const FUNDING_PERCENT_DECIMALS = 4;
+
+/**
+ * A signed price move, e.g. "+12.35" or "-0.0042" — the amount half of a 24h
+ * change, formatted at the same precision as the price it was measured from so
+ * the two never disagree about how many digits this market has.
+ */
+export function formatSignedPrice(
+  value: PerpsExactValue,
+  szDecimals?: number,
+  isMid = false
+): string {
+  if (isMissing(value)) {
+    return MISSING_DISPLAY;
+  }
+  const amount = new BigNumber(value);
+  const formatted = formatPrice(amount.absoluteValue(), szDecimals, isMid);
+  return `${amount.isNegative() ? '-' : '+'}${formatted}`;
 }
 
 /** Format a fractional fee rate for display, e.g. 0.000405 -> "0.0405%". */

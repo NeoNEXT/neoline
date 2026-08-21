@@ -5,17 +5,34 @@ import { of, Subject, throwError } from 'rxjs';
 
 import {
   PerpsAccount,
+  PerpsCandle,
   PERPS_BUILDER_FEE_TENTHS_BPS,
+  PERPS_CANDLE_LIMIT,
   PERPS_MAX_SLIPPAGE_PERCENT,
 } from '@popup/_lib/perps';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   HyperliquidService,
   isExchangeAnswer,
+  isTransientFetchFailure,
   PerpsLeverageChangeRequiredError,
   PerpsMarketDataUnavailableError,
   resolvePerpsTestnet,
 } from './hyperliquid.service';
+
+/** One closed minute, at whatever time the test needs it to have closed. */
+const candleAt = (t: number): PerpsCandle => ({
+  t,
+  T: t + 59_999,
+  s: 'ETH',
+  i: '1m',
+  o: '90',
+  c: '100',
+  h: '105',
+  l: '85',
+  v: '2',
+  n: 10,
+});
 
 const MARKET_IDENTITY = {
   coin: 'ETH',
@@ -1983,7 +2000,7 @@ describe('HyperliquidService account balances', () => {
     });
   });
 
-  it('keeps a shared websocket channel until its last observer leaves', () => {
+  it('keeps a shared websocket channel until its last observer leaves', fakeAsync(() => {
     spyOn<any>(service, 'send');
     spyOn<any>(service, 'closeSocket');
 
@@ -1994,7 +2011,81 @@ describe('HyperliquidService account balances', () => {
     first.unsubscribe();
     expect((service as any).activeSubs.size).toBe(1);
     second.unsubscribe();
+    // An abandoned channel is held a moment longer, in case whoever left is
+    // on their way back.
+    expect((service as any).activeSubs.size).toBe(1);
+    tick(500);
     expect((service as any).activeSubs.size).toBe(0);
+  }));
+
+  it('picks an abandoned channel back up instead of redialing it', fakeAsync(() => {
+    const send = spyOn<any>(service, 'send');
+    spyOn<any>(service, 'closeSocket');
+    const candles = { type: 'candle', coin: 'ETH', interval: '15m' };
+
+    const first = service.subscribe(candles).subscribe();
+    first.unsubscribe();
+    tick(200);
+    const second = service.subscribe(candles).subscribe();
+    tick(1000);
+
+    // Stepping off an interval and back is one subscription to the exchange,
+    // never an unsubscribe and a re-subscribe for data that never stopped.
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenCalledWith({
+      method: 'subscribe',
+      subscription: candles,
+    });
+    expect((service as any).activeSubs.size).toBe(1);
+
+    second.unsubscribe();
+    tick(500);
+  }));
+
+  it('remembers candles for a market and interval while they are worth showing', () => {
+    const candles = [candleAt(Date.now() - 60_000)];
+    service.rememberCandles('ETH', '1m', candles);
+
+    // Handed back as they were stored: this is what lets the chart paint
+    // before the network has said anything.
+    expect(service.cachedCandles('ETH', '1m')).toBe(candles);
+  });
+
+  it('refuses remembered candles that have gone too far out of date', () => {
+    service.rememberCandles('ETH', '1m', [candleAt(Date.now() - 5 * 60_000)]);
+
+    // Five missed minutes on a 1m chart is a visible hole. A spinner is the
+    // more honest answer than bars that are quietly behind.
+    expect(service.cachedCandles('ETH', '1m')).toBeNull();
+  });
+
+  it('keeps intervals of the same market apart', () => {
+    service.rememberCandles('ETH', '1m', [candleAt(Date.now())]);
+
+    expect(service.cachedCandles('ETH', '5m')).toBeNull();
+  });
+
+  it('bounds what it remembers across a long session', () => {
+    const now = Date.now();
+    for (let i = 0; i < 9; i++) {
+      service.rememberCandles(`COIN${i}`, '1m', [candleAt(now)]);
+    }
+
+    expect((service as any).candleCache.size).toBe(8);
+    // The market visited longest ago is the one dropped.
+    expect(service.cachedCandles('COIN0', '1m')).toBeNull();
+    expect(service.cachedCandles('COIN8', '1m')).not.toBeNull();
+  });
+
+  it('does not trim history inside a remembered dataset', () => {
+    const now = Date.now();
+    const candles = Array.from({ length: 1001 }, (_, index) =>
+      candleAt(now - (1000 - index) * 60_000)
+    );
+
+    service.rememberCandles('ETH', '1m', candles);
+
+    expect(service.cachedCandles('ETH', '1m')).toBe(candles);
   });
 
 });
@@ -2082,5 +2173,311 @@ describe('isExchangeAnswer', () => {
     expect(isExchangeAnswer(new HttpErrorResponse({ status: 0 }))).toBeFalse();
     expect(isExchangeAnswer(new HttpErrorResponse({ status: 502 }))).toBeFalse();
     expect(isExchangeAnswer(new HttpErrorResponse({ status: 500 }))).toBeFalse();
+  });
+
+  it('reads the same classification as whether a read is worth repeating', () => {
+    // An answered refusal returns the same refusal a second later; rate
+    // limiting is the case that costs something to re-ask.
+    expect(
+      isTransientFetchFailure(new HttpErrorResponse({ status: 429 }))
+    ).toBeFalse();
+    expect(
+      isTransientFetchFailure(new HttpErrorResponse({ status: 422 }))
+    ).toBeFalse();
+    expect(isTransientFetchFailure(new Error('bad json'))).toBeFalse();
+    expect(
+      isTransientFetchFailure(new HttpErrorResponse({ status: 0 }))
+    ).toBeTrue();
+    expect(
+      isTransientFetchFailure(new HttpErrorResponse({ status: 503 }))
+    ).toBeTrue();
+  });
+});
+
+describe('HyperliquidService market detail feed', () => {
+  let http: jasmine.SpyObj<HttpClient>;
+  let service: HyperliquidService;
+
+  const universe = [
+    { name: 'BTC', szDecimals: 5, maxLeverage: 40 },
+    { name: 'ETH', szDecimals: 4, maxLeverage: 25 },
+    { name: 'OLD', szDecimals: 2, maxLeverage: 3, isDelisted: true },
+  ];
+
+  const ctx = (midPx: string | null, markPx = '1875.7') => ({
+    funding: '0.0000125',
+    openInterest: '10',
+    prevDayPx: '1900',
+    dayNtlVlm: '1000',
+    markPx,
+    midPx,
+    oraclePx: '1876',
+  });
+
+  const contexts = [ctx('63000', '63001'), ctx('1875.75'), ctx('1', '1')];
+
+  function answerWith(reply: (body: any) => any) {
+    http.post.and.callFake(
+      (_url: string, body: any) => of(reply(body)) as any
+    );
+  }
+
+  function bodies(): any[] {
+    return http.post.calls.allArgs().map(([, body]) => body);
+  }
+
+  beforeEach(() => {
+    http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
+    service = new HyperliquidService(http);
+    spyOn<any>(service, 'send');
+  });
+
+  it('seeds from one DEX and then follows that market\'s own frames', () => {
+    answerWith(() => [{ universe }, contexts]);
+    const seen: any[] = [];
+
+    service.watchMarketDetail('ETH').subscribe((market) => seen.push(market));
+
+    expect(seen.length).toBe(1);
+    expect(seen[0].coin).toBe('ETH');
+    expect(seen[0].assetId).toBe(1);
+    expect(seen[0].midPxExact).toBe('1875.75');
+    // A canonical market is index 0 by definition, so the DEX registry — and
+    // every other DEX's context array — is never requested.
+    expect(bodies().length).toBe(1);
+    expect(bodies()[0]).toEqual({ type: 'metaAndAssetCtxs' });
+
+    (service as any).handleMessage({
+      data: JSON.stringify({
+        channel: 'activeAssetCtx',
+        data: { coin: 'ETH', ctx: ctx('1880.5', '1880') },
+      }),
+    });
+
+    expect(seen.length).toBe(2);
+    expect(seen[1].midPxExact).toBe('1880.5');
+    expect(seen[1].markPxExact).toBe('1880');
+    // Static metadata is not re-derived from a context frame.
+    expect(seen[1].szDecimals).toBe(4);
+    expect(seen[1].maxLeverage).toBe(25);
+    expect(seen[1].assetId).toBe(1);
+  });
+
+  it('routes a HIP-3 coin to its own DEX and asset-id space', () => {
+    answerWith((body) =>
+      body.type === 'perpDexs'
+        ? [null, { name: 'xyz' }]
+        : [{ universe: [{ name: 'SNDK', szDecimals: 2, maxLeverage: 5 }] }, [ctx('12.5')]]
+    );
+    const seen: any[] = [];
+
+    service.watchMarketDetail('xyz:SNDK').subscribe((m) => seen.push(m));
+
+    expect(seen[0].coin).toBe('xyz:SNDK');
+    expect(seen[0].symbol).toBe('SNDK');
+    expect(seen[0].dex).toBe('xyz');
+    expect(seen[0].assetId).toBe(110000);
+    expect(bodies()).toContain({ type: 'metaAndAssetCtxs', dex: 'xyz' });
+  });
+
+  it('answers null — not an error — for a coin this build does not carry', () => {
+    answerWith(() => [{ universe }, contexts]);
+    const seen: any[] = [];
+    const failed = jasmine.createSpy('failed');
+
+    service.watchMarketDetail('NOPE').subscribe((m) => seen.push(m), failed);
+    service.watchMarketDetail('OLD').subscribe((m) => seen.push(m), failed);
+    // An unenabled HIP-3 DEX never reaches the network at all.
+    service.watchMarketDetail('other:THING').subscribe((m) => seen.push(m), failed);
+
+    expect(seen).toEqual([null, null, null]);
+    expect(failed).not.toHaveBeenCalled();
+  });
+
+  it('does not repeat a refusal the exchange did answer', fakeAsync(() => {
+    http.post.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 429 })) as any
+    );
+    const failed = jasmine.createSpy('failed');
+
+    service.watchMarketDetail('ETH').subscribe({ error: failed });
+    tick(5000);
+
+    // Rate limiting is a reply. Asking the identical question a second later
+    // returns the identical answer and spends another slot out of a budget
+    // that refills over the following minute.
+    expect(http.post).toHaveBeenCalledTimes(1);
+    expect(failed).toHaveBeenCalled();
+  }));
+
+  it('repeats a snapshot the exchange never answered', fakeAsync(() => {
+    let attempts = 0;
+    http.post.and.callFake(
+      () =>
+        (attempts++ === 0
+          ? throwError(() => new HttpErrorResponse({ status: 503 }))
+          : of([{ universe }, contexts])) as any
+    );
+    const seen: any[] = [];
+
+    service.watchMarketDetail('ETH').subscribe((market) => seen.push(market));
+    tick(1000);
+
+    // The page has nothing at all without this snapshot, and a connection that
+    // dropped on the way in decided nothing about whether the market exists.
+    expect(attempts).toBe(2);
+    expect(seen[0].coin).toBe('ETH');
+  }));
+
+  it('spends a bounded budget and then lets the failure stand', fakeAsync(() => {
+    http.post.and.returnValue(
+      throwError(() => new HttpErrorResponse({ status: 500 })) as any
+    );
+    const failed = jasmine.createSpy('failed');
+
+    service.watchMarketDetail('ETH').subscribe({ error: failed });
+    tick(30_000);
+
+    // One attempt plus three evenly spaced retries, and nothing left running
+    // afterwards — `fakeAsync` fails on a timer that outlives the test, so a
+    // standing backoff cannot creep back in unnoticed.
+    expect(http.post).toHaveBeenCalledTimes(4);
+    expect(failed).toHaveBeenCalled();
+  }));
+
+  it('quotes the 24h amount and percent from the same two prices', () => {
+    answerWith(() => [{ universe }, contexts]);
+    const seen: any[] = [];
+    service.watchMarketDetail('ETH').subscribe((m) => seen.push(m));
+
+    // mid 1875.75 against prevDayPx 1900.
+    expect(seen[0].changeAmountExact).toBe('-24.25');
+    expect(seen[0].changePercentExact).toBe('-1.276315789473684211');
+  });
+
+  it('has no 24h change to quote when the book reports no mid', () => {
+    answerWith(() => [
+      { universe },
+      [contexts[0], ctx(null), contexts[2]],
+    ]);
+    const seen: any[] = [];
+    service.watchMarketDetail('ETH').subscribe((m) => seen.push(m));
+
+    // Market statistics unavailable: the mark is a different price kind from
+    // prevDayPx, so there is no honest comparison to make — and `null` is not
+    // the same claim as `0`.
+    expect(seen[0].midPxExact).toBeNull();
+    expect(seen[0].changeAmountExact).toBeNull();
+    expect(seen[0].changePercentExact).toBeNull();
+  });
+
+  it('ignores a frame that carries no context', () => {
+    answerWith(() => [{ universe }, contexts]);
+    const seen: any[] = [];
+    service.watchMarketDetail('ETH').subscribe((m) => seen.push(m));
+
+    (service as any).handleMessage({
+      data: JSON.stringify({
+        channel: 'activeAssetCtx',
+        data: { coin: 'ETH' },
+      }),
+    });
+
+    expect(seen.length).toBe(1);
+  });
+});
+
+describe('HyperliquidService candle intervals', () => {
+  const service = new HyperliquidService(null);
+
+  it('sizes every interval the product offers', () => {
+    expect(service.intervalMs('1m')).toBe(60e3);
+    expect(service.intervalMs('5m')).toBe(5 * 60e3);
+    expect(service.intervalMs('15m')).toBe(15 * 60e3);
+    expect(service.intervalMs('1h')).toBe(3600e3);
+    expect(service.intervalMs('12h')).toBe(12 * 3600e3);
+    expect(service.intervalMs('1d')).toBe(86400e3);
+    // Weekly and monthly used to fall through to a one-minute window, which
+    // asked for two hours of history and drew an empty chart.
+    expect(service.intervalMs('1w')).toBe(7 * 86400e3);
+    expect(service.intervalMs('1M')).toBe(30 * 86400e3);
+  });
+
+  it('keeps the month and the minute apart', () => {
+    expect(service.intervalMs('1M')).not.toBe(service.intervalMs('1m'));
+  });
+
+  it('refuses an interval it cannot size rather than guessing minutes', () => {
+    expect(() => service.intervalMs('1y' as any)).toThrowError(
+      /Unsupported Hyperliquid candle interval/
+    );
+  });
+});
+
+describe('HyperliquidService candle snapshots', () => {
+  it('requests an explicit candle range without deriving it from a limit', () => {
+    const http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
+    http.post.and.returnValue(of([]) as any);
+    const service = new HyperliquidService(http);
+
+    (service as any)
+      .getCandleRange('NEO', '15m', 1_000, 9_000)
+      .subscribe();
+
+    expect(http.post).toHaveBeenCalledWith(
+      jasmine.any(String),
+      {
+        type: 'candleSnapshot',
+        req: {
+          coin: 'NEO',
+          interval: '15m',
+          startTime: 1_000,
+          endTime: 9_000,
+        },
+      },
+      jasmine.any(Object)
+    );
+  });
+
+  it('pages a window that ends at the oldest bar already on screen', () => {
+    const http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
+    http.post.and.returnValue(of([]) as any);
+    const service = new HyperliquidService(http);
+    const endTime = 1_700_000_000_000;
+
+    service.getCandles('NEO', '15m', PERPS_CANDLE_LIMIT, endTime).subscribe();
+
+    expect(http.post).toHaveBeenCalledWith(
+      jasmine.any(String),
+      {
+        type: 'candleSnapshot',
+        req: {
+          coin: 'NEO',
+          interval: '15m',
+          startTime: endTime - 15 * 60e3 * PERPS_CANDLE_LIMIT,
+          endTime,
+        },
+      },
+      jasmine.any(Object)
+    );
+  });
+});
+
+describe('HyperliquidService candle websocket routing', () => {
+  it('routes every candle when the protocol sends an array', () => {
+    const service = new HyperliquidService(null);
+    spyOn<any>(service, 'send');
+    const seen: PerpsCandle[] = [];
+    service
+      .subscribe({ type: 'candle', coin: 'ETH', interval: '1m' })
+      .subscribe((candle) => seen.push(candle));
+    const first = candleAt(1_000);
+    const second = candleAt(61_000);
+
+    (service as any).handleMessage({
+      data: JSON.stringify({ channel: 'candle', data: [first, second] }),
+    });
+
+    expect(seen).toEqual([first, second]);
   });
 });

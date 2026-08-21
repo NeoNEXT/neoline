@@ -1,5 +1,6 @@
 import {
   availableToTradeForSide,
+  chartPriceDecimals,
   clampDecimals,
   coinLogo,
   collateralToNotional,
@@ -7,20 +8,46 @@ import {
   formatCompactUsd,
   formatFeeRatePercent,
   formatFillTime,
+  formatFundingPercent,
   formatPrice,
   formatSignedPercent,
+  formatSignedPrice,
   formatSize,
   formatUsd,
   formatBalance,
+  isNegativeExact,
   MISSING_DISPLAY,
   maxOrderNotionalForSide,
+  mergeCandles,
   notionalAtLotSize,
   previewClosePosition,
   previewOrder,
   priceDecimals,
   sizeAtLot,
 } from './perps.util';
-import { PerpsMarket, PerpsPosition } from '@popup/_lib/perps';
+import { PerpsPosition } from '@popup/_lib/perps';
+import { ethCandle, ethMarket } from './perps.test-fixture';
+
+describe('perps sign test', () => {
+  it('answers on the decimal itself rather than on a float of it', () => {
+    expect(isNegativeExact('-0.00000000000000000001')).toBeTrue();
+    expect(isNegativeExact('-1.2789473684')).toBeTrue();
+    expect(isNegativeExact('1.2789473684')).toBeFalse();
+  });
+
+  it('does not paint zero red', () => {
+    expect(isNegativeExact('0')).toBeFalse();
+    expect(isNegativeExact('-0')).toBeFalse();
+  });
+
+  it('gives a missing value no sign at all', () => {
+    // `--` is the absence of a number, not a number that happens to be down.
+    expect(isNegativeExact(null)).toBeFalse();
+    expect(isNegativeExact(undefined)).toBeFalse();
+    expect(isNegativeExact('')).toBeFalse();
+    expect(isNegativeExact('not a number')).toBeFalse();
+  });
+});
 
 describe('perps utilities', () => {
   // The amount field runs this on every keystroke, so a digit the transfer
@@ -495,6 +522,97 @@ describe('perps utilities', () => {
     expect(preview.builderFeeExact).toBe('0.00850275');
     expect(preview.feeExact).toBe('0.0170055');
   });
+  describe('formatFundingPercent', () => {
+    it('quotes four decimals, which is the floor for a millionths rate', () => {
+      expect(formatFundingPercent('0.000013')).toBe('0.0013%');
+      expect(formatFundingPercent('-0.000013')).toBe('-0.0013%');
+      expect(formatFundingPercent('0')).toBe('0.0000%');
+    });
+
+    it('never flattens a rate that exists into a rate that does not', () => {
+      // A market charging 0.00003% is a different fact from one charging
+      // nothing, and "0.0000%" tells the user the second.
+      expect(formatFundingPercent('0.0000003')).toBe('<0.0001%');
+      expect(formatFundingPercent('-0.0000003')).toBe('-<0.0001%');
+    });
+
+    it('reads an absent rate as absent', () => {
+      expect(formatFundingPercent(null)).toBe(MISSING_DISPLAY);
+      expect(formatFundingPercent('')).toBe(MISSING_DISPLAY);
+    });
+  });
+
+  describe('formatSignedPrice', () => {
+    it('carries the sign and the market\'s own precision', () => {
+      expect(formatSignedPrice('24.25', 4)).toBe('+24.25');
+      expect(formatSignedPrice('-24.25', 4)).toBe('-24.25');
+      // szDecimals 2 ticks at four decimals, and trailing zeros still go.
+      expect(formatSignedPrice('-0.0042', 2)).toBe('-0.0042');
+    });
+
+    it('reads an absent change as absent, not as no change', () => {
+      expect(formatSignedPrice(null, 4)).toBe(MISSING_DISPLAY);
+    });
+  });
+
+  describe('chartPriceDecimals', () => {
+    it('follows the market tick, not the current price', () => {
+      // BTC (szDecimals 5) ticks at one decimal, PUMP (0) at six.
+      expect(chartPriceDecimals(5)).toBe(1);
+      expect(chartPriceDecimals(2)).toBe(4);
+      expect(chartPriceDecimals(0)).toBe(6);
+    });
+
+    it('never returns a negative precision', () => {
+      expect(chartPriceDecimals(8)).toBe(0);
+    });
+
+    it('reads most perps sensibly without a market to consult', () => {
+      expect(chartPriceDecimals(undefined)).toBe(4);
+    });
+  });
+
+  describe('mergeCandles', () => {
+    const at = (t: number, close = '100') =>
+      ethCandle({ t, T: t + 59_999, c: close });
+
+    it('fills the bars a dropped feed missed', () => {
+      const onScreen = [at(1000), at(61_000)];
+      const snapshot = [at(61_000, '111'), at(121_000), at(181_000)];
+
+      expect(mergeCandles(onScreen, snapshot).map((item) => item.t)).toEqual([
+        1000, 61_000, 121_000, 181_000,
+      ]);
+    });
+
+    it('believes the snapshot where both carry the same bar', () => {
+      // A bar's closing print is not the last value that streamed while it was
+      // still open, so the later reading of it wins.
+      const merged = mergeCandles([at(61_000, '100')], [at(61_000, '111')]);
+
+      expect(merged.length).toBe(1);
+      expect(merged[0].c).toBe('111');
+    });
+
+    it('keeps history the snapshot no longer reaches back to', () => {
+      const paged = [at(1000), at(61_000)];
+
+      // The first bar is the dataset's identity to the chart: losing it
+      // redraws the series and throws away the zoom the user chose.
+      expect(mergeCandles(paged, [at(121_000)])[0].t).toBe(1000);
+    });
+
+    it('answers with the snapshot when there is nothing on screen', () => {
+      expect(mergeCandles([], [at(1000)]).map((item) => item.t)).toEqual([1000]);
+    });
+
+    it('leaves the dataset untouched when the snapshot is empty', () => {
+      const onScreen = [at(1000)];
+
+      expect(mergeCandles(onScreen, [])).toBe(onScreen);
+    });
+  });
+
 });
 
 function ethPosition(
@@ -515,30 +633,6 @@ function ethPosition(
     leverageType: 'cross',
     marginUsedExact: '9.44',
     isLong: false,
-    ...overrides,
-  };
-}
-
-function ethMarket(overrides: Partial<PerpsMarket> = {}): PerpsMarket {
-  return {
-    key: 'hl:ETH',
-    assetId: 0,
-    dex: '',
-    dexAssetIndex: 0,
-    coin: 'ETH',
-    symbol: 'ETH',
-    szDecimals: 4,
-    maxLeverage: 25,
-    onlyIsolated: false,
-    markPxExact: '100',
-    midPxExact: '100',
-    oraclePxExact: '100',
-    prevDayPxExact: '95',
-    changePercentExact: '0',
-    dayVolumeExact: '0',
-    openInterestSizeExact: '0',
-    openInterestExact: '0',
-    fundingExact: '0',
     ...overrides,
   };
 }

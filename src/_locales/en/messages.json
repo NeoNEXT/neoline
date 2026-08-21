@@ -1838,9 +1838,6 @@
   "perpsMyPosition": {
     "message": "My position"
   },
-  "perpsRecentActivity": {
-    "message": "Recent activity"
-  },
   "perpsNoTransactions": {
     "message": "No transactions"
   },
@@ -1851,7 +1848,7 @@
     "message": "Vol (USD)"
   },
   "perpsRiskTip": {
-    "message": "Perpetual futures trading carries substantial risk. You could lose your entire investment in an instant without warning. You are solely responsible for your trades."
+    "message": "Perpetual futures trading carries substantial risk. You could lose your entire investment in an instant without warning. You are solely responsible for your trades. Powered by Hyperliquid. Price charts by TradingView."
   },
   "perpsMarketOrder": {
     "message": "Market"
@@ -2051,17 +2048,23 @@
   "perpsOraclePrice": {
     "message": "Oracle price"
   },
+  "perpsStatsUnavailable": {
+    "message": "No data"
+  },
+  "perpsMoreIntervals": {
+    "message": "More"
+  },
   "perpsLearnBasics": {
     "message": "Learn the basics of perpetual futures"
   },
   "perpsOpenInterestTip": {
-    "message": "Total notional value of all open positions in this market."
+    "message": "The total value of all open positions in this perpetual contract."
   },
   "perpsFundingRateTip": {
-    "message": "Hourly rate exchanged between longs and shorts; positive means longs pay shorts. The countdown shows the next settlement."
+    "message": "The hourly fee paid between traders to keep the contract price in line with the market. When the rate is positive, longs pay shorts; when it is negative, shorts pay longs."
   },
   "perpsOracleTip": {
-    "message": "External spot price used for funding and margin calculations."
+    "message": "The median of the external prices reported by validators, used to calculate the funding rate."
   },
   "perpsReviewOrder": {
     "message": "Review order"
@@ -2128,6 +2131,21 @@
   },
   "perpsLoadFailed": {
     "message": "Unable to load Hyperliquid data. Check your connection and try again."
+  },
+  "perpsMarketNotFound": {
+    "message": "This market is not available on Hyperliquid right now."
+  },
+  "perpsNoTwoSidedBook": {
+    "message": "Incomplete order book — no tradable mid price, so orders are unavailable."
+  },
+  "perpsEntryStale": {
+    "message": "Trading is unavailable while the price feed is disconnected."
+  },
+  "perpsEntryConnecting": {
+    "message": "Trading is unavailable while the price feed is connecting."
+  },
+  "perpsChartInterrupted": {
+    "message": "The candle gap could not be filled. Chart data may be discontinuous."
   },
   "perpsFeedStale": {
     "message": "Data disconnected · showing last known prices"
@@ -2233,12 +2251,6 @@
   },
   "perpsReverseToShort": {
     "message": "Reverse to Short"
-  },
-  "perpsTheoreticalBuyingPower": {
-    "message": "Theoretical buying power"
-  },
-  "perpsBufferedMax": {
-    "message": "Max order (0.5% reserve)"
   },
   "perpsNearMarginLimit": {
     "message": "This amount uses the Max reserve and may be rejected if margin changes."

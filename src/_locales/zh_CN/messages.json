@@ -1838,9 +1838,6 @@
   "perpsMyPosition": {
     "message": "我的持仓"
   },
-  "perpsRecentActivity": {
-    "message": "最近活动"
-  },
   "perpsNoTransactions": {
     "message": "暂无交易"
   },
@@ -1851,7 +1848,7 @@
     "message": "成交额 (USD)"
   },
   "perpsRiskTip": {
-    "message": "永续合约交易存在很大风险，您可能会在毫无预警的情况下瞬间损失全部投资。交易风险完全由您自行承担。"
+    "message": "永续合约交易存在很大风险，您可能会在毫无预警的情况下瞬间损失全部投资。交易风险完全由您自行承担。技术支持由 Hyperliquid 提供。价格图表由 TradingView 提供。"
   },
   "perpsMarketOrder": {
     "message": "市场型"
@@ -2051,17 +2048,23 @@
   "perpsOraclePrice": {
     "message": "预言机价格"
   },
+  "perpsStatsUnavailable": {
+    "message": "暂无数据"
+  },
+  "perpsMoreIntervals": {
+    "message": "更多"
+  },
   "perpsLearnBasics": {
     "message": "了解永续合约的基础知识"
   },
   "perpsOpenInterestTip": {
-    "message": "该市场所有未平仓头寸的名义价值总和。"
+    "message": "该永续合约所有未平仓头寸的总价值。"
   },
   "perpsFundingRateTip": {
-    "message": "多空双方每小时互付的费率，为正时多头支付空头。倒计时为距下次结算的时间。"
+    "message": "交易者之间为使价格与市场保持一致而支付的每小时费用。当费率为正时，多头向空头支付费用；为负时，空头向多头支付费用。"
   },
   "perpsOracleTip": {
-    "message": "用于资金费与保证金计算的外部现货价格。"
+    "message": "由验证器报告的外部价格中位数，用于计算资金费率。"
   },
   "perpsReviewOrder": {
     "message": "检查订单"
@@ -2128,6 +2131,21 @@
   },
   "perpsLoadFailed": {
     "message": "无法加载 Hyperliquid 数据，请检查网络后重试。"
+  },
+  "perpsMarketNotFound": {
+    "message": "该市场当前在 Hyperliquid 上不可用。"
+  },
+  "perpsNoTwoSidedBook": {
+    "message": "盘口不完整，暂无可成交中间价，无法下单。"
+  },
+  "perpsEntryStale": {
+    "message": "行情已断开，暂时无法下单。"
+  },
+  "perpsEntryConnecting": {
+    "message": "正在连接行情，暂时无法下单。"
+  },
+  "perpsChartInterrupted": {
+    "message": "K 线断线缺口未能补齐，图表数据可能不连续。"
   },
   "perpsFeedStale": {
     "message": "数据已断开 · 显示最后一次价格"
@@ -2233,12 +2251,6 @@
   },
   "perpsReverseToShort": {
     "message": "反手做空"
-  },
-  "perpsTheoreticalBuyingPower": {
-    "message": "理论购买力"
-  },
-  "perpsBufferedMax": {
-    "message": "Max 下单金额（保留 0.5%）"
   },
   "perpsNearMarginLimit": {
     "message": "该金额会使用 Max 安全预留，保证金变化时可能被交易场所拒绝。"

@@ -56,6 +56,13 @@ import {
 /** Hyperliquid's base taker fee, used until `userFees` reports the real one. */
 const TAKER_FEE_RATE = 0.00045;
 
+/**
+ * Reading for a summary row before an amount is typed, matching Hyperliquid's
+ * own order form. Distinct from `--`, which this UI uses where the feed owes a
+ * value and has not delivered one: here nothing is owed yet.
+ */
+const NOT_APPLICABLE = 'N/A';
+
 @Component({
   templateUrl: 'perps-order.component.html',
   styleUrls: ['perps-order.component.scss'],
@@ -86,7 +93,6 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
 
   //#region template helpers
   formatPrice = formatPrice;
-  formatUsd = formatUsd;
   formatSignedPercent = formatSignedPercent;
   //#endregion
 
@@ -292,11 +298,6 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return this.market?.symbol ?? this.coin;
   }
 
-  /** Sign test for a decimal string, which a template cannot do with `< 0`. */
-  isNegative(value: string | null): boolean {
-    return value !== null && new BigNumber(value).isLessThan(0);
-  }
-
   get positionSizeExact(): string {
     return new BigNumber(this.position?.sziExact ?? 0)
       .absoluteValue()
@@ -365,7 +366,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    */
   get formattedEstimatedSlippage(): string {
     return this.estimatedSlippagePercent === null
-      ? '--'
+      ? NOT_APPLICABLE
       : `${this.estimatedSlippagePercent.toFixed(4)}%`;
   }
 
@@ -462,6 +463,29 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       ...preview,
       sizeExact: this.orderSizeExact,
     };
+  }
+
+  /**
+   * The summary rows below stay on screen with an empty amount box, so the user
+   * can see what an order will be judged on before typing one. Each row reads
+   * `N/A` until there is a preview to quote.
+   */
+  get liquidationPriceText(): string {
+    const price = this.preview?.liquidationPxExact;
+    return price
+      ? `$${formatPrice(price, this.market?.szDecimals)}`
+      : NOT_APPLICABLE;
+  }
+
+  get marginText(): string {
+    return this.preview ? formatUsd(this.preview.marginExact) : NOT_APPLICABLE;
+  }
+
+  /** Rate always, plus what it costs this order once one is sized. */
+  get feeText(): string {
+    return this.preview
+      ? `${this.formattedTotalFeeRate} (${formatUsd(this.preview.feeExact)})`
+      : this.formattedTotalFeeRate;
   }
 
   /** Exact position fraction in close mode; mark-price conversion can drift. */

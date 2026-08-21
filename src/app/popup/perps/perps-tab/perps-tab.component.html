@@ -84,7 +84,7 @@
             {{ position.leverage }}x
           </span>
         </div>
-        <div class="position-pnl" [class.negative]="isNegative(position.unrealizedPnlExact)">
+        <div class="position-pnl" [class.negative]="position.unrealizedPnlExact | perpsNegative">
           {{ formatSignedUsd(position.unrealizedPnlExact) }}
           <span class="percent">{{
             formatSignedPercent(returnOnEquityPercent(position), 1)

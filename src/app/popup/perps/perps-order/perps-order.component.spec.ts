@@ -1,5 +1,7 @@
 import { PerpsMarket } from '@popup/_lib/perps';
 import { PerpsOrderComponent } from './perps-order.component';
+import { formatPrice } from '../perps.util';
+import { ethMarket } from '../perps.test-fixture';
 
 describe('PerpsOrderComponent amount boundaries', () => {
   /** No builder address, so previews quote Hyperliquid's own fee alone. */
@@ -16,32 +18,24 @@ describe('PerpsOrderComponent amount boundaries', () => {
     );
   }
 
+  /** One market quoted flat at `price`, so a preview's arithmetic is visible. */
   function market(
     coin: string,
     price: number,
     szDecimals: number,
     maxLeverage = 25
   ): PerpsMarket {
-    return {
+    return ethMarket({
       key: `hl:${coin}`,
-      assetId: 0,
-      dex: '',
-      dexAssetIndex: 0,
       coin,
       symbol: coin,
       szDecimals,
       maxLeverage,
-      onlyIsolated: false,
       markPxExact: String(price),
       midPxExact: String(price),
       oraclePxExact: String(price),
       prevDayPxExact: String(price),
-      changePercentExact: '0',
-      dayVolumeExact: '0',
-      openInterestSizeExact: '0',
-      openInterestExact: '0',
-      fundingExact: '0',
-    };
+    });
   }
 
   it('allows a rounded 100% notional when its submitted size stays within the cap', () => {
@@ -173,6 +167,37 @@ describe('PerpsOrderComponent amount boundaries', () => {
     expect(value.preview.sizeExact).toBe('11');
     expect(value.preview.marginExact).toBe('18.315');
     expect(value.preview.feeExact).toBe('0.0164835');
+  });
+
+  /**
+   * The summary is on screen from the moment the form is, so an empty amount
+   * box has to read as "no order yet" rather than as a zero-value order.
+   */
+  it('reads N/A on every summary row before an amount is typed', () => {
+    const value = component();
+    value.market = market('ETH', 2000, 4);
+    value.leverage = 10;
+
+    expect(value.preview).toBeNull();
+    expect(value.liquidationPriceText).toBe('N/A');
+    expect(value.marginText).toBe('N/A');
+    expect(value.formattedEstimatedSlippage).toBe('N/A');
+    // The rate is known without an order; only its cost is not.
+    expect(value.feeText).toBe('0.045%');
+  });
+
+  it('quotes the order once an amount is typed', () => {
+    const value = component();
+    value.market = market('ETH', 2000, 4);
+    value.leverage = 10;
+    value.amount = 200;
+
+    expect(value.liquidationPriceText).toBe(
+      `$${formatPrice(value.preview.liquidationPxExact, 4)}`
+    );
+    expect(value.marginText).toBe('$20');
+    // The fee's cash amount, not the `--` an absent field used to render.
+    expect(value.feeText).toBe('0.045% ($0.09)');
   });
 
   it('blocks increasing a cross-margin position', () => {

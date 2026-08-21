@@ -297,11 +297,6 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     return this.markets.find((item) => item.key === position.key);
   }
 
-  /** Sign test for a decimal string, which a template cannot do with `< 0`. */
-  isNegative(value: string | null): boolean {
-    return value !== null && new BigNumber(value).isLessThan(0);
-  }
-
   /** Return on equity arrives as a fraction; the label shows a percentage. */
   returnOnEquityPercent(position: PerpsPosition): string {
     return new BigNumber(position.returnOnEquityExact).times(100).toFixed();

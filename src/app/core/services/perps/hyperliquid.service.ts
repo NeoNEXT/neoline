@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import {
   Observable,
+  MonoTypeOperatorFunction,
   Subject,
   BehaviorSubject,
   Subscription,
@@ -10,12 +11,14 @@ import {
   forkJoin,
   from,
   throwError,
+  timer,
 } from 'rxjs';
 import {
   map,
   catchError,
   shareReplay,
   filter,
+  retry,
   tap,
   switchMap,
 } from 'rxjs/operators';
@@ -53,6 +56,7 @@ import {
   PERPS_BUILDER_ADDRESS,
   PERPS_BUILDER_FEE_TENTHS_BPS,
   PERPS_BUILDER_MAX_FEE_RATE,
+  PERPS_CANDLE_LIMIT,
   PERPS_DEPOSIT_CONFIG,
   PERPS_HIP3_DEXES,
   PERPS_MAX_SLIPPAGE_PERCENT,
@@ -131,6 +135,21 @@ export function isExchangeAnswer(error: any): boolean {
   return Number.isFinite(status) && status >= 400 && status < 500;
 }
 
+/**
+ * Whether a failed read is worth repeating.
+ *
+ * The same classification `isExchangeAnswer` makes for writes, read from the
+ * other side. If the exchange answered, the read has its result and asking
+ * again returns the identical one: a 4xx is a refusal — rate limiting included,
+ * where a second-scale retry only spends another slot out of a budget that
+ * refills over the following minute — and a body that arrived and failed to
+ * parse will fail to parse again. If it did not answer, nothing in the domain
+ * was decided and the request is worth resending unchanged.
+ */
+export function isTransientFetchFailure(error: any): boolean {
+  return !isExchangeAnswer(error);
+}
+
 export function resolvePerpsTestnet(
   configuredNetwork: PerpsNetwork,
   production = environment.production
@@ -151,6 +170,18 @@ export function resolvePerpsTestnet(
  * last frame overwrite every other pool.
  */
 const DEX_SCOPED_CHANNELS = new Set(['assetCtxs', 'clearinghouseState']);
+
+/**
+ * How many times a read-only fetch is repeated before its failure is the answer.
+ *
+ * Bounded and evenly spaced on purpose. Exponential backoff belongs to a
+ * process that will still be running in a minute; this one belongs to a popup
+ * the user is watching, so the budget is spent inside the time they are
+ * already willing to wait for a page, and then it stops. Nothing here reschedules
+ * itself afterwards — the next attempt is the user's next action.
+ */
+const FETCH_RETRY_ATTEMPTS = 3;
+const FETCH_RETRY_DELAY_MS = 1000;
 
 @Injectable({ providedIn: 'root' })
 export class HyperliquidService {
@@ -229,6 +260,27 @@ export class HyperliquidService {
     string,
     { expiresAt: number; request: Observable<number> }
   >();
+  /**
+   * How long a channel outlives its last observer.
+   *
+   * Stepping through chart intervals, or leaving a market and coming back,
+   * passes through zero observers for a few hundred milliseconds at a time.
+   * Telling the exchange to stop and asking again immediately spends two
+   * frames and a re-snapshot on data that never actually stopped arriving, so
+   * a channel is held briefly and picked back up if someone returns.
+   */
+  private readonly channelTeardownMs = 500;
+  private channelTeardowns = new Map<string, any>();
+  /**
+   * The candles last shown for a market and interval.
+   *
+   * Keyed by both because they name different datasets, and kept only for the
+   * session: this is what lets a market the user already opened paint before
+   * the network answers, not a store of history.
+   */
+  private candleCache = new Map<string, PerpsCandle[]>();
+  /** Entries are bounded; each dataset itself remains append-only while cached. */
+  private readonly candleCacheEntries = 8;
   /** Accounts whose builder-fee approval this session has already confirmed. */
   private builderFeeApproved = new Set<string>();
   /**
@@ -359,6 +411,31 @@ export class HyperliquidService {
   }
 
   //#region info requests
+
+  /**
+   * Repeat a read-only fetch while its failure has not answered anything.
+   *
+   * Only a transient fetch failure is repeated: the request never reached the
+   * exchange, or the exchange itself faulted. An answered refusal — any 4xx,
+   * rate limiting included — is a reply, and asking the identical question a
+   * second later gets the identical reply; with a 429 it also spends another
+   * slot out of a budget that refills over the following minute.
+   *
+   * Applied per call site rather than inside `post`, because whether a late
+   * answer is worth having is a property of the caller. A page loading its
+   * market wants one. The order book behind a submission price does not: the
+   * value that arrives three seconds later is not fresher for having been
+   * waited on, it is a stale submission price walking into the freshness check.
+   */
+  private retryTransientFetch<T>(): MonoTypeOperatorFunction<T> {
+    return retry({
+      count: FETCH_RETRY_ATTEMPTS,
+      delay: (error) =>
+        isTransientFetchFailure(error)
+          ? timer(FETCH_RETRY_DELAY_MS)
+          : throwError(() => error),
+    });
+  }
 
   private post<T>(body: any): Observable<T> {
     return this.http
@@ -1086,27 +1163,7 @@ export class HyperliquidService {
             if (item.isDelisted || !ctx) {
               return;
             }
-            const protocolCoin =
-              dex && !item.name.includes(':')
-                ? `${dex}:${item.name}`
-                : item.name;
-            const symbol = protocolCoin.includes(':')
-              ? protocolCoin.slice(protocolCoin.indexOf(':') + 1)
-              : protocolCoin;
-            markets.push({
-              key: `${dex || 'hl'}:${symbol}`,
-              assetId: dex
-                ? 100000 + dexIndex * 10000 + index
-                : index,
-              dex,
-              dexAssetIndex: index,
-              coin: protocolCoin,
-              symbol,
-              szDecimals: item.szDecimals,
-              maxLeverage: item.maxLeverage,
-              onlyIsolated: !!item.onlyIsolated,
-              ...this.marketContextFields(ctx),
-            });
+            markets.push(this.buildMarket(item, ctx, dex, dexIndex, index));
           });
         });
         const sorted = markets.sort((a, b) =>
@@ -1187,6 +1244,101 @@ export class HyperliquidService {
         }
       };
     });
+  }
+
+  /**
+   * One market's live context, from that market's own feed.
+   *
+   * The detail page is what a user watches before tapping Long or Short, so it
+   * follows that market's `activeAssetCtx` channel rather than the market
+   * list's per-DEX periodic frames — see that page's ADR-0001. A frame carries
+   * prices and 24h statistics together, so the page never pairs a price from
+   * one message with a `prevDayPx` from another.
+   *
+   * Emits `null` for a coin this build does not carry: a delisted asset, a DEX
+   * this build does not enable, or a bad route parameter. That is a different
+   * answer from a request that failed, which errors.
+   */
+  watchMarketDetail(coin: string): Observable<PerpsMarket | null> {
+    const dex = coin?.includes(':') ? coin.slice(0, coin.indexOf(':')) : '';
+    if (!coin || !this.enabledDexes.includes(dex)) {
+      return of(null);
+    }
+    return this.getMarketSnapshot(coin, dex).pipe(
+      // The page has nothing at all without this snapshot, and it is a plain
+      // read, so a connection that dropped on the way in is worth asking again
+      // before the user is told the market could not be loaded.
+      this.retryTransientFetch(),
+      switchMap((market) =>
+        market
+          ? concat(
+              of(market),
+              // Frames that arrive while the snapshot is in flight are lost,
+              // which costs nothing: every frame is a complete context, so the
+              // next one restates whatever the missed ones said.
+              this.subscribe({ type: 'activeAssetCtx', coin }).pipe(
+                filter((frame) => !!frame?.ctx),
+                map((frame) => ({
+                  ...market,
+                  ...this.marketContextFields(frame.ctx),
+                }))
+              )
+            )
+          : of(null)
+      )
+    );
+  }
+
+  /**
+   * Static metadata plus one context frame for a single market.
+   *
+   * Only that market's own DEX is asked, which is what keeps the detail page
+   * off the all-DEX snapshot the market list needs. The DEX is read from the
+   * coin itself: a HIP-3 coin carries its DEX as a prefix, and a bare coin is
+   * canonical by definition.
+   */
+  private getMarketSnapshot(
+    coin: string,
+    dex: string
+  ): Observable<PerpsMarket | null> {
+    // The registry only exists to place a HIP-3 DEX in the asset-id space;
+    // canonical markets are index 0 by definition and skip the request.
+    const registry = dex ? this.getDexRegistry() : of([]);
+    return registry.pipe(
+      switchMap((perpDexs) => {
+        const dexIndex = dex
+          ? (Array.isArray(perpDexs) ? perpDexs : []).findIndex(
+              (item) => item?.name === dex
+            )
+          : 0;
+        if (dexIndex < 0) {
+          return of(null);
+        }
+        const request: any = { type: 'metaAndAssetCtxs' };
+        if (dex) {
+          request.dex = dex;
+        }
+        return this.post<
+          [{ universe: PerpsUniverseItem[] }, PerpsAssetCtx[]]
+        >(request).pipe(
+          map(([meta, ctxs]) => {
+            const universe = meta?.universe || [];
+            const index = universe.findIndex(
+              (item) =>
+                (dex && !item.name.includes(':')
+                  ? `${dex}:${item.name}`
+                  : item.name) === coin
+            );
+            const item = universe[index];
+            const ctx = ctxs?.[index];
+            if (!item || item.isDelisted || !ctx) {
+              return null;
+            }
+            return this.buildMarket(item, ctx, dex, dexIndex, index);
+          })
+        );
+      })
+    );
   }
 
   /**
@@ -1340,6 +1492,39 @@ export class HyperliquidService {
     });
   }
 
+  /**
+   * One universe entry joined with its live context.
+   *
+   * `assetId` is derived from the entry's position in its own DEX's universe,
+   * which is why the caller passes the original index rather than the position
+   * in any list built from it.
+   */
+  private buildMarket(
+    item: PerpsUniverseItem,
+    ctx: PerpsAssetCtx,
+    dex: string,
+    dexIndex: number,
+    index: number
+  ): PerpsMarket {
+    const protocolCoin =
+      dex && !item.name.includes(':') ? `${dex}:${item.name}` : item.name;
+    const symbol = protocolCoin.includes(':')
+      ? protocolCoin.slice(protocolCoin.indexOf(':') + 1)
+      : protocolCoin;
+    return {
+      key: `${dex || 'hl'}:${symbol}`,
+      assetId: dex ? 100000 + dexIndex * 10000 + index : index,
+      dex,
+      dexAssetIndex: index,
+      coin: protocolCoin,
+      symbol,
+      szDecimals: item.szDecimals,
+      maxLeverage: item.maxLeverage,
+      onlyIsolated: !!item.onlyIsolated,
+      ...this.marketContextFields(ctx),
+    };
+  }
+
   private marketContextFields(
     ctx: PerpsAssetCtx
   ): Pick<
@@ -1349,6 +1534,7 @@ export class HyperliquidService {
     | 'oraclePxExact'
     | 'prevDayPxExact'
     | 'changePercentExact'
+    | 'changeAmountExact'
     | 'dayVolumeExact'
     | 'openInterestExact'
     | 'openInterestSizeExact'
@@ -1369,13 +1555,13 @@ export class HyperliquidService {
       .times(markPxExact)
       .toFixed();
     const fundingExact = this.toFiniteDecimal(ctx.funding);
-    const change =
+    const changeAmount =
       midPxExact && new BigNumber(prevDayPxExact).isGreaterThan(0)
-        ? new BigNumber(midPxExact)
-            .minus(prevDayPxExact)
-            .dividedBy(prevDayPxExact)
-            .times(100)
+        ? new BigNumber(midPxExact).minus(prevDayPxExact)
         : null;
+    const change = changeAmount
+      ? changeAmount.dividedBy(prevDayPxExact).times(100)
+      : null;
     return {
       markPxExact,
       midPxExact,
@@ -1389,6 +1575,9 @@ export class HyperliquidService {
       // must never stand in here. A market with no mid has no change to quote:
       // that is market statistics unavailable, which is `null` and not `0`.
       changePercentExact: change ? change.toFixed() : null,
+      // Derived from the same two prices as the percentage, so the amount and
+      // the percentage beside it can never describe different moves.
+      changeAmountExact: changeAmount ? changeAmount.toFixed() : null,
       dayVolumeExact,
       openInterestSizeExact,
       openInterestExact,
@@ -1967,18 +2156,84 @@ export class HyperliquidService {
   /**
    * Historical candles. Hyperliquid returns at most the 5000 most recent candles
    * and ignores ranges beyond that, so `limit` only trims the tail we render.
+   *
+   * `endTime` pages backward from an already-loaded bar: the chart asks for
+   * the window that ends there rather than always taking "now".
    */
   getCandles(
     coin: string,
     interval: PerpsCandleInterval,
-    limit = 120
+    limit = PERPS_CANDLE_LIMIT,
+    endTime = Date.now()
   ): Observable<PerpsCandle[]> {
-    const endTime = Date.now();
     const startTime = endTime - this.intervalMs(interval) * limit;
+    return this.getCandleRange(coin, interval, startTime, endTime).pipe(
+      map((res) => res.slice(-limit))
+    );
+  }
+
+  /** Historical candles for an explicit exchange-time range. */
+  getCandleRange(
+    coin: string,
+    interval: PerpsCandleInterval,
+    startTime: number,
+    endTime: number
+  ): Observable<PerpsCandle[]> {
     return this.post<PerpsCandle[]>({
       type: 'candleSnapshot',
       req: { coin, interval, startTime, endTime },
-    }).pipe(map((res) => (Array.isArray(res) ? res.slice(-limit) : [])));
+    }).pipe(map((res) => (Array.isArray(res) ? res : [])));
+  }
+
+  /**
+   * Candles already seen for this market and interval, or `null` when what is
+   * held is too old to put on screen.
+   *
+   * Freshness is measured in bars rather than in seconds: a 1m chart is out of
+   * date within minutes while a 1d chart is not. One missed bar plus transport
+   * jitter is tolerated, which is where the half comes from; past that the gap
+   * would be visible and a snapshot is the honest answer.
+   */
+  cachedCandles(
+    coin: string,
+    interval: PerpsCandleInterval
+  ): PerpsCandle[] | null {
+    const cached = this.candleCache.get(this.candleCacheKey(coin, interval));
+    const last = cached?.[cached.length - 1];
+    if (!last) {
+      return null;
+    }
+    return Date.now() - last.t <= this.intervalMs(interval) * 2.5
+      ? cached
+      : null;
+  }
+
+  /**
+   * Remember what the chart is showing, for the next visit to this market.
+   *
+   * The caller's array is stored as it is rather than copied: it is already
+   * replaced rather than mutated on every update, so the two cannot drift.
+   */
+  rememberCandles(
+    coin: string,
+    interval: PerpsCandleInterval,
+    candles: PerpsCandle[]
+  ) {
+    if (!coin || !candles?.length) {
+      return;
+    }
+    const key = this.candleCacheKey(coin, interval);
+    // Re-inserting moves the key to the end, which keeps the map in
+    // least-recently-used order and makes the first key the one to drop.
+    this.candleCache.delete(key);
+    this.candleCache.set(key, candles);
+    while (this.candleCache.size > this.candleCacheEntries) {
+      this.candleCache.delete(this.candleCache.keys().next().value);
+    }
+  }
+
+  private candleCacheKey(coin: string, interval: PerpsCandleInterval): string {
+    return `${coin}:${interval}`;
   }
 
   getUserFills(address: string): Observable<PerpsFill[]> {
@@ -2061,11 +2316,29 @@ export class HyperliquidService {
     return parsed;
   }
 
+  /**
+   * How long one candle of this interval covers.
+   *
+   * Case is the whole game here: `m` is a minute and `M` is a month, and an
+   * unknown unit must not quietly fall back to either. A month has no fixed
+   * length, so thirty days sizes the request window and nothing else — the
+   * exchange still decides where its monthly bars begin and end.
+   */
   intervalMs(interval: PerpsCandleInterval): number {
     const unit = interval.slice(-1);
     const value = Number(interval.slice(0, -1));
-    const table = { m: 60e3, h: 3600e3, d: 86400e3 };
-    return value * (table[unit] || 60e3);
+    const table = {
+      m: 60e3,
+      h: 3600e3,
+      d: 86400e3,
+      w: 7 * 86400e3,
+      M: 30 * 86400e3,
+    };
+    const unitMs = table[unit];
+    if (!unitMs) {
+      throw new Error(`Unsupported Hyperliquid candle interval: ${interval}`);
+    }
+    return value * unitMs;
   }
 
   //#endregion
@@ -2074,11 +2347,15 @@ export class HyperliquidService {
 
   /**
    * Subscribe to a websocket channel. The returned observable replays nothing;
-   * callers should seed their view from the REST snapshot first.
+   * callers must provide a REST/cache baseline and preserve frames that race a
+   * concurrent snapshot refresh.
    */
   subscribe(subscription: any): Observable<any> {
     return new Observable<any>((observer) => {
       const key = this.channelKey(subscription);
+      // A teardown still pending means the exchange was never told to stop:
+      // the channel is alive and is simply picked up again.
+      this.cancelChannelTeardown(key);
       let channel = this.channels.get(key);
       if (!channel) {
         channel = new Subject<any>();
@@ -2099,6 +2376,28 @@ export class HyperliquidService {
           return;
         }
         this.channelObservers.delete(key);
+        this.scheduleChannelTeardown(key, subscription);
+      };
+    });
+  }
+
+  /**
+   * Close an abandoned channel, once it has stayed abandoned.
+   *
+   * The socket outlives the channel for the same reason: closing it here would
+   * make a market switch redial a connection the next page needs anyway.
+   */
+  private scheduleChannelTeardown(key: string, subscription: any) {
+    this.cancelChannelTeardown(key);
+    this.channelTeardowns.set(
+      key,
+      setTimeout(() => {
+        this.channelTeardowns.delete(key);
+        // A subscriber that came and went inside the window scheduled its own
+        // teardown; only an abandoned channel is closed here.
+        if (this.channelObservers.get(key)) {
+          return;
+        }
         this.channels.delete(key);
         this.activeSubs.delete(key);
         if (this.wsReady) {
@@ -2107,8 +2406,16 @@ export class HyperliquidService {
         if (this.channels.size === 0) {
           this.closeSocket();
         }
-      };
-    });
+      }, this.channelTeardownMs)
+    );
+  }
+
+  private cancelChannelTeardown(key: string) {
+    const timer = this.channelTeardowns.get(key);
+    if (timer !== undefined) {
+      clearTimeout(timer);
+      this.channelTeardowns.delete(key);
+    }
   }
 
   /**
@@ -2203,8 +2510,15 @@ export class HyperliquidService {
       return;
     }
     if (msg.channel === 'candle') {
-      const d = msg.data;
-      this.emit(`candle:${d?.s}:${d?.i}`, d);
+      const candles = Array.isArray(msg.data) ? msg.data : [msg.data];
+      candles.forEach((candle) => {
+        if (
+          typeof candle?.s === 'string' &&
+          typeof candle?.i === 'string'
+        ) {
+          this.emit(`candle:${candle.s}:${candle.i}`, candle);
+        }
+      });
       return;
     }
     if (msg.channel === 'activeAssetCtx') {

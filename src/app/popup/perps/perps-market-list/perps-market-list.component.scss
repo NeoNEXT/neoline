@@ -70,6 +70,15 @@
     background: var(--hover-color);
   }
 
+  // 当前正在看的那个市场:只有切换市场时才会标出来,让菜单说清楚起点在哪
+  &.active {
+    background: var(--hover-color);
+
+    .market-name .coin {
+      color: var(--theme-color);
+    }
+  }
+
   > perps-coin-logo {
     width: 36px;
     height: 36px;

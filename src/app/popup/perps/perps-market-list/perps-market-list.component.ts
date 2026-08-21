@@ -13,8 +13,6 @@ import { Router } from '@angular/router';
 import BigNumber from 'bignumber.js';
 import { Unsubscribable } from 'rxjs';
 
-import { ChromeService } from '@/app/core';
-import { STORAGE_NAME } from '@popup/_lib';
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
 import {
   PerpsConnectionState,
@@ -46,6 +44,24 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
    * there to read as "the biggest markets", and it always ranks by volume.
    */
   @Input() showSort = false;
+  /**
+   * The market this list is standing in for, marked as the one already open.
+   *
+   * Only the coin switcher sets it: it is a menu of where the user could go
+   * from where they are, and a menu that does not say where that is makes the
+   * user read the header again to find out.
+   */
+  @Input() activeCoin = '';
+  /**
+   * A row the user picked, by coin.
+   *
+   * The list still routes to it itself — that is the same thing on every
+   * surface. This says a choice was made, which is what a host rendering the
+   * list inside something dismissable needs: picking the market already open
+   * routes nowhere, so a host waiting on the route would stay open on the one
+   * tap that most clearly meant "close".
+   */
+  @Output() marketSelected = new EventEmitter<string>();
   /**
    * The markets this list is showing. Emitted so a host that needs them for
    * something else — the home tab sizes its positions by their market's
@@ -84,7 +100,6 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
   /** Feed health, which dims every quote the list is showing. */
   connectionState: PerpsConnectionState = 'connecting';
 
-  private favorites: string[] = [];
   /** The frozen row order; see `resnapshot`. */
   private orderedKeys: string[] = [];
   private pinnedKeys: string[] = [];
@@ -101,8 +116,7 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
 
   constructor(
     private router: Router,
-    private hyperliquid: HyperliquidService,
-    private chrome: ChromeService
+    private hyperliquid: HyperliquidService
   ) {}
 
   ngOnInit() {
@@ -110,7 +124,6 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
     this.connectionSub = this.hyperliquid
       .watchConnectionState()
       .subscribe((state) => (this.connectionState = state));
-    this.loadFavorites();
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -265,20 +278,9 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
       new BigNumber(b.dayVolumeExact).comparedTo(a.dayVolumeExact);
   }
 
-  /** Favourites and the Neo ecosystem sit above the sorted list. */
+  /** The Neo ecosystem sits above the sorted list. */
   private isPinned(market: PerpsMarket): boolean {
-    return (
-      this.favorites.includes(market.coin) ||
-      PERPS_NEO_COINS.includes(market.symbol)
-    );
-  }
-
-  /** Favourites are a list the user curates, so they are the one thing kept. */
-  private loadFavorites() {
-    this.chrome.getStorage(STORAGE_NAME.perpsFavorites).subscribe((list) => {
-      this.favorites = Array.isArray(list) ? list : [];
-      this.resnapshot();
-    });
+    return PERPS_NEO_COINS.includes(market.symbol);
   }
 
   /**
@@ -305,12 +307,8 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
     return market.key;
   }
 
-  /** Sign test for a decimal string, which a template cannot do with `< 0`. */
-  isNegative(value: string | null): boolean {
-    return value !== null && new BigNumber(value).isLessThan(0);
-  }
-
   toMarket(coin: string) {
+    this.marketSelected.emit(coin);
     this.router.navigateByUrl(`/popup/perps/market/${coin}`);
   }
 }

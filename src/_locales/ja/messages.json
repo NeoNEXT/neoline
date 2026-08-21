@@ -1838,9 +1838,6 @@
   "perpsMyPosition": {
     "message": "保有ポジション"
   },
-  "perpsRecentActivity": {
-    "message": "最近のアクティビティ"
-  },
   "perpsNoTransactions": {
     "message": "取引はありません"
   },
@@ -1851,7 +1848,7 @@
     "message": "出来高 (USD)"
   },
   "perpsRiskTip": {
-    "message": "無期限先物取引には大きなリスクがあり、警告なしに投資額全体を瞬時に失う可能性があります。取引の責任はすべてお客様が負います。"
+    "message": "無期限先物取引には大きなリスクがあり、警告なしに投資額全体を瞬時に失う可能性があります。取引の責任はすべてお客様が負います。技術サポートは Hyperliquid が提供し、価格チャートは TradingView が提供しています。"
   },
   "perpsMarketOrder": {
     "message": "成行"
@@ -2051,17 +2048,23 @@
   "perpsOraclePrice": {
     "message": "オラクル価格"
   },
+  "perpsStatsUnavailable": {
+    "message": "データなし"
+  },
+  "perpsMoreIntervals": {
+    "message": "その他"
+  },
   "perpsLearnBasics": {
     "message": "無期限先物の基礎を学ぶ"
   },
   "perpsOpenInterestTip": {
-    "message": "この銘柄の未決済ポジションの想定元本合計。"
+    "message": "この無期限先物のすべての未決済ポジションの合計価値です。"
   },
   "perpsFundingRateTip": {
-    "message": "ロングとショートが1時間ごとに交換するレートで、プラスの場合はロングがショートに支払います。カウントダウンは次回決済までの時間です。"
+    "message": "価格を市場に連動させるためにトレーダー間で支払われる1時間ごとの手数料です。レートがプラスのときはロングがショートに、マイナスのときはショートがロングに支払います。"
   },
   "perpsOracleTip": {
-    "message": "資金調達率と証拠金の計算に使用される外部スポット価格です。"
+    "message": "バリデーターが報告する外部価格の中央値で、資金調達率の計算に使われます。"
   },
   "perpsReviewOrder": {
     "message": "注文を確認"
@@ -2128,6 +2131,21 @@
   },
   "perpsLoadFailed": {
     "message": "Hyperliquid のデータを読み込めません。接続を確認して再試行してください。"
+  },
+  "perpsMarketNotFound": {
+    "message": "このマーケットは現在 Hyperliquid で利用できません。"
+  },
+  "perpsNoTwoSidedBook": {
+    "message": "板が片側のみのため、約定可能な仲値がなく発注できません。"
+  },
+  "perpsEntryStale": {
+    "message": "価格配信が切断されているため、現在は発注できません。"
+  },
+  "perpsEntryConnecting": {
+    "message": "価格配信に接続中のため、現在は発注できません。"
+  },
+  "perpsChartInterrupted": {
+    "message": "切断中のローソク足を補完できませんでした。チャートが不連続な可能性があります。"
   },
   "perpsFeedStale": {
     "message": "データが切断されました · 最終価格を表示中"
@@ -2233,12 +2251,6 @@
   },
   "perpsReverseToShort": {
     "message": "ショートへ反転"
-  },
-  "perpsTheoreticalBuyingPower": {
-    "message": "理論上の購入余力"
-  },
-  "perpsBufferedMax": {
-    "message": "最大注文（0.5% を確保）"
   },
   "perpsNearMarginLimit": {
     "message": "この金額は Max の確保分を使用するため、証拠金が変動すると拒否される場合があります。"

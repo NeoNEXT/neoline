@@ -15,6 +15,7 @@ import { PerpsCoinLogoComponent } from './perps-coin-logo/perps-coin-logo.compon
 import { PerpsMarketListComponent } from './perps-market-list/perps-market-list.component';
 import { PerpsMarketsComponent } from './perps-markets/perps-markets.component';
 import { PopupPerpsSlippageDialogComponent } from '@popup/_dialogs/perps-slippage/perps-slippage.dialog';
+import { PERPS_FORMAT_PIPES } from './perps-format.pipe';
 
 @NgModule({
   declarations: [
@@ -28,6 +29,7 @@ import { PopupPerpsSlippageDialogComponent } from '@popup/_dialogs/perps-slippag
     PerpsMarketListComponent,
     PerpsMarketsComponent,
     PopupPerpsSlippageDialogComponent,
+    ...PERPS_FORMAT_PIPES,
   ],
   imports: [CommonModule, FormsModule, ShareModule, PerpsRoutingModule],
   // The tab is embedded by the home page, the rest are routed.

@@ -3,35 +3,14 @@ import { SimpleChange } from '@angular/core';
 import { PerpsMarket } from '@popup/_lib/perps';
 
 import { PerpsMarketListComponent } from './perps-market-list.component';
+import { ethMarket } from '../perps.test-fixture';
 
 describe('PerpsMarketListComponent', () => {
-  const market = (overrides: Partial<PerpsMarket> = {}): PerpsMarket => ({
-    key: 'hl:ETH',
-    assetId: 4,
-    dex: '',
-    dexAssetIndex: 4,
-    coin: 'ETH',
-    symbol: 'ETH',
-    szDecimals: 4,
-    maxLeverage: 25,
-    onlyIsolated: false,
-    markPxExact: '1885.8',
-    midPxExact: '1885.7',
-    oraclePxExact: '1884.4',
-    prevDayPxExact: '1884.5',
-    changePercentExact: '0.0636',
-    dayVolumeExact: '1563608.19928',
-    openInterestSizeExact: '1346.6006',
-    openInterestExact: '2539501',
-    fundingExact: '0.0000125',
-    ...overrides,
-  });
+  /** Mid and mark deliberately differ, so a row quoting the wrong one shows. */
+  const market = (overrides: Partial<PerpsMarket> = {}): PerpsMarket =>
+    ethMarket({ markPxExact: '1885.8', midPxExact: '1885.7', ...overrides });
 
-  const chromeStub = {
-    getStorage: () => ({ subscribe: () => undefined }),
-    setStorage: () => undefined,
-  } as any;
-  const component = () => new PerpsMarketListComponent(null, null, chromeStub);
+  const component = () => new PerpsMarketListComponent(null, null);
 
   /** The keyword arrives as an input, so searching is an `ngOnChanges`. */
   const search = (value: PerpsMarketListComponent, keyword = '') => {
@@ -161,11 +140,7 @@ describe('PerpsMarketListComponent', () => {
   });
 
   it('opens on volume, and lets a sort go no further than the visit', () => {
-    const setStorage = jasmine.createSpy('setStorage');
-    const value = new PerpsMarketListComponent(null, null, {
-      getStorage: () => ({ subscribe: () => undefined }),
-      setStorage,
-    } as any);
+    const value = component();
     value.showSort = true;
 
     expect(value.sortKey).toBe('volume');
@@ -174,9 +149,23 @@ describe('PerpsMarketListComponent', () => {
 
     // The choice holds while the page is open and is never written down: the
     // next visit asks its own question rather than inheriting one the user
-    // cannot see the reason for.
+    // cannot see the reason for. The list holds no storage at all now, so
+    // there is nowhere for the choice to leak to.
     expect(value.sortKey).toBe('change');
-    expect(setStorage).not.toHaveBeenCalled();
+  });
+
+  it('reports the pick as well as routing to it', () => {
+    const router = jasmine.createSpyObj('Router', ['navigateByUrl']);
+    const value = new PerpsMarketListComponent(router, null);
+    const picked: string[] = [];
+    value.marketSelected.subscribe((coin) => picked.push(coin));
+
+    value.toMarket('ETH');
+
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/popup/perps/market/ETH');
+    // A host that renders this list inside something dismissable cannot wait
+    // for the route: picking the market already open routes nowhere.
+    expect(picked).toEqual(['ETH']);
   });
 
   it('batches a long market list instead of truncating it', () => {

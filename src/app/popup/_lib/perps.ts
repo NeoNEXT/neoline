@@ -382,14 +382,64 @@ export const PERPS_MARKET_PAGE_SIZE = 30;
 
 export const PERPS_CANDLE_INTERVALS = [
   '1m',
-  '3m',
   '5m',
   '15m',
   '1h',
-  '4h',
+  '12h',
   '1d',
+  '1w',
+  '1M',
 ] as const;
 export type PerpsCandleInterval = typeof PERPS_CANDLE_INTERVALS[number];
+
+/**
+ * Whether a value from outside this build is an interval it still ships.
+ *
+ * Storage answers with whatever an older version wrote, which is not
+ * necessarily an interval that still exists. Case matters here as everywhere
+ * else: `1M` and `1m` are different intervals, so this is a membership test
+ * and never a normalisation.
+ */
+export function isCandleInterval(value: unknown): value is PerpsCandleInterval {
+  return PERPS_CANDLE_INTERVALS.includes(value as PerpsCandleInterval);
+}
+
+/**
+ * How each interval is written on screen.
+ *
+ * Display and protocol are deliberately separate strings. Hyperliquid's daily
+ * and weekly intervals are lowercase `1d` and `1w`, while its monthly one is
+ * `1M` — a single capital away from `1m`, the minute. Only these labels are
+ * ever shown, and only the protocol values are ever compared, stored, or sent;
+ * a case-insensitive comparison anywhere between the two turns a month into a
+ * minute without failing.
+ */
+export const PERPS_CANDLE_INTERVAL_LABELS: Record<
+  PerpsCandleInterval,
+  string
+> = {
+  '1m': '1m',
+  '5m': '5m',
+  '15m': '15m',
+  '1h': '1h',
+  '12h': '12h',
+  '1d': '1D',
+  '1w': '1W',
+  '1M': '1M',
+};
+
+/**
+ * How many candles one snapshot holds.
+ *
+ * Sized for scrolling back rather than for the initial view, which shows about
+ * thirty: at one minute this is over eight hours of history, and on the long
+ * intervals the exchange simply returns however much the market has. Reaching
+ * the left edge pages another snapshot of this size; live bars are appended
+ * from there and never trimmed, so this is a starting depth and not a window.
+ */
+export const PERPS_CANDLE_LIMIT = 500;
+/** Maximum number of recent candles Hyperliquid makes available per request. */
+export const PERPS_CANDLE_HISTORY_LIMIT = 5000;
 
 /**
  * Whether the live feed can be trusted right now. `stale` keeps the last values
@@ -462,6 +512,12 @@ export interface PerpsMarket {
    * computed from one price kind — market statistics unavailable, not `0`.
    */
   changePercentExact: string | null;
+  /**
+   * Price change over the last 24h in quote currency, e.g. `"-24.25"`. Shares
+   * `changePercentExact`'s inputs and its `null`, so the two can never quote
+   * the same move from different prices.
+   */
+  changeAmountExact: string | null;
   dayVolumeExact: string;
   openInterestSizeExact: string;
   openInterestExact: string;

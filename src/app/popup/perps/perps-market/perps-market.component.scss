@@ -4,6 +4,11 @@
   padding-bottom: 24px;
 }
 
+// 切换市场的面板贴着头部下沿展开,所以定位基准是整个头部,而不是标题里的某个字
+.header-wrap {
+  position: relative;
+}
+
 .market-header {
   display: flex;
   align-items: flex-start;
@@ -43,22 +48,101 @@
       border-radius: 4px;
     }
 
+    // 换币入口。箭头本身只有 11px,所以外面留出可点的余量,
+    // 否则这是一个看得见但点不中的控件
+    .coin-switch {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 4px;
+      margin: -6px -4px;
+      cursor: pointer;
+
+      svg {
+        display: block;
+        transition: transform 0.15s ease;
+      }
+
+      // 展开时箭头翻过来:菜单开着的时候,一个仍然朝下的箭头是在说反话
+      &.open svg {
+        transform: rotate(180deg);
+      }
+    }
+
     .subtitle {
       font-size: 12px;
       color: var(--sub-title-color);
       margin-top: 3px;
     }
   }
+}
 
-  .star {
-    margin-top: 8px;
-    cursor: pointer;
-    fill: none;
-    stroke: var(--sub-title-color);
+// 遮罩盖住整页,包括头部:菜单开着时再点一次那个箭头,意思是关掉
+.coin-menu-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+}
 
-    &.active {
-      fill: var(--theme-color);
-      stroke: var(--theme-color);
+.coin-menu {
+  position: absolute;
+  z-index: 31;
+  left: 8px;
+  right: 8px;
+  top: calc(100% + 8px);
+  // 面板底部要留在弹窗里:列表自己滚,而不是把整页撑长
+  max-height: 62vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background: var(--body-background-color);
+  box-shadow: var(--popups-box-shadow);
+  overflow: hidden;
+
+  perps-market-list {
+    display: block;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin: 12px 12px 8px;
+    padding: 0 12px;
+    height: 36px;
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+
+    img {
+      width: 15px;
+      opacity: 0.6;
+    }
+
+    input {
+      flex: 1;
+      min-width: 0;
+      border: 0;
+      background: transparent;
+      color: var(--title-color);
+      font-family: NeverMind-Regular;
+      font-size: 14px;
+      outline: none;
+
+      &::placeholder {
+        color: var(--tip-color);
+      }
+    }
+
+    // 清空关键词是一次点击,在手机键盘上重打一遍符号不是
+    .clear {
+      padding: 0 2px;
+      color: var(--tip-color);
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
     }
   }
 }
@@ -80,6 +164,85 @@
     &.negative {
       color: var(--error-color);
     }
+
+    // 没有同价格类型的比较基准时，这里是「没有数据」，不是「没有涨跌」
+    &.unavailable {
+      color: var(--sub-title-color);
+    }
+  }
+
+  // 头部报的是哪种价格。回退到标记价时这个标签是价格的一部分，不是装饰
+  .price-kind {
+    margin-left: 6px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    background: var(--tip-bg, rgba(0, 0, 0, 0.06));
+    color: var(--tip-color);
+    font-size: 11px;
+    line-height: 16px;
+    vertical-align: middle;
+  }
+}
+
+// 行情连接不健康：值保留在屏幕上，但必须读起来不像实时数据
+.stale-banner {
+  margin: 8px 16px 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--tip-bg, rgba(255, 168, 0, 0.12));
+  color: var(--tip-color);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.perps-market.feed-stale {
+  .price-block .price,
+  .price-block .change,
+  .stats-card .value {
+    opacity: 0.45;
+  }
+}
+
+.page-notice {
+  margin: 16px 22px 0;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: var(--box-color);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--sub-title-color);
+}
+
+// 首帧到达前的占位：`--` 会被读成「取到了，是空的」
+.skeleton-bar {
+  display: block;
+  border-radius: 5px;
+  background: var(--tip-bg, rgba(0, 0, 0, 0.06));
+  animation: perps-skeleton 1.4s ease-in-out infinite;
+
+  &.price {
+    width: 148px;
+    height: 26px;
+  }
+
+  &.label {
+    width: 92px;
+    height: 12px;
+  }
+
+  &.value {
+    width: 64px;
+    height: 12px;
+  }
+}
+
+@keyframes perps-skeleton {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
   }
 }
 
@@ -210,51 +373,6 @@
   }
 }
 
-.fill-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 24px 12px;
-
-  .fill-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: rgba(6, 204, 171, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--theme-color);
-    font-size: 15px;
-
-    &.sell {
-      background: rgba(250, 85, 85, 0.1);
-      color: var(--error-color);
-    }
-  }
-
-  .fill-info {
-    flex: 1;
-
-    .dir {
-      font-family: NeverMind-Medium;
-      font-size: 14px;
-      color: var(--title-color);
-    }
-
-    .time {
-      font-size: 12px;
-      color: var(--sub-title-color);
-      margin-top: 4px;
-    }
-  }
-
-  .fill-size {
-    font-size: 14px;
-    color: var(--title-color);
-  }
-}
-
 .learn-card {
   margin: 8px 22px 0;
   display: flex;
@@ -274,6 +392,14 @@
   font-size: 12px;
   line-height: 1.7;
   color: var(--tip-color);
+}
+
+// 下单入口为什么关着，必须说出来：一个变灰但不解释的按钮读起来像故障
+.entry-blocked {
+  padding: 14px 24px 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--error-color);
 }
 
 .trade-actions {
@@ -301,6 +427,11 @@
       border: 1px solid var(--error-color);
       background: transparent;
       color: var(--error-color);
+    }
+
+    &[disabled] {
+      cursor: not-allowed;
+      opacity: 0.4;
     }
   }
 }

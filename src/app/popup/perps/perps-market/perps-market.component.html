@@ -1,159 +1,205 @@
-<div class="perps-market">
-  <!-- 1b 头部：大 logo + 名称/副标题 + 收藏 -->
-  <div class="market-header">
-    <svg class="back" width="9" height="16" viewBox="0 0 9 16" fill="none" (click)="back()">
-      <path
-        d="M8 1L1 8L8 15"
-        stroke="var(--title-color)"
-        stroke-width="1.8"
-        stroke-linecap="round"
-      />
-    </svg>
-    <perps-coin-logo [symbol]="symbol" [coin]="coin"></perps-coin-logo>
-    <div class="title">
-      <div class="name">
-        {{ symbol }}
-        <span class="dex-badge" *ngIf="market?.dex">{{ market.dex }}</span>
-        <span class="leverage" *ngIf="market">{{ market.maxLeverage }}x</span>
-      </div>
-      <div class="subtitle">
-        {{ symbol }}-USDC {{ "perps" | translate | async }}
+<div class="perps-market" [class.feed-stale]="isStale">
+  <!-- 1b 头部：大 logo + 名称/副标题。
+       切换市场的面板挂在头部下沿，所以这一层要能定位 -->
+  <div class="header-wrap">
+    <div class="market-header">
+      <svg class="back" width="9" height="16" viewBox="0 0 9 16" fill="none" (click)="back()">
+        <path
+          d="M8 1L1 8L8 15"
+          stroke="var(--title-color)"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        />
+      </svg>
+      <perps-coin-logo [symbol]="symbol" [coin]="coin"></perps-coin-logo>
+      <div class="title">
+        <div class="name">
+          {{ symbol }}
+          <span class="dex-badge" *ngIf="market?.dex">{{ market.dex }}</span>
+          <span class="leverage" *ngIf="market">{{ market.maxLeverage }}x</span>
+          <!-- 换币入口。不跟着行情走：这个市场没加载出来时，它正是换去
+               一个能看的市场的路，此时消失等于把用户留在死胡同里 -->
+          <span
+            class="coin-switch"
+            [class.open]="showCoinMenu"
+            (click)="toggleCoinMenu()"
+          >
+            <svg width="11" height="7" viewBox="0 0 11 7" fill="none">
+              <path
+                d="M1 1.5L5.5 5.5L10 1.5"
+                stroke="var(--sub-title-color)"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+        </div>
+        <div class="subtitle">
+          {{ symbol }}-USDC {{ "perps" | translate | async }}
+        </div>
       </div>
     </div>
-    <svg
-      class="star"
-      [class.active]="isFavorite"
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      (click)="toggleFavorite()"
-    >
-      <path
-        d="M9 1.5L11.2 6.2L16.5 6.9L12.7 10.5L13.6 15.7L9 13.2L4.4 15.7L5.3 10.5L1.5 6.9L6.8 6.2Z"
-        stroke-width="1.4"
-        stroke-linejoin="round"
-      />
-    </svg>
+
+    <!-- 点面板以外任何地方都是「不换了」，包括再点一次那个箭头 -->
+    <div class="coin-menu-mask" *ngIf="showCoinMenu" (click)="closeCoinMenu()"></div>
+    <div class="coin-menu" *ngIf="showCoinMenu">
+      <div class="search-bar">
+        <img theme src="assets/images/common/search.svg" alt="" />
+        <input
+          #coinSearch
+          type="text"
+          [(ngModel)]="coinKeyword"
+          [placeholder]="'perpsSearchMarket' | translate | async"
+        />
+        <span class="clear" *ngIf="coinKeyword" (click)="coinKeyword = ''">×</span>
+      </div>
+      <!-- 列表本身不另写一份：行序、置顶、分页在这里和列表页必须是同一套,
+           否则同一个币在两个地方的位置不一样 -->
+      <perps-market-list
+        [keyword]="coinKeyword"
+        [activeCoin]="coin"
+        (marketSelected)="closeCoinMenu()"
+      ></perps-market-list>
+    </div>
   </div>
 
-  <!-- 大字价格 -->
-  <div class="price-block">
-    <span class="price">${{ formatPrice(displayPrice, market?.szDecimals, usingMid) }}</span>
-    <span
-      class="change"
-      *ngIf="market"
-      [class.negative]="isNegative(displayChangePercent)"
-    >
-      {{ formatSignedPercent(displayChangePercent) }}
-    </span>
+  <!-- 行情连接不健康：保留最后值，但明确标记为非实时 -->
+  <div class="stale-banner" *ngIf="isStale && market">
+    {{ "perpsFeedStale" | translate | async }}
   </div>
 
-  <div class="chart-wrap">
-    <perps-chart
-      [candles]="candles"
-      [loading]="chartLoading"
-      [priceDecimals]="priceDecimals"
-    ></perps-chart>
-    <p class="risk-tip" *ngIf="chartLoadError">
+  <!-- 交易所不认这个 coin：这是确定的答案，不是还没加载完 -->
+  <p class="page-notice" *ngIf="marketStatus === 'missing'">
+    {{ "perpsMarketNotFound" | translate | async }}
+  </p>
+
+  <ng-container *ngIf="marketStatus !== 'missing'">
+    <!-- 取数失败：后台按退避重试中，所以这里只说明状态，不放按钮 -->
+    <p class="page-notice" *ngIf="marketStatus === 'error'">
       {{ "perpsLoadFailed" | translate | async }}
     </p>
-  </div>
 
-  <div class="interval-bar">
-    <span
-      *ngFor="let item of quickIntervals"
-      [class.active]="interval === item"
-      (click)="selectInterval(item)"
-      >{{ item }}</span
-    >
-    <div class="interval-menu-wrap">
+    <!-- 大字价格 -->
+    <div class="price-block" *ngIf="market; else priceSkeleton">
+      <span class="price">${{ displayPrice | perpsPrice: market.szDecimals:usingMid }}</span>
+      <!-- 没有双边盘口时头部退到标记价：不标出来就会被读成可成交价 -->
+      <span class="price-kind" *ngIf="!usingMid">
+        {{ "perpsMarkPriceTag" | translate | async }}
+      </span>
+      <!-- 涨跌幅只由中间价与 prevDayPx 计算，价格类型不一致时不展示 -->
       <span
-        class="interval-select"
-        [class.active]="longIntervals.includes(interval)"
-        (click)="showIntervalMenu = !showIntervalMenu"
+        class="change"
+        *ngIf="hasChange"
+        [class.negative]="displayChangePercent | perpsNegative"
       >
-        {{ longInterval }}
-        <img theme src="assets/images/common/triangle-fill.svg" alt="" />
+        ({{ displayChangePercent | perpsSignedPercent }})
       </span>
-      <ul class="interval-menu" *ngIf="showIntervalMenu">
-        <li
-          *ngFor="let item of longIntervals"
-          [class.active]="interval === item"
-          (click)="selectLongInterval(item)"
+      <span class="change unavailable" *ngIf="!hasChange">
+        {{ "perpsStatsUnavailable" | translate | async }}
+      </span>
+    </div>
+    <ng-template #priceSkeleton>
+      <div class="price-block">
+        <i class="skeleton-bar price"></i>
+      </div>
+    </ng-template>
+
+    <div class="chart-wrap">
+      <perps-chart
+        [candles]="candles"
+        [loading]="chartLoading"
+        [priceDecimals]="priceDecimals"
+        [seriesKey]="chartSeriesKey"
+        (needEarlier)="loadEarlierCandles()"
+      ></perps-chart>
+      <p class="risk-tip" *ngIf="chartLoadError">
+        {{ "perpsLoadFailed" | translate | async }}
+      </p>
+      <p class="risk-tip" *ngIf="chartRecoveryError">
+        {{ "perpsChartInterrupted" | translate | async }}
+      </p>
+    </div>
+
+    <div class="interval-bar">
+      <span
+        *ngFor="let item of quickIntervals"
+        [class.active]="interval === item"
+        (click)="selectInterval(item)"
+        >{{ intervalLabel(item) }}</span
+      >
+      <div class="interval-menu-wrap">
+        <!-- 按钮读的是当前周期；当前周期不在菜单里时，它只表示「还有更多」 -->
+        <span
+          class="interval-select"
+          [class.active]="intervalInMenu"
+          (click)="showIntervalMenu = !showIntervalMenu"
         >
-          {{ item }}
-        </li>
-      </ul>
+          {{ intervalMenuLabel || ("perpsMoreIntervals" | translate | async) }}
+          <img theme src="assets/images/common/triangle-fill.svg" alt="" />
+        </span>
+        <ul class="interval-menu" *ngIf="showIntervalMenu">
+          <li
+            *ngFor="let item of longIntervals"
+            [class.active]="interval === item"
+            (click)="selectInterval(item)"
+          >
+            {{ intervalLabel(item) }}
+          </li>
+        </ul>
+      </div>
     </div>
-  </div>
 
-  <!-- 统计数据 -->
-  <div class="section-title">{{ "perpsStats" | translate | async }}</div>
-  <div class="stats-card">
-    <div class="row">
-      <span class="label">{{ "perpsDayVolumeFull" | translate | async }}</span>
-      <span class="value">{{
-        formatCompactUsd(market?.dayVolumeExact)
-      }}</span>
-    </div>
-    <div class="row">
-      <span class="label">
-        {{ "perpsOpenInterestFull" | translate | async }}
-        <tooltip placement="top" [tip]="'perpsOpenInterestTip' | translate | async">
-          <img theme src="assets/images/common/tooltip.svg" alt="" />
-        </tooltip>
-      </span>
-      <span class="value">{{
-        formatCompactUsd(market?.openInterestExact)
-      }}</span>
-    </div>
-    <div class="row">
-      <span class="label">
-        {{ "perpsFundingRateFull" | translate | async }}
-        <tooltip placement="top" [tip]="'perpsFundingRateTip' | translate | async">
-          <img theme src="assets/images/common/tooltip.svg" alt="" />
-        </tooltip>
-      </span>
-      <span class="value">
-        <span class="funding" [class.negative]="isNegative(market?.fundingExact)">{{
-          fundingPercent
-        }}</span>
-        <span class="countdown">({{ fundingCountdown }})</span>
-      </span>
-    </div>
-    <div class="row">
-      <span class="label">
-        {{ "perpsOraclePrice" | translate | async }}
-        <tooltip placement="top" [tip]="'perpsOracleTip' | translate | async">
-          <img theme src="assets/images/common/tooltip.svg" alt="" />
-        </tooltip>
-      </span>
-      <span class="value"
-        >${{ formatPrice(market?.oraclePxExact, market?.szDecimals) }}</span
-      >
-    </div>
-  </div>
-
-  <!-- 最近活动 -->
-  <ng-container *ngIf="fills.length > 0">
-    <div class="section-title">
-      {{ "perpsRecentActivity" | translate | async }}
-    </div>
-    <div class="fill-row" *ngFor="let fill of fills">
-      <div class="fill-icon" [class.sell]="!fillIsBuy(fill)">
-        {{ fillIsBuy(fill) ? "↗" : "↘" }}
+    <!-- 统计数据 -->
+    <div class="section-title">{{ "perpsStats" | translate | async }}</div>
+    <div class="stats-card" *ngIf="market; else statsSkeleton">
+      <div class="row">
+        <span class="label">{{ "perpsDayVolumeFull" | translate | async }}</span>
+        <span class="value">{{ market.dayVolumeExact | perpsCompactUsd }}</span>
       </div>
-      <div class="fill-info">
-        <div class="dir">{{ fillLabel(fill) }} {{ symbol }}</div>
-        <div class="time">{{ fillTime(fill) }}</div>
+      <div class="row">
+        <span class="label">
+          {{ "perpsOpenInterestFull" | translate | async }}
+          <tooltip placement="top" [tip]="'perpsOpenInterestTip' | translate | async">
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </span>
+        <span class="value">{{ market.openInterestExact | perpsCompactUsd }}</span>
       </div>
-      <div class="fill-size">
-        {{ fillSize(fill) }} {{ symbol }}<br />
-        <small>${{ formatPrice(fill.px, market?.szDecimals) }}</small>
-        <small *ngIf="fill.fee"> · {{ "perpsFee" | translate | async }} {{ fill.fee }} {{ fill.feeToken || "USDC" }}</small>
-        <small *ngIf="+fill.closedPnl"> · PnL {{ formatSignedUsd(fill.closedPnl) }}</small>
+      <div class="row">
+        <span class="label">
+          {{ "perpsFundingRateFull" | translate | async }}
+          <tooltip placement="top" [tip]="'perpsFundingRateTip' | translate | async">
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </span>
+        <span class="value">
+          <span class="funding" [class.negative]="market.fundingExact | perpsNegative">{{
+            fundingPercent
+          }}</span>
+          <span class="countdown">({{ fundingCountdown }})</span>
+        </span>
+      </div>
+      <div class="row">
+        <span class="label">
+          {{ "perpsOraclePrice" | translate | async }}
+          <tooltip placement="top" [tip]="'perpsOracleTip' | translate | async">
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </span>
+        <span class="value"
+          >${{ market.oraclePxExact | perpsPrice: market.szDecimals }}</span
+        >
       </div>
     </div>
+    <ng-template #statsSkeleton>
+      <div class="stats-card">
+        <div class="row" *ngFor="let row of statsSkeletonRows">
+          <i class="skeleton-bar label"></i>
+          <i class="skeleton-bar value"></i>
+        </div>
+      </div>
+    </ng-template>
   </ng-container>
 
   <!-- 了解基础知识 -->
@@ -169,14 +215,23 @@
     </svg>
   </div>
 
-  <p class="risk-tip">{{ "perpsRiskTip" | translate | async }}</p>
+  <!-- 入口只在市场取到之后出现：没取到时页面已经说了自己没有市场，
+       此时再摆一对禁用按钮，就是一个没有理由的禁用 -->
+  <ng-container *ngIf="marketStatus === 'ready'">
+    <p class="risk-tip">{{ "perpsRiskTip" | translate | async }}</p>
 
-  <div class="trade-actions">
-    <button class="long" (click)="toOrder('long')">
-      {{ "perpsLong" | translate | async }}
-    </button>
-    <button class="short" (click)="toOrder('short')">
-      {{ "perpsShort" | translate | async }}
-    </button>
-  </div>
+    <!-- 行情尚未可用或没有双边盘口时，下单入口关闭并说明原因：
+         把问题传给下单页等于让用户在一个没人能报的价上建立交易意图 -->
+    <p class="entry-blocked" *ngIf="orderBlockedKey">
+      {{ orderBlockedKey | translate | async }}
+    </p>
+    <div class="trade-actions">
+      <button class="long" [disabled]="!canOrder" (click)="toOrder('long')">
+        {{ "perpsLong" | translate | async }}
+      </button>
+      <button class="short" [disabled]="!canOrder" (click)="toOrder('short')">
+        {{ "perpsShort" | translate | async }}
+      </button>
+    </div>
+  </ng-container>
 </div>

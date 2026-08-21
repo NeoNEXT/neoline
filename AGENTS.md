@@ -41,7 +41,7 @@ Environment baseline: Node `>=16.20.1`, npm `~8.19.4`.
 - `cross-runtime/`: shared Neo/EVM dAPI constants, models, and error normalization consumed by both `src/` and `extension/`.
 - `extension/`: background scripts, dAPI/injection scripts, manifests.
 - `scripts/`: repository maintenance scripts such as `dev-audit.js`.
-- `src/_locales/`: i18n JSON (`en`, `zh_CN`, `ja`).
+- `src/_locales/`: i18n JSON (`en`, `zh_CN`, `ja`, `ko`).
 - Tests: colocated `*.spec.ts` files.
 
 ## Architecture Notes

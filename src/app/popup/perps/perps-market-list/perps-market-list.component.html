@@ -59,7 +59,11 @@
   </p>
 
   <ng-template #marketRow let-market>
-    <div class="market-row" (click)="toMarket(market.coin)">
+    <div
+      class="market-row"
+      [class.active]="market.coin === activeCoin"
+      (click)="toMarket(market.coin)"
+    >
       <perps-coin-logo
         [symbol]="market.symbol"
         [coin]="market.coin"
@@ -78,7 +82,7 @@
             "perpsMarkPriceTag" | translate | async
           }}</span>
         </div>
-        <div class="change" [class.negative]="isNegative(market.changePercentExact)">
+        <div class="change" [class.negative]="market.changePercentExact | perpsNegative">
           {{ formatSignedPercent(market.changePercentExact) }}
         </div>
       </div>

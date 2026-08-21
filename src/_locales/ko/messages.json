@@ -1838,9 +1838,6 @@
   "perpsMyPosition": {
     "message": "내 포지션"
   },
-  "perpsRecentActivity": {
-    "message": "최근 활동"
-  },
   "perpsNoTransactions": {
     "message": "거래 없음"
   },
@@ -1851,7 +1848,7 @@
     "message": "거래대금 (USD)"
   },
   "perpsRiskTip": {
-    "message": "무기한 선물 거래는 큰 위험을 수반하며, 경고 없이 순식간에 투자금 전액을 잃을 수 있습니다. 거래 책임은 전적으로 본인에게 있습니다."
+    "message": "무기한 선물 거래는 큰 위험을 수반하며, 경고 없이 순식간에 투자금 전액을 잃을 수 있습니다. 거래 책임은 전적으로 본인에게 있습니다. 기술 지원은 Hyperliquid에서, 가격 차트는 TradingView에서 제공합니다."
   },
   "perpsMarketOrder": {
     "message": "시장가"
@@ -2051,17 +2048,23 @@
   "perpsOraclePrice": {
     "message": "오라클 가격"
   },
+  "perpsStatsUnavailable": {
+    "message": "데이터 없음"
+  },
+  "perpsMoreIntervals": {
+    "message": "더보기"
+  },
   "perpsLearnBasics": {
     "message": "무기한 선물 기초 알아보기"
   },
   "perpsOpenInterestTip": {
-    "message": "이 마켓의 모든 미결제 포지션 명목 가치 합계입니다."
+    "message": "이 무기한 계약의 모든 미결제 포지션의 총 가치입니다."
   },
   "perpsFundingRateTip": {
-    "message": "롱과 숏이 매시간 주고받는 비율로, 양수면 롱이 숏에게 지급합니다. 카운트다운은 다음 정산까지의 시간입니다."
+    "message": "가격을 시장에 맞추기 위해 트레이더 간에 매시간 지급하는 수수료입니다. 요율이 양수이면 롱이 숏에게, 음수이면 숏이 롱에게 지급합니다."
   },
   "perpsOracleTip": {
-    "message": "펀딩 및 증거금 계산에 사용되는 외부 현물 가격입니다."
+    "message": "검증자가 보고한 외부 가격의 중앙값으로, 펀딩 비율 계산에 사용됩니다."
   },
   "perpsReviewOrder": {
     "message": "주문 검토"
@@ -2128,6 +2131,21 @@
   },
   "perpsLoadFailed": {
     "message": "Hyperliquid 데이터를 불러올 수 없습니다. 연결을 확인하고 다시 시도하세요."
+  },
+  "perpsMarketNotFound": {
+    "message": "이 마켓은 현재 Hyperliquid에서 사용할 수 없습니다."
+  },
+  "perpsNoTwoSidedBook": {
+    "message": "호가창이 불완전해 체결 가능한 중간가가 없어 주문할 수 없습니다."
+  },
+  "perpsEntryStale": {
+    "message": "시세 연결이 끊겨 지금은 주문할 수 없습니다."
+  },
+  "perpsEntryConnecting": {
+    "message": "시세에 연결 중이므로 지금은 주문할 수 없습니다."
+  },
+  "perpsChartInterrupted": {
+    "message": "연결 중단 구간의 캔들을 채우지 못했습니다. 차트 데이터가 불연속일 수 있습니다."
   },
   "perpsFeedStale": {
     "message": "데이터 연결 끊김 · 마지막 가격 표시 중"
@@ -2233,12 +2251,6 @@
   },
   "perpsReverseToShort": {
     "message": "숏으로 반전"
-  },
-  "perpsTheoreticalBuyingPower": {
-    "message": "이론상 구매력"
-  },
-  "perpsBufferedMax": {
-    "message": "최대 주문(0.5% 예비금)"
   },
   "perpsNearMarginLimit": {
     "message": "이 금액은 Max 예비금을 사용하므로 증거금이 변하면 거래소에서 거부될 수 있습니다."
