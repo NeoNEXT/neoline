@@ -23,7 +23,7 @@ export function ethMarket(overrides: Partial<PerpsMarket> = {}): PerpsMarket {
     symbol: 'ETH',
     szDecimals: 4,
     maxLeverage: 25,
-    onlyIsolated: false,
+    marginMode: null,
     markPxExact: '100',
     midPxExact: '100',
     oraclePxExact: '100',

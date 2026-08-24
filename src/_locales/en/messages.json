@@ -1907,12 +1907,6 @@
   "perpsSlippage": {
     "message": "Slippage"
   },
-  "perpsEstimatedShort": {
-    "message": "Est."
-  },
-  "perpsMaximumShort": {
-    "message": "Max"
-  },
   "perpsEditSlippage": {
     "message": "Adjust max slippage"
   },
@@ -1923,7 +1917,7 @@
     "message": "Max slippage only affects market orders submitted from the order form."
   },
   "perpsSlippageTip": {
-    "message": "Estimated slippage is calculated from the current order book and order size. Max is the allowed price deviation; a lower value may cause the order to fail."
+    "message": "The most the fill price may differ from the reference price. A market order is sent as an IOC limit at that boundary, so a tighter value protects the price and makes a miss more likely."
   },
   "perpsInsufficientMargin": {
     "message": "Not enough available margin"
@@ -2028,7 +2022,7 @@
     "message": "You receive"
   },
   "perpsBelowMinimum": {
-    "message": "Amount is below the minimum of"
+    "message": "Amount is below the minimum of {{min}} USDC"
   },
   "perpsExceedsBalance": {
     "message": "Amount exceeds your balance"
@@ -2202,7 +2196,7 @@
     "message": "Market order was not filled. No retry was sent."
   },
   "perpsMarketChangedReviewAgain": {
-    "message": "The market changed or fresh liquidity is unavailable. Review the order again."
+    "message": "The price moved beyond your max slippage. Nothing was sent — review the order again."
   },
   "perpsFeeQuoteChangedReviewAgain": {
     "message": "The fee quote changed. Review it again before submitting."
@@ -2263,5 +2257,41 @@
   },
   "confirm": {
     "message": "Confirm"
+  },
+  "perpsMaxSlippage": {
+    "message": "Max slippage"
+  },
+  "perpsPositionChangedReviewAgain": {
+    "message": "Your position changed before the order was signed. Review it again."
+  },
+  "perpsMakerShort": {
+    "message": "Maker"
+  },
+  "perpsTakerShort": {
+    "message": "Taker"
+  },
+  "perpsFeeMakerTakerTip": {
+    "message": "NeoLine fee　{{neoLineFeeRate}}<br />Hyperliquid maker fee　{{makerFeeRate}}<br />Hyperliquid taker fee　{{takerFeeRate}}<br />A limit order that rests pays the maker fee; one that fills immediately pays the taker fee."
+  },
+  "perpsNoExecutionPrice": {
+    "message": "This market has no tradable mid price right now, so market orders are unavailable."
+  },
+  "perpsHoldingLongChooseExit": {
+    "message": "You hold a long position in this market. Choose Reduce or Close to exit it."
+  },
+  "perpsHoldingShortChooseExit": {
+    "message": "You hold a short position in this market. Choose Reduce or Close to exit it."
+  },
+  "perpsNoPositionToClose": {
+    "message": "There is no open position in this market to close."
+  },
+  "perpsSlippageOutOfRange": {
+    "message": "Max slippage is outside the allowed range. Adjust it before submitting."
+  },
+  "perpsExecutionStatusUnknown": {
+    "message": "The order was sent, but its result could not be read. It may have filled — check its status or your activity before sending another."
+  },
+  "perpsCheckOrderStatus": {
+    "message": "Check again"
   }
 }

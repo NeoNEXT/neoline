@@ -179,7 +179,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 24px 0;
+  padding: 18px 24px 4px;
   .label {
     font-size: 13px;
     color: var(--title-color);
@@ -447,6 +447,40 @@
     }
     .value {
       color: var(--title-color);
+
+      // The exchange's current liquidation price, shown beside the estimate
+      // while adding to a position.
+      .current,
+      .arrow {
+        font-style: normal;
+        color: var(--sub-title-color);
+      }
+
+      .arrow {
+        margin: 0 3px;
+      }
+    }
+
+    .fee-sides {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+
+      .side-label,
+      .separator {
+        font-style: normal;
+        color: var(--sub-title-color);
+      }
+
+      b {
+        font-weight: normal;
+
+        // A negative maker rate pays the account; it reads as income, not cost.
+        &.rebate {
+          color: var(--theme-color);
+        }
+      }
     }
 
     .slippage-value {
@@ -487,6 +521,48 @@
   color: var(--error-color);
 }
 
+// A signed order whose result never arrived: not an error, and not a retry.
+.status-unknown {
+  margin: 12px 22px 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--box-color);
+
+  p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--title-color);
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+
+    button {
+      flex: 1;
+      height: 32px;
+      border: 1px solid var(--theme-color);
+      border-radius: 16px;
+      background: transparent;
+      color: var(--theme-color);
+      font-size: 12px;
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+
+      &.plain {
+        border-color: var(--line-color);
+        color: var(--sub-title-color);
+      }
+    }
+  }
+}
+
 .review-tip {
   margin: 10px 24px 0;
   font-size: 12px;
@@ -495,7 +571,7 @@
 }
 
 .margin-mode-tip {
-  margin: -4px 24px 10px;
+  margin: 0 24px 10px;
   font-size: 12px;
   color: var(--sub-title-color);
 }

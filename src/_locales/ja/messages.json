@@ -1907,12 +1907,6 @@
   "perpsSlippage": {
     "message": "スリッページ"
   },
-  "perpsEstimatedShort": {
-    "message": "予想"
-  },
-  "perpsMaximumShort": {
-    "message": "最大"
-  },
   "perpsEditSlippage": {
     "message": "最大スリッページを調整"
   },
@@ -1923,7 +1917,7 @@
     "message": "最大スリッページは注文フォームから送信した成行注文にのみ適用されます。"
   },
   "perpsSlippageTip": {
-    "message": "予想スリッページは現在の板情報と注文数量から算出されます。最大値は成行注文で許容する価格差で、低すぎると約定しない場合があります。"
+    "message": "約定価格が参照価格から離れてよい上限です。成行注文はこの境界を指値とする IOC として送信されるため、小さくするほど価格は守られますが約定しにくくなります。"
   },
   "perpsInsufficientMargin": {
     "message": "利用可能な証拠金が不足しています"
@@ -2028,7 +2022,7 @@
     "message": "受取額"
   },
   "perpsBelowMinimum": {
-    "message": "最低額を下回っています"
+    "message": "金額が最小注文額 {{min}} USDC を下回っています"
   },
   "perpsExceedsBalance": {
     "message": "残高を超えています"
@@ -2202,7 +2196,7 @@
     "message": "成行注文は約定しませんでした。自動再試行は行っていません。"
   },
   "perpsMarketChangedReviewAgain": {
-    "message": "市場が変動したか、最新の流動性を取得できません。注文を再確認してください。"
+    "message": "価格が最大スリッページを超えて変動したため、注文は送信されませんでした。もう一度確認してください。"
   },
   "perpsFeeQuoteChangedReviewAgain": {
     "message": "手数料の見積もりが変わりました。送信する前にもう一度確認してください。"
@@ -2263,5 +2257,41 @@
   },
   "confirm": {
     "message": "確認"
+  },
+  "perpsMaxSlippage": {
+    "message": "最大スリッページ"
+  },
+  "perpsPositionChangedReviewAgain": {
+    "message": "署名前にポジションが変化しました。もう一度確認してください。"
+  },
+  "perpsMakerShort": {
+    "message": "メイカー"
+  },
+  "perpsTakerShort": {
+    "message": "テイカー"
+  },
+  "perpsFeeMakerTakerTip": {
+    "message": "NeoLine 手数料　{{neoLineFeeRate}}<br />Hyperliquid メイカー手数料　{{makerFeeRate}}<br />Hyperliquid テイカー手数料　{{takerFeeRate}}<br />板に残った指値はメイカー手数料、即時約定はテイカー手数料が適用されます。"
+  },
+  "perpsNoExecutionPrice": {
+    "message": "この市場には現在取引可能な仲値がないため、成行注文はご利用いただけません。"
+  },
+  "perpsHoldingLongChooseExit": {
+    "message": "この市場でロングポジションを保有しています。解消するには減少またはクローズを選択してください。"
+  },
+  "perpsHoldingShortChooseExit": {
+    "message": "この市場でショートポジションを保有しています。解消するには減少またはクローズを選択してください。"
+  },
+  "perpsNoPositionToClose": {
+    "message": "この市場にクローズできるポジションはありません。"
+  },
+  "perpsSlippageOutOfRange": {
+    "message": "最大スリッページが許容範囲外です。調整してから送信してください。"
+  },
+  "perpsExecutionStatusUnknown": {
+    "message": "注文は送信されましたが、結果を読み取れませんでした。約定している可能性があるため、状態か履歴を確認してから再送してください。"
+  },
+  "perpsCheckOrderStatus": {
+    "message": "再確認"
   }
 }

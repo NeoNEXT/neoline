@@ -7,6 +7,7 @@ import {
   BehaviorSubject,
   Subscription,
   concat,
+  combineLatest,
   of,
   forkJoin,
   from,
@@ -19,6 +20,8 @@ import {
   shareReplay,
   filter,
   retry,
+  scan,
+  startWith,
   tap,
   switchMap,
 } from 'rxjs/operators';
@@ -47,12 +50,12 @@ import {
   PerpsLedgerUpdate,
   PerpsMarket,
   PerpsOpenOrder,
-  PerpsOrderBook,
   PerpsOrderExecutionResult,
   PerpsOrderRequest,
   PerpsExchangeResponse,
   PerpsPosition,
   PerpsUniverseItem,
+  PerpsUserFeeRates,
   PERPS_BUILDER_ADDRESS,
   PERPS_BUILDER_FEE_TENTHS_BPS,
   PERPS_BUILDER_MAX_FEE_RATE,
@@ -61,6 +64,7 @@ import {
   PERPS_HIP3_DEXES,
   PERPS_MAX_SLIPPAGE_PERCENT,
   PERPS_MIN_SLIPPAGE_PERCENT,
+  perpsPriceDecimals,
 } from '@popup/_lib/perps';
 import { environment } from '@/environments/environment';
 import {
@@ -82,13 +86,6 @@ export class PerpsLeverageChangeRequiredError extends Error {
   }
 }
 
-export class PerpsMarketDataUnavailableError extends Error {
-  constructor(message = 'A fresh two-sided order book is required') {
-    super(message);
-    this.name = 'PerpsMarketDataUnavailableError';
-  }
-}
-
 export class PerpsPositionChangedError extends Error {
   constructor() {
     super('The position changed before the close order was signed');
@@ -97,7 +94,10 @@ export class PerpsPositionChangedError extends Error {
 }
 
 interface HyperliquidUserFees {
+  /** Taker rate: what crossing the spread costs. */
   userCrossRate: string;
+  /** Maker rate: what adding to the book costs, negative where it pays. */
+  userAddRate: string;
   activeReferralDiscount?: string;
 }
 
@@ -169,7 +169,11 @@ export function resolvePerpsTestnet(
  * subscription per DEX is required — sharing a channel across DEXes lets the
  * last frame overwrite every other pool.
  */
-const DEX_SCOPED_CHANNELS = new Set(['assetCtxs', 'clearinghouseState']);
+const DEX_SCOPED_CHANNELS = new Set([
+  'assetCtxs',
+  'clearinghouseState',
+  'openOrders',
+]);
 
 /**
  * How many times a read-only fetch is repeated before its failure is the answer.
@@ -256,9 +260,9 @@ export class HyperliquidService {
     string,
     { expiresAt: number; request: Observable<PerpsAccountMode> }
   >();
-  private userTakerFeeCache = new Map<
+  private userFeeCache = new Map<
     string,
-    { expiresAt: number; request: Observable<number> }
+    { expiresAt: number; request: Observable<PerpsUserFeeRates> }
   >();
   /**
    * How long a channel outlives its last observer.
@@ -494,12 +498,20 @@ export class HyperliquidService {
   }
 
   /**
-   * User-specific perps taker rate, including the active referral discount.
-   * Staking and volume tier adjustments are already reflected in userCrossRate.
+   * User-specific perps fee rates, including the active referral discount.
+   * Staking and volume tier adjustments are already reflected in the rates.
+   *
+   * Both sides are read because both are charged: a market order crosses the
+   * spread and pays `userCrossRate`, while a GTC limit order usually rests and
+   * fills at `userAddRate`. Quoting the taker rate on a limit order overstates
+   * its cost, and on a rebate tier it reverses the sign of the answer.
+   *
+   * The maker rate is allowed to be negative — that is a rebate, and clamping
+   * it to zero would hide money the fill pays back.
    */
-  getUserTakerFeeRate(address: string): Observable<number> {
+  getUserFeeRates(address: string): Observable<PerpsUserFeeRates> {
     const user = address.toLowerCase();
-    const cached = this.userTakerFeeCache.get(user);
+    const cached = this.userFeeCache.get(user);
     if (cached && cached.expiresAt > Date.now()) {
       return cached.request;
     }
@@ -510,27 +522,37 @@ export class HyperliquidService {
     }).pipe(
       map((fees) => {
         const userCrossRate = Number(fees?.userCrossRate);
+        const userAddRate = Number(fees?.userAddRate);
         const referralDiscount = Number(
           fees?.activeReferralDiscount || 0
         );
         if (
           !Number.isFinite(userCrossRate) ||
           userCrossRate < 0 ||
+          !Number.isFinite(userAddRate) ||
           !Number.isFinite(referralDiscount) ||
           referralDiscount < 0 ||
           referralDiscount > 1
         ) {
           throw new Error('Invalid Hyperliquid user fee response');
         }
-        return userCrossRate * (1 - referralDiscount);
+        return {
+          takerRate: userCrossRate * (1 - referralDiscount),
+          // A referral discount reduces what is paid; it cannot reduce what is
+          // paid back, so a rebate keeps its full size.
+          makerRate:
+            userAddRate < 0
+              ? userAddRate
+              : userAddRate * (1 - referralDiscount),
+        };
       }),
       catchError((error) => {
-        this.userTakerFeeCache.delete(user);
+        this.userFeeCache.delete(user);
         throw error;
       }),
       shareReplay(1)
     );
-    this.userTakerFeeCache.set(user, {
+    this.userFeeCache.set(user, {
       expiresAt: Date.now() + this.userFeeCacheMs,
       request,
     });
@@ -668,25 +690,14 @@ export class HyperliquidService {
       throw new PerpsLeverageChangeRequiredError(leverage);
     }
 
-    // Current NeoLine market forms freeze a USD intent (or an exact full-close
-    // quantity) at review. Refresh L2 at the last possible point so the signed
-    // IOC is derived from a current two-sided book rather than a UI snapshot.
-    const requiresFreshBook =
-      request.orderType === 'market' &&
-      (request.notionalExact !== undefined || request.fullClose !== undefined);
-    if (!requiresFreshBook) {
-      if (request.intent === 'reverse') {
-        return this.getAccount(ethers.computeAddress(privateKey), true).pipe(
-          switchMap((account) =>
-            this.submitPreparedOrder(
-              privateKey,
-              request,
-              new BigNumber(request.price),
-              this.reverseOrderSize(account, request, request.size)
-            )
-          )
-        );
-      }
+    // Only the size can still be stale here, and only when it is derived from
+    // the position rather than typed: a full close must send the quantity the
+    // account holds now, not the one review saw, or it leaves a dust position
+    // behind. Everything about the price was settled by the page (ADR-0004,
+    // ADR-0006) — this is the submission refresh, not a second price source.
+    const refreshesPosition =
+      request.fullClose === true || request.intent === 'reverse';
+    if (!refreshesPosition) {
       return this.submitPreparedOrder(
         privateKey,
         request,
@@ -694,46 +705,12 @@ export class HyperliquidService {
         new BigNumber(request.size)
       );
     }
-    const account$ = request.fullClose || request.intent === 'reverse'
-      ? this.getAccount(ethers.computeAddress(privateKey), true)
-      : of(null);
-    return forkJoin([this.getOrderBook(request.coin), account$]).pipe(
-      switchMap(([book, account]) => {
-        const bid = new BigNumber(book?.bids?.[0]?.priceExact || 0);
-        const ask = new BigNumber(book?.asks?.[0]?.priceExact || 0);
-        const age = Date.now() - Number(book?.time || 0);
-        if (
-          !book ||
-          !bid.isGreaterThan(0) ||
-          !ask.isGreaterThan(bid) ||
-          age < -5_000 ||
-          age > 10_000
-        ) {
-          return throwError(
-            () => new PerpsMarketDataUnavailableError()
-          );
-        }
-        const mid = bid.plus(ask).dividedBy(2);
-        const reviewedMid = new BigNumber(request.price);
-        const allowedPercent = new BigNumber(
-          this.slippageFraction(request.slippagePercent)
-        ).times(100);
-        const movedPercent = mid
-          .minus(reviewedMid)
-          .absoluteValue()
-          .dividedBy(reviewedMid)
-          .times(100);
-        if (
-          !reviewedMid.isGreaterThan(0) ||
-          movedPercent.isGreaterThan(allowedPercent)
-        ) {
-          return throwError(
-            () =>
-              new PerpsMarketDataUnavailableError(
-                'Market moved beyond the reviewed slippage tolerance'
-              )
-          );
-        }
+    return this.getAccount(
+      ethers.computeAddress(privateKey),
+      true,
+      this.dexOfCoin(request.coin)
+    ).pipe(
+      switchMap((account) => {
         let size: BigNumber;
         if (request.fullClose) {
           const position = account?.positions?.find(
@@ -749,18 +726,21 @@ export class HyperliquidService {
           }
           size = signedSize.absoluteValue();
         } else {
-          const targetSize =
-            request.notionalExact === undefined
-              ? new BigNumber(request.size)
-              : new BigNumber(request.notionalExact).dividedBy(mid);
-          size =
-            request.intent === 'reverse'
-              ? this.reverseOrderSize(account, request, targetSize)
-              : targetSize;
+          size = this.reverseOrderSize(account, request, request.size);
         }
-        return this.submitPreparedOrder(privateKey, request, mid, size);
+        return this.submitPreparedOrder(
+          privateKey,
+          request,
+          new BigNumber(request.price),
+          size
+        );
       })
     );
+  }
+
+  /** A HIP-3 coin carries its DEX as a prefix; a bare coin is canonical. */
+  private dexOfCoin(coin: string): string {
+    return coin?.includes(':') ? coin.slice(0, coin.indexOf(':')) : '';
   }
 
   private reverseOrderSize(
@@ -843,14 +823,16 @@ export class HyperliquidService {
           // Once the signed order was sent, a transport failure cannot prove
           // rejection. Preserve cloid and stop: retrying could duplicate risk.
           catchError((error) =>
-            of({
-              status: 'unknown' as const,
-              cloid,
-              submittedSizeExact: size,
-              filledSizeExact: '0',
-              remainingSizeExact: size,
-              error: error?.message || String(error),
-            })
+            isExchangeAnswer(error)
+              ? throwError(() => error)
+              : of({
+                  status: 'unknown' as const,
+                  cloid,
+                  submittedSizeExact: size,
+                  filledSizeExact: '0',
+                  remainingSizeExact: size,
+                  error: error?.message || String(error),
+                })
           )
         )
       )
@@ -1057,22 +1039,20 @@ export class HyperliquidService {
   }
 
   /**
-   * Perp prices use at most five significant figures and 6-szDecimals places.
+   * Quantise a price to what the market can quote, per `perpsPriceDecimals`.
+   *
+   * The order form normalises a typed limit price through the same rule, so on
+   * that path this is a no-op — which is the point: it means the price the user
+   * approved is the price in the signature.
    */
   private roundPrice(
     price: BigNumber,
     szDecimals: number,
     roundingMode: BigNumber.RoundingMode = BigNumber.ROUND_HALF_UP
   ): string {
-    const maxDecimals = Math.max(0, 6 - szDecimals);
-    const numericPrice = price.toNumber();
-    const significantDecimals = Math.max(
-      0,
-      5 - Math.floor(Math.log10(Math.abs(numericPrice))) - 1
-    );
     return price
       .decimalPlaces(
-        Math.min(maxDecimals, significantDecimals),
+        perpsPriceDecimals(price.toNumber(), szDecimals),
         roundingMode
       )
       .toFixed();
@@ -1383,61 +1363,6 @@ export class HyperliquidService {
     };
   }
 
-  getOrderBook(coin: string): Observable<PerpsOrderBook> {
-    return this.post<any>({ type: 'l2Book', coin }).pipe(
-      map((book) => this.parseOrderBook(book))
-    );
-  }
-
-  /** Seed from REST, then follow Hyperliquid's live level-2 book snapshots. */
-  watchOrderBook(coin: string): Observable<PerpsOrderBook> {
-    return concat(
-      this.getOrderBook(coin).pipe(catchError(() => of(null))),
-      this.subscribe({ type: 'l2Book', coin }).pipe(
-        map((book) => this.parseOrderBook(book))
-      )
-    ).pipe(filter((book) => !!book));
-  }
-
-  private parseOrderBook(book: any): PerpsOrderBook {
-    if (!book || !Array.isArray(book.levels)) {
-      return null;
-    }
-    const parseLevels = (levels: any[]) =>
-      (Array.isArray(levels) ? levels : [])
-        .map((level) => ({
-          priceExact: this.toFiniteDecimal(level?.px),
-          sizeExact: this.toFiniteDecimal(level?.sz),
-          price: this.toFiniteNumber(level?.px),
-          size: this.toFiniteNumber(level?.sz),
-        }))
-        .filter(
-          (level) =>
-            new BigNumber(level.priceExact).isGreaterThan(0) &&
-            new BigNumber(level.sizeExact).isGreaterThan(0)
-        );
-    const bids = parseLevels(book.levels[0]).sort((a, b) =>
-      new BigNumber(b.priceExact).comparedTo(a.priceExact)
-    );
-    const asks = parseLevels(book.levels[1]).sort((a, b) =>
-      new BigNumber(a.priceExact).comparedTo(b.priceExact)
-    );
-    if (
-      bids[0] &&
-      asks[0] &&
-      new BigNumber(bids[0].priceExact).isGreaterThanOrEqualTo(
-        asks[0].priceExact
-      )
-    ) {
-      return null;
-    }
-    return {
-      coin: book.coin,
-      time: this.toFiniteNumber(book.time),
-      bids,
-      asks,
-    };
-  }
 
   private loadMarketSnapshot() {
     this.getMarkets().subscribe({
@@ -1511,6 +1436,10 @@ export class HyperliquidService {
     const symbol = protocolCoin.includes(':')
       ? protocolCoin.slice(protocolCoin.indexOf(':') + 1)
       : protocolCoin;
+    const marginMode =
+      item.marginMode === 'strictIsolated' || item.marginMode === 'noCross'
+        ? item.marginMode
+        : null;
     return {
       key: `${dex || 'hl'}:${symbol}`,
       assetId: dex ? 100000 + dexIndex * 10000 + index : index,
@@ -1520,7 +1449,7 @@ export class HyperliquidService {
       symbol,
       szDecimals: item.szDecimals,
       maxLeverage: item.maxLeverage,
-      onlyIsolated: !!item.onlyIsolated,
+      marginMode,
       ...this.marketContextFields(ctx),
     };
   }
@@ -1630,14 +1559,41 @@ export class HyperliquidService {
   }
 
   /**
+   * One address's account on one DEX, kept live rather than re-read.
+   *
+   * `clearinghouseState` is the account-level channel: positions and margin
+   * summary together, scoped by `dex`, which is what makes this correct on a
+   * HIP-3 market as well — that pool has its own clearinghouse, and a canonical
+   * frame folded into it would report one DEX's margin as another's.
+   *
+   * This replaces polling rather than adding a layer: the page holds the same
+   * single account state it held before, without a three-second cache deciding
+   * how stale it is (ADR-0006). The same channel already backs the home tab and
+   * the funding page, so there is one account feed in the product, not two.
+   */
+  watchAccount(address: string, dex = ''): Observable<PerpsAccount> {
+    const user = address.toLowerCase();
+    return this.getAccount(user, true, dex).pipe(
+      switchMap((seed) =>
+        this.subscribe({ type: 'clearinghouseState', user, dex }).pipe(
+          scan(
+            (account, frame) =>
+              this.updateAccountFromClearinghouseState(account, frame),
+            seed
+          ),
+          startWith(seed)
+        )
+      )
+    );
+  }
+
+  /**
    * The account across every DEX the product enables, merged for display.
    *
-   * Each DEX is a separate clearinghouse with its own collateral, so each is
-   * requested separately and a failure is recorded rather than thrown: one
-   * unavailable builder DEX must not blank out an account that is otherwise
-   * readable. What it does do is mark the totals incomplete, because a sum
-   * that quietly omits a pool reads as "you have less money" instead of
-   * "we could not look".
+   * Standard accounts have one collateral pool per DEX. Unified and portfolio
+   * modes expose one account-wide collateral balance, while DEX snapshots are
+   * still needed for their positions. A failed DEX is recorded rather than
+   * blanking all readable state.
    */
   getAggregatedAccount(
     address: string,
@@ -1672,6 +1628,7 @@ export class HyperliquidService {
   ): PerpsAggregatedAccount {
     const canonical =
       snapshots.find((item) => item.dex === '') ?? snapshots[0] ?? null;
+    const unified = canonical?.unified ?? false;
     const sum = (pick: (account: PerpsAccount) => string) =>
       snapshots
         .reduce(
@@ -1681,7 +1638,7 @@ export class HyperliquidService {
         .toFixed();
     // The riskiest pool, not the average one: the ratio rises as maintenance
     // margin approaches equity, so the highest is the one closest to the edge.
-    const riskiest = snapshots
+    const riskiest = unified ? null : snapshots
       .filter((account) => account.marginRatioExact !== null)
       .reduce(
         (worst, account) =>
@@ -1694,14 +1651,32 @@ export class HyperliquidService {
         null as PerpsAccount
       );
     return {
-      unified: canonical?.unified ?? false,
+      unified,
       abstractionMode: canonical?.abstractionMode ?? 'unknown',
-      accountValueExact: sum((account) => account.accountValueExact),
-      totalBalanceExact: sum((account) => account.totalBalanceExact),
+      accountValueExact: unified
+        ? canonical?.spotUsdcExact ?? '0'
+        : sum((account) => account.accountValueExact),
+      totalBalanceExact: unified
+        ? canonical?.spotUsdcExact ?? '0'
+        : sum((account) => account.totalBalanceExact),
       totalMarginUsedExact: sum((account) => account.totalMarginUsedExact),
       totalNtlPosExact: sum((account) => account.totalNtlPosExact),
-      withdrawableExact: sum((account) => account.withdrawableExact),
-      availableBalanceExact: sum((account) => account.availableBalanceExact),
+      withdrawableExact: unified
+        ? BigNumber.maximum(
+            0,
+            new BigNumber(canonical?.spotUsdcExact ?? 0).minus(
+              canonical?.spotUsdcHoldExact ?? 0
+            )
+          ).toFixed()
+        : sum((account) => account.withdrawableExact),
+      availableBalanceExact: unified
+        ? BigNumber.maximum(
+            0,
+            new BigNumber(canonical?.spotUsdcExact ?? 0).minus(
+              canonical?.spotUsdcHoldExact ?? 0
+            )
+          ).toFixed()
+        : sum((account) => account.availableBalanceExact),
       spotUsdcExact: canonical?.spotUsdcExact ?? '0',
       spotUsdcHoldExact: canonical?.spotUsdcHoldExact ?? '0',
       marginRatioExact: riskiest?.marginRatioExact ?? null,
@@ -1879,15 +1854,17 @@ export class HyperliquidService {
       holdExact: spotUsdcHoldExact,
       freeExact: freeSpotUsdcExact,
     } = this.parseSpotUsdc(spot);
-    const foldedSpotExact = account.unified ? freeSpotUsdcExact : '0';
     const updated = {
       ...account,
-      totalBalanceExact: new BigNumber(account.accountValueExact)
-        .plus(foldedSpotExact)
-        .toFixed(),
-      availableBalanceExact: new BigNumber(account.withdrawableExact)
-        .plus(foldedSpotExact)
-        .toFixed(),
+      accountValueExact: account.unified
+        ? spotUsdcExact
+        : account.accountValueExact,
+      totalBalanceExact: account.unified
+        ? spotUsdcExact
+        : account.totalBalanceExact,
+      availableBalanceExact: account.unified
+        ? freeSpotUsdcExact
+        : account.availableBalanceExact,
       spotUsdcExact,
       spotUsdcHoldExact,
     };
@@ -2018,7 +1995,8 @@ export class HyperliquidService {
         unified,
         abstractionMode: mode,
         dex,
-        totalBalanceExact: unified ? freeSpotUsdcExact : '0',
+        accountValueExact: unified ? spotUsdcExact : '0',
+        totalBalanceExact: unified ? spotUsdcExact : '0',
         availableBalanceExact: unified ? freeSpotUsdcExact : '0',
         spotUsdcExact,
         spotUsdcHoldExact,
@@ -2066,22 +2044,27 @@ export class HyperliquidService {
           marginUsedExact,
         } as PerpsPosition;
       });
-    const accountValueExact = this.toFiniteDecimal(
+    const perDexAccountValueExact = this.toFiniteDecimal(
       res.marginSummary.accountValue
     );
+    const accountValueExact = unified
+      ? dex
+        ? '0'
+        : spotUsdcExact
+      : perDexAccountValueExact;
     const withdrawableExact = this.toFiniteDecimal(res.withdrawable);
-    const availableBalanceExact = new BigNumber(withdrawableExact)
-      .plus(unified ? freeSpotUsdcExact : 0)
-      .toFixed();
+    const availableBalanceExact = unified
+      ? dex
+        ? '0'
+        : freeSpotUsdcExact
+      : withdrawableExact;
     const maintenanceMarginUsedExact = this.toFiniteDecimal(
       res.crossMaintenanceMarginUsed
     );
     const standardRiskCapitalExact = this.toFiniteDecimal(
-      res.crossMarginSummary?.accountValue ?? accountValueExact
+      res.crossMarginSummary?.accountValue ?? perDexAccountValueExact
     );
-    const totalBalanceExact = new BigNumber(accountValueExact)
-      .plus(unified ? freeSpotUsdcExact : 0)
-      .toFixed();
+    const totalBalanceExact = accountValueExact;
     const totalMarginUsedExact = this.toFiniteDecimal(
       res.marginSummary.totalMarginUsed
     );
@@ -2253,22 +2236,32 @@ export class HyperliquidService {
 
   /** Active orders that can still fill and therefore must remain manageable. */
   getOpenOrders(address: string): Observable<PerpsOpenOrder[]> {
-    return this.post<PerpsOpenOrder[]>({
-      type: 'frontendOpenOrders',
-      user: address.toLowerCase(),
-    }).pipe(
-      map((res) => this.normalizeIds(Array.isArray(res) ? res : []))
-    );
+    const user = address.toLowerCase();
+    return forkJoin(
+      this.enabledDexes.map((dex) =>
+        this.post<PerpsOpenOrder[]>({
+          type: 'frontendOpenOrders',
+          user,
+          dex,
+        }).pipe(
+          map((res) => this.normalizeIds(Array.isArray(res) ? res : []))
+        )
+      )
+    ).pipe(map((ordersByDex) => ordersByDex.flat()));
   }
 
   /** Full open-order snapshots pushed whenever the user's book changes. */
   watchOpenOrders(address: string): Observable<PerpsOpenOrder[]> {
     const user = address.toLowerCase();
-    return this.subscribe({ type: 'openOrders', user }).pipe(
-      map((data) =>
-        this.normalizeIds(Array.isArray(data?.orders) ? data.orders : [])
+    return combineLatest(
+      this.enabledDexes.map((dex) =>
+        this.subscribe({ type: 'openOrders', user, dex }).pipe(
+          map((data) =>
+            this.normalizeIds(Array.isArray(data?.orders) ? data.orders : [])
+          )
+        )
       )
-    );
+    ).pipe(map((ordersByDex) => ordersByDex.flat()));
   }
 
   /** Orders that already left the book. Hyperliquid caps this at 2000 rows. */
@@ -2530,10 +2523,6 @@ export class HyperliquidService {
       this.emit(`assetCtxs:dex=${msg.data?.dex ?? ''}`, msg.data);
       return;
     }
-    if (msg.channel === 'l2Book' && typeof msg.data?.coin === 'string') {
-      this.emit(`l2Book:${msg.data.coin}`, msg.data);
-      return;
-    }
     if (
       msg.channel === 'activeAssetData' &&
       typeof msg.data?.user === 'string' &&
@@ -2565,9 +2554,19 @@ export class HyperliquidService {
       return;
     }
     if (
+      msg.channel === 'openOrders' &&
+      typeof msg.data?.user === 'string'
+    ) {
+      this.normalizeIds(msg.data);
+      this.emit(
+        `openOrders:${msg.data.user.toLowerCase()}:dex=${msg.data.dex ?? ''}`,
+        msg.data
+      );
+      return;
+    }
+    if (
       [
         'userFills',
-        'openOrders',
         'orderUpdates',
         'userNonFundingLedgerUpdates',
       ].includes(msg.channel) &&

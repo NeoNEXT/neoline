@@ -2,10 +2,11 @@ import {
   PerpsActiveAssetData,
   PerpsCandle,
   PerpsMarket,
-  PerpsOrderBook,
   PerpsOrderPreview,
   PerpsOrderSide,
   PerpsPosition,
+  PERPS_PRICE_MAX_DECIMALS,
+  perpsPriceDecimals,
 } from '@popup/_lib/perps';
 import BigNumber from 'bignumber.js';
 
@@ -189,9 +190,6 @@ export function priceDecimals(
     Math.max(0, PERPS_PRICE_MAX_DECIMALS - szDecimals) + (isMid ? 1 : 0);
   return Math.min(actual, cap);
 }
-
-/** Hyperliquid quotes perp prices at up to six decimals, less `szDecimals`. */
-const PERPS_PRICE_MAX_DECIMALS = 6;
 
 /**
  * Decimal places the chart's price axis quotes.
@@ -377,6 +375,72 @@ export function formatSize(
 }
 
 /**
+ * Whether the market has left the window the user agreed to.
+ *
+ * Max slippage is the whole of the user's consent about price, so it is also
+ * the test for whether the price they reviewed still stands. Both sides are
+ * compared as decimals: at six decimals a market can move by less than a
+ * float comparison can resolve.
+ *
+ * A missing or non-positive price on either side answers `true` — there is no
+ * agreed price to measure against, so nothing may be signed against it.
+ */
+export function exceedsMaxSlippage(
+  reviewedPriceExact: PerpsExactValue,
+  currentPriceExact: PerpsExactValue,
+  maxSlippagePercent: number
+): boolean {
+  const reviewed = new BigNumber(reviewedPriceExact ?? 0);
+  const current = new BigNumber(currentPriceExact ?? 0);
+  if (
+    !reviewed.isFinite() ||
+    !reviewed.isGreaterThan(0) ||
+    !current.isFinite() ||
+    !current.isGreaterThan(0) ||
+    !Number.isFinite(maxSlippagePercent)
+  ) {
+    return true;
+  }
+  return current
+    .minus(reviewed)
+    .absoluteValue()
+    .dividedBy(reviewed)
+    .times(100)
+    .isGreaterThan(maxSlippagePercent);
+}
+
+/**
+ * A typed limit price quantised to what this market can actually quote.
+ *
+ * Hyperliquid does not reject an off-tick price, it rounds one — so a form that
+ * accepts `1234.567` on a market quoting one decimal signs `1234.5` while still
+ * showing the user the number they typed. Running this on blur and writing the
+ * answer back into the box keeps the price on screen and the price in the
+ * signature the same value.
+ *
+ * A box holding nothing, a minus sign or a lone decimal point is left for the
+ * user to finish: those answer `''` rather than a zero price.
+ */
+export function normalizeLimitPrice(
+  value: PerpsExactValue,
+  szDecimals?: number
+): string {
+  const price = new BigNumber(value ?? '');
+  if (!price.isFinite() || !price.isGreaterThan(0)) {
+    return '';
+  }
+  if (szDecimals === undefined) {
+    return price.toFixed();
+  }
+  return price
+    .decimalPlaces(
+      perpsPriceDecimals(price.toNumber(), szDecimals),
+      BigNumber.ROUND_HALF_UP
+    )
+    .toFixed();
+}
+
+/**
  * Amount text cut down to the decimals the destination can carry.
  *
  * This runs on every keystroke of an amount field, so a digit the transfer
@@ -457,50 +521,6 @@ export function formatFillTime(time: number): string {
   return `${date.getMonth() + 1}/${date.getDate()} ${pad2(
     date.getHours()
   )}:${pad2(date.getMinutes())}`;
-}
-
-/**
- * Estimate price impact by consuming the live book in execution order.
- * Returns null when the visible book cannot fill the whole order.
- */
-export function estimateMarketSlippagePercent(
-  book: PerpsOrderBook,
-  size: BigNumber.Value,
-  isBuy: boolean
-): number | null {
-  const requested = new BigNumber(size || 0);
-  if (!book || !requested.isFinite() || !requested.isGreaterThan(0)) {
-    return null;
-  }
-  const bestBid = book.bids[0]?.priceExact ?? book.bids[0]?.price;
-  const bestAsk = book.asks[0]?.priceExact ?? book.asks[0]?.price;
-  if (!bestBid || !bestAsk) {
-    return null;
-  }
-  const midPrice = new BigNumber(bestBid).plus(bestAsk).dividedBy(2);
-  const levels = isBuy ? book.asks : book.bids;
-  let remaining = requested;
-  let notional = new BigNumber(0);
-  for (const level of levels) {
-    const levelSize = new BigNumber(level.sizeExact ?? level.size);
-    const filled = BigNumber.minimum(remaining, levelSize);
-    notional = notional.plus(filled.times(level.priceExact ?? level.price));
-    remaining = remaining.minus(filled);
-    if (remaining.isZero()) {
-      break;
-    }
-  }
-  if (remaining.isGreaterThan(0)) {
-    return null;
-  }
-  const averagePrice = notional.dividedBy(requested);
-  const directionAdjustedImpact = isBuy
-    ? averagePrice.minus(midPrice)
-    : midPrice.minus(averagePrice);
-  return BigNumber.maximum(
-    0,
-    directionAdjustedImpact.dividedBy(midPrice).times(100)
-  ).toNumber();
 }
 
 /**
@@ -693,6 +713,53 @@ export function previewClosePosition(params: {
 }
 
 /**
+ * The isolated position an order leaves behind, when it adds to an open one.
+ *
+ * Entry is size-weighted because that is what the exchange keeps: half a
+ * position bought at $100 and half at $120 is liquidated as one position
+ * entered at $110. Margin adds up for the same reason — collateral already
+ * posted still backs the merged position.
+ *
+ * Answers `null` whenever there is nothing to merge: no position, one on the
+ * other side (which the order form refuses rather than reading as a reverse),
+ * or an order too small to reach one lot.
+ */
+function mergedPositionForLiquidation(params: {
+  position: PerpsPosition | null;
+  isLong: boolean;
+  entryExact: BigNumber;
+  sizeExact: string;
+  marginExact: BigNumber;
+}): { entry: BigNumber; size: BigNumber; margin: BigNumber } | null {
+  const { position, isLong, entryExact, sizeExact, marginExact } = params;
+  const heldSize = new BigNumber(position?.sziExact ?? 0).absoluteValue();
+  const orderSize = new BigNumber(sizeExact || 0);
+  if (
+    !position ||
+    position.isLong !== isLong ||
+    !heldSize.isGreaterThan(0) ||
+    !orderSize.isGreaterThan(0)
+  ) {
+    return null;
+  }
+  const heldEntry = new BigNumber(position.entryPxExact || 0);
+  if (!heldEntry.isFinite() || !heldEntry.isGreaterThan(0)) {
+    return null;
+  }
+  const size = heldSize.plus(orderSize);
+  return {
+    entry: heldEntry
+      .times(heldSize)
+      .plus(entryExact.times(orderSize))
+      .dividedBy(size),
+    size,
+    margin: new BigNumber(position.marginUsedExact || 0)
+      .absoluteValue()
+      .plus(marginExact),
+  };
+}
+
+/**
  * Local estimate of what a market order would cost and where it would liquidate.
  *
  * Liquidation assumes an isolated position backed only by its own margin, with
@@ -700,6 +767,11 @@ export function previewClosePosition(params: {
  * Hyperliquid's rule. Orders are placed isolated (see perps-order.component),
  * so this matches the exchange's binding value; it still ignores fees and
  * funding, so treat it as a close estimate rather than the exact figure.
+ *
+ * Pass `position` when the order adds to exposure the account already holds:
+ * the exchange liquidates the merged position, not this order on its own, so
+ * an estimate that ignored the existing size and margin would quote a price
+ * the account will never be liquidated at.
  */
 export function previewOrder(params: {
   market: PerpsMarket;
@@ -712,6 +784,8 @@ export function previewOrder(params: {
   feeRate: BigNumber.Value;
   /** NeoLine's builder fee rate; zero when no builder is configured. */
   builderFeeRate?: BigNumber.Value;
+  /** Same-direction position this order adds to, if there is one. */
+  position?: PerpsPosition | null;
 }): PerpsOrderPreview {
   const {
     market,
@@ -721,6 +795,7 @@ export function previewOrder(params: {
     isLong,
     feeRate,
     builderFeeRate = 0,
+    position = null,
   } = params;
   // A missing two-sided book is not a licence to substitute mark price: the
   // mark can sit outside executable liquidity and must never define an order.
@@ -738,21 +813,42 @@ export function previewOrder(params: {
     new BigNumber(2).times(market.maxLeverage)
   );
   const side = isLong ? 1 : -1;
-  const numerator = new BigNumber(1)
-    .dividedBy(lev)
-    .minus(maintenanceFraction)
-    .times(side);
   const denominator = new BigNumber(1).minus(maintenanceFraction.times(side));
-  const liquidationPx = price.times(
-    new BigNumber(1).minus(numerator.dividedBy(denominator))
-  );
+  const marginExact = notional.dividedBy(lev);
+  const merged = mergedPositionForLiquidation({
+    position,
+    isLong,
+    entryExact: price,
+    sizeExact,
+    marginExact,
+  });
+  const liquidationPx = merged
+    ? // The exchange marks one isolated position: this order's size and margin
+      // added to what is already there, entered at the size-weighted average.
+      merged.entry.minus(
+        merged.margin
+          .minus(merged.entry.times(merged.size).times(maintenanceFraction))
+          .times(side)
+          .dividedBy(merged.size)
+          .dividedBy(denominator)
+      )
+    : // Nothing held yet, so the ratio alone decides and the size cancels out.
+      price.times(
+        new BigNumber(1).minus(
+          new BigNumber(1)
+            .dividedBy(lev)
+            .minus(maintenanceFraction)
+            .times(side)
+            .dividedBy(denominator)
+        )
+      );
 
   const protocolFee = notional.times(feeRate || 0);
   const builderFee = notional.times(builderFeeRate || 0);
 
   return {
     notionalExact: notional.toFixed(),
-    marginExact: notional.dividedBy(lev).toFixed(),
+    marginExact: marginExact.toFixed(),
     sizeExact,
     // No positive estimate means there is nothing to quote. Null says that;
     // zero would claim the position liquidates at a price of nothing.

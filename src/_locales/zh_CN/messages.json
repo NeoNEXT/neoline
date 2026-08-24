@@ -1907,12 +1907,6 @@
   "perpsSlippage": {
     "message": "滑点"
   },
-  "perpsEstimatedShort": {
-    "message": "预估"
-  },
-  "perpsMaximumShort": {
-    "message": "最大"
-  },
   "perpsEditSlippage": {
     "message": "调整最大滑点"
   },
@@ -1923,7 +1917,7 @@
     "message": "最大滑点仅影响从下单表单提交的市价单。"
   },
   "perpsSlippageTip": {
-    "message": "预估滑点根据当前盘口和订单数量计算；最大滑点是市价单允许的成交价格偏差，设置过低可能导致订单无法成交。"
+    "message": "成交价与参考价之间允许的最大偏差。市价单按该边界作为 IOC 限价发出，设得越小价格越有保障，但更容易不成交。"
   },
   "perpsInsufficientMargin": {
     "message": "可用保证金不足"
@@ -2028,7 +2022,7 @@
     "message": "您收到"
   },
   "perpsBelowMinimum": {
-    "message": "低于最低限额"
+    "message": "金额低于最小下单金额 {{min}} USDC"
   },
   "perpsExceedsBalance": {
     "message": "超出可用余额"
@@ -2202,7 +2196,7 @@
     "message": "市价单未成交，未自动重试。"
   },
   "perpsMarketChangedReviewAgain": {
-    "message": "市场已变化或无法取得最新流动性，请重新检查订单。"
+    "message": "价格变动已超过你设置的最大滑点，订单未发出，请重新审核。"
   },
   "perpsFeeQuoteChangedReviewAgain": {
     "message": "费用报价已变化。提交前请重新确认。"
@@ -2263,5 +2257,41 @@
   },
   "confirm": {
     "message": "确认"
+  },
+  "perpsMaxSlippage": {
+    "message": "最大滑点"
+  },
+  "perpsPositionChangedReviewAgain": {
+    "message": "签名前仓位已发生变化，请重新审核订单。"
+  },
+  "perpsMakerShort": {
+    "message": "Maker"
+  },
+  "perpsTakerShort": {
+    "message": "Taker"
+  },
+  "perpsFeeMakerTakerTip": {
+    "message": "NeoLine 手续费　{{neoLineFeeRate}}<br />Hyperliquid Maker 费率　{{makerFeeRate}}<br />Hyperliquid Taker 费率　{{takerFeeRate}}<br />挂单成交按 Maker 费率收取，立即成交按 Taker 费率收取。"
+  },
+  "perpsNoExecutionPrice": {
+    "message": "该市场当前没有可成交的中间价，暂时无法下市价单。"
+  },
+  "perpsHoldingLongChooseExit": {
+    "message": "你在该市场持有多头仓位。请选择减仓或平仓来退出。"
+  },
+  "perpsHoldingShortChooseExit": {
+    "message": "你在该市场持有空头仓位。请选择减仓或平仓来退出。"
+  },
+  "perpsNoPositionToClose": {
+    "message": "该市场没有可平的仓位。"
+  },
+  "perpsSlippageOutOfRange": {
+    "message": "最大滑点超出允许范围，请调整后再提交。"
+  },
+  "perpsExecutionStatusUnknown": {
+    "message": "订单已发出，但未能读取结果。它可能已经成交——请先查询状态或查看活动记录，不要重复下单。"
+  },
+  "perpsCheckOrderStatus": {
+    "message": "重新查询"
   }
 }

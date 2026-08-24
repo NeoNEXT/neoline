@@ -14,16 +14,15 @@ import {
 import {
   HyperliquidService,
   PerpsLeverageChangeRequiredError,
-  PerpsMarketDataUnavailableError,
   PerpsPositionChangedError,
 } from '@/app/core/services/perps/hyperliquid.service';
 import { EvmWalletJSON } from '@popup/_lib/evm';
+import { STORAGE_NAME } from '@popup/_lib';
 import { PopupPerpsSlippageDialogComponent } from '@popup/_dialogs/perps-slippage/perps-slippage.dialog';
 import {
   PerpsAccount,
   PerpsActiveAssetData,
   PerpsMarket,
-  PerpsOrderBook,
   PerpsOrderPreview,
   PerpsOrderRequest,
   PerpsOrderSide,
@@ -39,22 +38,41 @@ import {
 } from '@popup/_lib/perps';
 import {
   availableToTradeForSide,
+  clampDecimals,
   collateralToNotional,
-  estimateMarketSlippagePercent,
+  exceedsMaxSlippage,
+  formatBalance,
   formatFeeRatePercent,
   formatPrice,
   formatSignedPercent,
   formatSize,
   formatUsd,
   maxOrderNotionalForSide,
+  normalizeLimitPrice,
   notionalAtLotSize,
   previewClosePosition,
   previewOrder,
   sizeAtLot,
 } from '../perps.util';
 
-/** Hyperliquid's base taker fee, used until `userFees` reports the real one. */
+/** Hyperliquid's base fees, used until `userFees` reports the real ones. */
 const TAKER_FEE_RATE = 0.00045;
+const MAKER_FEE_RATE = 0.00015;
+
+/** USD amounts are typed and submitted to the cent. */
+const AMOUNT_DECIMALS = 2;
+
+/**
+ * How hard the page tries to learn the fate of an order it could not read.
+ *
+ * A cloid resolves within a second or two when the exchange has an answer, so
+ * a short fixed cadence finds one quickly; what matters more is that the
+ * attempts end. An unbounded retry leaves the submit button disabled forever
+ * on an order the exchange may never report, and the only escape the user had
+ * was to leave the page — which loses the cloid altogether.
+ */
+const ORDER_RESOLUTION_ATTEMPTS = 4;
+const ORDER_RESOLUTION_INTERVAL_MS = 1500;
 
 /**
  * Reading for a summary row before an amount is typed, matching Hyperliquid's
@@ -63,6 +81,27 @@ const TAKER_FEE_RATE = 0.00045;
  */
 const NOT_APPLICABLE = 'N/A';
 
+/**
+ * What the user approved, kept for the moment they press submit.
+ *
+ * Deliberately only their own input and the price they were shown: per the page
+ * CONTEXT and ADR-0006 this is a review baseline, not a snapshot of the account,
+ * the fees and the market. Its whole job is to answer two questions at submit
+ * time — has the intent changed, and has the market moved further than the user
+ * agreed to.
+ */
+interface PerpsReviewBaseline {
+  /** The execution reference price on screen when the user reviewed. */
+  priceExact: string;
+  amount: string;
+  limitPrice: string;
+  side: PerpsOrderSide;
+  orderType: PerpsOrderType;
+  leverage: number;
+  slippagePercent: number;
+  closeMode: boolean;
+}
+
 @Component({
   templateUrl: 'perps-order.component.html',
   styleUrls: ['perps-order.component.scss'],
@@ -70,18 +109,33 @@ const NOT_APPLICABLE = 'N/A';
 export class PerpsOrderComponent implements OnInit, OnDestroy {
   coin: string;
   market: PerpsMarket;
+  /**
+   * Whether this route names a market at all.
+   *
+   * A coin this build does not carry is a different answer from a market whose
+   * feed has not arrived, and the form has to say which: without it a delisted
+   * asset or a mistyped route leaves every row reading `--` forever.
+   */
+  marketStatus: 'loading' | 'ready' | 'missing' | 'error' = 'loading';
   account: PerpsAccount;
   position: PerpsPosition;
   activeAssetData: PerpsActiveAssetData;
-  orderBook: PerpsOrderBook;
 
   /** Close mode reduces an existing position instead of opening a new one. */
   closeMode = false;
 
   side: PerpsOrderSide = 'long';
   orderType: PerpsOrderType = 'market';
-  limitPrice: number;
-  amount: number = null;
+  /**
+   * Both money boxes hold text, not numbers.
+   *
+   * These are the page's only inputs into signed values, and ADR-0001 keeps
+   * those out of JavaScript floats: a `number` model turns a price typed on a
+   * six-decimal market into whatever the nearest double is, and the box then
+   * shows one price while the signature carries another.
+   */
+  limitPrice = '';
+  amount = '';
   leverage = 1;
   slippagePercent = PERPS_DEFAULT_SLIPPAGE_PERCENT;
   activePercent: number = null;
@@ -89,24 +143,37 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   submitting = false;
   reviewing = false;
   accountLoadError = false;
+  /**
+   * The order was signed and sent, and the page never learned what became of
+   * it. Not a failure — it may have filled — so the page says exactly that and
+   * offers another look rather than an apology or a retry.
+   */
+  executionStatusUnknown = false;
+  /** A cloid query is in flight, so "check again" would only stack another. */
+  resolvingOrderStatus = false;
   readonly minOrderNotional = PERPS_MIN_ORDER_NOTIONAL;
 
   //#region template helpers
   formatPrice = formatPrice;
   formatSignedPercent = formatSignedPercent;
+  formatBalance = formatBalance;
   //#endregion
 
   private address: string;
   private wallet: EvmWalletJSON;
   private accountSub: Unsubscribable;
+  private accountStateSub: Unsubscribable;
   private marketsSub: Unsubscribable;
   private activeAssetDataSub: Unsubscribable;
-  private orderBookSub: Unsubscribable;
   private userFeeSub: Unsubscribable;
   private leverageSelected = false;
   /** Locally confirmed write while the account stream catches up. */
   private confirmedLeverage: number = null;
   private takerFeeRate = TAKER_FEE_RATE;
+  private makerFeeRate = MAKER_FEE_RATE;
+  /** Close mode sizes itself from the position once, not on every frame. */
+  private closeModeSeeded = false;
+  private reviewBaseline: PerpsReviewBaseline = null;
   private pendingCloid: string = null;
   /** Blocks duplicate submission after a transport-ambiguous signed request. */
   private orderResolutionPending = false;
@@ -140,6 +207,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       this.side = side;
     }
 
+    this.loadMaxSlippage();
     this.accountSub = this.store.select('account').subscribe((state) => {
       const address = state.currentWallet?.accounts[0]?.address;
       this.wallet = state.currentWallet as EvmWalletJSON;
@@ -147,43 +215,87 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         this.address = address;
         this.loadActiveAssetData();
         this.loadAccount();
-        this.loadUserTakerFeeRate();
+        this.loadUserFeeRates();
       }
     });
     this.loadMarket();
-    this.loadOrderBook();
   }
 
   ngOnDestroy() {
     this.accountSub?.unsubscribe();
+    this.accountStateSub?.unsubscribe();
     this.marketsSub?.unsubscribe();
     this.activeAssetDataSub?.unsubscribe();
-    this.orderBookSub?.unsubscribe();
     this.userFeeSub?.unsubscribe();
     clearTimeout(this.reconciliationTimer);
   }
 
+  /** The DEX this route trades on; a HIP-3 coin carries it as a prefix. */
+  private get dex(): string {
+    return this.coin?.includes(':')
+      ? this.coin.slice(0, this.coin.indexOf(':'))
+      : '';
+  }
+
+  /**
+   * This market's own feed, not the whole enabled-DEX universe.
+   *
+   * Finding one coin by pulling every DEX's context array is what the market
+   * detail page stopped doing (see its ADR-0001), and the order form wants the
+   * same one market this page is about.
+   */
   private loadMarket() {
-    this.marketsSub = this.hyperliquid.watchMarkets().subscribe((markets) => {
-      const market = markets.find((m) => m.coin === this.coin);
-      const initialLoad = !this.market;
-      this.market = market;
-      if (this.market && initialLoad) {
-        // Seed the limit field with the same reference a market order uses.
-        this.limitPrice = Number(this.market.midPxExact ?? 0);
-        if (
-          this.activeAssetData &&
-          !this.leverageSelected &&
-          this.activeAssetData.leverage.value >= 1 &&
-          this.activeAssetData.leverage.value <= this.market.maxLeverage
-        ) {
-          this.leverage = this.activeAssetData.leverage.value;
-        } else {
-          // Default until the user's exchange-side leverage arrives.
-          this.leverage = Math.min(2, this.market.maxLeverage);
+    this.marketsSub = this.hyperliquid.watchMarketDetail(this.coin).subscribe({
+      next: (market) => {
+        const initialLoad = !this.market;
+        this.market = market ?? undefined;
+        this.marketStatus = market ? 'ready' : 'missing';
+        if (this.market && initialLoad) {
+          // Seed the limit field with the same reference a market order uses,
+          // already quantised to what this market can quote.
+          this.limitPrice = normalizeLimitPrice(
+            this.market.midPxExact,
+            this.market.szDecimals
+          );
+          if (
+            this.activeAssetData &&
+            !this.leverageSelected &&
+            this.activeAssetData.leverage.value >= 1 &&
+            this.activeAssetData.leverage.value <= this.market.maxLeverage
+          ) {
+            this.leverage = this.activeAssetData.leverage.value;
+          } else {
+            // Default until the user's exchange-side leverage arrives.
+            this.leverage = Math.min(2, this.market.maxLeverage);
+          }
         }
-      }
+      },
+      error: () => {
+        this.marketStatus = 'error';
+      },
     });
+  }
+
+  /**
+   * Max slippage is a habit rather than a property of any one market, so it is
+   * remembered once for the wallet — the same way the chart interval is.
+   */
+  private loadMaxSlippage() {
+    this.chrome
+      .getStorage(STORAGE_NAME.perpsMaxSlippage)
+      .subscribe((saved) => {
+        // Storage answers with whatever an older build wrote, and the dialog's
+        // range is the whole of the user's price consent — a value outside it
+        // is not a preference worth restoring.
+        const value = Number(saved);
+        if (
+          Number.isFinite(value) &&
+          value >= PERPS_MIN_SLIPPAGE_PERCENT &&
+          value <= PERPS_MAX_SLIPPAGE_PERCENT
+        ) {
+          this.slippagePercent = value;
+        }
+      });
   }
 
   private loadActiveAssetData() {
@@ -221,51 +333,62 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       });
   }
 
-  private loadOrderBook() {
-    this.orderBookSub = this.hyperliquid
-      .watchOrderBook(this.coin)
-      .subscribe((book) => {
-        this.orderBook = book;
-      });
-  }
-
+  /**
+   * The account, followed rather than polled.
+   *
+   * Position value moves with the mark price, and the close form's percentage
+   * slider is measured against it — read once every few seconds it was a figure
+   * that visibly lagged the price in the header. `watchAccount` seeds from REST
+   * and then follows the account channel, so this is the page's one account
+   * state kept current, not a second copy of it.
+   *
+   * The DEX comes from the route: a HIP-3 market's positions live in that
+   * DEX's own clearinghouse, and asking the canonical one finds nothing —
+   * which used to leave close, add and reverse silently inoperable there.
+   */
   private loadAccount() {
     this.accountLoadError = false;
-    this.hyperliquid.getAccount(this.address).subscribe({
-      next: (account) => {
-        this.account = account;
-        this.position = account.positions.find((p) => p.coin === this.coin);
-        if (this.closeMode && this.position) {
-          // Closing means taking the opposite side of what is held.
-          this.side = this.position.isLong ? 'short' : 'long';
-          this.leverage = this.position.leverage;
-          this.amount = Number(
-            new BigNumber(this.position.positionValueExact).toFixed(2)
-          );
-          this.activePercent = 100;
-        }
-      },
-      error: () => {
-        this.accountLoadError = true;
-      },
-    });
-  }
-
-  private loadUserTakerFeeRate() {
-    this.userFeeSub?.unsubscribe();
-    this.takerFeeRate = TAKER_FEE_RATE;
-    this.userFeeSub = this.hyperliquid
-      .getUserTakerFeeRate(this.address)
+    this.accountStateSub?.unsubscribe();
+    this.accountStateSub = this.hyperliquid
+      .watchAccount(this.address, this.dex)
       .subscribe({
-        next: (feeRate) => {
-          this.takerFeeRate = feeRate;
-          if (this.activePercent !== null && !this.closeMode) {
-            this.setPercent(this.activePercent);
+        next: (account) => {
+          this.account = account;
+          this.position = account.positions.find((p) => p.coin === this.coin);
+          // Seeding once: later frames must not overwrite an amount the user
+          // has since typed.
+          if (this.closeMode && this.position && !this.closeModeSeeded) {
+            this.closeModeSeeded = true;
+            // Closing means taking the opposite side of what is held.
+            this.side = this.position.isLong ? 'short' : 'long';
+            this.leverage = this.position.leverage;
+            this.amount = new BigNumber(
+              this.position.positionValueExact
+            ).toFixed(AMOUNT_DECIMALS);
+            this.activePercent = 100;
           }
         },
-        // The base rate remains a conservative fallback when userFees fails.
-        error: () => {},
+        error: () => {
+          this.accountLoadError = true;
+        },
       });
+  }
+
+  private loadUserFeeRates() {
+    this.userFeeSub?.unsubscribe();
+    this.takerFeeRate = TAKER_FEE_RATE;
+    this.makerFeeRate = MAKER_FEE_RATE;
+    this.userFeeSub = this.hyperliquid.getUserFeeRates(this.address).subscribe({
+      next: ({ takerRate, makerRate }) => {
+        this.takerFeeRate = takerRate;
+        this.makerFeeRate = makerRate;
+        if (this.activePercent !== null && !this.closeMode) {
+          this.setPercent(this.activePercent);
+        }
+      },
+      // The base rates remain a conservative fallback when userFees fails.
+      error: () => {},
+    });
   }
 
   get isLong(): boolean {
@@ -285,12 +408,13 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return formatFeeRatePercent(this.builderFeeRate);
   }
 
+  /** Hyperliquid's own rates, as the fee tooltip itemises them. */
   get formattedTakerFeeRate(): string {
     return formatFeeRatePercent(this.takerFeeRate);
   }
 
-  get formattedTotalFeeRate(): string {
-    return formatFeeRatePercent(this.takerFeeRate + this.builderFeeRate);
+  get formattedMakerFeeRate(): string {
+    return formatFeeRatePercent(this.makerFeeRate);
   }
 
   /** Display name; the route's coin carries a DEX prefix on HIP-3 markets. */
@@ -313,11 +437,15 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    * Free collateral for this direction, as Hyperliquid reports it, falling back
    * to the account-wide figure. A margin number: it does not move with leverage.
    */
-  get available(): number {
+  get availableExact(): string {
     if (this.activeAssetData) {
-      return Number(availableToTradeForSide(this.activeAssetData, this.side));
+      return availableToTradeForSide(this.activeAssetData, this.side);
     }
-    return Number(this.account?.availableBalanceExact ?? 0);
+    return this.account?.availableBalanceExact ?? '0';
+  }
+
+  get available(): number {
+    return Number(this.availableExact);
   }
 
   /** What that collateral can open, capped by the exchange's per-asset size limit. */
@@ -340,34 +468,18 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       return this.activePercent;
     }
     const base = this.percentBase;
-    if (!base || !this.amount) {
+    if (!base || !this.hasAmount) {
       return 0;
     }
-    return Math.max(0, Math.min(100, (this.amount / base) * 100));
+    return Math.max(
+      0,
+      Math.min(100, this.amountExact.dividedBy(base).times(100).toNumber())
+    );
   }
 
   get leverageSliderPercent(): number {
     const max = this.market?.maxLeverage || 1;
     return max === 1 ? 100 : ((this.leverage - 1) / (max - 1)) * 100;
-  }
-
-  get estimatedSlippagePercent(): number | null {
-    return estimateMarketSlippagePercent(
-      this.orderBook,
-      this.orderSizeExact,
-      this.isLong
-    );
-  }
-
-  /**
-   * Four decimals, matching Hyperliquid's own order form. Price impact on a
-   * small order is a few ten-thousandths of a percent, which two decimals
-   * flatten to a misleading "0.00%".
-   */
-  get formattedEstimatedSlippage(): string {
-    return this.estimatedSlippagePercent === null
-      ? NOT_APPLICABLE
-      : `${this.estimatedSlippagePercent.toFixed(4)}%`;
   }
 
   get formattedMaxSlippage(): string {
@@ -394,6 +506,16 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return this.market?.midPxExact || '0';
   }
 
+  /** The amount box as a number, whatever half-typed text it currently holds. */
+  private get amountExact(): BigNumber {
+    const value = new BigNumber(this.amount || 0);
+    return value.isFinite() ? value : new BigNumber(0);
+  }
+
+  private get hasAmount(): boolean {
+    return this.amountExact.isGreaterThan(0);
+  }
+
   /**
    * Portfolio Margin's perps clearinghouse figures are meaningless, so an order
    * that adds risk cannot be sized or previewed on such an account. Closing is a
@@ -412,7 +534,16 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return !this.closeMode && this.position?.leverageType === 'cross';
   }
 
-  get reverseMode(): boolean {
+  /**
+   * An order against a position the account already holds, on this form.
+   *
+   * NeoLine does not read it as a reverse (see the page CONTEXT on implicit
+   * flip). The exchange has no "flip" order: a reverse is |position| + amount
+   * on one ticket, so treating a $14 short against a $44 long as one would
+   * sign $58 of risk against a preview that quoted the fee on $14. The user is
+   * asked which they meant instead; the explicit reverse lives on the position.
+   */
+  get oppositePositionHeld(): boolean {
     return (
       !this.closeMode &&
       !!this.position &&
@@ -420,18 +551,24 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     );
   }
 
+  /** Same market, same direction: this order adds to what is already open. */
+  get increasesPosition(): boolean {
+    return (
+      !this.closeMode &&
+      !!this.position &&
+      this.position.isLong === this.isLong
+    );
+  }
+
   private get tradeIntent(): PerpsOrderRequest['intent'] {
     if (this.closeMode) {
       return this.fullClose ? 'close' : 'reduce';
-    }
-    if (this.reverseMode) {
-      return 'reverse';
     }
     return this.position ? 'increase' : 'open';
   }
 
   get preview(): PerpsOrderPreview {
-    if (!this.market || !this.amount) {
+    if (!this.market || !this.hasAmount) {
       return null;
     }
     if (this.closeMode && this.position) {
@@ -467,6 +604,9 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       isLong: this.isLong,
       feeRate: this.takerFeeRate,
       builderFeeRate: this.builderFeeRate,
+      // Adding to an open position liquidates as one merged position, so the
+      // estimate has to be built from both.
+      position: this.increasesPosition ? this.position : null,
     });
     return {
       ...preview,
@@ -486,6 +626,26 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       : NOT_APPLICABLE;
   }
 
+  /**
+   * The exchange's liquidation price for the position already open, shown
+   * beside the estimate while adding to it.
+   *
+   * The estimate is arithmetic on inputs; this is what Hyperliquid currently
+   * says. Putting them side by side is the honest way to add to a position:
+   * the user sees which way the estimate moves the real number, rather than
+   * being handed one figure that silently replaces the other.
+   */
+  get currentLiquidationPriceText(): string {
+    const price = this.position?.liquidationPxExact;
+    return price
+      ? `$${formatPrice(price, this.market?.szDecimals)}`
+      : NOT_APPLICABLE;
+  }
+
+  get showsCurrentLiquidationPrice(): boolean {
+    return this.increasesPosition && !!this.position?.liquidationPxExact;
+  }
+
   get marginText(): string {
     return this.preview ? formatUsd(this.preview.marginExact) : NOT_APPLICABLE;
   }
@@ -503,11 +663,49 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return !!this.market?.dex;
   }
 
+  /**
+   * Whether both sides of the book are worth quoting.
+   *
+   * A market order always crosses, so the taker rate is the whole answer. A GTC
+   * limit order usually rests and fills as maker, but it can also cross on the
+   * way in, so the row shows both rather than picking one and being wrong half
+   * the time.
+   */
+  get quotesBothFeeSides(): boolean {
+    return this.orderType === 'limit';
+  }
+
   /** Rate always, plus what it costs this order once one is sized. */
   get feeText(): string {
-    return this.preview
-      ? `${this.formattedTotalFeeRate} (${formatUsd(this.preview.feeExact)})`
-      : this.formattedTotalFeeRate;
+    return this.feeSideText(this.takerFeeRate);
+  }
+
+  get makerFeeText(): string {
+    return this.feeSideText(this.makerFeeRate);
+  }
+
+  /**
+   * A rate, and once the order is sized what it comes to in dollars.
+   *
+   * Both are the total charge — Hyperliquid's rate plus NeoLine's builder fee —
+   * because that is what leaves the account. A negative total keeps its sign:
+   * on a rebate tier the fill pays the account back, and flooring that at
+   * "$0.00" would quietly delete money the user is owed.
+   */
+  private feeSideText(rate: number): string {
+    const total = rate + this.builderFeeRate;
+    const formattedRate = formatFeeRatePercent(total);
+    const preview = this.preview;
+    if (!preview) {
+      return formattedRate;
+    }
+    const amount = new BigNumber(preview.notionalExact).times(total);
+    return `${formattedRate} (${formatUsd(amount.toFixed())})`;
+  }
+
+  /** Whether the maker side pays the account rather than charging it. */
+  get makerFeeIsRebate(): boolean {
+    return this.makerFeeRate + this.builderFeeRate < 0;
   }
 
   /** Exact position fraction in close mode; mark-price conversion can drift. */
@@ -529,7 +727,11 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
 
   /** Exact signed size, floored to the market lot without a Number round-trip. */
   private get orderSizeExact(): string {
-    if (!this.market || !this.amount || !new BigNumber(this.orderPriceExact).isGreaterThan(0)) {
+    if (
+      !this.market ||
+      !this.hasAmount ||
+      !new BigNumber(this.orderPriceExact).isGreaterThan(0)
+    ) {
       return '0';
     }
     if (this.closeMode && this.position && this.fullClose) {
@@ -537,14 +739,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         .absoluteValue()
         .toFixed();
     }
-    if (!this.closeMode || !this.position?.positionValueExact) {
-      return sizeAtLot(
-        new BigNumber(this.amount).dividedBy(this.orderPriceExact),
-        this.market.szDecimals
-      );
-    }
     return sizeAtLot(
-      new BigNumber(this.amount).dividedBy(this.orderPriceExact),
+      this.amountExact.dividedBy(this.orderPriceExact),
       this.market.szDecimals
     );
   }
@@ -559,8 +755,11 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     }
     return (
       this.activePercent === 100 ||
-      this.amount >=
-        Number(new BigNumber(this.position.positionValueExact).toFixed(2))
+      this.amountExact.isGreaterThanOrEqualTo(
+        new BigNumber(this.position.positionValueExact).toFixed(
+          AMOUNT_DECIMALS
+        )
+      )
     );
   }
 
@@ -579,7 +778,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   get insufficient(): boolean {
-    if (this.closeMode || !this.amount) {
+    if (this.closeMode || !this.hasAmount) {
       return false;
     }
     if (!this.market || !this.orderPrice) {
@@ -600,7 +799,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    * A full close is exempt: the exchange lets a position out at any size.
    */
   get belowMinimum(): boolean {
-    if (!(this.amount > 0) || !this.orderPrice) {
+    if (!this.hasAmount || !this.orderPrice) {
       return false;
     }
     if (this.closeMode && this.fullClose) {
@@ -609,20 +808,119 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return this.executableNotional.isLessThan(this.minOrderNotional);
   }
 
+  /**
+   * A market order with nothing to price against.
+   *
+   * Not an error state of the feed: the market is live, it simply has no
+   * two-sided book right now, so there is no execution reference price to size
+   * an order or derive an IOC limit from. The mark is not a substitute — it can
+   * sit outside the spread.
+   */
+  get noExecutionPrice(): boolean {
+    return (
+      this.marketStatus === 'ready' &&
+      this.orderType === 'market' &&
+      !new BigNumber(this.market?.midPxExact ?? 0).isGreaterThan(0)
+    );
+  }
+
+  /**
+   * The one thing standing between this form and a submitted order, or null.
+   *
+   * Only ever one: a form that lists every objection at once leaves the user
+   * guessing which to fix first, so the checks are ordered from the ones no
+   * amount of typing can fix down to the ones that depend on the amount.
+   *
+   * Everything here is a client-decidable condition (root CONTEXT) — identity,
+   * protocol precision, a positive amount, the minimum notional, reduce-only
+   * direction, available balance, market state and the user's own slippage.
+   * Nothing else belongs: open-interest caps, oracle deviation and whether the
+   * book can actually fill are the exchange's to judge, and per ADR-0006 a
+   * client that guesses at them blocks legitimate orders instead of preventing
+   * losses. Those come back as rejections, which this page translates.
+   *
+   * A box the user has not finished filling in is not a reason — an empty
+   * amount or limit price leaves the button disabled, silently.
+   */
+  get orderUnavailableReason(): string | null {
+    if (this.accountLoadError) {
+      return 'perpsLoadFailed';
+    }
+    if (this.marketStatus === 'missing') {
+      return 'perpsMarketNotFound';
+    }
+    if (this.marketStatus === 'error') {
+      return 'perpsLoadFailed';
+    }
+    if (this.unsupportedAccountMode) {
+      return 'perpsPortfolioUnsupported';
+    }
+    if (this.crossPositionUnsupported) {
+      return 'perpsCrossPositionUnsupported';
+    }
+    if (this.oppositePositionHeld) {
+      return this.position.isLong
+        ? 'perpsHoldingLongChooseExit'
+        : 'perpsHoldingShortChooseExit';
+    }
+    if (this.closeMode && this.account && !this.position) {
+      return 'perpsNoPositionToClose';
+    }
+    if (this.noExecutionPrice) {
+      return 'perpsNoExecutionPrice';
+    }
+    if (!this.slippageInRange) {
+      return 'perpsSlippageOutOfRange';
+    }
+    if (!this.hasAmount) {
+      return null;
+    }
+    if (this.insufficient) {
+      return 'perpsInsufficientMargin';
+    }
+    if (this.belowMinimum) {
+      return 'perpsBelowMinimum';
+    }
+    return null;
+  }
+
+  /** Values the one reason on screen interpolates, when it takes any. */
+  get orderUnavailableParams(): { [key: string]: string | number } {
+    return { min: this.minOrderNotional, symbol: this.symbol };
+  }
+
+  /** The dialog clamps, but storage answers with whatever an older build wrote. */
+  private get slippageInRange(): boolean {
+    return (
+      Number.isFinite(this.slippagePercent) &&
+      this.slippagePercent >= PERPS_MIN_SLIPPAGE_PERCENT &&
+      this.slippagePercent <= PERPS_MAX_SLIPPAGE_PERCENT
+    );
+  }
+
   get canSubmit(): boolean {
     return (
       !this.submitting &&
       !this.orderResolutionPending &&
-      !!this.market &&
-      this.amount > 0 &&
-      !this.insufficient &&
-      !this.belowMinimum &&
-      !this.accountLoadError &&
-      !this.unsupportedAccountMode &&
-      !this.crossPositionUnsupported &&
-      (this.orderType === 'market' || this.limitPrice > 0) &&
+      this.marketStatus === 'ready' &&
+      this.hasAmount &&
+      !this.orderUnavailableReason &&
+      new BigNumber(this.orderPriceExact).isGreaterThan(0) &&
       new BigNumber(this.preview?.sizeExact ?? 0).isGreaterThan(0)
     );
+  }
+
+  /**
+   * Any change to the intent drops the review.
+   *
+   * The baseline exists to answer "is this still what was approved", so an
+   * edit invalidates it rather than being compared against it — the user is
+   * sent back to review the thing they just changed.
+   */
+  private discardReview() {
+    this.reviewing = false;
+    this.reviewBaseline = null;
+    this.pendingCloid = null;
   }
 
   setSide(side: PerpsOrderSide) {
@@ -630,8 +928,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       return;
     }
     this.side = side;
-    this.reviewing = false;
-    this.pendingCloid = null;
+    this.discardReview();
     if (this.activePercent !== null) {
       this.setPercent(this.activePercent);
     }
@@ -639,8 +936,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
 
   setOrderType(type: PerpsOrderType) {
     this.orderType = type;
-    this.reviewing = false;
-    this.pendingCloid = null;
+    this.discardReview();
   }
 
   setLeverage(leverage: number) {
@@ -650,8 +946,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       Math.min(max, Math.round(Number(leverage) || 1))
     );
     this.leverageSelected = true;
-    this.reviewing = false;
-    this.pendingCloid = null;
+    this.discardReview();
     // The amount slider sizes off buying power, which just changed with leverage.
     if (this.activePercent !== null && !this.closeMode) {
       this.setPercent(this.activePercent);
@@ -691,8 +986,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    */
   setPercent(percent: number) {
     this.activePercent = Math.max(0, Math.min(100, Number(percent) || 0));
-    this.reviewing = false;
-    this.pendingCloid = null;
+    this.discardReview();
     // Floor to the cent the box displays, never round. The base is already the
     // largest notional this market's lot can express, so rounding the last cent
     // up buys one lot more than the exchange allows and the form ends up
@@ -706,8 +1000,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
             .times(this.activePercent)
             .dividedBy(100);
     this.amount = amount
-      .decimalPlaces(2, BigNumber.ROUND_FLOOR)
-      .toNumber();
+      .decimalPlaces(AMOUNT_DECIMALS, BigNumber.ROUND_FLOOR)
+      .toFixed();
   }
 
   /** See {@link leverageBoxText}; the percentage box works the same way. */
@@ -740,15 +1034,46 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     }
   }
 
-  onAmountChange() {
+  /**
+   * Cents are the most this order can express, so a third decimal never reaches
+   * the model: it is dropped as it is typed rather than accepted and then
+   * explained, the same way the transfer screen's amount field behaves.
+   *
+   * The box is written back to directly because a property binding will not do
+   * it here: rejecting the keystroke leaves the model on the value it already
+   * held, Angular sees nothing to update, and the digit the model refused stays
+   * on screen — a box showing more precision than the order carries.
+   */
+  onAmountInput(input: HTMLInputElement) {
+    const clamped = clampDecimals(input.value, AMOUNT_DECIMALS);
+    if (input.value !== clamped) {
+      input.value = clamped;
+    }
+    this.amount = clamped;
     this.activePercent = null;
-    this.reviewing = false;
-    this.pendingCloid = null;
+    this.discardReview();
   }
 
-  onLimitPriceChange() {
-    this.reviewing = false;
-    this.pendingCloid = null;
+  onLimitPriceInput(value: string) {
+    this.limitPrice = value;
+    this.discardReview();
+  }
+
+  /**
+   * Quantise the typed price to the market's tick and put the result back in
+   * the box, so what the user reads is what gets signed. Doing it on blur
+   * rather than per keystroke leaves a half-typed price alone: "1.2" on its way
+   * to "1.25" must not be rewritten under the caret.
+   */
+  onLimitPriceBlur() {
+    const normalized = normalizeLimitPrice(
+      this.limitPrice,
+      this.market?.szDecimals
+    );
+    if (normalized !== this.limitPrice) {
+      this.limitPrice = normalized;
+      this.discardReview();
+    }
   }
 
   openSlippageDialog() {
@@ -773,8 +1098,11 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
             Math.min(PERPS_MAX_SLIPPAGE_PERCENT, value)
           ).toFixed(2)
         );
-        this.reviewing = false;
-        this.pendingCloid = null;
+        this.chrome.setStorage(
+          STORAGE_NAME.perpsMaxSlippage,
+          this.slippagePercent
+        );
+        this.discardReview();
       });
   }
 
@@ -816,7 +1144,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   get nearMarginLimit(): boolean {
-    const amount = new BigNumber(this.amount || 0);
+    const amount = this.amountExact;
     return (
       !this.closeMode &&
       amount.isGreaterThan(this.bufferedMaxOrderNotional) &&
@@ -831,21 +1159,72 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     if (this.closeMode) {
       return this.position?.isLong ? 'perpsCloseLong' : 'perpsCloseShort';
     }
-    if (this.reverseMode) {
-      return this.isLong ? 'perpsReverseToLong' : 'perpsReverseToShort';
-    }
     return this.isLong ? 'perpsLong' : 'perpsShort';
   }
 
   review() {
-    if (this.canSubmit) {
-      this.reviewing = true;
-      this.pendingCloid = this.hyperliquid.createCloid();
+    if (!this.canSubmit) {
+      return;
     }
+    // The price the user is about to be shown, kept so submit can tell whether
+    // the market has since moved further than they agreed to.
+    this.reviewBaseline = {
+      priceExact: this.orderPriceExact,
+      amount: this.amount,
+      limitPrice: this.limitPrice,
+      side: this.side,
+      orderType: this.orderType,
+      leverage: this.leverage,
+      slippagePercent: this.slippagePercent,
+      closeMode: this.closeMode,
+    };
+    this.reviewing = true;
+    this.pendingCloid = this.hyperliquid.createCloid();
+  }
+
+  /** Whether the form still holds the intent the baseline was taken from. */
+  private get intentChanged(): boolean {
+    const baseline = this.reviewBaseline;
+    return (
+      !baseline ||
+      baseline.amount !== this.amount ||
+      baseline.limitPrice !== this.limitPrice ||
+      baseline.side !== this.side ||
+      baseline.orderType !== this.orderType ||
+      baseline.leverage !== this.leverage ||
+      baseline.slippagePercent !== this.slippagePercent ||
+      baseline.closeMode !== this.closeMode
+    );
+  }
+
+  /**
+   * Whether the market left the window the user agreed to.
+   *
+   * Checked before the wallet is unlocked, so a market that ran away is
+   * refused while the user still has an order to fix, rather than after they
+   * have already signed one. A limit order prices itself and cannot drift,
+   * which makes this inert there — as it should be.
+   */
+  private get priceMovedBeyondSlippage(): boolean {
+    return exceedsMaxSlippage(
+      this.reviewBaseline?.priceExact,
+      this.orderPriceExact,
+      this.slippagePercent
+    );
+  }
+
+  /** Send the user back to review, saying why. */
+  private requireReview(message: string) {
+    this.discardReview();
+    this.global.snackBarTip(message);
   }
 
   async submit() {
-    if (!this.canSubmit || !this.reviewing) {
+    if (!this.canSubmit || !this.reviewing || !this.reviewBaseline) {
+      return;
+    }
+    if (this.intentChanged || this.priceMovedBeyondSlippage) {
+      this.requireReview('perpsMarketChangedReviewAgain');
       return;
     }
     const walletExtra = this.wallet?.accounts[0]?.extra;
@@ -868,10 +1247,6 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         isBuy: this.isLong,
         price: this.orderPriceExact,
         size: this.orderSizeExact,
-        notionalExact:
-          this.orderType === 'market' && !this.fullClose
-            ? new BigNumber(this.amount).toFixed()
-            : undefined,
         fullClose: this.orderType === 'market' ? this.fullClose : undefined,
         szDecimals: this.market.szDecimals,
         maxLeverage: this.market.maxLeverage,
@@ -906,8 +1281,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
           .subscribe({
             next: () => {
               this.submitting = false;
-              this.reviewing = false;
-              this.pendingCloid = null;
+              this.discardReview();
               this.confirmedLeverage = this.leverage;
               this.activeAssetData = this.activeAssetData
                 ? {
@@ -930,7 +1304,6 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         .subscribe({
           next: (result) => {
             this.submitting = false;
-            this.orderResolutionPending = result.status === 'unknown';
             const message = {
               filled: 'perpsOrderFilled',
               partial: 'perpsOrderPartiallyFilled',
@@ -941,12 +1314,13 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
             }[result.status];
             this.global.snackBarTip(message, result.error);
             if (result.status === 'unknown') {
-              this.scheduleOrderReconciliation(result.cloid);
+              this.startOrderResolution(result.cloid);
+              return;
             }
             if (result.status === 'filled') {
               this.router.navigateByUrl(PERPS_HOME_URL);
             } else {
-              this.reviewing = false;
+              this.discardReview();
               this.loadAccount();
             }
           },
@@ -954,13 +1328,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
             this.submitting = false;
             if (error instanceof PerpsLeverageChangeRequiredError) {
               this.global.snackBarTip('perpsLeverageUpdatedReviewAgain');
-            } else if (
-              error instanceof PerpsMarketDataUnavailableError ||
-              error instanceof PerpsPositionChangedError
-            ) {
-              this.reviewing = false;
-              this.pendingCloid = null;
-              this.global.snackBarTip('perpsMarketChangedReviewAgain');
+            } else if (error instanceof PerpsPositionChangedError) {
+              this.requireReview('perpsPositionChangedReviewAgain');
             } else {
               this.global.snackBarTip('txFailed', error?.message || error);
             }
@@ -972,24 +1341,74 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     }
   }
 
-  private scheduleOrderReconciliation(cloid: string) {
+  /**
+   * Ask the exchange what became of a signed order it did not answer for.
+   *
+   * Per ADR-0006 this is a query and a refresh, nothing more: the cloid is
+   * asked about, and whatever comes back is read off the account. No intent is
+   * persisted, nothing is re-signed, and there is no local order state machine
+   * to fall out of sync.
+   */
+  private startOrderResolution(cloid: string) {
+    this.pendingCloid = cloid;
+    this.orderResolutionPending = true;
+    this.executionStatusUnknown = false;
+    this.resolvingOrderStatus = true;
+    this.queryOrderStatus(cloid, ORDER_RESOLUTION_ATTEMPTS);
+  }
+
+  /** The "check again" button, once the page has run out of its own attempts. */
+  retryOrderResolution() {
+    if (!this.pendingCloid || this.resolvingOrderStatus) {
+      return;
+    }
+    this.startOrderResolution(this.pendingCloid);
+  }
+
+  viewHistory() {
+    this.router.navigateByUrl('/popup/perps/history');
+  }
+
+  private queryOrderStatus(cloid: string, attemptsLeft: number) {
     clearTimeout(this.reconciliationTimer);
     this.reconciliationTimer = setTimeout(() => {
       this.hyperliquid.getOrderStatus(this.address, cloid).subscribe({
         next: (result) => {
-          if (result?.status !== 'order') {
+          if (result?.status === 'order') {
+            this.resolveOrderStatus();
             return;
           }
-          this.orderResolutionPending = false;
-          this.pendingCloid = null;
-          this.reviewing = false;
-          this.loadAccount();
-          this.global.snackBarTip('perpsOrderStatusResolved');
+          // Any other answer means the exchange has nothing to report yet,
+          // which is not the same as nothing having happened.
+          this.retryOrGiveUp(cloid, attemptsLeft);
         },
-        // Keep submission blocked while the cloid is still unresolved.
-        error: () => {},
+        error: () => this.retryOrGiveUp(cloid, attemptsLeft),
       });
-    }, 1500);
+    }, ORDER_RESOLUTION_INTERVAL_MS);
+  }
+
+  private retryOrGiveUp(cloid: string, attemptsLeft: number) {
+    if (attemptsLeft > 1) {
+      this.queryOrderStatus(cloid, attemptsLeft - 1);
+      return;
+    }
+    // Out of attempts. Submission stays blocked — a second order is how one
+    // position becomes two — but the page now says so and offers a way on,
+    // rather than sitting on a permanently disabled button.
+    this.resolvingOrderStatus = false;
+    this.executionStatusUnknown = true;
+    this.loadAccount();
+  }
+
+  private resolveOrderStatus() {
+    this.orderResolutionPending = false;
+    this.executionStatusUnknown = false;
+    this.resolvingOrderStatus = false;
+    this.pendingCloid = null;
+    this.reviewing = false;
+    this.reviewBaseline = null;
+    this.loadAccount();
+    this.global.snackBarTip('perpsOrderStatusResolved');
   }
 
   back() {

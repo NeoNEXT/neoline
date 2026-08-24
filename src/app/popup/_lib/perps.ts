@@ -151,6 +151,39 @@ export const PERPS_MIN_DEPOSIT = 5;
 export const PERPS_MIN_ORDER_NOTIONAL = 10;
 /** Safety reserve applied only when the user chooses Max / 100%. */
 export const PERPS_MAX_ORDER_BUFFER_FRACTION = 0.005;
+
+/** Hyperliquid quotes perp prices at up to six decimals, less `szDecimals`. */
+export const PERPS_PRICE_MAX_DECIMALS = 6;
+/** …and at no more than five significant figures, whichever binds first. */
+export const PERPS_PRICE_SIGNIFICANT_FIGURES = 5;
+
+/**
+ * Decimal places Hyperliquid accepts for one market's prices.
+ *
+ * Both of its limits apply at once and the tighter one wins, so the answer
+ * depends on the price as well as the market: on a market ticking at four
+ * decimals, $0.5432 keeps all four while $1234.5 keeps one.
+ *
+ * This is the rule the wire price is quantised against, so the order form
+ * normalises the typed limit price through it too — otherwise the signature
+ * would carry a price the user never saw.
+ */
+export function perpsPriceDecimals(
+  price: number,
+  szDecimals: number
+): number {
+  const maxDecimals = Math.max(0, PERPS_PRICE_MAX_DECIMALS - szDecimals);
+  const magnitude = Math.abs(price);
+  // No magnitude to count significant figures from; the tick alone decides.
+  if (!Number.isFinite(magnitude) || magnitude === 0) {
+    return maxDecimals;
+  }
+  const significantDecimals = Math.max(
+    0,
+    PERPS_PRICE_SIGNIFICANT_FIGURES - Math.floor(Math.log10(magnitude)) - 1
+  );
+  return Math.min(maxDecimals, significantDecimals);
+}
 /**
  * HyperEVM, read-only: the chain that prices a withdrawal.
  *
@@ -449,11 +482,14 @@ export const PERPS_CANDLE_HISTORY_LIMIT = 5000;
 export type PerpsConnectionState = 'connecting' | 'live' | 'stale';
 
 /** Raw `universe` entry from the `meta` info request. */
+export type PerpsMarketMarginMode = 'strictIsolated' | 'noCross';
+
 export interface PerpsUniverseItem {
   name: string;
   szDecimals: number;
   maxLeverage: number;
-  onlyIsolated?: boolean;
+  /** Current protocol field. Absence means cross margin is supported. */
+  marginMode?: PerpsMarketMarginMode;
   isDelisted?: boolean;
 }
 
@@ -493,8 +529,8 @@ export interface PerpsMarket {
   symbol: string;
   szDecimals: number;
   maxLeverage: number;
-  /** The exchange rejects cross-margin leverage updates for this market. */
-  onlyIsolated: boolean;
+  /** Exact protocol restriction; null means cross margin is supported. */
+  marginMode: PerpsMarketMarginMode | null;
   markPxExact: string;
   /**
    * Book mid, and the reference every market order is priced from. Hyperliquid's
@@ -523,24 +559,6 @@ export interface PerpsMarket {
   openInterestExact: string;
   /** Hourly funding rate as a fraction, e.g. `"0.0000125"` */
   fundingExact: string;
-}
-
-export interface PerpsOrderBookLevel {
-  priceExact?: string;
-  sizeExact?: string;
-  /** Ephemeral UI projection. Never use for order construction. */
-  price: number;
-  /** Ephemeral UI projection. Never use for order construction. */
-  size: number;
-}
-
-export interface PerpsOrderBook {
-  coin: string;
-  time: number;
-  /** Price-descending bids. */
-  bids: PerpsOrderBookLevel[];
-  /** Price-ascending asks. */
-  asks: PerpsOrderBookLevel[];
 }
 
 export interface PerpsCandle {
@@ -791,12 +809,6 @@ export interface PerpsOrderRequest {
   price: string | number;
   /** Decimal base size; the service floors it to szDecimals before signing. */
   size: string;
-  /**
-   * USD intent frozen on review. For market orders the service fetches a fresh
-   * two-sided L2 book immediately before signing and recomputes base size from
-   * this amount. Omit only for an explicit base-asset quantity intent.
-   */
-  notionalExact?: string;
   /** Full closes keep the exact position quantity instead of rescaling by USD. */
   fullClose?: boolean;
   szDecimals: number;
@@ -851,6 +863,18 @@ export interface PerpsOrderExecutionResult {
 }
 
 /** Estimated position risk for an order under review, at protocol precision. */
+/**
+ * What this account is charged, per side of the book.
+ *
+ * Both are fractions, e.g. `0.00045` for 4.5bps. `makerRate` may be negative:
+ * on Hyperliquid's rebate tiers a resting fill pays the account rather than
+ * charging it, and a UI that floors the rate at zero hides that.
+ */
+export interface PerpsUserFeeRates {
+  takerRate: number;
+  makerRate: number;
+}
+
 export interface PerpsOrderPreview {
   /** Notional position size in USD. */
   notionalExact: string;

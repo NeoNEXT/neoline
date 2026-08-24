@@ -48,14 +48,6 @@
     </b>
   </div>
 
-  <div class="close-position" *ngIf="reverseMode">
-    <span>{{ "perpsReversePosition" | translate | async }}</span>
-    <b [class.short]="!position.isLong">
-      {{ (position.isLong ? "perpsLong" : "perpsShort") | translate | async }}
-      · {{ formattedPositionSize }} {{ symbol }}
-    </b>
-  </div>
-
   <div class="order-type">
     <span
       class="chip"
@@ -73,7 +65,7 @@
     </span>
     <span class="available" *ngIf="!closeMode">
       {{ "perpsAvailable" | translate | async }}
-      <b>{{ available | number: "1.2-2" }} USDC</b>
+      <b>{{ formatBalance(availableExact) }} USDC</b>
     </span>
   </div>
 
@@ -82,9 +74,11 @@
     <span class="label">{{ "perpsLimitPrice" | translate | async }}</span>
     <span class="input-value">
       <input
-        type="number"
-        [(ngModel)]="limitPrice"
-        (ngModelChange)="onLimitPriceChange()"
+        type="text"
+        inputmode="decimal"
+        [value]="limitPrice"
+        (input)="onLimitPriceInput($any($event.target).value)"
+        (blur)="onLimitPriceBlur()"
       />
       <span class="unit">USDC</span>
     </span>
@@ -95,9 +89,10 @@
     <span class="label">{{ "perpsAmount" | translate | async }}</span>
     <span class="input-value">
       <input
-        type="number"
-        [(ngModel)]="amount"
-        (ngModelChange)="onAmountChange()"
+        type="text"
+        inputmode="decimal"
+        [value]="amount"
+        (input)="onAmountInput($any($event.target))"
         placeholder="0"
       />
       <span class="unit">USDC</span>
@@ -202,7 +197,13 @@
           <img src="assets/images/common/tooltip.svg" alt="" />
         </tooltip>
       </span>
-      <span class="value">{{ liquidationPriceText }}</span>
+      <span class="value">
+        <ng-container *ngIf="showsCurrentLiquidationPrice">
+          <i class="current">{{ currentLiquidationPriceText }}</i>
+          <i class="arrow">→</i>
+        </ng-container>
+        {{ liquidationPriceText }}
+      </span>
     </div>
     <div class="row">
       <span class="label">
@@ -232,6 +233,15 @@
           [tip]="
             (feeEstimateUnavailable
               ? ('perpsFeeEstimateUnavailableTip' | translate | async)
+              : quotesBothFeeSides
+              ? ('perpsFeeMakerTakerTip'
+                | translate
+                  : {
+                      neoLineFeeRate: formattedBuilderFeeRate,
+                      makerFeeRate: formattedMakerFeeRate,
+                      takerFeeRate: formattedTakerFeeRate
+                    }
+                | async)
               : ('perpsFeeTip'
                 | translate
                   : {
@@ -244,14 +254,29 @@
           <img src="assets/images/common/tooltip.svg" alt="" />
         </tooltip>
       </span>
-      <span class="value" *ngIf="!feeEstimateUnavailable">{{ feeText }}</span>
       <span class="value" *ngIf="feeEstimateUnavailable">{{
         "perpsFeeEstimateUnavailable" | translate | async
       }}</span>
+      <span
+        class="value"
+        *ngIf="!feeEstimateUnavailable && !quotesBothFeeSides"
+        >{{ feeText }}</span
+      >
+      <!-- A resting limit order usually fills as maker, so both are quoted. -->
+      <span
+        class="value fee-sides"
+        *ngIf="!feeEstimateUnavailable && quotesBothFeeSides"
+      >
+        <i class="side-label">{{ "perpsMakerShort" | translate | async }}</i>
+        <b [class.rebate]="makerFeeIsRebate">{{ makerFeeText }}</b>
+        <i class="separator">/</i>
+        <i class="side-label">{{ "perpsTakerShort" | translate | async }}</i>
+        <b>{{ feeText }}</b>
+      </span>
     </div>
     <div class="row" *ngIf="orderType === 'market'">
       <span class="label">
-        {{ "perpsSlippage" | translate | async }}
+        {{ "perpsMaxSlippage" | translate | async }}
         <tooltip
           placement="topLeft"
           [tip]="'perpsSlippageTip' | translate | async"
@@ -260,10 +285,6 @@
         </tooltip>
       </span>
       <span class="slippage-value">
-        {{ "perpsEstimatedShort" | translate | async }}:
-        {{ formattedEstimatedSlippage }}
-        <i>/</i>
-        {{ "perpsMaximumShort" | translate | async }}:
         {{ formattedMaxSlippage }}
         <button
           type="button"
@@ -277,22 +298,30 @@
     </div>
   </div>
 
-  <p class="error-tip" *ngIf="insufficient">
-    {{ "perpsInsufficientMargin" | translate | async }}
+  <!-- One reason at a time: see orderUnavailableReason. -->
+  <p class="error-tip" *ngIf="orderUnavailableReason">
+    {{ orderUnavailableReason | translate: orderUnavailableParams | async }}
   </p>
-  <p class="error-tip" *ngIf="belowMinimum">
-    {{ "perpsBelowMinimum" | translate | async }}
-    {{ minOrderNotional }} USDC
-  </p>
-  <p class="error-tip" *ngIf="unsupportedAccountMode">
-    {{ "perpsPortfolioUnsupported" | translate | async }}
-  </p>
-  <p class="error-tip" *ngIf="crossPositionUnsupported">
-    {{ "perpsCrossPositionUnsupported" | translate | async }}
-  </p>
-  <p class="error-tip" *ngIf="accountLoadError">
-    {{ "perpsLoadFailed" | translate | async }}
-  </p>
+
+  <!--
+    The order was sent and its result never came back. It may well have filled,
+    so the page says so and offers another look rather than a second order.
+  -->
+  <div class="status-unknown" *ngIf="executionStatusUnknown">
+    <p>{{ "perpsExecutionStatusUnknown" | translate | async }}</p>
+    <div class="actions">
+      <button
+        type="button"
+        (click)="retryOrderResolution()"
+        [disabled]="resolvingOrderStatus"
+      >
+        {{ "perpsCheckOrderStatus" | translate | async }}
+      </button>
+      <button type="button" class="plain" (click)="viewHistory()">
+        {{ "perpsHistory" | translate | async }}
+      </button>
+    </div>
+  </div>
 
   <p class="review-tip" *ngIf="reviewing">
     {{ "perpsReviewTip" | translate | async }}

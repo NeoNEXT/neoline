@@ -1907,12 +1907,6 @@
   "perpsSlippage": {
     "message": "슬리피지"
   },
-  "perpsEstimatedShort": {
-    "message": "예상"
-  },
-  "perpsMaximumShort": {
-    "message": "최대"
-  },
   "perpsEditSlippage": {
     "message": "최대 슬리피지 조정"
   },
@@ -1923,7 +1917,7 @@
     "message": "최대 슬리피지는 주문 양식에서 제출한 시장가 주문에만 적용됩니다."
   },
   "perpsSlippageTip": {
-    "message": "예상 슬리피지는 현재 호가창과 주문 수량으로 계산됩니다. 최대값은 시장가 주문에 허용되는 가격 차이이며, 너무 낮으면 주문이 체결되지 않을 수 있습니다."
+    "message": "체결가가 기준가에서 벗어날 수 있는 최대 범위입니다. 시장가 주문은 이 경계를 지정가로 하는 IOC로 전송되므로, 값을 낮출수록 가격은 보호되지만 미체결 가능성이 높아집니다."
   },
   "perpsInsufficientMargin": {
     "message": "사용 가능한 증거금이 부족합니다"
@@ -2028,7 +2022,7 @@
     "message": "받는 금액"
   },
   "perpsBelowMinimum": {
-    "message": "최소 금액보다 적습니다"
+    "message": "금액이 최소 주문 금액 {{min}} USDC보다 적습니다"
   },
   "perpsExceedsBalance": {
     "message": "잔액을 초과합니다"
@@ -2202,7 +2196,7 @@
     "message": "시장가 주문이 체결되지 않았습니다. 자동 재시도하지 않았습니다."
   },
   "perpsMarketChangedReviewAgain": {
-    "message": "시장이 변했거나 최신 유동성을 확인할 수 없습니다. 주문을 다시 검토하세요."
+    "message": "가격이 최대 슬리피지를 넘어 변동해 주문을 보내지 않았습니다. 다시 검토해 주세요."
   },
   "perpsFeeQuoteChangedReviewAgain": {
     "message": "수수료 견적이 변경되었습니다. 제출하기 전에 다시 확인하세요."
@@ -2263,5 +2257,41 @@
   },
   "confirm": {
     "message": "확인"
+  },
+  "perpsMaxSlippage": {
+    "message": "최대 슬리피지"
+  },
+  "perpsPositionChangedReviewAgain": {
+    "message": "서명 전에 포지션이 변경되었습니다. 다시 검토해 주세요."
+  },
+  "perpsMakerShort": {
+    "message": "메이커"
+  },
+  "perpsTakerShort": {
+    "message": "테이커"
+  },
+  "perpsFeeMakerTakerTip": {
+    "message": "NeoLine 수수료　{{neoLineFeeRate}}<br />Hyperliquid 메이커 수수료　{{makerFeeRate}}<br />Hyperliquid 테이커 수수료　{{takerFeeRate}}<br />지정가가 호가에 남아 체결되면 메이커, 즉시 체결되면 테이커 수수료가 적용됩니다."
+  },
+  "perpsNoExecutionPrice": {
+    "message": "이 마켓은 현재 거래 가능한 중간가가 없어 시장가 주문을 사용할 수 없습니다."
+  },
+  "perpsHoldingLongChooseExit": {
+    "message": "이 마켓에 롱 포지션을 보유하고 있습니다. 정리하려면 축소 또는 종료를 선택하세요."
+  },
+  "perpsHoldingShortChooseExit": {
+    "message": "이 마켓에 숏 포지션을 보유하고 있습니다. 정리하려면 축소 또는 종료를 선택하세요."
+  },
+  "perpsNoPositionToClose": {
+    "message": "이 마켓에는 종료할 포지션이 없습니다."
+  },
+  "perpsSlippageOutOfRange": {
+    "message": "최대 슬리피지가 허용 범위를 벗어났습니다. 조정한 뒤 제출하세요."
+  },
+  "perpsExecutionStatusUnknown": {
+    "message": "주문은 전송되었지만 결과를 확인하지 못했습니다. 체결되었을 수 있으니 상태나 활동 내역을 확인한 뒤 다시 보내세요."
+  },
+  "perpsCheckOrderStatus": {
+    "message": "다시 확인"
   }
 }

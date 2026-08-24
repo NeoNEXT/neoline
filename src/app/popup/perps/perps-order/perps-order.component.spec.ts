@@ -52,11 +52,11 @@ describe('PerpsOrderComponent amount boundaries', () => {
       markPx: price,
     };
     value.leverage = 10;
-    value.amount = 47.89;
+    value.amount = '47.89';
 
     expect(value.insufficient).toBeFalse();
 
-    value.amount = 48.08;
+    value.amount = '48.08';
     expect(value.insufficient).toBeTrue();
   });
 
@@ -69,6 +69,7 @@ describe('PerpsOrderComponent amount boundaries', () => {
   it('keeps 100% inside the cap on a market whose lot is worth under a cent', () => {
     const value = component();
     const price = 0.002718;
+    value.marketStatus = 'ready';
     value.market = market('kPEPE', price, 0);
     value.activeAssetData = {
       user: '0xabc',
@@ -84,8 +85,8 @@ describe('PerpsOrderComponent amount boundaries', () => {
     value.setPercent(100);
 
     // Max applies the confirmed 0.5% reserve before lot quantisation.
-    expect(value.amount).toBeLessThanOrEqual(37.706814);
-    expect(value.amount).toBeLessThanOrEqual(
+    expect(Number(value.amount)).toBeLessThanOrEqual(37.706814);
+    expect(Number(value.amount)).toBeLessThanOrEqual(
       value.theoreticalBuyingPower * 0.995
     );
     expect(value.insufficient).toBeFalse();
@@ -123,12 +124,12 @@ describe('PerpsOrderComponent amount boundaries', () => {
   it('rejects an amount whose lot-floored notional falls under the $10 floor', () => {
     const value = component();
     value.market = market('SOME', 3.33, 0);
-    value.amount = 10;
+    value.amount = '10';
 
     expect(value.belowMinimum).toBeTrue();
     expect(value.canSubmit).toBeFalse();
 
-    value.amount = 13.32;
+    value.amount = '13.32';
     expect(value.belowMinimum).toBeFalse();
   });
 
@@ -161,7 +162,7 @@ describe('PerpsOrderComponent amount boundaries', () => {
     const value = component();
     value.market = market('SOME', 3.33, 0);
     value.leverage = 2;
-    value.amount = 39.9;
+    value.amount = '39.9';
 
     // 11 lots at 3.33 is 36.63, not the 39.90 that was typed.
     expect(value.preview.sizeExact).toBe('11');
@@ -181,7 +182,6 @@ describe('PerpsOrderComponent amount boundaries', () => {
     expect(value.preview).toBeNull();
     expect(value.liquidationPriceText).toBe('N/A');
     expect(value.marginText).toBe('N/A');
-    expect(value.formattedEstimatedSlippage).toBe('N/A');
     // The rate is known without an order; only its cost is not.
     expect(value.feeText).toBe('0.045%');
   });
@@ -190,7 +190,7 @@ describe('PerpsOrderComponent amount boundaries', () => {
     const value = component();
     value.market = market('ETH', 2000, 4);
     value.leverage = 10;
-    value.amount = 200;
+    value.amount = '200';
 
     expect(value.liquidationPriceText).toBe(
       `$${formatPrice(value.preview.liquidationPxExact, 4)}`
@@ -200,10 +200,77 @@ describe('PerpsOrderComponent amount boundaries', () => {
     expect(value.feeText).toBe('0.045% ($0.09)');
   });
 
+  /**
+   * A market order crosses and pays taker. A GTC limit order usually rests and
+   * fills as maker, so quoting only the taker rate overstates what it costs —
+   * and on a rebate tier it gets the sign of the answer wrong.
+   */
+  describe('fee sides', () => {
+    function priced(): PerpsOrderComponent {
+      const value = component();
+      value.market = market('ETH', 2000, 4);
+      value.leverage = 10;
+      value.amount = '200';
+      return value;
+    }
+
+    it('quotes the taker rate alone for a market order', () => {
+      const value = priced();
+
+      expect(value.quotesBothFeeSides).toBeFalse();
+      expect(value.feeText).toBe('0.045% ($0.09)');
+    });
+
+    it('quotes both sides for a limit order', () => {
+      const value = priced();
+      value.orderType = 'limit';
+      value.limitPrice = '2000';
+
+      expect(value.quotesBothFeeSides).toBeTrue();
+      expect(value.makerFeeText).toBe('0.015% ($0.03)');
+      expect(value.feeText).toBe('0.045% ($0.09)');
+      expect(value.makerFeeIsRebate).toBeFalse();
+    });
+
+    // A rebate pays the account. Showing it as "$0.00" would delete money the
+    // fill actually returns, so the sign is carried all the way to the row.
+    it('shows a negative maker rate as a rebate rather than zero', () => {
+      const value = priced();
+      value.orderType = 'limit';
+      value.limitPrice = '2000';
+      (value as any).makerFeeRate = -0.00002;
+
+      expect(value.makerFeeIsRebate).toBeTrue();
+      expect(value.makerFeeText).toBe('-0.002% (-$<0.01)');
+    });
+
+    // Both rows quote what leaves the account, so NeoLine's cut is in each.
+    it('includes the builder fee on both sides', () => {
+      const value = new PerpsOrderComponent(
+        null,
+        null,
+        null,
+        null,
+        { builderAddress: '0xbuilder' } as any,
+        null,
+        null,
+        null
+      );
+      value.market = market('ETH', 2000, 4);
+      value.leverage = 10;
+      value.amount = '200';
+      value.orderType = 'limit';
+      value.limitPrice = '2000';
+
+      expect(value.makerFeeText).toBe('0.06% ($0.12)');
+      expect(value.feeText).toBe('0.09% ($0.18)');
+    });
+  });
+
   it('blocks increasing a cross-margin position', () => {
     const value = component();
     value.market = market('ETH', 100, 2);
-    value.amount = 100;
+    value.amount = '100';
     value.position = {
       key: 'hl:ETH',
       dex: '',
@@ -225,10 +292,17 @@ describe('PerpsOrderComponent amount boundaries', () => {
     expect(value.canSubmit).toBeFalse();
   });
 
-  it('labels an opposite isolated order as an explicit reverse', () => {
+  /**
+   * The exchange has no flip order: a reverse is |position| + amount on one
+   * ticket. Reading a plain opposite-side order as one signs several times the
+   * risk the form previewed, so the page asks what was meant instead.
+   */
+  it('refuses to read an opposite-side order as a reverse', () => {
     const value = component();
+    value.marketStatus = 'ready';
     value.market = market('ETH', 100, 2);
     value.side = 'long';
+    value.amount = '20';
     value.position = {
       key: 'hl:ETH',
       dex: '',
@@ -245,10 +319,54 @@ describe('PerpsOrderComponent amount boundaries', () => {
       marginUsedExact: '15',
       isLong: false,
     };
-    value.reviewing = true;
 
-    expect(value.reverseMode).toBeTrue();
-    expect(value.ctaLabel).toBe('perpsReverseToLong');
+    expect(value.oppositePositionHeld).toBeTrue();
+    expect(value.orderUnavailableReason).toBe('perpsHoldingShortChooseExit');
+    expect(value.canSubmit).toBeFalse();
+
+    // The button never offers a reverse from this page, even in review.
+    value.reviewing = true;
+    expect(value.ctaLabel).toBe('perpsLong');
+  });
+
+  it('adds to a position held on the same side', () => {
+    const value = component();
+    value.marketStatus = 'ready';
+    value.market = market('ETH', 100, 2);
+    value.side = 'long';
+    value.amount = '20';
+    value.activeAssetData = {
+      user: '0xabc',
+      coin: 'ETH',
+      leverage: { type: 'isolated', value: 1 },
+      maxTradeSzs: ['100', '100'],
+      availableToTrade: ['1000', '1000'],
+      markPxExact: '100',
+      markPx: 100,
+    };
+    value.position = {
+      key: 'hl:ETH',
+      dex: '',
+      coin: 'ETH',
+      symbol: 'ETH',
+      sziExact: '0.75',
+      entryPxExact: '100',
+      positionValueExact: '75',
+      unrealizedPnlExact: '0',
+      returnOnEquityExact: '0',
+      liquidationPxExact: '60',
+      leverage: 5,
+      leverageType: 'isolated',
+      marginUsedExact: '15',
+      isLong: true,
+    };
+
+    expect(value.oppositePositionHeld).toBeFalse();
+    expect(value.increasesPosition).toBeTrue();
+    expect(value.orderUnavailableReason).toBeNull();
+    // The exchange's own figure is shown beside the estimate.
+    expect(value.showsCurrentLiquidationPrice).toBeTrue();
+    expect(value.currentLiquidationPriceText).toBe('$60');
   });
 });
 

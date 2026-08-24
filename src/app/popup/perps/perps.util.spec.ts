@@ -4,7 +4,6 @@ import {
   clampDecimals,
   coinLogo,
   collateralToNotional,
-  estimateMarketSlippagePercent,
   formatCompactUsd,
   formatFeeRatePercent,
   formatFillTime,
@@ -15,10 +14,12 @@ import {
   formatSize,
   formatUsd,
   formatBalance,
+  exceedsMaxSlippage,
   isNegativeExact,
   MISSING_DISPLAY,
   maxOrderNotionalForSide,
   mergeCandles,
+  normalizeLimitPrice,
   notionalAtLotSize,
   previewClosePosition,
   previewOrder,
@@ -226,38 +227,6 @@ describe('perps utilities', () => {
     expect(formatSize(1.5)).toBe('1.5');
     expect(formatSize(0.005)).toBe('0.005');
     expect(formatSize(0.25)).toBe('0.25');
-  });
-
-  it('estimates market slippage from the weighted book fill', () => {
-    const book = {
-      coin: 'ETH',
-      time: 1,
-      bids: [
-        { price: 99, size: 4 },
-        { price: 98, size: 10 },
-      ],
-      asks: [
-        { price: 101, size: 2 },
-        { price: 102, size: 10 },
-      ],
-    };
-
-    expect(estimateMarketSlippagePercent(book, 4, true)).toBeCloseTo(1.5, 8);
-    expect(estimateMarketSlippagePercent(book, 6, false)).toBeCloseTo(
-      1.3333333333,
-      8
-    );
-  });
-
-  it('does not estimate slippage beyond the visible book depth', () => {
-    const book = {
-      coin: 'ETH',
-      time: 1,
-      bids: [{ price: 99, size: 1 }],
-      asks: [{ price: 101, size: 1 }],
-    };
-
-    expect(estimateMarketSlippagePercent(book, 2, true)).toBeNull();
   });
 
   it('formats fill time as M/D HH:mm using local time', () => {
@@ -521,6 +490,209 @@ describe('perps utilities', () => {
     expect(preview.protocolFeeExact).toBe('0.00850275');
     expect(preview.builderFeeExact).toBe('0.00850275');
     expect(preview.feeExact).toBe('0.0170055');
+  });
+
+  /**
+   * Adding to a position does not create a second one. The exchange marks the
+   * merged position, so an estimate that priced this order on its own — with
+   * only its own margin behind it — quotes a level the account is never
+   * liquidated at.
+   */
+  describe('liquidation estimate when adding to a position', () => {
+    /** 10 ETH long, entered at $100, held at 2x — so $500 of margin. */
+    const heldLong = () =>
+      ethPosition({
+        sziExact: '10',
+        entryPxExact: '100',
+        positionValueExact: '1000',
+        marginUsedExact: '500',
+        leverage: 2,
+        leverageType: 'isolated',
+        isLong: true,
+      });
+
+    const standalone = (executionPriceExact: string) =>
+      previewOrder({
+        market: ethMarket(),
+        executionPriceExact,
+        notionalExact: '1000',
+        leverage: 2,
+        isLong: true,
+        feeRate: 0,
+      }).liquidationPxExact;
+
+    // Doubling a position at its own price and leverage changes nothing about
+    // where it liquidates — the clearest check that the merge is arithmetic on
+    // the whole position rather than on this order alone.
+    it('leaves the level unmoved when the order matches what is held', () => {
+      const preview = previewOrder({
+        market: ethMarket(),
+        executionPriceExact: '100',
+        notionalExact: '1000',
+        leverage: 2,
+        isLong: true,
+        feeRate: 0,
+        position: heldLong(),
+      });
+
+      expect(Number(preview.liquidationPxExact)).toBeCloseTo(
+        Number(standalone('100')),
+        10
+      );
+      expect(Number(preview.liquidationPxExact)).toBeCloseTo(51.0204, 4);
+    });
+
+    // Buying higher drags the size-weighted entry up, so the merged level sits
+    // above the position's own and below what this order would face alone.
+    it('weights the entry by size when the order fills higher', () => {
+      const merged = Number(
+        previewOrder({
+          market: ethMarket(),
+          executionPriceExact: '120',
+          notionalExact: '1000',
+          leverage: 2,
+          isLong: true,
+          feeRate: 0,
+          position: heldLong(),
+        }).liquidationPxExact
+      );
+
+      expect(merged).toBeGreaterThan(Number(standalone('100')));
+      expect(merged).toBeLessThan(Number(standalone('120')));
+    });
+
+    // The margin figure is still this order's own: it is what the order locks,
+    // not what the merged position holds.
+    it('still reports the margin this order locks', () => {
+      const preview = previewOrder({
+        market: ethMarket(),
+        executionPriceExact: '100',
+        notionalExact: '1000',
+        leverage: 2,
+        isLong: true,
+        feeRate: 0,
+        position: heldLong(),
+      });
+
+      expect(preview.marginExact).toBe('500');
+    });
+
+    // An order on the other side is a reduce or a reverse, and the order form
+    // refuses to guess which — so there is nothing to merge with.
+    it('ignores a position held on the other side', () => {
+      const preview = previewOrder({
+        market: ethMarket(),
+        executionPriceExact: '100',
+        notionalExact: '1000',
+        leverage: 2,
+        isLong: true,
+        feeRate: 0,
+        position: ethPosition({
+          sziExact: '-10',
+          entryPxExact: '100',
+          marginUsedExact: '500',
+          leverageType: 'isolated',
+          isLong: false,
+        }),
+      });
+
+      expect(Number(preview.liquidationPxExact)).toBeCloseTo(
+        Number(standalone('100')),
+        10
+      );
+    });
+
+    // Below one lot there is no order to merge, and dividing by a zero size
+    // would answer with an infinity rather than a price.
+    it('falls back to the ratio when the order cannot reach one lot', () => {
+      const preview = previewOrder({
+        market: ethMarket({ szDecimals: 0 }),
+        executionPriceExact: '100',
+        notionalExact: '50',
+        leverage: 2,
+        isLong: true,
+        feeRate: 0,
+        position: heldLong(),
+      });
+
+      expect(preview.sizeExact).toBe('0');
+      expect(Number(preview.liquidationPxExact)).toBeCloseTo(51.0204, 4);
+    });
+  });
+
+  /**
+   * Max slippage is the whole of the user's consent about price, so it is also
+   * what decides whether the price they reviewed still stands at submit time.
+   */
+  describe('exceedsMaxSlippage', () => {
+    it('allows a move inside the tolerance, in either direction', () => {
+      expect(exceedsMaxSlippage('100', '100.5', 1)).toBeFalse();
+      expect(exceedsMaxSlippage('100', '99.5', 1)).toBeFalse();
+    });
+
+    // The boundary is the agreed limit, not one tick past it.
+    it('allows a move that lands exactly on the tolerance', () => {
+      expect(exceedsMaxSlippage('100', '101', 1)).toBeFalse();
+      expect(exceedsMaxSlippage('100', '99', 1)).toBeFalse();
+    });
+
+    it('refuses a move past the tolerance', () => {
+      expect(exceedsMaxSlippage('100', '101.01', 1)).toBeTrue();
+      expect(exceedsMaxSlippage('100', '98.99', 1)).toBeTrue();
+    });
+
+    // Six-decimal markets move by amounts a float comparison rounds away.
+    it('measures the move on the decimals, not on a float of them', () => {
+      expect(exceedsMaxSlippage('0.000001', '0.00000106', 5)).toBeTrue();
+      expect(exceedsMaxSlippage('0.000001', '0.00000104', 5)).toBeFalse();
+    });
+
+    // No price is not a price that has not moved.
+    it('refuses when either side has no price at all', () => {
+      expect(exceedsMaxSlippage(null, '100', 1)).toBeTrue();
+      expect(exceedsMaxSlippage('100', null, 1)).toBeTrue();
+      expect(exceedsMaxSlippage('0', '100', 1)).toBeTrue();
+      expect(exceedsMaxSlippage('100', '0', 1)).toBeTrue();
+      expect(exceedsMaxSlippage('100', '100', NaN)).toBeTrue();
+    });
+  });
+
+  /**
+   * The signed price has to be the price on screen, so the box is normalised
+   * through the same rule the wire price is quantised against.
+   */
+  describe('normalizeLimitPrice', () => {
+    it('quantises to the tighter of the tick and five significant figures', () => {
+      // BTC (szDecimals 5) quotes one decimal, but five significant figures
+      // bind first at this magnitude.
+      expect(normalizeLimitPrice('63393.55', 5)).toBe('63394');
+      // SOL (szDecimals 2) quotes four decimals; significance allows three.
+      expect(normalizeLimitPrice('75.7565', 2)).toBe('75.757');
+      // PUMP (szDecimals 0) quotes six, and the tick is what binds.
+      expect(normalizeLimitPrice('0.0029794', 0)).toBe('0.002979');
+    });
+
+    // Running it twice must not keep moving the price, or the box would drift
+    // every time it lost focus.
+    it('is a no-op on a price it has already quantised', () => {
+      ['63393.55', '75.7565', '0.0029794', '1886'].forEach((price) => {
+        const once = normalizeLimitPrice(price, 2);
+        expect(normalizeLimitPrice(once, 2)).toBe(once);
+      });
+    });
+
+    // A box mid-edit belongs to the user; only a finished price is rewritten.
+    it('leaves a box that holds no price alone', () => {
+      expect(normalizeLimitPrice('', 2)).toBe('');
+      expect(normalizeLimitPrice('.', 2)).toBe('');
+      expect(normalizeLimitPrice('-', 2)).toBe('');
+      expect(normalizeLimitPrice('abc', 2)).toBe('');
+      expect(normalizeLimitPrice('0', 2)).toBe('');
+    });
+
+    it('leaves a price untouched when no market says how it ticks', () => {
+      expect(normalizeLimitPrice('63393.5555')).toBe('63393.5555');
+    });
   });
   describe('formatFundingPercent', () => {
     it('quotes four decimals, which is the floor for a millionths rate', () => {
