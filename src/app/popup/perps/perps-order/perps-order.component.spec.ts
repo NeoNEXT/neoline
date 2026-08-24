@@ -1,4 +1,5 @@
 import { PerpsMarket } from '@popup/_lib/perps';
+import { of } from 'rxjs';
 import { PerpsOrderComponent } from './perps-order.component';
 import { formatPrice } from '../perps.util';
 import { ethMarket } from '../perps.test-fixture';
@@ -12,6 +13,7 @@ describe('PerpsOrderComponent amount boundaries', () => {
       null,
       null,
       { builderAddress: '' } as any,
+      null,
       null,
       null,
       null,
@@ -256,6 +258,7 @@ describe('PerpsOrderComponent amount boundaries', () => {
         null,
         null,
         null,
+        null,
         null
       );
       value.market = market('ETH', 2000, 4);
@@ -383,6 +386,7 @@ describe('PerpsOrderComponent account modes', () => {
       null,
       null,
       null,
+      null,
       null
     );
 
@@ -421,5 +425,97 @@ describe('PerpsOrderComponent account modes', () => {
     value.closeMode = true;
 
     expect(value.unsupportedAccountMode).toBeFalse();
+  });
+});
+
+describe('PerpsOrderComponent submission seam', () => {
+  it('passes semantic intent to the trade-order module', async () => {
+    const router = jasmine.createSpyObj('Router', ['navigateByUrl']);
+    const global = jasmine.createSpyObj('GlobalService', ['snackBarTip']);
+    const accountStates = jasmine.createSpyObj('PerpsAccountStateService', [
+      'refreshAccount',
+    ]);
+    const tradeOrders = jasmine.createSpyObj('PerpsTradeOrderService', [
+      'submit',
+    ]);
+    const chrome = jasmine.createSpyObj('ChromeService', ['getPassword']);
+    const evmWallet = jasmine.createSpyObj('EvmWalletService', [
+      'getPrivateKey',
+    ]);
+    chrome.getPassword.and.returnValue(Promise.resolve('password'));
+    evmWallet.getPrivateKey.and.returnValue(Promise.resolve('private-key'));
+    tradeOrders.submit.and.returnValue(
+      of({
+        kind: 'order-submitted',
+        result: {
+          status: 'filled',
+          cloid: '0x00000000000000000000000000000001',
+          submittedSizeExact: '1',
+          filledSizeExact: '1',
+          remainingSizeExact: '0',
+        },
+      })
+    );
+    const value = new PerpsOrderComponent(
+      null,
+      router,
+      null,
+      global,
+      { builderAddress: '' } as any,
+      accountStates,
+      tradeOrders,
+      chrome,
+      evmWallet,
+      null
+    );
+    value.marketStatus = 'ready';
+    value.market = ethMarket({
+      key: 'hl:ETH',
+      coin: 'ETH',
+      symbol: 'ETH',
+      assetId: 3,
+      szDecimals: 2,
+      maxLeverage: 20,
+      midPxExact: '100',
+    });
+    value.activeAssetData = {
+      user: '0xabc',
+      coin: 'ETH',
+      leverage: { type: 'isolated', value: 5 },
+      maxTradeSzs: ['10', '10'],
+      availableToTrade: ['100', '100'],
+      markPxExact: '100',
+      markPx: 100,
+    };
+    value.leverage = 5;
+    value.amount = '100';
+    (value as any).wallet = { accounts: [{ extra: {} }] };
+
+    value.review();
+    await value.submit();
+
+    const submitted = tradeOrders.submit.calls.mostRecent().args[1];
+    expect(submitted).toEqual({
+      market: {
+        key: 'hl:ETH',
+        coin: 'ETH',
+        dex: '',
+        assetId: 3,
+        szDecimals: 2,
+        maxLeverage: 20,
+      },
+      operation: 'open',
+      side: 'long',
+      referencePriceExact: '100',
+      requestedSizeExact: '1',
+      leverage: 5,
+      orderType: 'market',
+      maxSlippagePercent: value.slippagePercent,
+      currentLeverage: { type: 'isolated', value: 5 },
+    });
+    expect((submitted as any).reduceOnly).toBeUndefined();
+    expect((submitted as any).timeInForce).toBeUndefined();
+    expect((submitted as any).cloid).toBeUndefined();
+    expect(router.navigateByUrl).toHaveBeenCalled();
   });
 });

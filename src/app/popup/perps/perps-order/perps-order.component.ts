@@ -11,12 +11,10 @@ import {
   EvmWalletService,
   GlobalService,
 } from '@/app/core';
-import {
-  HyperliquidService,
-  PerpsLeverageChangeRequiredError,
-  PerpsPositionChangedError,
-} from '@/app/core/services/perps/hyperliquid.service';
+import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
 import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
+import { PerpsTradeOrderService } from '@/app/core/services/perps/perps-trade-order.service';
+import { PerpsTradeOrderError } from '@/app/core/services/perps/perps-trade-order';
 import { EvmWalletJSON } from '@popup/_lib/evm';
 import { STORAGE_NAME } from '@popup/_lib';
 import { PopupPerpsSlippageDialogComponent } from '@popup/_dialogs/perps-slippage/perps-slippage.dialog';
@@ -25,10 +23,10 @@ import {
   PerpsActiveAssetData,
   PerpsMarket,
   PerpsOrderPreview,
-  PerpsOrderRequest,
   PerpsOrderSide,
   PerpsOrderType,
   PerpsPosition,
+  PerpsTradeOrderIntent,
   PERPS_BUILDER_FEE_RATE,
   PERPS_DEFAULT_SLIPPAGE_PERCENT,
   PERPS_HOME_URL,
@@ -196,6 +194,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     private global: GlobalService,
     private hyperliquid: HyperliquidService,
     private accountStates: PerpsAccountStateService,
+    private tradeOrders: PerpsTradeOrderService,
     private chrome: ChromeService,
     private evmWallet: EvmWalletService,
     private dialog: MatDialog
@@ -568,7 +567,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     );
   }
 
-  private get tradeIntent(): PerpsOrderRequest['intent'] {
+  private get tradeIntent(): PerpsTradeOrderIntent['operation'] {
     if (this.closeMode) {
       return this.fullClose ? 'close' : 'reduce';
     }
@@ -1187,7 +1186,6 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       closeMode: this.closeMode,
     };
     this.reviewing = true;
-    this.pendingCloid = this.hyperliquid.createCloid();
   }
 
   /** Whether the form still holds the intent the baseline was taken from. */
@@ -1247,71 +1245,49 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         this.wallet,
         password
       );
-      const request: PerpsOrderRequest = {
-        coin: this.market.coin,
-        marketKey: this.market.key,
-        intent: this.tradeIntent,
-        assetId: this.market.assetId,
-        isBuy: this.isLong,
-        price: this.orderPriceExact,
-        size: this.orderSizeExact,
-        fullClose: this.orderType === 'market' ? this.fullClose : undefined,
-        szDecimals: this.market.szDecimals,
-        maxLeverage: this.market.maxLeverage,
+      const intent: PerpsTradeOrderIntent = {
+        market: {
+          key: this.market.key,
+          coin: this.market.coin,
+          dex: this.market.dex,
+          assetId: this.market.assetId,
+          szDecimals: this.market.szDecimals,
+          maxLeverage: this.market.maxLeverage,
+        },
+        operation: this.tradeIntent,
+        side: this.side,
+        referencePriceExact: this.orderPriceExact,
+        requestedSizeExact: this.orderSizeExact,
         leverage: this.leverage,
         orderType: this.orderType,
-        slippagePercent: this.slippagePercent,
-        reduceOnly: this.closeMode,
-        // Always open isolated so the liquidation price shown in the preview
-        // (see previewOrder) is the value the exchange actually binds. Cross
-        // margin would make liquidation a whole-account figure that our
-        // per-order preview cannot match.
-        isCross: false,
+        maxSlippagePercent: this.slippagePercent,
         currentLeverage:
           (this.confirmedLeverage === this.leverage
             ? { type: 'isolated', value: this.confirmedLeverage }
             : this.activeAssetData?.leverage),
-        cloid: this.pendingCloid,
       };
-      const leverageMatches =
-        this.closeMode ||
-        this.confirmedLeverage === this.leverage ||
-        (this.activeAssetData?.leverage.type === 'isolated' &&
-          this.activeAssetData?.leverage.value === this.leverage);
-      if (!leverageMatches) {
-        this.hyperliquid
-          .updateLeverage(
-            privateKey,
-            this.market.assetId,
-            this.leverage,
-            this.market.maxLeverage
-          )
-          .subscribe({
-            next: () => {
-              this.submitting = false;
+      this.tradeOrders
+        .submit(privateKey, intent)
+        .subscribe({
+          next: (submission) => {
+            this.submitting = false;
+            if (submission.kind === 'leverage-updated') {
               this.discardReview();
-              this.confirmedLeverage = this.leverage;
+              this.confirmedLeverage = submission.leverage;
               this.activeAssetData = this.activeAssetData
                 ? {
                     ...this.activeAssetData,
-                    leverage: { type: 'isolated', value: this.leverage },
+                    leverage: {
+                      type: 'isolated',
+                      value: submission.leverage,
+                    },
                   }
                 : this.activeAssetData;
               this.refreshAccount();
               this.global.snackBarTip('perpsLeverageUpdatedReviewAgain');
-            },
-            error: (error) => {
-              this.submitting = false;
-              this.global.snackBarTip('txFailed', error?.message || error);
-            },
-          });
-        return;
-      }
-      this.hyperliquid
-        .placeOrder(privateKey, request)
-        .subscribe({
-          next: (result) => {
-            this.submitting = false;
+              return;
+            }
+            const result = submission.result;
             const message = {
               filled: 'perpsOrderFilled',
               partial: 'perpsOrderPartiallyFilled',
@@ -1334,9 +1310,10 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
           },
           error: (error) => {
             this.submitting = false;
-            if (error instanceof PerpsLeverageChangeRequiredError) {
-              this.global.snackBarTip('perpsLeverageUpdatedReviewAgain');
-            } else if (error instanceof PerpsPositionChangedError) {
+            if (
+              error instanceof PerpsTradeOrderError &&
+              error.code === 'position-changed'
+            ) {
               this.requireReview('perpsPositionChangedReviewAgain');
             } else {
               this.global.snackBarTip('txFailed', error?.message || error);

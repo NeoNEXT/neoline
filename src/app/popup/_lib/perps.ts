@@ -819,34 +819,24 @@ export interface PerpsSignature {
   v: number;
 }
 
-export interface PerpsOrderRequest {
-  /** Protocol coin identifier used by REST/WS and signing. */
-  coin: string;
-  /** Stable `(dex, coin)` identity; symbols alone are not globally unique. */
-  marketKey: string;
-  /** Explicit semantic operation; reverse targets a new opposite position. */
-  intent?: PerpsTradeIntent;
-  assetId: number;
-  isBuy: boolean;
-  /** Price the user reviewed, kept exact until the wire price is derived. */
-  price: string | number;
-  /** Decimal base size; the service floors it to szDecimals before signing. */
-  size: string;
-  /** Full closes keep the exact position quantity instead of rescaling by USD. */
-  fullClose?: boolean;
-  szDecimals: number;
-  maxLeverage: number;
+/** User-confirmed facts needed to derive one protocol order. */
+export interface PerpsTradeOrderIntent {
+  market: Pick<
+    PerpsMarket,
+    'key' | 'coin' | 'dex' | 'assetId' | 'szDecimals' | 'maxLeverage'
+  >;
+  operation: PerpsTradeIntent;
+  side: PerpsOrderSide;
+  /** Current execution reference or normalized limit price. */
+  referencePriceExact: string;
+  /** Base size requested; ignored for a full close. */
+  requestedSizeExact: string;
   leverage: number;
   orderType: PerpsOrderType;
   /** Maximum market-order price deviation as a percentage, e.g. 1 for 1%. */
-  slippagePercent: number;
-  reduceOnly: boolean;
-  /** False for isolated-only markets and existing isolated positions. */
-  isCross: boolean;
+  maxSlippagePercent: number;
   /** Exchange-side setting used to avoid signing an identical update. */
   currentLeverage?: PerpsActiveAssetData['leverage'];
-  /** Stable 16-byte id reused while this exact intent is unresolved. */
-  cloid?: string;
 }
 
 export interface PerpsExchangeResponse {

@@ -48,7 +48,6 @@ import {
   PerpsMarket,
   PerpsOpenOrder,
   PerpsOrderExecutionResult,
-  PerpsOrderRequest,
   PerpsExchangeResponse,
   PerpsPosition,
   PerpsUniverseItem,
@@ -59,9 +58,6 @@ import {
   PERPS_CANDLE_LIMIT,
   PERPS_DEPOSIT_CONFIG,
   PERPS_HIP3_DEXES,
-  PERPS_MAX_SLIPPAGE_PERCENT,
-  PERPS_MIN_SLIPPAGE_PERCENT,
-  perpsPriceDecimals,
 } from '@popup/_lib/perps';
 import { environment } from '@/environments/environment';
 import {
@@ -74,22 +70,9 @@ import {
   signHyperliquidSendToEvmWithData,
 } from './hyperliquid-signing';
 import { parsePerpsAccount } from './perps-account-state';
+import { PerpsOrder } from './perps-trade-order';
 
 export type PerpsNetwork = 'mainnet' | 'testnet';
-
-export class PerpsLeverageChangeRequiredError extends Error {
-  constructor(readonly leverage: number) {
-    super('Leverage must be updated and reviewed before placing the order');
-    this.name = 'PerpsLeverageChangeRequiredError';
-  }
-}
-
-export class PerpsPositionChangedError extends Error {
-  constructor() {
-    super('The position changed before the close order was signed');
-    this.name = 'PerpsPositionChangedError';
-  }
-}
 
 interface HyperliquidUserFees {
   /** Taker rate: what crossing the spread costs. */
@@ -615,10 +598,6 @@ export class HyperliquidService {
     return this.nonces.next(ethers.computeAddress(privateKey));
   }
 
-  createCloid(): string {
-    return ethers.hexlify(ethers.randomBytes(16));
-  }
-
   /** Resolve a transport-ambiguous order by its stable client id. */
   getOrderStatus(address: string, cloid: string): Observable<any> {
     if (!/^0x[0-9a-fA-F]{32}$/u.test(cloid)) {
@@ -652,164 +631,38 @@ export class HyperliquidService {
     );
   }
 
-  /** Market orders are IOC limits priced this far through the mark. */
-  private slippageFraction(slippagePercent: number): number {
-    return (
-      Math.max(
-        PERPS_MIN_SLIPPAGE_PERCENT,
-        Math.min(PERPS_MAX_SLIPPAGE_PERCENT, slippagePercent)
-      ) / 100
-    );
-  }
-
-  /**
-   * Set the requested leverage / margin mode (`isCross`) when it differs from
-   * the exchange-side setting, then place one order.
-   * Callers currently open isolated so the per-order liquidation preview is
-   * binding. Market orders use an IOC limit priced through the mid — the price
-   * the caller supplies — according to its configured slippage tolerance.
-   */
-  placeOrder(
+  /** Serialize, sign and send one already-normalized protocol order. */
+  submitOrder(
     privateKey: string,
-    request: PerpsOrderRequest
+    order: PerpsOrder
   ): Observable<PerpsOrderExecutionResult> {
-    const leverage = Math.max(
-      1,
-      Math.min(request.maxLeverage, Math.floor(request.leverage))
-    );
-    const requestedLeverageType = request.isCross ? 'cross' : 'isolated';
-    const leverageMatches =
-      request.currentLeverage?.type === requestedLeverageType &&
-      request.currentLeverage?.value === leverage;
-    if (!request.coin || !request.marketKey) {
-      throw new Error('Order is missing its market identity');
+    if (!Number.isSafeInteger(order.assetId) || order.assetId < 0) {
+      throw new Error('Invalid Hyperliquid asset id');
     }
-    if (!request.reduceOnly && !leverageMatches) {
-      throw new PerpsLeverageChangeRequiredError(leverage);
+    if (!/^0x[0-9a-fA-F]{32}$/u.test(order.cloid)) {
+      throw new Error('Invalid Hyperliquid cloid');
     }
-
-    // Only the size can still be stale here, and only when it is derived from
-    // the position rather than typed: a full close must send the quantity the
-    // account holds now, not the one review saw, or it leaves a dust position
-    // behind. Everything about the price was settled by the page (ADR-0004,
-    // ADR-0006) — this is the submission refresh, not a second price source.
-    const refreshesPosition =
-      request.fullClose === true || request.intent === 'reverse';
-    if (!refreshesPosition) {
-      return this.submitPreparedOrder(
-        privateKey,
-        request,
-        new BigNumber(request.price),
-        new BigNumber(request.size)
-      );
+    if (
+      !new BigNumber(order.priceExact).isGreaterThan(0) ||
+      !new BigNumber(order.sizeExact).isGreaterThan(0)
+    ) {
+      throw new Error('Invalid Hyperliquid order values');
     }
-    return this.getAccount(
-      ethers.computeAddress(privateKey),
-      true,
-      this.dexOfCoin(request.coin)
-    ).pipe(
-      switchMap((account) => {
-        let size: BigNumber;
-        if (request.fullClose) {
-          const position = account?.positions?.find(
-            (item) =>
-              item.key === request.marketKey || item.coin === request.coin
-          );
-          const signedSize = new BigNumber(position?.sziExact ?? 0);
-          const closesDirection = request.isBuy
-            ? signedSize.isLessThan(0)
-            : signedSize.isGreaterThan(0);
-          if (!closesDirection) {
-            return throwError(() => new PerpsPositionChangedError());
-          }
-          size = signedSize.absoluteValue();
-        } else {
-          size = this.reverseOrderSize(account, request, request.size);
-        }
-        return this.submitPreparedOrder(
-          privateKey,
-          request,
-          new BigNumber(request.price),
-          size
-        );
-      })
-    );
-  }
-
-  /** A HIP-3 coin carries its DEX as a prefix; a bare coin is canonical. */
-  private dexOfCoin(coin: string): string {
-    return coin?.includes(':') ? coin.slice(0, coin.indexOf(':')) : '';
-  }
-
-  private reverseOrderSize(
-    account: PerpsAccount,
-    request: PerpsOrderRequest,
-    targetSize: BigNumber.Value
-  ): BigNumber {
-    const position = account?.positions?.find(
-      (item) => item.key === request.marketKey || item.coin === request.coin
-    );
-    const signedSize = new BigNumber(position?.sziExact ?? 0);
-    const isOpposite = request.isBuy
-      ? signedSize.isLessThan(0)
-      : signedSize.isGreaterThan(0);
-    if (!isOpposite || position?.leverageType === 'cross') {
-      throw new PerpsPositionChangedError();
-    }
-    return signedSize.absoluteValue().plus(targetSize);
-  }
-
-  private submitPreparedOrder(
-    privateKey: string,
-    request: PerpsOrderRequest,
-    referencePrice: BigNumber,
-    requestedSize: BigNumber
-  ): Observable<PerpsOrderExecutionResult> {
-    const size = requestedSize
-      .decimalPlaces(
-        Math.max(0, request.szDecimals),
-        BigNumber.ROUND_FLOOR
-      )
-      .toFixed();
-    if (!new BigNumber(size).isGreaterThan(0)) {
-      throw new Error('Order size is below the market lot size');
-    }
-    const slippage = this.slippageFraction(request.slippagePercent);
-    const price =
-      request.orderType === 'market'
-        ? referencePrice.times(
-            new BigNumber(1)[request.isBuy ? 'plus' : 'minus'](slippage)
-          )
-        : referencePrice;
-    // Snapping to the tick always moves the price in the signer's favour: a buy
-    // floors, a sell ceilings. That keeps an IOC market order inside its
-    // slippage tolerance, and it keeps a limit order from resting through the
-    // price that was typed — rounding to the nearest tick instead would put a
-    // limit buy up to half a tick above the number the form displayed.
-    const wirePrice = this.roundPrice(
-      price,
-      request.szDecimals,
-      request.isBuy ? BigNumber.ROUND_FLOOR : BigNumber.ROUND_CEIL
-    );
-    if (!new BigNumber(wirePrice).isGreaterThan(0)) {
-      throw new Error('Order price is below the market tick size');
-    }
-    const cloid = request.cloid || this.createCloid();
     const action = this.withBuilder({
       type: 'order',
       orders: [
         {
-          a: request.assetId,
-          b: request.isBuy,
-          p: this.floatToWire(wirePrice),
-          s: this.floatToWire(size),
-          r: request.reduceOnly,
+          a: order.assetId,
+          b: order.isBuy,
+          p: this.floatToWire(order.priceExact),
+          s: this.floatToWire(order.sizeExact),
+          r: order.reduceOnly,
           t: {
             limit: {
-              tif: request.orderType === 'market' ? 'Ioc' : 'Gtc',
+              tif: order.timeInForce,
             },
           },
-          c: cloid,
+          c: order.cloid,
         },
       ],
       grouping: 'na',
@@ -817,7 +670,13 @@ export class HyperliquidService {
     return this.ensureBuilderFeeApproved(privateKey).pipe(
       switchMap(() =>
         this.signedL1Action(privateKey, action, true).pipe(
-          map((response) => this.parseOrderExecution(response, size, cloid)),
+          map((response) =>
+            this.parseOrderExecution(
+              response,
+              order.sizeExact,
+              order.cloid
+            )
+          ),
           // Once the signed order was sent, a transport failure cannot prove
           // rejection. Preserve cloid and stop: retrying could duplicate risk.
           catchError((error) =>
@@ -825,10 +684,10 @@ export class HyperliquidService {
               ? throwError(() => error)
               : of({
                   status: 'unknown' as const,
-                  cloid,
-                  submittedSizeExact: size,
+                  cloid: order.cloid,
+                  submittedSizeExact: order.sizeExact,
                   filledSizeExact: '0',
-                  remainingSizeExact: size,
+                  remainingSizeExact: order.sizeExact,
                   error: error?.message || String(error),
                 })
           )
@@ -1034,26 +893,6 @@ export class HyperliquidService {
       throw new Error('Hyperliquid number exceeds 8 decimal places');
     }
     return decimal.isZero() ? '0' : decimal.toFixed();
-  }
-
-  /**
-   * Quantise a price to what the market can quote, per `perpsPriceDecimals`.
-   *
-   * The order form normalises a typed limit price through the same rule, so on
-   * that path this is a no-op — which is the point: it means the price the user
-   * approved is the price in the signature.
-   */
-  private roundPrice(
-    price: BigNumber,
-    szDecimals: number,
-    roundingMode: BigNumber.RoundingMode = BigNumber.ROUND_HALF_UP
-  ): string {
-    return price
-      .decimalPlaces(
-        perpsPriceDecimals(price.toNumber(), szDecimals),
-        roundingMode
-      )
-      .toFixed();
   }
 
   /**

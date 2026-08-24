@@ -8,7 +8,6 @@ import {
   PerpsCandle,
   PERPS_BUILDER_FEE_TENTHS_BPS,
   PERPS_CANDLE_LIMIT,
-  PERPS_MAX_SLIPPAGE_PERCENT,
   PerpsUserFeeRates,
 } from '@popup/_lib/perps';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -16,9 +15,9 @@ import {
   HyperliquidService,
   isExchangeAnswer,
   isTransientFetchFailure,
-  PerpsLeverageChangeRequiredError,
   resolvePerpsTestnet,
 } from './hyperliquid.service';
+import { PerpsOrder } from './perps-trade-order';
 
 /** One closed minute, at whatever time the test needs it to have closed. */
 const candleAt = (t: number): PerpsCandle => ({
@@ -38,6 +37,18 @@ const MARKET_IDENTITY = {
   coin: 'ETH',
   marketKey: 'hl:ETH',
   cloid: '0x00000000000000000000000000000001',
+};
+
+const PRIVATE_KEY =
+  '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
+const ORDER: PerpsOrder = {
+  assetId: 3,
+  isBuy: true,
+  priceExact: '101.5',
+  sizeExact: '1.25',
+  reduceOnly: false,
+  timeInForce: 'Ioc',
+  cloid: MARKET_IDENTITY.cloid,
 };
 
 describe('resolvePerpsTestnet', () => {
@@ -160,29 +171,6 @@ describe('HyperliquidService account balances', () => {
     expect(result.status).toBe('order');
   });
 
-  it('requires a separately confirmed leverage update before opening', () => {
-    expect(() =>
-      service.placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 3,
-          isBuy: true,
-          price: 100,
-          size: '1.25',
-          szDecimals: 2,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'market',
-          slippagePercent: 1.5,
-          reduceOnly: false,
-          isCross: false,
-        }
-      )
-    ).toThrowError(PerpsLeverageChangeRequiredError);
-    expect(http.post).not.toHaveBeenCalled();
-  });
-
   it('updates isolated leverage as an independent action', fakeAsync(() => {
     http.post.and.returnValue(
       of({ status: 'ok', response: { type: 'default' } }) as any
@@ -230,186 +218,29 @@ describe('HyperliquidService account balances', () => {
     });
   }));
 
-  it('places an opening order directly when leverage and margin mode match', fakeAsync(() => {
+  it('serializes a normalized order without reinterpreting its intent', fakeAsync(() => {
     http.post.and.returnValue(
       of({ status: 'ok', response: { type: 'order' } }) as any
     );
 
-    service
-      .placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 3,
-          isBuy: true,
-          price: 100,
-          size: '1.25',
-          szDecimals: 2,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'market',
-          slippagePercent: 1.5,
-          reduceOnly: false,
-          isCross: false,
-          currentLeverage: { type: 'isolated', value: 5 },
-        }
-      )
-      .subscribe();
+    service.submitOrder(PRIVATE_KEY, ORDER).subscribe();
     flushMicrotasks();
 
-    const actions = http.post.calls.allArgs().map((args) => args[1].action);
-    expect(actions).toHaveSize(1);
-    expect(actions[0].type).toBe('order');
-  }));
-
-  it('does not combine a leverage update and order into one operation', () => {
-    expect(() =>
-      service.placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 3,
-          isBuy: true,
-          price: 100,
-          size: '1.25',
-          szDecimals: 2,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'market',
-          slippagePercent: 1.5,
-          reduceOnly: false,
-          isCross: false,
-          currentLeverage: { type: 'isolated', value: 3 },
-        }
-      )
-    ).toThrowError(PerpsLeverageChangeRequiredError);
-    expect(http.post).not.toHaveBeenCalled();
-  });
-
-  it('places a reduce-only limit order without changing leverage', fakeAsync(() => {
-    http.post.and.returnValue(
-      of({ status: 'ok', response: { type: 'order' } }) as any
-    );
-
-    service
-      .placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 1,
-          isBuy: false,
-          price: 123.456,
-          size: '0.5',
-          szDecimals: 3,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'limit',
-          slippagePercent: 1,
-          reduceOnly: true,
-          isCross: true,
-        }
-      )
-      .subscribe();
-    flushMicrotasks();
-
-    expect(http.post).toHaveBeenCalledTimes(1);
     expect(http.post.calls.mostRecent().args[1].action.orders[0]).toEqual({
-      a: 1,
-      b: false,
-      p: '123.46',
-      s: '0.5',
-      r: true,
-      t: { limit: { tif: 'Gtc' } },
+      a: 3,
+      b: true,
+      p: '101.5',
+      s: '1.25',
+      r: false,
+      t: { limit: { tif: 'Ioc' } },
       c: MARKET_IDENTITY.cloid,
     });
+    expect(http.post.calls.mostRecent().args[1].action.builder).toBeUndefined();
   }));
 
-  it('rounds the submitted size down to szDecimals', fakeAsync(() => {
+  it('interprets partial fills through the adapter interface', fakeAsync(() => {
     http.post.and.returnValue(
-      of({ status: 'ok', response: { type: 'order' } }) as any
-    );
-
-    service
-      .placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 1,
-          isBuy: true,
-          price: 100,
-          size: '0.025599999999999999',
-          szDecimals: 4,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'limit',
-          slippagePercent: 1,
-          reduceOnly: true,
-          isCross: true,
-        }
-      )
-      .subscribe();
-    flushMicrotasks();
-
-    expect(http.post.calls.mostRecent().args[1].action.orders[0].s).toBe(
-      '0.0255'
-    );
-  }));
-
-  it('refuses a size that floors below the market lot', () => {
-    expect(() =>
-      service.placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 1,
-          isBuy: true,
-          price: 100,
-          size: '0.0004',
-          szDecimals: 3,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'limit',
-          slippagePercent: 1,
-          reduceOnly: true,
-          isCross: true,
-        }
-      )
-    ).toThrowError('Order size is below the market lot size');
-    expect(http.post).not.toHaveBeenCalled();
-  });
-
-  it('honours a slippage tolerance above the old 5% ceiling', fakeAsync(() => {
-    http.post.and.returnValue(
-      of({ status: 'ok', response: { type: 'order' } }) as any
-    );
-
-    service
-      .placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 3,
-          isBuy: true,
-          price: 100,
-          size: '1',
-          szDecimals: 2,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'market',
-          slippagePercent: 8,
-          reduceOnly: true,
-          isCross: true,
-        }
-      )
-      .subscribe();
-    flushMicrotasks();
-
-    expect(http.post.calls.mostRecent().args[1].action.orders[0].p).toBe('108');
-  }));
-
-  it('distinguishes partial fills from complete fills', () => {
-    const result = (service as any).parseOrderExecution(
-      {
+      of({
         status: 'ok',
         response: {
           type: 'order',
@@ -419,18 +250,22 @@ describe('HyperliquidService account balances', () => {
             ],
           },
         },
-      },
-      '1',
-      MARKET_IDENTITY.cloid
+      }) as any
     );
+    let result: any;
+
+    service
+      .submitOrder(PRIVATE_KEY, { ...ORDER, sizeExact: '1' })
+      .subscribe((value) => (result = value));
+    flushMicrotasks();
 
     expect(result.status).toBe('partial');
     expect(result.filledSizeExact).toBe('0.4');
     expect(result.remainingSizeExact).toBe('0.6');
     expect(result.averagePriceExact).toBe('101.25');
-  });
+  }));
 
-  it('returns unknown instead of retrying after a signed transport failure', fakeAsync(() => {
+  it('returns unknown without retrying a signed transport failure', fakeAsync(() => {
     http.post.and.returnValue(
       throwError(
         () => new HttpErrorResponse({ status: 0, statusText: 'network timeout' })
@@ -439,33 +274,17 @@ describe('HyperliquidService account balances', () => {
     let result: any;
 
     service
-      .placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 3,
-          isBuy: true,
-          price: '100',
-          size: '1',
-          szDecimals: 2,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'limit',
-          slippagePercent: 1,
-          reduceOnly: true,
-          isCross: false,
-        }
-      )
+      .submitOrder(PRIVATE_KEY, ORDER)
       .subscribe((value) => (result = value));
     flushMicrotasks();
 
     expect(result.status).toBe('unknown');
-    expect(result.cloid).toBe(MARKET_IDENTITY.cloid);
-    expect(result.error).toContain('Http failure response');
+    expect(result.cloid).toBe(ORDER.cloid);
+    expect(result.submittedSizeExact).toBe(ORDER.sizeExact);
     expect(http.post).toHaveBeenCalledTimes(1);
   }));
 
-  it('surfaces a definite exchange rejection instead of reporting unknown', fakeAsync(() => {
+  it('surfaces a definite exchange rejection', fakeAsync(() => {
     const rejection = new HttpErrorResponse({
       status: 422,
       statusText: 'Unprocessable Entity',
@@ -474,312 +293,67 @@ describe('HyperliquidService account balances', () => {
     let failure: unknown;
 
     service
-      .placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 3,
-          isBuy: true,
-          price: '100',
-          size: '1',
-          szDecimals: 2,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'limit',
-          slippagePercent: 1,
-          reduceOnly: true,
-          isCross: false,
-        }
-      )
+      .submitOrder(PRIVATE_KEY, ORDER)
       .subscribe({ error: (error) => (failure = error) });
     flushMicrotasks();
 
     expect(failure).toBe(rejection);
   }));
 
-  it('refreshes exact position size before signing a full close', fakeAsync(() => {
-    spyOn(service, 'getAccount').and.returnValue(
-      of({
-        positions: [
-          { key: 'hl:ETH', coin: 'ETH', sziExact: '0.75', szi: 0.75 },
-        ],
-      } as any)
-    );
-    http.post.and.returnValue(
-      of({ status: 'ok', response: { type: 'order' } }) as any
-    );
+  it('approves a configured builder once and attaches it to orders', fakeAsync(() => {
+    const builder = '0x000000000000000000000000000000000000beef';
+    spyOnProperty(service, 'builderAddress', 'get').and.returnValue(builder);
+    http.post.and.callFake(((_url: string, body: any) => {
+      if (body.type === 'maxBuilderFee') {
+        return of(0) as any;
+      }
+      return of({ status: 'ok', response: { type: 'default' } }) as any;
+    }) as any);
 
-    service
-      .placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 3,
-          isBuy: false,
-          price: '100',
-          size: '1',
-          fullClose: true,
-          szDecimals: 2,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'market',
-          slippagePercent: 1,
-          reduceOnly: true,
-          isCross: false,
-        }
-      )
-      .subscribe();
+    service.submitOrder(PRIVATE_KEY, ORDER).subscribe();
     flushMicrotasks();
 
-    expect(service.getAccount).toHaveBeenCalledWith(
-      '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-      true,
-      ''
-    );
-    expect(http.post.calls.mostRecent().args[1].action.orders[0].s).toBe(
-      '0.75'
-    );
+    const bodies = http.post.calls.allArgs().map((args) => args[1]);
+    expect(bodies).toHaveSize(3);
+    expect(bodies[0].type).toBe('maxBuilderFee');
+    expect(bodies[1].action.type).toBe('approveBuilderFee');
+    expect(bodies[2].action.builder).toEqual({
+      b: builder,
+      f: PERPS_BUILDER_FEE_TENTHS_BPS,
+    });
+
+    http.post.calls.reset();
+    service.submitOrder(PRIVATE_KEY, ORDER).subscribe();
+    flushMicrotasks();
+
+    expect(http.post).toHaveBeenCalledTimes(1);
+    expect(http.post.calls.mostRecent().args[1].action.builder).toEqual({
+      b: builder,
+      f: PERPS_BUILDER_FEE_TENTHS_BPS,
+    });
   }));
 
-  it('submits P plus N for an explicit net reverse', fakeAsync(() => {
-    spyOn(service, 'getAccount').and.returnValue(
-      of({
-        positions: [
-          {
-            key: 'hl:ETH',
-            coin: 'ETH',
-            sziExact: '-0.75',
-            szi: -0.75,
-            leverageType: 'isolated',
-          },
-        ],
-      } as any)
-    );
-    http.post.and.returnValue(
-      of({ status: 'ok', response: { type: 'order' } }) as any
-    );
+  it('skips approval when the account already authorized the builder fee', fakeAsync(() => {
+    const builder = '0x000000000000000000000000000000000000beef';
+    spyOnProperty(service, 'builderAddress', 'get').and.returnValue(builder);
+    http.post.and.callFake(((_url: string, body: any) => {
+      if (body.type === 'maxBuilderFee') {
+        return of(PERPS_BUILDER_FEE_TENTHS_BPS) as any;
+      }
+      return of({ status: 'ok', response: { type: 'default' } }) as any;
+    }) as any);
 
-    service
-      .placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          intent: 'reverse',
-          assetId: 3,
-          isBuy: true,
-          price: '100',
-          size: '1.25',
-          fullClose: false,
-          szDecimals: 2,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'market',
-          slippagePercent: 1,
-          reduceOnly: false,
-          isCross: false,
-          currentLeverage: { type: 'isolated', value: 5 },
-        }
-      )
-      .subscribe();
+    service.submitOrder(PRIVATE_KEY, ORDER).subscribe();
     flushMicrotasks();
 
-    expect(http.post.calls.mostRecent().args[1].action.orders[0].s).toBe('2');
-    expect(http.post.calls.mostRecent().args[1].action.orders[0].r).toBeFalse();
-  }));
-
-  it('never rounds an IOC buy above its maximum slippage price', fakeAsync(() => {
-    http.post.and.returnValue(
-      of({ status: 'ok', response: { type: 'order' } }) as any
-    );
-    const mid = 1925.57;
-    const slippagePercent = 0.1;
-
-    service
-      .placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 3,
-          isBuy: true,
-          price: mid,
-          size: '0.01',
-          szDecimals: 4,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'market',
-          slippagePercent,
-          reduceOnly: true,
-          isCross: false,
-        }
-      )
-      .subscribe();
-    flushMicrotasks();
-
-    const wirePrice = Number(
-      http.post.calls.mostRecent().args[1].action.orders[0].p
-    );
-    expect(wirePrice).toBeLessThanOrEqual(
-      mid * (1 + slippagePercent / 100)
-    );
-  }));
-
-  it('never rounds an IOC sell below its minimum slippage price', fakeAsync(() => {
-    http.post.and.returnValue(
-      of({ status: 'ok', response: { type: 'order' } }) as any
-    );
-    const mid = 1925.68;
-    const slippagePercent = 0.1;
-
-    service
-      .placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 3,
-          isBuy: false,
-          price: mid,
-          size: '0.01',
-          szDecimals: 4,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'market',
-          slippagePercent,
-          reduceOnly: true,
-          isCross: false,
-        }
-      )
-      .subscribe();
-    flushMicrotasks();
-
-    const wirePrice = Number(
-      http.post.calls.mostRecent().args[1].action.orders[0].p
-    );
-    expect(wirePrice).toBeGreaterThanOrEqual(
-      mid * (1 - slippagePercent / 100)
-    );
-  }));
-
-  it('never rounds a limit buy above the price the user typed', fakeAsync(() => {
-    http.post.and.returnValue(
-      of({ status: 'ok', response: { type: 'order' } }) as any
-    );
-    // Five significant figures leave two decimals here, so 9.87654321 has to
-    // land on 9.87 rather than the nearer 9.88.
-    const limitPrice = 9.87654321;
-
-    service
-      .placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 3,
-          isBuy: true,
-          price: limitPrice,
-          size: '1',
-          szDecimals: 4,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'limit',
-          slippagePercent: 3,
-          reduceOnly: true,
-          isCross: false,
-        }
-      )
-      .subscribe();
-    flushMicrotasks();
-
-    expect(http.post.calls.mostRecent().args[1].action.orders[0].p).toBe(
-      '9.87'
-    );
-  }));
-
-  it('never rounds a limit sell below the price the user typed', fakeAsync(() => {
-    http.post.and.returnValue(
-      of({ status: 'ok', response: { type: 'order' } }) as any
-    );
-    const limitPrice = 9.87104321;
-
-    service
-      .placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 3,
-          isBuy: false,
-          price: limitPrice,
-          size: '1',
-          szDecimals: 4,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'limit',
-          slippagePercent: 3,
-          reduceOnly: true,
-          isCross: false,
-        }
-      )
-      .subscribe();
-    flushMicrotasks();
-
-    expect(http.post.calls.mostRecent().args[1].action.orders[0].p).toBe(
-      '9.88'
-    );
-  }));
-
-  it('refuses a price that floors below the market tick', () => {
-    expect(() =>
-      service.placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 3,
-          isBuy: true,
-          price: 0.0000004,
-          size: '1',
-          szDecimals: 1,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'limit',
-          slippagePercent: 3,
-          reduceOnly: true,
-          isCross: false,
-        }
-      )
-    ).toThrowError(/tick size/);
-  });
-
-  it('clamps a tolerance beyond the configured ceiling', fakeAsync(() => {
-    http.post.and.returnValue(
-      of({ status: 'ok', response: { type: 'order' } }) as any
-    );
-
-    service
-      .placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 3,
-          isBuy: true,
-          price: 100,
-          size: '1',
-          szDecimals: 2,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'market',
-          slippagePercent: 999,
-          reduceOnly: true,
-          isCross: true,
-        }
-      )
-      .subscribe();
-    flushMicrotasks();
-
-    // Derived from the constant rather than pinned, so retuning the ceiling
-    // does not turn this into a false failure. Compared numerically because the
-    // wire value is rounded while the expectation carries float error.
-    const ceiling = 100 * (1 + PERPS_MAX_SLIPPAGE_PERCENT / 100);
-    expect(
-      Number(http.post.calls.mostRecent().args[1].action.orders[0].p)
-    ).toBeCloseTo(ceiling, 8);
+    const bodies = http.post.calls.allArgs().map((args) => args[1]);
+    expect(bodies).toHaveSize(2);
+    expect(bodies[0].type).toBe('maxBuilderFee');
+    expect(bodies[1].action.type).toBe('order');
+    expect(bodies[1].action.builder).toEqual({
+      b: builder,
+      f: PERPS_BUILDER_FEE_TENTHS_BPS,
+    });
   }));
 
   it('always writes leverage in isolated mode', fakeAsync(() => {
@@ -975,135 +549,6 @@ describe('HyperliquidService account balances', () => {
       done();
     });
   });
-
-  it('omits the builder fee when no builder address is configured', fakeAsync(() => {
-    http.post.and.returnValue(
-      of({ status: 'ok', response: { type: 'default' } }) as any
-    );
-
-    service
-      .placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 3,
-          isBuy: true,
-          price: 100,
-          size: '1',
-          szDecimals: 2,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'market',
-          slippagePercent: 1,
-          reduceOnly: true,
-          isCross: false,
-        }
-      )
-      .subscribe();
-    flushMicrotasks();
-
-    // No approval round-trip and no builder field: the order pays the exchange only.
-    expect(http.post).toHaveBeenCalledTimes(1);
-    expect(
-      http.post.calls.mostRecent().args[1].action.builder
-    ).toBeUndefined();
-  }));
-
-  // The address is the only switch: a configured builder always charges the
-  // fee. Emptying `PERPS_BUILDER_ADDRESS` is what turns it off, so these cover
-  // the on-state that the empty-address test above cannot reach.
-  it('attaches a configured builder and approves the fee once per account', fakeAsync(() => {
-    const builder = '0x000000000000000000000000000000000000beef';
-    spyOnProperty(service, 'builderAddress', 'get').and.returnValue(builder);
-    http.post.and.callFake(((_url: string, body: any) => {
-      if (body.type === 'maxBuilderFee') {
-        // Nothing approved yet.
-        return of(0) as any;
-      }
-      return of({ status: 'ok', response: { type: 'default' } }) as any;
-    }) as any);
-
-    const request = {
-      ...MARKET_IDENTITY,
-      assetId: 3,
-      isBuy: true,
-      price: 100,
-      size: '1',
-      szDecimals: 2,
-      maxLeverage: 20,
-      leverage: 5,
-      orderType: 'market' as const,
-      slippagePercent: 1,
-      reduceOnly: true,
-      isCross: false,
-    };
-    const key =
-      '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
-
-    service.placeOrder(key, request).subscribe();
-    flushMicrotasks();
-
-    const bodies = http.post.calls.allArgs().map((args) => args[1]);
-    expect(bodies.length).toBe(3);
-    expect(bodies[0].type).toBe('maxBuilderFee');
-    expect(bodies[1].action.type).toBe('approveBuilderFee');
-    expect(bodies[2].action.builder).toEqual({
-      b: builder,
-      f: PERPS_BUILDER_FEE_TENTHS_BPS,
-    });
-
-    // The approval is remembered for the session: the next order signs once.
-    http.post.calls.reset();
-    service.placeOrder(key, request).subscribe();
-    flushMicrotasks();
-
-    expect(http.post).toHaveBeenCalledTimes(1);
-    expect(http.post.calls.mostRecent().args[1].action.builder).toEqual({
-      b: builder,
-      f: PERPS_BUILDER_FEE_TENTHS_BPS,
-    });
-  }));
-
-  it('skips the approval when the account already authorised the fee', fakeAsync(() => {
-    const builder = '0x000000000000000000000000000000000000beef';
-    spyOnProperty(service, 'builderAddress', 'get').and.returnValue(builder);
-    http.post.and.callFake(((_url: string, body: any) => {
-      if (body.type === 'maxBuilderFee') {
-        return of(PERPS_BUILDER_FEE_TENTHS_BPS) as any;
-      }
-      return of({ status: 'ok', response: { type: 'default' } }) as any;
-    }) as any);
-
-    service
-      .placeOrder(
-        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-        {
-          ...MARKET_IDENTITY,
-          assetId: 3,
-          isBuy: true,
-          price: 100,
-          size: '1',
-          szDecimals: 2,
-          maxLeverage: 20,
-          leverage: 5,
-          orderType: 'market',
-          slippagePercent: 1,
-          reduceOnly: true,
-          isCross: false,
-        }
-      )
-      .subscribe();
-    flushMicrotasks();
-
-    const bodies = http.post.calls.allArgs().map((args) => args[1]);
-    expect(bodies.length).toBe(2);
-    expect(bodies[0].type).toBe('maxBuilderFee');
-    expect(bodies[1].action.type).toBe('order');
-    expect(bodies[1].action.builder).toEqual({
-      b: builder,
-      f: PERPS_BUILDER_FEE_TENTHS_BPS,
-    });
-  }));
 
   it('loads frontend open orders and cancels by asset and order id', fakeAsync(() => {
     spyOnProperty(service, 'enabledDexes', 'get').and.returnValue(['', 'xyz']);
