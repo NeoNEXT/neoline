@@ -6,7 +6,9 @@ import { Unsubscribable } from 'rxjs';
 
 import { AppState } from '@/app/reduers';
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
+import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
 import {
+  PerpsAccountAvailability,
   PerpsAggregatedAccount,
   PerpsConnectionState,
   PerpsMarket,
@@ -32,6 +34,7 @@ import {
 export class PerpsTabComponent implements OnInit, OnDestroy {
   address: string;
   accountLoadError = false;
+  accountAvailability: PerpsAccountAvailability = 'loading';
 
   account: PerpsAggregatedAccount;
   /**
@@ -45,14 +48,9 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   marketFeedAt: number | null = null;
 
   private accountSub: Unsubscribable;
-  private spotStateSub: Unsubscribable;
-  private clearinghouseStateSubs: Unsubscribable[] = [];
+  private accountStateSub: Unsubscribable;
   private connectionSub: Unsubscribable;
   private feedAtSub: Unsubscribable;
-  private accountStateAddress: string;
-  private pendingSpotState: any;
-  private pendingClearinghouseState: any[] = [];
-  private accountRequestId = 0;
 
   //#region template helpers
   formatPrice = formatPrice;
@@ -64,7 +62,8 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private store: Store<AppState>,
-    private hyperliquid: HyperliquidService
+    private hyperliquid: HyperliquidService,
+    private accountStates: PerpsAccountStateService
   ) {}
 
   ngOnInit() {
@@ -73,10 +72,8 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
       if (address && address !== this.address) {
         this.address = address;
         this.account = undefined;
-        this.pendingSpotState = undefined;
-        this.pendingClearinghouseState = [];
+        this.accountAvailability = 'loading';
         this.watchAccountState(address);
-        this.loadAccount();
       }
     });
 
@@ -85,20 +82,12 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.accountSub?.unsubscribe();
-    this.spotStateSub?.unsubscribe();
-    this.unwatchClearinghouseState();
+    this.accountStateSub?.unsubscribe();
     this.connectionSub?.unsubscribe();
     this.feedAtSub?.unsubscribe();
   }
 
-  /**
-   * Track feed health, and re-snapshot the account whenever the feed comes back.
-   *
-   * Market frames repair themselves — each one carries the whole context array,
-   * so the first frame after a reconnect is already a full picture. Account
-   * state does not get that guarantee from us, so it is re-fetched over REST;
-   * a position opened while the socket was down would otherwise stay invisible.
-   */
+  /** Track shared feed health for the existing stale banner. */
   private watchFeedHealth() {
     this.feedAtSub = this.hyperliquid
       .watchMarketFeedAt()
@@ -106,106 +95,32 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     this.connectionSub = this.hyperliquid
       .watchConnectionState()
       .subscribe((state) => {
-        const recovered = this.connectionState === 'stale' && state === 'live';
         this.connectionState = state;
-        if (recovered) {
-          this.loadAccount();
-        }
       });
   }
 
-  private loadAccount() {
-    if (!this.address) {
-      return;
-    }
-    const requestId = ++this.accountRequestId;
-    const address = this.address;
-    this.accountLoadError = false;
-    this.hyperliquid
-      .getAggregatedAccount(address)
-      .subscribe({
-        next: (account) => {
-          if (requestId === this.accountRequestId && address === this.address) {
-            let latest = account;
-            this.pendingClearinghouseState.forEach((update) => {
-              latest = this.hyperliquid.updateAggregatedFromClearinghouseState(
-                latest,
-                update
-              );
-            });
-            if (this.pendingSpotState) {
-              latest = this.hyperliquid.updateAggregatedFromSpotState(
-                latest,
-                this.pendingSpotState
-              );
-            }
-            this.pendingClearinghouseState = [];
-            this.pendingSpotState = undefined;
-            this.account = latest;
-          }
-        },
-        error: () => {
-          if (requestId === this.accountRequestId && address === this.address) {
-            this.accountLoadError = true;
-          }
-        },
-      });
-  }
-
-  /**
-   * After the initial REST snapshot, perps and spot account changes are both
-   * driven by websocket payloads without issuing another `/info` request.
-   */
+  /** Consume account domain state without knowing its REST/WS implementation. */
   private watchAccountState(address: string) {
-    this.spotStateSub?.unsubscribe();
-    this.unwatchClearinghouseState();
-    this.accountStateAddress = address.toLowerCase();
-    this.spotStateSub = this.hyperliquid
-      .subscribe({ type: 'spotState', user: this.accountStateAddress })
-      .subscribe((update) => {
-        if (this.account) {
-          this.account = this.hyperliquid.updateAggregatedFromSpotState(
-            this.account,
-            update
-          );
-        } else {
-          this.pendingSpotState = update;
+    this.accountStateSub?.unsubscribe();
+    this.accountLoadError = false;
+    this.accountStateSub = this.accountStates
+      .watchAggregatedAccount(address)
+      .subscribe((state) => {
+        if (address !== this.address) {
+          return;
         }
+        this.account = state.account ?? undefined;
+        this.accountAvailability = state.availability;
+        this.accountLoadError = state.availability === 'unavailable';
       });
-    // One subscription per DEX: each clearinghouse reports its own pool, and a
-    // shared subscription would let one DEX's frame overwrite another's.
-    this.clearinghouseStateSubs = this.hyperliquid.enabledDexes.map((dex) =>
-      this.hyperliquid
-        .subscribe({
-          type: 'clearinghouseState',
-          user: this.accountStateAddress,
-          dex,
-        })
-        .subscribe((update) => {
-          if (this.account) {
-            this.account =
-              this.hyperliquid.updateAggregatedFromClearinghouseState(
-                this.account,
-                update
-              );
-          } else {
-            this.pendingClearinghouseState.push(update);
-          }
-        })
-    );
-  }
-
-  private unwatchClearinghouseState() {
-    this.clearinghouseStateSubs.forEach((sub) => sub.unsubscribe());
-    this.clearinghouseStateSubs = [];
   }
 
   /** Collateral equity for the active account mode. */
-  get accountEquityExact(): string {
+  get accountEquityExact(): string | null {
     if (this.unsupportedAccountMode) {
-      return '0';
+      return null;
     }
-    return this.account?.totalBalanceExact ?? '0';
+    return this.account?.totalBalanceExact ?? null;
   }
 
   /**
@@ -213,15 +128,18 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
    * string — `'0'` is truthy — so the question is answered here instead.
    */
   get hasEquity(): boolean {
-    return new BigNumber(this.accountEquityExact).isGreaterThan(0);
+    return (
+      this.accountEquityExact !== null &&
+      new BigNumber(this.accountEquityExact).isGreaterThan(0)
+    );
   }
 
   /** Buying power, with free spot USDC folded only for Unified/portfolio mode. */
-  get availableMarginExact(): string {
+  get availableMarginExact(): string | null {
     if (this.unsupportedAccountMode) {
-      return '0';
+      return null;
     }
-    return this.account?.availableBalanceExact ?? '0';
+    return this.account?.availableBalanceExact ?? null;
   }
 
   /** Initial margin in use, reported by the perps clearinghouse. */
@@ -257,7 +175,12 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
    * worse than showing an incomplete balance.
    */
   get globalActionsDisabled(): boolean {
-    return this.unsupportedAccountMode || this.aggregateIncomplete;
+    return (
+      !this.account ||
+      this.accountAvailability === 'loading' ||
+      this.unsupportedAccountMode ||
+      this.aggregateIncomplete
+    );
   }
 
   /**

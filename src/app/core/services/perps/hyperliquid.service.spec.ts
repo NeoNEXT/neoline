@@ -1402,50 +1402,6 @@ describe('HyperliquidService account balances', () => {
     expect(second).not.toHaveBeenCalled();
   });
 
-  /**
-   * The order page's account feed. Named explicitly because a subscription to a
-   * channel the protocol does not carry fails silently: the seed arrives, no
-   * frame ever follows, and the page shows a stale account that looks live.
-   */
-  it('follows the account on the DEX it was asked about', () => {
-    spyOn(service, 'getAccount').and.returnValue(
-      of({ dex: 'xyz', positions: [], spotUsdcExact: '0' } as any)
-    );
-    const subscribeSpy = spyOn(service, 'subscribe').and.returnValue(
-      new Subject<any>()
-    );
-
-    service.watchAccount('0xABC', 'xyz').subscribe();
-
-    expect(subscribeSpy).toHaveBeenCalledWith({
-      type: 'clearinghouseState',
-      user: '0xabc',
-      dex: 'xyz',
-    });
-  });
-
-  it('applies account frames onto the seed as they arrive', () => {
-    const frames = new Subject<any>();
-    spyOn(service, 'getAccount').and.returnValue(
-      of({ dex: '', positions: [], spotUsdcExact: '0' } as any)
-    );
-    spyOn(service, 'subscribe').and.returnValue(frames);
-    const seen: any[] = [];
-
-    service.watchAccount('0xabc').subscribe((account) => seen.push(account));
-    frames.next({
-      user: '0xabc',
-      clearinghouseState: {
-        marginSummary: { accountValue: '250', totalMarginUsed: '10' },
-        assetPositions: [],
-      },
-    });
-
-    // The seed, then the pushed state — one account, kept current.
-    expect(seen.length).toBe(2);
-    expect(seen[1].accountValueExact).toBe('250');
-  });
-
   it('loads and normalizes directional active asset availability', (done) => {
     http.post.and.returnValue(
       of({
@@ -1532,52 +1488,6 @@ describe('HyperliquidService account balances', () => {
     expect(send).not.toHaveBeenCalled();
   }));
 
-  it('merges spotState updates without another info request', (done) => {
-    mockAccountRequests('unifiedAccount', '0.96');
-
-    service.getAccount('0xABC').subscribe((account) => {
-      const updated = service.updateAccountFromSpotState(account, {
-        user: '0xabc',
-        spotState: {
-          balances: [
-            { coin: 'USDC', token: 0, total: '1200', hold: '2' },
-          ],
-        },
-      });
-
-      expect(updated.accountValueExact).toBe('1200');
-      expect(updated.totalBalanceExact).toBe('1200');
-      expect(updated.availableBalanceExact).toBe('1198');
-      expect(http.post).toHaveBeenCalledTimes(3);
-      done();
-    });
-  });
-
-  it('merges clearinghouseState updates without another info request', (done) => {
-    mockAccountRequests('unifiedAccount', '0.96');
-
-    service.getAccount('0xABC').subscribe((account) => {
-      const updated = service.updateAccountFromClearinghouseState(account, {
-        user: '0xabc',
-        clearinghouseState: {
-          marginSummary: {
-            accountValue: '5',
-            totalMarginUsed: '2',
-            totalNtlPos: '20',
-          },
-          withdrawable: '3',
-          assetPositions: [],
-        },
-      });
-
-      expect(updated.accountValueExact).toBe('998.97');
-      expect(updated.totalMarginUsedExact).toBe('2');
-      expect(updated.spotUsdcExact).toBe('998.97');
-      expect(http.post).toHaveBeenCalledTimes(3);
-      done();
-    });
-  });
-
   it('shares repeated account snapshots for the same user', () => {
     mockAccountRequests('unifiedAccount', '0.96');
 
@@ -1605,25 +1515,23 @@ describe('HyperliquidService account balances', () => {
     ]);
   }));
 
-  it('keeps websocket spotState data on the next account refresh', fakeAsync(() => {
+  it('re-reads spot collateral for an authoritative account refresh', () => {
     mockAccountRequests('unifiedAccount', '0.96');
-    let account;
 
-    service.getAccount('0xABC').subscribe((value) => (account = value));
-    account = service.updateAccountFromSpotState(account, {
-      user: '0xabc',
-      spotState: {
-        balances: [
-          { coin: 'USDC', token: 0, total: '1200', hold: '2' },
-        ],
-      },
-    });
-    tick(3001);
-    service.getAccount('0xABC').subscribe((value) => (account = value));
+    service.getAccount('0xABC').subscribe();
+    service.getAccount('0xabc', true).subscribe();
 
-    expect(account.totalBalanceExact).toBe('1200');
-    expect(http.post).toHaveBeenCalledTimes(4);
-  }));
+    const requestTypes = http.post.calls
+      .allArgs()
+      .map((args) => args[1].type);
+    expect(requestTypes).toEqual([
+      'clearinghouseState',
+      'spotClearinghouseState',
+      'userAbstraction',
+      'clearinghouseState',
+      'spotClearinghouseState',
+    ]);
+  });
 
   it('shares repeated market snapshots', () => {
     http.post.and.returnValue(of([{ universe: [] }, []]) as any);
@@ -1636,157 +1544,6 @@ describe('HyperliquidService account balances', () => {
         .allArgs()
         .filter((args) => args[1].type === 'metaAndAssetCtxs').length
     ).toBe(1);
-  });
-
-  describe('cross-DEX aggregation', () => {
-    const snapshot = (
-      dex: string,
-      overrides: Partial<PerpsAccount> = {}
-    ): PerpsAccount => ({
-      unified: false,
-      abstractionMode: 'disabled',
-      dex,
-      accountValueExact: '0',
-      totalBalanceExact: '0',
-      totalMarginUsedExact: '0',
-      totalNtlPosExact: '0',
-      marginRatioExact: null,
-      withdrawableExact: '0',
-      availableBalanceExact: '0',
-      spotUsdcExact: '0',
-      spotUsdcHoldExact: '0',
-      positions: [],
-      ...overrides,
-    });
-
-    it('sums balances at protocol precision', () => {
-      const aggregate = service.aggregateAccounts([
-        snapshot('', {
-          accountValueExact: '0.1',
-          totalBalanceExact: '0.1',
-          totalMarginUsedExact: '0.07',
-        }),
-        snapshot('xyz', {
-          accountValueExact: '0.2',
-          totalBalanceExact: '0.2',
-          totalMarginUsedExact: '0.14',
-        }),
-      ]);
-
-      // 0.1 + 0.2 through a float is 0.30000000000000004.
-      expect(aggregate.totalBalanceExact).toBe('0.3');
-      expect(aggregate.totalMarginUsedExact).toBe('0.21');
-    });
-
-    it('reports the riskiest pool ratio, never a ratio of the sums', () => {
-      const aggregate = service.aggregateAccounts([
-        snapshot('', {
-          accountValueExact: '1000',
-          totalMarginUsedExact: '10',
-          marginRatioExact: '1',
-        }),
-        snapshot('xyz', {
-          accountValueExact: '10',
-          totalMarginUsedExact: '9',
-          marginRatioExact: '90',
-        }),
-      ]);
-
-      // Summing would read as ~1.9% and hide a pool about to be liquidated.
-      expect(aggregate.marginRatioExact).toBe('90');
-      expect(aggregate.marginRatioDex).toBe('xyz');
-    });
-
-    it('counts the account-wide spot wallet once', () => {
-      const aggregate = service.aggregateAccounts([
-        snapshot('', { spotUsdcExact: '500', spotUsdcHoldExact: '20' }),
-        snapshot('xyz'),
-      ]);
-
-      expect(aggregate.spotUsdcExact).toBe('500');
-      expect(aggregate.spotUsdcHoldExact).toBe('20');
-    });
-
-    it('does not sum per-DEX account values in unified mode', () => {
-      const aggregate = service.aggregateAccounts([
-        snapshot('', {
-          unified: true,
-          abstractionMode: 'unifiedAccount',
-          accountValueExact: '100',
-          totalBalanceExact: '100',
-          availableBalanceExact: '80',
-          spotUsdcExact: '500',
-          spotUsdcHoldExact: '20',
-        }),
-        snapshot('xyz', {
-          unified: true,
-          abstractionMode: 'unifiedAccount',
-          accountValueExact: '50',
-          totalBalanceExact: '50',
-          availableBalanceExact: '40',
-          marginRatioExact: '90',
-        }),
-      ]);
-
-      expect(aggregate.accountValueExact).toBe('500');
-      expect(aggregate.totalBalanceExact).toBe('500');
-      expect(aggregate.availableBalanceExact).toBe('480');
-      expect(aggregate.withdrawableExact).toBe('480');
-      expect(aggregate.marginRatioExact).toBeNull();
-      expect(aggregate.marginRatioDex).toBeNull();
-    });
-
-    it('keeps each position on its own DEX and records what is missing', () => {
-      const aggregate = service.aggregateAccounts(
-        [
-          snapshot('', {
-            positions: [{ key: 'hl:ETH', dex: '', coin: 'ETH' } as any],
-          }),
-          snapshot('xyz', {
-            positions: [
-              { key: 'xyz:IWM', dex: 'xyz', coin: 'xyz:IWM' } as any,
-            ],
-          }),
-        ],
-        ['broken']
-      );
-
-      expect(aggregate.positions.map((p) => p.key)).toEqual([
-        'hl:ETH',
-        'xyz:IWM',
-      ]);
-      expect(aggregate.missingDexes).toEqual(['broken']);
-    });
-
-    it('routes a clearinghouse frame to the DEX that sent it', () => {
-      const aggregate = service.aggregateAccounts([
-        snapshot('', { accountValueExact: '100' }),
-        snapshot('xyz', { accountValueExact: '5' }),
-      ]);
-
-      const updated = service.updateAggregatedFromClearinghouseState(
-        aggregate,
-        {
-          user: '0xabc',
-          dex: 'xyz',
-          clearinghouseState: {
-            marginSummary: {
-              accountValue: '7',
-              totalMarginUsed: '0',
-              totalNtlPos: '0',
-            },
-            withdrawable: '7',
-            assetPositions: [],
-          },
-        }
-      );
-
-      const canonical = updated.byDex.find((item) => item.dex === '');
-      const xyz = updated.byDex.find((item) => item.dex === 'xyz');
-      expect(canonical.accountValueExact).toBe('100');
-      expect(xyz.accountValueExact).toBe('7');
-      expect(updated.accountValueExact).toBe('107');
-    });
   });
 
   it('merges a dex context frame by universe index, not list position', () => {

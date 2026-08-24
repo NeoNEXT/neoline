@@ -15,6 +15,7 @@ import {
   HyperliquidService,
   PerpsExecutionStatusUnknownError,
 } from '@/app/core/services/perps/hyperliquid.service';
+import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
 import {
   coversExact,
   PerpsDepositAuthorization,
@@ -131,8 +132,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   private loadedConfig: PerpsDepositConfig;
   private accountSub: Unsubscribable;
   private connectionSub: Unsubscribable;
-  private spotStateSub: Unsubscribable;
-  private clearinghouseSub: Unsubscribable;
+  private accountStateSub: Unsubscribable;
   private balanceTimer: ReturnType<typeof setInterval>;
   private pendingTimer: ReturnType<typeof setInterval>;
 
@@ -141,6 +141,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     private store: Store<AppState>,
     private global: GlobalService,
     private hyperliquid: HyperliquidService,
+    private accountStates: PerpsAccountStateService,
     private chrome: ChromeService,
     private evmWallet: EvmWalletService,
     private depositChain: PerpsDepositChainService,
@@ -157,14 +158,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     this.connectionSub = this.hyperliquid
       .watchConnectionState()
       .subscribe((state) => {
-        const recovered = this.connectionState === 'stale' && state === 'live';
         this.connectionState = state;
-        // A reconnected feed replays subscriptions, but the account snapshot it
-        // replays may predate what happened while we were dark, so the REST
-        // snapshot is taken again rather than trusted from the replay.
-        if (recovered && this.address) {
-          this.loadAccount(this.address, true);
-        }
       });
     this.accountSub = this.store.select('account').subscribe((state) => {
       const address = state.currentWallet?.accounts[0]?.address;
@@ -175,7 +169,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
       ) {
         this.address = address;
         this.loadedConfig = this.token;
-        this.loadAccount(address);
         this.watchAccountState(address);
         this.startBalancePolling(address);
         this.startPendingTracking(address);
@@ -183,65 +176,21 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     });
   }
 
-  /** The REST snapshot the websocket updates are then applied on top of. */
-  private loadAccount(address: string, force = false) {
-    const config = this.token;
+  /** Consume the canonical account state through its domain seam. */
+  private watchAccountState(address: string) {
+    this.accountStateSub?.unsubscribe();
     this.accountLoadError = false;
     this.accountLoading = true;
-    this.hyperliquid.getAccount(address, force).subscribe({
-      next: (account) => {
-        if (config === this.token && address === this.address) {
-          this.account = account;
-          this.accountLoading = false;
+    this.accountStateSub = this.accountStates
+      .watchAccount(address)
+      .subscribe((state) => {
+        if (address !== this.address) {
+          return;
         }
-      },
-      error: () => {
-        if (config === this.token && address === this.address) {
-          this.accountLoadError = true;
-          this.accountLoading = false;
-        }
-      },
-    });
-  }
-
-  /**
-   * Keep the account figures live for as long as the screen is open.
-   *
-   * A funding screen is somewhere users sit and think, and a withdrawable
-   * balance read once on entry is wrong by the time they act on it. The home
-   * tab already runs these two subscriptions; this is the same pair scoped to
-   * the canonical clearinghouse, which is the only pool a withdrawal touches.
-   */
-  private watchAccountState(address: string) {
-    const user = address.toLowerCase();
-    this.unwatchAccountState();
-    this.spotStateSub = this.hyperliquid
-      .subscribe({ type: 'spotState', user })
-      .subscribe((update) => {
-        if (this.account && user === this.address?.toLowerCase()) {
-          this.account = this.hyperliquid.updateAccountFromSpotState(
-            this.account,
-            update
-          );
-        }
+        this.account = state.account ?? undefined;
+        this.accountLoading = state.availability === 'loading';
+        this.accountLoadError = state.availability === 'unavailable';
       });
-    this.clearinghouseSub = this.hyperliquid
-      .subscribe({ type: 'clearinghouseState', user, dex: '' })
-      .subscribe((update) => {
-        if (this.account && user === this.address?.toLowerCase()) {
-          this.account = this.hyperliquid.updateAccountFromClearinghouseState(
-            this.account,
-            update
-          );
-        }
-      });
-  }
-
-  private unwatchAccountState() {
-    this.spotStateSub?.unsubscribe();
-    this.spotStateSub = undefined;
-    this.clearinghouseSub?.unsubscribe();
-    this.clearinghouseSub = undefined;
   }
 
   /** The source chain has no feed here, so its balance is polled instead. */
@@ -379,7 +328,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.accountSub?.unsubscribe();
     this.connectionSub?.unsubscribe();
-    this.unwatchAccountState();
+    this.accountStateSub?.unsubscribe();
     clearInterval(this.balanceTimer);
     clearInterval(this.pendingTimer);
     this.discardDepositPreparation();
@@ -883,13 +832,13 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
    */
   private async refreshBeforeSubmit(): Promise<void> {
     const address = this.address;
-    const account = await firstValueFrom(
-      this.hyperliquid.getAccount(address, true)
+    const state = await firstValueFrom(
+      this.accountStates.refreshAccount(address)
     );
-    if (address !== this.address) {
+    if (address !== this.address || !state.account) {
       throw new Error('Account changed during refresh');
     }
-    this.account = account;
+    this.account = state.account;
     if (this.isDeposit) {
       await this.loadWalletBalance(address);
       if (this.walletBalanceExact === null) {
@@ -972,7 +921,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   /** Retry after a failed read, so an unknown balance or quote is not a dead end. */
   reload() {
     if (this.address) {
-      this.loadAccount(this.address, true);
+      this.accountStates.refreshAccount(this.address).subscribe();
       this.loadWalletBalance(this.address);
     }
     if (this.isWithdraw) {
@@ -1190,10 +1139,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     if (!this.address) {
       return;
     }
-    this.hyperliquid.getAccount(this.address, true).subscribe({
-      next: (account) => (this.account = account),
-      error: () => (this.accountLoadError = true),
-    });
+    this.accountStates.refreshAccount(this.address).subscribe();
   }
 
   back() {

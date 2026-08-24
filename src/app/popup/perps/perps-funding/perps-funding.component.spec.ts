@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { of, throwError } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
@@ -58,6 +59,39 @@ const depositChainStub = () =>
     depositFeeExact: () => Promise.reject(new Error('not stubbed')),
     sendDeposit: () => Promise.reject(new Error('not stubbed')),
     depositOutcome: () => Promise.resolve('pending'),
+  } as any);
+
+/** Keep direct construction focused on the page while preserving its account seam. */
+const accountStateStub = (hyperliquid: any = {}) =>
+  ({
+    watchAccount: () =>
+      of({
+        availability: 'live',
+        account: null,
+        missingDexes: [],
+        updatedAt: null,
+      }),
+    refreshAccount: (address: string, dex = '') => {
+      const request = hyperliquid.getAccount?.(address, true, dex);
+      return request
+        ? request.pipe(
+            map((account) => ({
+              availability: 'live',
+              account,
+              missingDexes: [],
+              updatedAt: Date.now(),
+            }))
+          )
+        : of({
+            availability: 'live',
+            account: {
+              abstractionMode: 'default',
+              withdrawableExact: '100',
+            },
+            missingDexes: [],
+            updatedAt: Date.now(),
+          });
+    },
   } as any);
 
 
@@ -176,6 +210,7 @@ describe('PerpsFundingComponent amount boundaries', () => {
       null,
       globalStub(),
       { depositConfig: { decimals: 6 } } as any,
+      accountStateStub(),
       null,
       null,
       depositChainStub(),
@@ -426,6 +461,7 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
       null,
       global,
       hyperliquid,
+      accountStateStub(hyperliquid),
       chrome,
       evmWallet,
       depositChainStub(),
@@ -592,6 +628,7 @@ describe('PerpsFundingComponent submit gate', () => {
       null,
       globalStub(),
       { depositConfig: { decimals: 6 } } as any,
+      accountStateStub(),
       null,
       null,
       depositChainStub(),
@@ -766,6 +803,7 @@ describe('PerpsFundingComponent deposit confirmation', () => {
       null,
       globalStub(),
       { depositConfig: CONFIG } as any,
+      accountStateStub(),
       { getPassword: () => Promise.resolve('password') } as any,
       { getPrivateKey: () => Promise.resolve('0xkey') } as any,
       {
@@ -913,6 +951,7 @@ describe('PerpsFundingComponent withdrawal quote', () => {
       null,
       globalStub(),
       { depositConfig: CONFIG, getAccount: () => of({ abstractionMode: 'default', withdrawableExact: '100' }) } as any,
+      accountStateStub(),
       null,
       null,
       depositChainStub(),
@@ -1032,6 +1071,7 @@ describe('PerpsFundingComponent deposit authorisation lifetime', () => {
         depositConfig: CONFIG,
         getAccount: () => of({ abstractionMode: 'default' }),
       } as any,
+      accountStateStub(),
       { getPassword: () => Promise.resolve('password') } as any,
       { getPrivateKey: () => Promise.resolve('0xkey') } as any,
       {

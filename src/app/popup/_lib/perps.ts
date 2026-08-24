@@ -683,20 +683,24 @@ export interface PerpsAccount {
 export interface PerpsAggregatedAccount {
   unified: boolean;
   abstractionMode: PerpsAccountMode;
-  /** Sums over every DEX that reported. */
-  accountValueExact: string;
-  totalBalanceExact: string;
+  /**
+   * Sums over every DEX that reported. Account-level figures are unknown when
+   * the canonical snapshot, which carries account mode and spot collateral, is
+   * missing. `null` is unknown; `'0'` is an authoritative zero.
+   */
+  accountValueExact: string | null;
+  totalBalanceExact: string | null;
   totalMarginUsedExact: string;
   totalNtlPosExact: string;
-  withdrawableExact: string;
-  availableBalanceExact: string;
+  withdrawableExact: string | null;
+  availableBalanceExact: string | null;
   /**
    * The spot wallet, which is account-wide rather than per DEX. It is read from
    * the canonical snapshot alone; adding it up per DEX would count one balance
    * as many times as there are DEXes.
    */
-  spotUsdcExact: string;
-  spotUsdcHoldExact: string;
+  spotUsdcExact: string | null;
+  spotUsdcHoldExact: string | null;
   /** The riskiest pool's margin ratio, and which DEX that pool belongs to. */
   marginRatioExact: string | null;
   marginRatioDex: string | null;
@@ -709,6 +713,25 @@ export interface PerpsAggregatedAccount {
   missingDexes: string[];
   /** The per-DEX snapshots, so an action can be routed back to its own pool. */
   byDex: PerpsAccount[];
+}
+
+export type PerpsAccountAvailability =
+  | 'loading'
+  | 'live'
+  | 'incomplete'
+  | 'stale'
+  | 'unavailable';
+
+/**
+ * A live account view. Transport failures are represented here rather than by
+ * terminating the stream, so the same view can recover after a reconnect.
+ */
+export interface PerpsAccountState<T> {
+  availability: PerpsAccountAvailability;
+  account: T | null;
+  missingDexes: string[];
+  /** Client time of the newest trusted snapshot or frame. */
+  updatedAt: number | null;
 }
 
 export type PerpsAccountMode =

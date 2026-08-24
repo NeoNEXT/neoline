@@ -20,8 +20,6 @@ import {
   shareReplay,
   filter,
   retry,
-  scan,
-  startWith,
   tap,
   switchMap,
 } from 'rxjs/operators';
@@ -39,7 +37,6 @@ import {
   PerpsAccount,
   PerpsActiveAssetData,
   PerpsAccountMode,
-  PerpsAggregatedAccount,
   PerpsAssetCtx,
   PerpsConnectionState,
   PerpsCandle,
@@ -76,6 +73,7 @@ import {
   signHyperliquidL1Action,
   signHyperliquidSendToEvmWithData,
 } from './hyperliquid-signing';
+import { parsePerpsAccount } from './perps-account-state';
 
 export type PerpsNetwork = 'mainnet' | 'testnet';
 
@@ -1539,10 +1537,12 @@ export class HyperliquidService {
       this.post<any>({ type: 'clearinghouseState', user, dex }),
       // The spot wallet is account-wide. Only the canonical snapshot reads it,
       // so that folding it in as collateral cannot happen once per DEX.
-      dex ? of(null) : this.getSpotState(user),
+      dex ? of(null) : this.getSpotState(user, force),
       this.getAccountMode(user),
     ]).pipe(
-      map(([perps, spot, mode]) => this.parseAccount(perps, spot, mode, dex)),
+      map(([perps, spot, mode]) =>
+        parsePerpsAccount(perps, spot, mode, dex)
+      ),
       catchError((error) => {
         if (this.accountCache.get(cacheKey)?.request === request) {
           this.accountCache.delete(cacheKey);
@@ -1556,138 +1556,6 @@ export class HyperliquidService {
       request,
     });
     return request;
-  }
-
-  /**
-   * One address's account on one DEX, kept live rather than re-read.
-   *
-   * `clearinghouseState` is the account-level channel: positions and margin
-   * summary together, scoped by `dex`, which is what makes this correct on a
-   * HIP-3 market as well — that pool has its own clearinghouse, and a canonical
-   * frame folded into it would report one DEX's margin as another's.
-   *
-   * This replaces polling rather than adding a layer: the page holds the same
-   * single account state it held before, without a three-second cache deciding
-   * how stale it is (ADR-0006). The same channel already backs the home tab and
-   * the funding page, so there is one account feed in the product, not two.
-   */
-  watchAccount(address: string, dex = ''): Observable<PerpsAccount> {
-    const user = address.toLowerCase();
-    return this.getAccount(user, true, dex).pipe(
-      switchMap((seed) =>
-        this.subscribe({ type: 'clearinghouseState', user, dex }).pipe(
-          scan(
-            (account, frame) =>
-              this.updateAccountFromClearinghouseState(account, frame),
-            seed
-          ),
-          startWith(seed)
-        )
-      )
-    );
-  }
-
-  /**
-   * The account across every DEX the product enables, merged for display.
-   *
-   * Standard accounts have one collateral pool per DEX. Unified and portfolio
-   * modes expose one account-wide collateral balance, while DEX snapshots are
-   * still needed for their positions. A failed DEX is recorded rather than
-   * blanking all readable state.
-   */
-  getAggregatedAccount(
-    address: string,
-    force = false
-  ): Observable<PerpsAggregatedAccount> {
-    return forkJoin(
-      this.enabledDexes.map((dex) =>
-        this.getAccount(address, force, dex).pipe(
-          map((account) => ({ dex, account })),
-          catchError(() => of({ dex, account: null as PerpsAccount }))
-        )
-      )
-    ).pipe(
-      map((results) =>
-        this.aggregateAccounts(
-          results.filter((item) => item.account).map((item) => item.account),
-          results.filter((item) => !item.account).map((item) => item.dex)
-        )
-      )
-    );
-  }
-
-  /**
-   * Combine per-DEX snapshots into the figures the home page shows.
-   *
-   * Everything here is decimal-string arithmetic: these are balances, and a
-   * float sum of several pools drifts in exactly the digits a user would check.
-   */
-  aggregateAccounts(
-    snapshots: PerpsAccount[],
-    missingDexes: string[] = []
-  ): PerpsAggregatedAccount {
-    const canonical =
-      snapshots.find((item) => item.dex === '') ?? snapshots[0] ?? null;
-    const unified = canonical?.unified ?? false;
-    const sum = (pick: (account: PerpsAccount) => string) =>
-      snapshots
-        .reduce(
-          (total, account) => total.plus(new BigNumber(pick(account) || 0)),
-          new BigNumber(0)
-        )
-        .toFixed();
-    // The riskiest pool, not the average one: the ratio rises as maintenance
-    // margin approaches equity, so the highest is the one closest to the edge.
-    const riskiest = unified ? null : snapshots
-      .filter((account) => account.marginRatioExact !== null)
-      .reduce(
-        (worst, account) =>
-          !worst ||
-          new BigNumber(account.marginRatioExact).isGreaterThan(
-            worst.marginRatioExact
-          )
-            ? account
-            : worst,
-        null as PerpsAccount
-      );
-    return {
-      unified,
-      abstractionMode: canonical?.abstractionMode ?? 'unknown',
-      accountValueExact: unified
-        ? canonical?.spotUsdcExact ?? '0'
-        : sum((account) => account.accountValueExact),
-      totalBalanceExact: unified
-        ? canonical?.spotUsdcExact ?? '0'
-        : sum((account) => account.totalBalanceExact),
-      totalMarginUsedExact: sum((account) => account.totalMarginUsedExact),
-      totalNtlPosExact: sum((account) => account.totalNtlPosExact),
-      withdrawableExact: unified
-        ? BigNumber.maximum(
-            0,
-            new BigNumber(canonical?.spotUsdcExact ?? 0).minus(
-              canonical?.spotUsdcHoldExact ?? 0
-            )
-          ).toFixed()
-        : sum((account) => account.withdrawableExact),
-      availableBalanceExact: unified
-        ? BigNumber.maximum(
-            0,
-            new BigNumber(canonical?.spotUsdcExact ?? 0).minus(
-              canonical?.spotUsdcHoldExact ?? 0
-            )
-          ).toFixed()
-        : sum((account) => account.availableBalanceExact),
-      spotUsdcExact: canonical?.spotUsdcExact ?? '0',
-      spotUsdcHoldExact: canonical?.spotUsdcHoldExact ?? '0',
-      marginRatioExact: riskiest?.marginRatioExact ?? null,
-      marginRatioDex: riskiest ? riskiest.dex : null,
-      positions: snapshots.reduce(
-        (all, account) => all.concat(account.positions || []),
-        [] as PerpsPosition[]
-      ),
-      missingDexes,
-      byDex: snapshots,
-    };
   }
 
   /**
@@ -1760,9 +1628,9 @@ export class HyperliquidService {
   }
 
   /** Initial spot snapshot; subsequent values are replaced by `spotState` pushes. */
-  private getSpotState(user: string): Observable<any> {
+  private getSpotState(user: string, force = false): Observable<any> {
     const cached = this.spotStateCache.get(user);
-    if (cached) {
+    if (!force && cached) {
       return cached;
     }
     const request = this.post<any>({
@@ -1812,286 +1680,11 @@ export class HyperliquidService {
   }
 
   /**
-   * USDC in the spot/unified wallet (token index 0). `total` is the whole
-   * balance; `hold` is the slice already reserved as margin for open perps
-   * positions, so `total - hold` is what is still free to back new orders.
-   */
-  private parseSpotUsdc(spot: any): {
-    totalExact: string;
-    holdExact: string;
-    freeExact: string;
-  } {
-    const balance = (spot?.balances || []).find(
-      (b) => b.coin === 'USDC' || b.token === 0
-    );
-    const totalExact = this.toFiniteDecimal(balance?.total);
-    const holdExact = this.toFiniteDecimal(balance?.hold);
-    const freeExact = BigNumber.maximum(
-      0,
-      new BigNumber(totalExact).minus(holdExact)
-    ).toFixed();
-    return { totalExact, holdExact, freeExact };
-  }
-
-  /**
-   * Merge a websocket `spotState` payload into an existing account snapshot.
-   * The push already contains the complete spot balance, so refreshing three
-   * REST snapshots here would only duplicate data and amplify every update.
-   */
-  updateAccountFromSpotState(
-    account: PerpsAccount,
-    update: any
-  ): PerpsAccount {
-    if (!account) {
-      return account;
-    }
-    const spot = update?.spotState || update;
-    if (!Array.isArray(spot?.balances)) {
-      return account;
-    }
-    const {
-      totalExact: spotUsdcExact,
-      holdExact: spotUsdcHoldExact,
-      freeExact: freeSpotUsdcExact,
-    } = this.parseSpotUsdc(spot);
-    const updated = {
-      ...account,
-      accountValueExact: account.unified
-        ? spotUsdcExact
-        : account.accountValueExact,
-      totalBalanceExact: account.unified
-        ? spotUsdcExact
-        : account.totalBalanceExact,
-      availableBalanceExact: account.unified
-        ? freeSpotUsdcExact
-        : account.availableBalanceExact,
-      spotUsdcExact,
-      spotUsdcHoldExact,
-    };
-    const user =
-      typeof update?.user === 'string' ? update.user.toLowerCase() : undefined;
-    if (user) {
-      this.spotStateCache.set(user, of(spot));
-      this.cacheAccount(user, updated);
-    }
-    return updated;
-  }
-
-  /** Merge a websocket `clearinghouseState` payload with the latest spot data. */
-  updateAccountFromClearinghouseState(
-    account: PerpsAccount,
-    update: any
-  ): PerpsAccount {
-    if (!account) {
-      return account;
-    }
-    const perps = update?.clearinghouseState || update;
-    if (!perps?.marginSummary) {
-      return account;
-    }
-    const spot = {
-      balances: [
-        {
-          coin: 'USDC',
-          token: 0,
-          total: account.spotUsdcExact,
-          hold: account.spotUsdcHoldExact,
-        },
-      ],
-    };
-    const updated = this.parseAccount(
-      perps,
-      account.dex ? null : spot,
-      account.abstractionMode,
-      account.dex
-    );
-    const user =
-      typeof update?.user === 'string' ? update.user.toLowerCase() : undefined;
-    if (user) {
-      this.cacheAccount(user, updated);
-    }
-    return updated;
-  }
-
-  /**
-   * Apply a clearinghouse push to the one DEX it describes, then re-total.
-   *
-   * A frame carries its own `dex`, and it replaces only that pool's snapshot;
-   * merging it into whichever snapshot happens to be first would silently
-   * attribute one DEX's positions and margin to another.
-   */
-  updateAggregatedFromClearinghouseState(
-    aggregate: PerpsAggregatedAccount,
-    update: any
-  ): PerpsAggregatedAccount {
-    if (!aggregate) {
-      return aggregate;
-    }
-    const dex = typeof update?.dex === 'string' ? update.dex : '';
-    const target = aggregate.byDex.find((account) => account.dex === dex);
-    if (!target) {
-      return aggregate;
-    }
-    const updated = this.updateAccountFromClearinghouseState(target, update);
-    return this.aggregateAccounts(
-      aggregate.byDex.map((account) =>
-        account.dex === dex ? updated : account
-      ),
-      aggregate.missingDexes
-    );
-  }
-
-  /** The spot wallet belongs to the account, so it lands on the canonical pool. */
-  updateAggregatedFromSpotState(
-    aggregate: PerpsAggregatedAccount,
-    update: any
-  ): PerpsAggregatedAccount {
-    if (!aggregate) {
-      return aggregate;
-    }
-    const canonical = aggregate.byDex.find((account) => account.dex === '');
-    if (!canonical) {
-      return aggregate;
-    }
-    const updated = this.updateAccountFromSpotState(canonical, update);
-    return this.aggregateAccounts(
-      aggregate.byDex.map((account) =>
-        account.dex === '' ? updated : account
-      ),
-      aggregate.missingDexes
-    );
-  }
-
-  private cacheAccount(user: string, account: PerpsAccount) {
-    this.accountCache.set(`${user}:dex=${account.dex}`, {
-      expiresAt: Date.now() + this.accountCacheMs,
-      request: of(account),
-    });
-  }
-
-  /**
    * Only `unifiedAccount` and `portfolioMargin` treat spot USDC as perps
    * collateral; every other mode (`default`, `disabled`, …) keeps them separate.
    */
   private isUnifiedMode(mode: PerpsAccountMode): boolean {
     return mode === 'unifiedAccount' || mode === 'portfolioMargin';
-  }
-
-  private parseAccount(
-    res: any,
-    spot?: any,
-    mode: PerpsAccountMode = 'unknown',
-    dex = ''
-  ): PerpsAccount {
-    const unified = this.isUnifiedMode(mode);
-    const {
-      totalExact: spotUsdcExact,
-      holdExact: spotUsdcHoldExact,
-      freeExact: freeSpotUsdcExact,
-    } = this.parseSpotUsdc(spot);
-    if (!res || !res.marginSummary) {
-      return {
-        ...this.emptyAccount(),
-        unified,
-        abstractionMode: mode,
-        dex,
-        accountValueExact: unified ? spotUsdcExact : '0',
-        totalBalanceExact: unified ? spotUsdcExact : '0',
-        availableBalanceExact: unified ? freeSpotUsdcExact : '0',
-        spotUsdcExact,
-        spotUsdcHoldExact,
-      };
-    }
-    const positions: PerpsPosition[] = (res.assetPositions || [])
-      .map((item) => item.position)
-      .filter(
-        (p) =>
-          p && !new BigNumber(this.toFiniteDecimal(p.szi)).isZero()
-      )
-      .map((p) => {
-        const sziExact = this.toFiniteDecimal(p.szi);
-        const entryPxExact = this.toFiniteDecimal(p.entryPx);
-        const positionValueExact = this.toFiniteDecimal(p.positionValue);
-        const unrealizedPnlExact = this.toFiniteDecimal(p.unrealizedPnl);
-        const returnOnEquityExact = this.toFiniteDecimal(p.returnOnEquity);
-        const liquidationPxExact =
-          p.liquidationPx === null
-            ? null
-            : this.toFiniteDecimal(p.liquidationPx);
-        const marginUsedExact = this.toFiniteDecimal(p.marginUsed);
-        const protocolCoin = String(p.coin);
-        const separator = protocolCoin.indexOf(':');
-        const dex = separator >= 0 ? protocolCoin.slice(0, separator) : '';
-        const symbol =
-          separator >= 0 ? protocolCoin.slice(separator + 1) : protocolCoin;
-        return {
-          key: `${dex || 'hl'}:${symbol}`,
-          dex,
-          coin: protocolCoin,
-          symbol,
-          sziExact,
-          isLong: new BigNumber(sziExact).isGreaterThan(0),
-          entryPxExact,
-          positionValueExact,
-          unrealizedPnlExact,
-          returnOnEquityExact,
-          // Null for positions that cannot be liquidated at any price. It stays
-          // null all the way to the screen: a zero here would read as "liquidates
-          // at $0", which is the opposite of "no liquidation price".
-          liquidationPxExact,
-          leverage: Number(p.leverage?.value ?? 1),
-          leverageType: p.leverage?.type ?? 'cross',
-          marginUsedExact,
-        } as PerpsPosition;
-      });
-    const perDexAccountValueExact = this.toFiniteDecimal(
-      res.marginSummary.accountValue
-    );
-    const accountValueExact = unified
-      ? dex
-        ? '0'
-        : spotUsdcExact
-      : perDexAccountValueExact;
-    const withdrawableExact = this.toFiniteDecimal(res.withdrawable);
-    const availableBalanceExact = unified
-      ? dex
-        ? '0'
-        : freeSpotUsdcExact
-      : withdrawableExact;
-    const maintenanceMarginUsedExact = this.toFiniteDecimal(
-      res.crossMaintenanceMarginUsed
-    );
-    const standardRiskCapitalExact = this.toFiniteDecimal(
-      res.crossMarginSummary?.accountValue ?? perDexAccountValueExact
-    );
-    const totalBalanceExact = accountValueExact;
-    const totalMarginUsedExact = this.toFiniteDecimal(
-      res.marginSummary.totalMarginUsed
-    );
-    const totalNtlPosExact = this.toFiniteDecimal(
-      res.marginSummary.totalNtlPos
-    );
-    const marginRatioExact = unified
-      ? null
-      : this.calculateMarginRatioExact(
-          maintenanceMarginUsedExact,
-          standardRiskCapitalExact
-        );
-    return {
-      unified,
-      abstractionMode: mode,
-      dex,
-      accountValueExact,
-      totalBalanceExact,
-      totalMarginUsedExact,
-      totalNtlPosExact,
-      marginRatioExact,
-      withdrawableExact,
-      availableBalanceExact,
-      spotUsdcExact,
-      spotUsdcHoldExact,
-      positions,
-    };
   }
 
   private toFiniteNumber(value: any): number {
@@ -2103,37 +1696,6 @@ export class HyperliquidService {
   private toFiniteDecimal(value: any): string {
     const parsed = new BigNumber(value ?? 0);
     return parsed.isFinite() ? (parsed.isZero() ? '0' : parsed.toFixed()) : '0';
-  }
-
-  private calculateMarginRatioExact(
-    maintenanceMarginUsed: string,
-    riskCapital: string
-  ): string {
-    const capital = new BigNumber(riskCapital);
-    return capital.isGreaterThan(0)
-      ? new BigNumber(maintenanceMarginUsed)
-          .dividedBy(capital)
-          .times(100)
-          .toFixed()
-      : '0';
-  }
-
-  private emptyAccount(): PerpsAccount {
-    return {
-      unified: false,
-      abstractionMode: 'unknown',
-      dex: '',
-      accountValueExact: '0',
-      totalBalanceExact: '0',
-      totalMarginUsedExact: '0',
-      totalNtlPosExact: '0',
-      marginRatioExact: null,
-      withdrawableExact: '0',
-      availableBalanceExact: '0',
-      spotUsdcExact: '0',
-      spotUsdcHoldExact: '0',
-      positions: [],
-    };
   }
 
   /**

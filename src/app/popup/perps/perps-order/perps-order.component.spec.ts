@@ -14,6 +14,7 @@ describe('PerpsOrderComponent amount boundaries', () => {
       { builderAddress: '' } as any,
       null,
       null,
+      null,
       null
     );
   }
@@ -254,6 +255,7 @@ describe('PerpsOrderComponent amount boundaries', () => {
         { builderAddress: '0xbuilder' } as any,
         null,
         null,
+        null,
         null
       );
       value.market = market('ETH', 2000, 4);
@@ -378,6 +380,7 @@ describe('PerpsOrderComponent account modes', () => {
       null,
       null,
       { builderAddress: '' } as any,
+      null,
       null,
       null,
       null

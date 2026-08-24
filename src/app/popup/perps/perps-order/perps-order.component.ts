@@ -16,6 +16,7 @@ import {
   PerpsLeverageChangeRequiredError,
   PerpsPositionChangedError,
 } from '@/app/core/services/perps/hyperliquid.service';
+import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
 import { EvmWalletJSON } from '@popup/_lib/evm';
 import { STORAGE_NAME } from '@popup/_lib';
 import { PopupPerpsSlippageDialogComponent } from '@popup/_dialogs/perps-slippage/perps-slippage.dialog';
@@ -194,6 +195,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     private store: Store<AppState>,
     private global: GlobalService,
     private hyperliquid: HyperliquidService,
+    private accountStates: PerpsAccountStateService,
     private chrome: ChromeService,
     private evmWallet: EvmWalletService,
     private dialog: MatDialog
@@ -349,12 +351,14 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   private loadAccount() {
     this.accountLoadError = false;
     this.accountStateSub?.unsubscribe();
-    this.accountStateSub = this.hyperliquid
+    this.accountStateSub = this.accountStates
       .watchAccount(this.address, this.dex)
-      .subscribe({
-        next: (account) => {
-          this.account = account;
-          this.position = account.positions.find((p) => p.coin === this.coin);
+      .subscribe((state) => {
+        this.accountLoadError = state.availability === 'unavailable';
+        const account = state.account;
+        this.account = account ?? undefined;
+        this.position = account?.positions.find((p) => p.coin === this.coin);
+        if (account) {
           // Seeding once: later frames must not overwrite an amount the user
           // has since typed.
           if (this.closeMode && this.position && !this.closeModeSeeded) {
@@ -367,11 +371,15 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
             ).toFixed(AMOUNT_DECIMALS);
             this.activePercent = 100;
           }
-        },
-        error: () => {
-          this.accountLoadError = true;
-        },
+        }
       });
+  }
+
+  /** Refresh the same state stream after an exchange write. */
+  private refreshAccount() {
+    if (this.address) {
+      this.accountStates.refreshAccount(this.address, this.dex).subscribe();
+    }
   }
 
   private loadUserFeeRates() {
@@ -1289,7 +1297,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
                     leverage: { type: 'isolated', value: this.leverage },
                   }
                 : this.activeAssetData;
-              this.loadAccount();
+              this.refreshAccount();
               this.global.snackBarTip('perpsLeverageUpdatedReviewAgain');
             },
             error: (error) => {
@@ -1321,7 +1329,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
               this.router.navigateByUrl(PERPS_HOME_URL);
             } else {
               this.discardReview();
-              this.loadAccount();
+              this.refreshAccount();
             }
           },
           error: (error) => {
@@ -1397,7 +1405,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     // rather than sitting on a permanently disabled button.
     this.resolvingOrderStatus = false;
     this.executionStatusUnknown = true;
-    this.loadAccount();
+    this.refreshAccount();
   }
 
   private resolveOrderStatus() {
@@ -1407,7 +1415,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     this.pendingCloid = null;
     this.reviewing = false;
     this.reviewBaseline = null;
-    this.loadAccount();
+    this.refreshAccount();
     this.global.snackBarTip('perpsOrderStatusResolved');
   }
 

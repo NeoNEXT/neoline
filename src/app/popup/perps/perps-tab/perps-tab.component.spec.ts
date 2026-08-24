@@ -4,7 +4,7 @@ import { ethMarket } from '../perps.test-fixture';
 // Row order, sorting, paging and search now live in PerpsMarketListComponent,
 // which the tab embeds; their specs moved with them.
 describe('PerpsTabComponent', () => {
-  const component = () => new PerpsTabComponent(null, null, null);
+  const component = () => new PerpsTabComponent(null, null, null, null);
 
   it('locates a position market by key so HIP-3 namesakes stay apart', () => {
     const value = component();
@@ -35,5 +35,31 @@ describe('PerpsTabComponent', () => {
 
     expect(value.unsupportedAccountMode).toBeTrue();
     expect(value.hasPositions).toBeTrue();
+  });
+
+  it('does not present an unknown account total as zero', () => {
+    const value = component();
+    value.account = {
+      abstractionMode: 'disabled',
+      totalBalanceExact: null,
+      availableBalanceExact: null,
+      positions: [],
+    } as any;
+
+    expect(value.accountEquityExact).toBeNull();
+    expect(value.availableMarginExact).toBeNull();
+    expect(value.hasEquity).toBeFalse();
+  });
+
+  it('keeps account-wide actions disabled while aggregation is loading', () => {
+    const value = component();
+    value.account = {
+      abstractionMode: 'disabled',
+      missingDexes: [],
+      positions: [],
+    } as any;
+    value.accountAvailability = 'loading';
+
+    expect(value.globalActionsDisabled).toBeTrue();
   });
 });
