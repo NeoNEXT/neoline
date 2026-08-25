@@ -2180,8 +2180,8 @@
   "perpsCrossPositionUnsupported": {
     "message": "该市场存在全仓持仓。NeoLine 仅支持逐仓订单，无法在此加仓。"
   },
-  "perpsLeverageUpdatedReviewAgain": {
-    "message": "杠杆已更新，请重新检查刷新后的订单再提交。"
+  "perpsLeverageUpdateFailed": {
+    "message": "杠杆设置失败，订单未提交，请重试。"
   },
   "perpsOrderFilled": {
     "message": "订单已全部成交。"

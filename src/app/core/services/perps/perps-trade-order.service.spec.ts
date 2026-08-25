@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 
 import {
   PerpsAccount,
@@ -35,7 +35,6 @@ const intent = (
   leverage: 5,
   orderType: 'market',
   maxSlippagePercent: 1.5,
-  currentLeverage: { type: 'isolated', value: 5 },
   ...values,
 });
 
@@ -78,7 +77,7 @@ describe('PerpsTradeOrderService', () => {
       .submit(PRIVATE_KEY, intent())
       .subscribe((value) => (submission = value));
 
-    expect(exchange.updateLeverage).not.toHaveBeenCalled();
+    expect(exchange.updateLeverage).toHaveBeenCalledWith(PRIVATE_KEY, 3, 5, 20);
     expect(accounts.refreshAccount).not.toHaveBeenCalled();
     expect(exchange.submitOrder).toHaveBeenCalledTimes(1);
     const order = exchange.submitOrder.calls.mostRecent().args[1];
@@ -95,25 +94,34 @@ describe('PerpsTradeOrderService', () => {
     expect((submission as any).result.cloid).toBe(order.cloid);
   });
 
-  it('updates leverage and requires another review without placing an order', () => {
+  /**
+   * Leverage is written immediately before the order that uses it, in the same
+   * operation. The user presses the button once: an exchange-side value that
+   * disagreed with the form used to cost them a second press.
+   */
+  it('writes leverage and places the order in one submission', () => {
     let submission: PerpsTradeSubmission;
 
     service
-      .submit(
-        PRIVATE_KEY,
-        intent({ currentLeverage: { type: 'isolated', value: 3 } })
-      )
+      .submit(PRIVATE_KEY, intent({ leverage: 7 }))
       .subscribe((value) => (submission = value));
 
-    expect(exchange.updateLeverage).toHaveBeenCalledWith(
-      PRIVATE_KEY,
-      3,
-      5,
-      20
+    expect(exchange.updateLeverage).toHaveBeenCalledWith(PRIVATE_KEY, 3, 7, 20);
+    expect(exchange.submitOrder).toHaveBeenCalledTimes(1);
+    expect(submission.kind).toBe('order-submitted');
+  });
+
+  /** A failed write leaves no order behind: the exchange never saw one. */
+  it('places no order when the leverage write is rejected', () => {
+    const errors = jasmine.createSpy('errors');
+    exchange.updateLeverage.and.returnValue(
+      throwError(() => new Error('margin tier'))
     );
+
+    service.submit(PRIVATE_KEY, intent()).subscribe({ error: errors });
+
+    expect(errors).toHaveBeenCalled();
     expect(exchange.submitOrder).not.toHaveBeenCalled();
-    expect(accounts.refreshAccount).not.toHaveBeenCalled();
-    expect(submission).toEqual({ kind: 'leverage-updated', leverage: 5 });
   });
 
   it('derives reduce-only and GTC from a reduce intent', () => {
@@ -126,7 +134,6 @@ describe('PerpsTradeOrderService', () => {
           orderType: 'limit',
           referencePriceExact: '123.456',
           requestedSizeExact: '0.5009',
-          currentLeverage: undefined,
           market: { ...intent().market, szDecimals: 3 },
         })
       )
@@ -330,7 +337,6 @@ describe('PerpsTradeOrderService', () => {
         intent({
           operation: 'reverse',
           requestedSizeExact: '1.25',
-          currentLeverage: { type: 'cross', value: 5 },
         })
       )
       .subscribe({ error: errors });

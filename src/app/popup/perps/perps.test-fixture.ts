@@ -1,4 +1,4 @@
-import { PerpsCandle, PerpsMarket } from '@popup/_lib/perps';
+import { PerpsCandle, PerpsMarket, PerpsPosition } from '@popup/_lib/perps';
 
 /**
  * The market and the candle every perps spec starts from.
@@ -57,6 +57,34 @@ export function ethCandle(overrides: Partial<PerpsCandle> = {}): PerpsCandle {
     l: '85',
     v: '2',
     n: 10,
+    ...overrides,
+  };
+}
+
+/**
+ * A small short in ETH, cross-margined.
+ *
+ * Deliberately not the mirror of `ethMarket`: a position whose numbers differ
+ * from the market's makes it obvious which of the two an assertion is reading.
+ */
+export function ethPosition(
+  overrides: Partial<PerpsPosition> = {}
+): PerpsPosition {
+  return {
+    key: 'hl:ETH',
+    dex: '',
+    coin: 'ETH',
+    symbol: 'ETH',
+    sziExact: '-0.01',
+    entryPxExact: '1921.5',
+    positionValueExact: '18.895',
+    unrealizedPnlExact: '0.34',
+    returnOnEquityExact: '0.035',
+    liquidationPxExact: '99829',
+    leverage: 2,
+    leverageType: 'cross',
+    marginUsedExact: '9.44',
+    isLong: false,
     ...overrides,
   };
 }

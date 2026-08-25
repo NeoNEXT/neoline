@@ -13,7 +13,9 @@ export interface PerpsOrder {
 export type PerpsTradeOrderErrorCode =
   | 'invalid-intent'
   | 'position-changed'
-  | 'account-unavailable';
+  | 'account-unavailable'
+  /** The leverage write was refused, so no order was ever sent. */
+  | 'leverage-write';
 
 export class PerpsTradeOrderError extends Error {
   constructor(

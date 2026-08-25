@@ -2180,8 +2180,8 @@
   "perpsCrossPositionUnsupported": {
     "message": "This market has an open cross-margin position. NeoLine cannot increase it because only isolated orders are supported."
   },
-  "perpsLeverageUpdatedReviewAgain": {
-    "message": "Leverage was updated. Review the refreshed order before submitting."
+  "perpsLeverageUpdateFailed": {
+    "message": "Leverage could not be set, so no order was submitted. Try again."
   },
   "perpsOrderFilled": {
     "message": "Order filled."

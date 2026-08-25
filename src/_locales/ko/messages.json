@@ -2180,8 +2180,8 @@
   "perpsCrossPositionUnsupported": {
     "message": "이 시장에 교차 증거금 포지션이 있습니다. NeoLine은 격리 주문만 지원하므로 포지션을 추가할 수 없습니다."
   },
-  "perpsLeverageUpdatedReviewAgain": {
-    "message": "레버리지가 업데이트되었습니다. 갱신된 주문을 다시 검토한 후 제출하세요."
+  "perpsLeverageUpdateFailed": {
+    "message": "레버리지를 설정하지 못해 주문이 제출되지 않았습니다. 다시 시도해 주세요."
   },
   "perpsOrderFilled": {
     "message": "주문이 전부 체결되었습니다."

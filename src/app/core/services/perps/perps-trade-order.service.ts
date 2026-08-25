@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
-import { defer, Observable, of, throwError } from 'rxjs';
+import { Observable, catchError, defer, of, throwError } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
 import {
@@ -39,9 +39,10 @@ interface PerpsOrderAccounts {
   ): Observable<PerpsAccountState<PerpsAccount>>;
 }
 
-export type PerpsTradeSubmission =
-  | { kind: 'leverage-updated'; leverage: number }
-  | { kind: 'order-submitted'; result: PerpsOrderExecutionResult };
+export type PerpsTradeSubmission = {
+  kind: 'order-submitted';
+  result: PerpsOrderExecutionResult;
+};
 
 /**
  * Turns one user-confirmed trade intent into one canonical protocol order.
@@ -72,27 +73,34 @@ export class PerpsTradeOrderService {
       const address = this.signerAddress(privateKey);
       return this.resolveSize(address, intent).pipe(
         switchMap((sizeExact) => {
-          const leverage = intent.leverage;
-          if (this.requiresLeverageUpdate(intent)) {
-            return this.exchange
-              .updateLeverage(
-                privateKey,
-                intent.market.assetId,
-                leverage,
-                intent.market.maxLeverage
-              )
-              .pipe(
-                map(() => ({ kind: 'leverage-updated', leverage } as const))
-              );
-          }
-
           const order = this.buildOrder(intent, sizeExact);
-          return this.exchange.submitOrder(privateKey, order).pipe(
-            map(
-              (result) =>
-                ({ kind: 'order-submitted', result } as const)
+          const submit = () =>
+            this.exchange.submitOrder(privateKey, order).pipe(
+              map((result) => ({ kind: 'order-submitted', result } as const))
+            );
+          if (!this.setsLeverage(intent)) {
+            return submit();
+          }
+          return this.exchange
+            .updateLeverage(
+              privateKey,
+              intent.market.assetId,
+              intent.leverage,
+              intent.market.maxLeverage
             )
-          );
+            .pipe(
+              // A refused write means no order was sent, which the caller has
+              // to be able to say. `updateLeverage` is bounded by the margin
+              // tier the notional falls into, not by the market's static
+              // maximum, so this is a rejection the client cannot pre-empt.
+              catchError((error) => {
+                throw new PerpsTradeOrderError(
+                  'leverage-write',
+                  error?.message || 'Leverage update was rejected'
+                );
+              }),
+              switchMap(submit)
+            );
         })
       );
     });
@@ -163,14 +171,23 @@ export class PerpsTradeOrderService {
     }
   }
 
-  private requiresLeverageUpdate(intent: PerpsTradeOrderIntent): boolean {
-    if (intent.operation === 'reduce' || intent.operation === 'close') {
-      return false;
-    }
-    return !(
-      intent.currentLeverage?.type === 'isolated' &&
-      intent.currentLeverage.value === intent.leverage
-    );
+  /**
+   * Whether this order writes its leverage to the exchange before it is placed.
+   *
+   * Leverage is an order parameter, not an account setting the client tracks:
+   * the value the user picked is written immediately before the order that uses
+   * it, so there is no window in which an exchange-side setting and a form can
+   * disagree. Comparing against a cached current value would reintroduce one.
+   *
+   * A reduce-only exit is exempt. Its leverage is the position's own — the form
+   * does not offer the control in close mode — so the write would set the value
+   * that is already in effect, while still being able to fail: `updateLeverage`
+   * is bounded by the margin tier the position's notional falls into, not by
+   * the market's static maximum. An exit must not acquire a failure mode for a
+   * write that changes nothing.
+   */
+  private setsLeverage(intent: PerpsTradeOrderIntent): boolean {
+    return intent.operation !== 'reduce' && intent.operation !== 'close';
   }
 
   private resolveSize(

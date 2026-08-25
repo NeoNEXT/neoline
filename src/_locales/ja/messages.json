@@ -2180,8 +2180,8 @@
   "perpsCrossPositionUnsupported": {
     "message": "この市場にはクロスマージンのポジションがあります。NeoLine は分離注文のみ対応しているため、追加注文はできません。"
   },
-  "perpsLeverageUpdatedReviewAgain": {
-    "message": "レバレッジを更新しました。更新後の注文内容を再確認してから送信してください。"
+  "perpsLeverageUpdateFailed": {
+    "message": "レバレッジを設定できなかったため、注文は送信されていません。再試行してください。"
   },
   "perpsOrderFilled": {
     "message": "注文は全て約定しました。"

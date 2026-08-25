@@ -835,8 +835,6 @@ export interface PerpsTradeOrderIntent {
   orderType: PerpsOrderType;
   /** Maximum market-order price deviation as a percentage, e.g. 1 for 1%. */
   maxSlippagePercent: number;
-  /** Exchange-side setting used to avoid signing an identical update. */
-  currentLeverage?: PerpsActiveAssetData['leverage'];
 }
 
 export interface PerpsExchangeResponse {
