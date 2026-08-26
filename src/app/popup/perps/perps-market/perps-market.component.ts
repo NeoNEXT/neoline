@@ -8,11 +8,16 @@ import {
   ViewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { asyncScheduler, Subject, Unsubscribable } from 'rxjs';
+import { asyncScheduler, Unsubscribable } from 'rxjs';
 import { tap, throttleTime } from 'rxjs/operators';
 
 import { ChromeService } from '@/app/core';
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
+import {
+  PerpsCandleAvailability,
+  PerpsCandleDatasetState,
+} from '@/app/core/services/perps/perps-candle-dataset';
+import { PerpsCandleDatasetService } from '@/app/core/services/perps/perps-candle-dataset.service';
 import { STORAGE_NAME } from '@popup/_lib';
 import {
   PerpsCandle,
@@ -21,14 +26,11 @@ import {
   PerpsMarket,
   isCandleInterval,
   PERPS_CANDLE_INTERVAL_LABELS,
-  PERPS_CANDLE_HISTORY_LIMIT,
-  PERPS_CANDLE_LIMIT,
   PERPS_HOME_URL,
 } from '@popup/_lib/perps';
 import {
   chartPriceDecimals,
   formatFundingPercent,
-  mergeCandles,
   pad2,
 } from '../perps.util';
 
@@ -38,25 +40,14 @@ const PERPS_BASICS_URL =
   'https://hyperliquid.gitbook.io/hyperliquid-docs/trading/perpetual-futures';
 
 /**
- * How often live candle frames are allowed to reach the view.
+ * How often candle updates are allowed to redraw the chart.
  *
- * Every frame is still folded into the dataset the moment it lands — this
- * rations only the check that redraws the chart. An active market prints
+ * Every state is still absorbed the moment it lands — this rations only the
+ * check that redraws the chart. An active market prints
  * several trades a second, and under OnPush each one would otherwise have the
  * page checked and the canvas repainted to move one bar by a pixel.
  */
 const CANDLE_REFRESH_MS = 1000;
-
-/**
- * How closely snapshot requests may follow one another.
- *
- * Stepping through the interval row is four taps in about a second, and each
- * one would otherwise be its own snapshot — the priciest request this page
- * makes, since Hyperliquid charges a candle snapshot by the bar. The first tap
- * still fetches at once so a single one feels instant; the rest of the burst
- * collapses into the tap that ends it.
- */
-const CANDLE_FETCH_MS = 300;
 
 @Component({
   templateUrl: 'perps-market.component.html',
@@ -122,34 +113,9 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   private routeSub: Unsubscribable;
   private marketsSub: Unsubscribable;
   private connectionSub: Unsubscribable;
-  private candleSub: Unsubscribable;
-  /**
-   * Snapshot requests, rationed.
-   *
-   * Wired here rather than in `ngOnInit` because the first request is issued
-   * from the route's own callback: a pipe that started later would drop it.
-   */
-  private candleFetch$ = new Subject<void>();
-  private fetchSub = this.candleFetch$
-    .pipe(
-      throttleTime(CANDLE_FETCH_MS, asyncScheduler, {
-        leading: true,
-        trailing: true,
-      })
-    )
-    .subscribe(() => this.fetchCandles());
-  /** Monotonic token so a stale candle snapshot can't overwrite a newer interval. */
-  private candleReqId = 0;
-  /** Live frames received after the current REST snapshot was requested. */
-  private activeCandleSnapshot: {
-    reqId: number;
-    liveFrames: PerpsCandle[];
-  } | null = null;
-  /** A stale → live transition that happened while another snapshot was open. */
-  private pendingCandleRecovery = false;
-  /** True once an earlier snapshot added nothing, so we stop paging. */
-  private historyExhausted = false;
-  private historyLoading = false;
+  private datasetSub: Unsubscribable;
+  /** What the dataset last said, so a change of kind is never held back. */
+  private datasetAvailability: PerpsCandleAvailability = 'loading';
   private countdownTimer: any;
 
   constructor(
@@ -157,6 +123,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     private router: Router,
     private chrome: ChromeService,
     private hyperliquid: HyperliquidService,
+    private candleDatasets: PerpsCandleDatasetService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -164,11 +131,9 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     this.connectionSub = this.hyperliquid
       .watchConnectionState()
       .subscribe((state) => {
-        const recovered = this.connectionState === 'stale' && state === 'live';
+        // Recovery is the dataset's own business now; the page reads the
+        // connection only to say whether what is on screen is still live.
         this.connectionState = state;
-        if (recovered) {
-          this.recoverCandles();
-        }
         this.cdr.markForCheck();
       });
     this.routeSub = this.route.params.subscribe((params) =>
@@ -207,8 +172,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     this.routeSub?.unsubscribe();
     this.marketsSub?.unsubscribe();
     this.connectionSub?.unsubscribe();
-    this.fetchSub?.unsubscribe();
-    this.unwatchCandles();
+    this.unwatchDataset();
     clearInterval(this.countdownTimer);
   }
 
@@ -407,290 +371,73 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
 
   //#region candles
 
-  private loadCandles() {
-    this.chartLoadError = false;
-    this.chartRecoveryError = false;
-    this.historyExhausted = false;
-    this.historyLoading = false;
-    this.unwatchCandles();
-    this.candleReqId++;
-    this.activeCandleSnapshot = null;
-    this.pendingCandleRecovery = false;
-    // Bars this session has already seen are drawn before the network is asked
-    // anything: a spinner over a chart we could have painted is the worse
-    // answer, and the snapshot behind it corrects the tail a moment later.
-    const cached = this.hyperliquid.cachedCandles(this.coin, this.interval);
-    // Nothing cached clears instead: candles from the previous interval under
-    // the new interval's label are a chart of something the user did not ask
-    // for.
-    this.candles = cached || [];
-    this.chartLoading = !cached;
-    if (cached) {
-      // Frames from here on, so what was painted from memory is current within
-      // a second whether or not the snapshot behind it is quick.
-      this.watchCandles();
-    }
-    this.cdr.markForCheck();
-    this.candleFetch$.next();
-  }
-
-  /** The snapshot itself, once the tap that asked for it has settled. */
-  private fetchCandles() {
-    const reqId = this.candleReqId;
-    // Anything already on screen came from the cache, and live frames may have
-    // carried its trailing bar past what this snapshot saw — so the snapshot
-    // is merged into it rather than put in its place.
-    const seeded = this.candles.length > 0;
-    this.beginCandleSnapshot(reqId);
-    this.hyperliquid.getCandles(this.coin, this.interval).subscribe({
-      next: (res) => {
-        if (reqId !== this.candleReqId) {
-          return;
-        }
-        const liveFrames = this.finishCandleSnapshot(reqId);
-        this.candles = seeded
-          ? mergeCandles(this.candles, res || [])
-          : res || [];
-        // A REST response can land after a newer websocket statement for the
-        // same bar. Reapply frames observed during the request so arrival
-        // order cannot make the older snapshot win.
-        this.candles = mergeCandles(this.candles, liveFrames);
-        this.chartLoading = false;
-        this.chartLoadError = false;
-        this.cacheCandles();
-        this.cdr.markForCheck();
-        if (!this.candleSub) {
-          this.watchCandles();
-        }
-        this.runPendingCandleRecovery(reqId);
-      },
-      error: () => {
-        if (reqId !== this.candleReqId) {
-          return;
-        }
-        this.finishCandleSnapshot(reqId);
-        this.chartLoading = false;
-        // Cached bars stay up: they are what the exchange last said, and an
-        // empty chart is not the more honest answer for a top-up that failed.
-        if (!seeded) {
-          this.candles = [];
-          this.chartLoadError = true;
-        }
-        this.cdr.markForCheck();
-        this.runPendingCandleRecovery(reqId);
-      },
-    });
-  }
-
-  /** Keep the remembered dataset in step with the one on screen. */
-  private cacheCandles() {
-    this.hyperliquid.rememberCandles(this.coin, this.interval, this.candles);
-  }
-
-  /**
-   * Refill what the feed missed while it was down.
-   *
-   * A reconnected socket replays the subscription, but the exchange streams
-   * only the bar that is open now: every bar that closed while we were dark is
-   * a hole nothing else will ever fill. The snapshot is taken again and merged
-   * into the existing tail while the gap remains queryable. Once the gap is
-   * older than the exchange's 5000-bar history, the available range becomes a
-   * genuinely different dataset and is reloaded rather than joined across a
-   * hole.
-   */
-  private recoverCandles() {
+  private watchDataset() {
+    this.unwatchDataset();
     if (!this.coin) {
       return;
     }
-    if (this.chartLoading || this.activeCandleSnapshot) {
-      this.pendingCandleRecovery = true;
-      return;
-    }
-    // Nothing on screen to merge into, so what is owed is the first load.
-    if (!this.candles.length) {
-      this.loadCandles();
-      return;
-    }
-    const reqId = this.candleReqId;
-    const endTime = Date.now();
-    const intervalMs = this.hyperliquid.intervalMs(this.interval);
-    const earliestRecoverable =
-      endTime - intervalMs * PERPS_CANDLE_HISTORY_LIMIT;
-    const lastTime = this.candles[this.candles.length - 1].t;
-    const reloadAvailableDataset = lastTime < earliestRecoverable;
-    const startTime = reloadAvailableDataset
-      ? earliestRecoverable
-      : lastTime;
-    this.beginCandleSnapshot(reqId);
-    this.hyperliquid
-      .getCandleRange(this.coin, this.interval, startTime, endTime)
-      .subscribe({
-        next: (res) => {
-          if (reqId !== this.candleReqId) {
-            return;
-          }
-          const liveFrames = this.finishCandleSnapshot(reqId);
-          if (reloadAvailableDataset && !res?.length) {
-            this.chartRecoveryError = true;
-            this.cdr.markForCheck();
-            this.runPendingCandleRecovery(reqId);
-            return;
-          }
-          this.candles = reloadAvailableDataset
-            ? mergeCandles(res || [], liveFrames)
-            : mergeCandles(
-                mergeCandles(this.candles, res || []),
-                liveFrames
-              );
-          this.chartRecoveryError = false;
-          this.cacheCandles();
-          this.cdr.markForCheck();
-          this.runPendingCandleRecovery(reqId);
-        },
-        error: () => {
-          if (reqId !== this.candleReqId) {
-            return;
-          }
-          this.finishCandleSnapshot(reqId);
-          // Price frames may be live again while the closed bars remain
-          // incomplete. Keep what is known, but expose that interruption.
-          this.chartRecoveryError = true;
-          this.cdr.markForCheck();
-          this.runPendingCandleRecovery(reqId);
-        },
-      });
-  }
-
-  private beginCandleSnapshot(reqId: number) {
-    this.activeCandleSnapshot = { reqId, liveFrames: [] };
-  }
-
-  private finishCandleSnapshot(reqId: number): PerpsCandle[] {
-    if (this.activeCandleSnapshot?.reqId !== reqId) {
-      return [];
-    }
-    const frames = this.activeCandleSnapshot.liveFrames;
-    this.activeCandleSnapshot = null;
-    return frames;
-  }
-
-  private runPendingCandleRecovery(reqId: number) {
-    if (reqId !== this.candleReqId || !this.pendingCandleRecovery) {
-      return;
-    }
-    this.pendingCandleRecovery = false;
-    this.recoverCandles();
-  }
-
-  /**
-   * Another page of bars older than what is already on screen.
-   *
-   * The chart emits this when the user scrolls to the left edge. Prepending
-   * keeps the dataset's right side (and therefore the live-update identity)
-   * intact; an empty page means the exchange has nothing further back.
-   */
-  loadEarlierCandles() {
-    if (
-      this.historyExhausted ||
-      this.historyLoading ||
-      this.chartLoading ||
-      !this.candles.length
-    ) {
-      return;
-    }
-    this.historyLoading = true;
-    const endTime = this.candles[0].t;
-    const reqId = this.candleReqId;
-    this.hyperliquid
-      .getCandles(this.coin, this.interval, PERPS_CANDLE_LIMIT, endTime)
-      .subscribe({
-        next: (res) => {
-          if (reqId !== this.candleReqId) {
-            return;
-          }
-          this.historyLoading = false;
-          const older = (res || []).filter((candle) => candle.t < endTime);
-          if (older.length === 0) {
-            this.historyExhausted = true;
-            return;
-          }
-          this.candles = [...older, ...this.candles];
-          this.cacheCandles();
-          this.cdr.markForCheck();
-        },
-        error: () => {
-          if (reqId === this.candleReqId) {
-            this.historyLoading = false;
-          }
-        },
-      });
-  }
-
-  /** Live candle updates replace the trailing bar, or append when it rolls over. */
-  private watchCandles() {
-    const candleSubscription = {
-      type: 'candle',
-      coin: this.coin,
-      interval: this.interval,
-    };
-    this.candleSub = this.hyperliquid
-      .subscribe(candleSubscription)
+    this.datasetSub = this.candleDatasets
+      .watchDataset(this.coin, this.interval)
       .pipe(
-        // Folded before the throttle, never inside it: dropping whole frames
-        // would lose a bar's closing print when it rolls over mid-window.
-        // Only the redraw is rationed, and the dataset stays exact.
-        tap((candle: PerpsCandle) => this.absorbCandle(candle)),
-        // `leading` keeps the first frame after subscribing instant, so a
-        // freshly opened chart never waits a second to start moving;
-        // `trailing` guarantees the last frame of a burst still lands rather
-        // than sitting invisible until the next trade prints.
+        // Absorbed before the throttle, never inside it: dropping whole states
+        // would lose a bar's closing print when it rolls over mid-window. Only
+        // the redraw is rationed, and what the page holds stays exact.
+        tap((state: PerpsCandleDatasetState) => this.absorbDataset(state)),
+        // `leading` keeps the first state after subscribing instant, so a
+        // freshly opened chart never waits a second to appear; `trailing`
+        // guarantees the last frame of a burst still lands rather than sitting
+        // invisible until the next trade prints.
         throttleTime(CANDLE_REFRESH_MS, asyncScheduler, {
           leading: true,
           trailing: true,
         })
       )
-      .subscribe(() => {
-        this.cacheCandles();
-        this.cdr.markForCheck();
-      });
+      .subscribe(() => this.cdr.markForCheck());
   }
 
-  /** Fold one live frame into the dataset, without touching the view. */
-  private absorbCandle(candle: PerpsCandle) {
-    if (!candle) {
-      return;
-    }
-    if (this.activeCandleSnapshot?.reqId === this.candleReqId) {
-      this.activeCandleSnapshot.liveFrames.push(candle);
-    }
-    const last = this.candles[this.candles.length - 1];
-    if (last && last.t === candle.t) {
-      this.candles = [...this.candles.slice(0, -1), candle];
-    } else if (!last || candle.t > last.t) {
-      // Append only. Dropping the oldest bar to hold a fixed window would
-      // move the dataset's starting point, which is exactly how the chart
-      // tells one dataset from another — so every roll-over would redraw
-      // the whole series and throw away the user's zoom.
-      this.candles = [...this.candles, candle];
+  /**
+   * Take one dataset state, without redrawing for it.
+   *
+   * A change of kind is marked at once rather than rationed: a chart that has
+   * just failed, or has just lost the bars that closed while the feed was
+   * down, is saying something that must not wait for the next throttle window.
+   */
+  private absorbDataset(state: PerpsCandleDatasetState) {
+    const changedKind = this.datasetAvailability !== state.availability;
+    this.datasetAvailability = state.availability;
+    this.candles = state.candles;
+    this.chartLoading = state.availability === 'loading';
+    this.chartLoadError = state.availability === 'unavailable';
+    this.chartRecoveryError = state.availability === 'gapped';
+    if (changedKind) {
+      this.cdr.markForCheck();
     }
   }
 
-  private unwatchCandles() {
-    this.candleSub?.unsubscribe();
-    this.candleSub = undefined;
+  private unwatchDataset() {
+    this.datasetSub?.unsubscribe();
+    this.datasetSub = undefined;
+  }
+
+  /**
+   * Another page of bars older than what is already on screen.
+   *
+   * The chart emits this when the user scrolls to the left edge; whether there
+   * is anything further back to ask for is the dataset's own bookkeeping.
+   */
+  loadEarlierCandles() {
+    if (this.coin) {
+      this.candleDatasets.loadEarlier(this.coin, this.interval);
+    }
   }
 
   private invalidateCandleDataset() {
-    this.unwatchCandles();
-    this.candleReqId++;
-    this.activeCandleSnapshot = null;
-    this.pendingCandleRecovery = false;
+    this.unwatchDataset();
+    this.datasetAvailability = 'loading';
     this.candles = [];
     this.chartLoading = true;
     this.chartLoadError = false;
     this.chartRecoveryError = false;
-    this.historyExhausted = false;
-    this.historyLoading = false;
   }
 
   /**
@@ -702,7 +449,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
       .getStorage(STORAGE_NAME.perpsChartInterval)
       .subscribe((saved) => {
         // Storage answers with whatever an older build wrote. An interval this
-        // build no longer ships must not reach `getCandles`, which sizes its
+        // build no longer ships must not reach the dataset, which sizes its
         // request window from the interval and throws — synchronously, before
         // the subscription exists — on one it cannot size, leaving the chart
         // spinning with no error path to land in.
@@ -710,7 +457,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
           this.interval = saved;
         }
         this.cdr.markForCheck();
-        this.loadCandles();
+        this.watchDataset();
       });
   }
 
@@ -721,7 +468,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     }
     this.interval = interval;
     this.chrome.setStorage(STORAGE_NAME.perpsChartInterval, interval);
-    this.loadCandles();
+    this.watchDataset();
   }
 
   //#endregion

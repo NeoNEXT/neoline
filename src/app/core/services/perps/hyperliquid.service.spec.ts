@@ -7,7 +7,6 @@ import {
   PerpsAccount,
   PerpsCandle,
   PERPS_BUILDER_FEE_TENTHS_BPS,
-  PERPS_CANDLE_LIMIT,
   PerpsUserFeeRates,
 } from '@popup/_lib/perps';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -1259,52 +1258,6 @@ describe('HyperliquidService account balances', () => {
     tick(500);
   }));
 
-  it('remembers candles for a market and interval while they are worth showing', () => {
-    const candles = [candleAt(Date.now() - 60_000)];
-    service.rememberCandles('ETH', '1m', candles);
-
-    // Handed back as they were stored: this is what lets the chart paint
-    // before the network has said anything.
-    expect(service.cachedCandles('ETH', '1m')).toBe(candles);
-  });
-
-  it('refuses remembered candles that have gone too far out of date', () => {
-    service.rememberCandles('ETH', '1m', [candleAt(Date.now() - 5 * 60_000)]);
-
-    // Five missed minutes on a 1m chart is a visible hole. A spinner is the
-    // more honest answer than bars that are quietly behind.
-    expect(service.cachedCandles('ETH', '1m')).toBeNull();
-  });
-
-  it('keeps intervals of the same market apart', () => {
-    service.rememberCandles('ETH', '1m', [candleAt(Date.now())]);
-
-    expect(service.cachedCandles('ETH', '5m')).toBeNull();
-  });
-
-  it('bounds what it remembers across a long session', () => {
-    const now = Date.now();
-    for (let i = 0; i < 9; i++) {
-      service.rememberCandles(`COIN${i}`, '1m', [candleAt(now)]);
-    }
-
-    expect((service as any).candleCache.size).toBe(8);
-    // The market visited longest ago is the one dropped.
-    expect(service.cachedCandles('COIN0', '1m')).toBeNull();
-    expect(service.cachedCandles('COIN8', '1m')).not.toBeNull();
-  });
-
-  it('does not trim history inside a remembered dataset', () => {
-    const now = Date.now();
-    const candles = Array.from({ length: 1001 }, (_, index) =>
-      candleAt(now - (1000 - index) * 60_000)
-    );
-
-    service.rememberCandles('ETH', '1m', candles);
-
-    expect(service.cachedCandles('ETH', '1m')).toBe(candles);
-  });
-
 });
 
 describe('HyperliquidService withdrawals', () => {
@@ -1604,33 +1557,6 @@ describe('HyperliquidService market detail feed', () => {
   });
 });
 
-describe('HyperliquidService candle intervals', () => {
-  const service = new HyperliquidService(null);
-
-  it('sizes every interval the product offers', () => {
-    expect(service.intervalMs('1m')).toBe(60e3);
-    expect(service.intervalMs('5m')).toBe(5 * 60e3);
-    expect(service.intervalMs('15m')).toBe(15 * 60e3);
-    expect(service.intervalMs('1h')).toBe(3600e3);
-    expect(service.intervalMs('12h')).toBe(12 * 3600e3);
-    expect(service.intervalMs('1d')).toBe(86400e3);
-    // Weekly and monthly used to fall through to a one-minute window, which
-    // asked for two hours of history and drew an empty chart.
-    expect(service.intervalMs('1w')).toBe(7 * 86400e3);
-    expect(service.intervalMs('1M')).toBe(30 * 86400e3);
-  });
-
-  it('keeps the month and the minute apart', () => {
-    expect(service.intervalMs('1M')).not.toBe(service.intervalMs('1m'));
-  });
-
-  it('refuses an interval it cannot size rather than guessing minutes', () => {
-    expect(() => service.intervalMs('1y' as any)).toThrowError(
-      /Unsupported Hyperliquid candle interval/
-    );
-  });
-});
-
 describe('HyperliquidService candle snapshots', () => {
   it('requests an explicit candle range without deriving it from a limit', () => {
     const http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
@@ -1656,28 +1582,6 @@ describe('HyperliquidService candle snapshots', () => {
     );
   });
 
-  it('pages a window that ends at the oldest bar already on screen', () => {
-    const http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
-    http.post.and.returnValue(of([]) as any);
-    const service = new HyperliquidService(http);
-    const endTime = 1_700_000_000_000;
-
-    service.getCandles('NEO', '15m', PERPS_CANDLE_LIMIT, endTime).subscribe();
-
-    expect(http.post).toHaveBeenCalledWith(
-      jasmine.any(String),
-      {
-        type: 'candleSnapshot',
-        req: {
-          coin: 'NEO',
-          interval: '15m',
-          startTime: endTime - 15 * 60e3 * PERPS_CANDLE_LIMIT,
-          endTime,
-        },
-      },
-      jasmine.any(Object)
-    );
-  });
 });
 
 describe('HyperliquidService candle websocket routing', () => {

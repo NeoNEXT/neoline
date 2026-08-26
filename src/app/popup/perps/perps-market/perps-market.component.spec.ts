@@ -2,7 +2,8 @@ import { fakeAsync, tick } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 
 import { STORAGE_NAME } from '@popup/_lib';
-import { PerpsCandle, PerpsMarket, PERPS_CANDLE_LIMIT } from '@popup/_lib/perps';
+import { PerpsMarket } from '@popup/_lib/perps';
+import { PerpsCandleDatasetState } from '@/app/core/services/perps/perps-candle-dataset';
 
 import { PerpsMarketComponent } from './perps-market.component';
 import { ethCandle, ethMarket } from '../perps.test-fixture';
@@ -22,20 +23,25 @@ const market = ethMarket({
 const detector = () => jasmine.createSpyObj('ChangeDetectorRef', ['markForCheck']);
 
 /**
- * The feed as this page uses it, over the answers that change nothing: no
- * candles remembered from an earlier visit, and a channel that never speaks.
- * A test then states only the calls its assertions rest on.
+ * The feed as this page uses it, over the answers that change nothing. Candles
+ * no longer come through here at all — the page reads a dataset instead.
  */
 const service = (overrides: any = {}) =>
   ({
-    cachedCandles: () => null,
-    rememberCandles: () => undefined,
     subscribe: () => new Subject(),
     ...overrides,
   } as any);
 
+/** The candle dataset as this page uses it: one state, and a paging request. */
+const datasets = (overrides: any = {}) =>
+  ({
+    watchDataset: () => new Subject<PerpsCandleDatasetState>(),
+    loadEarlier: () => undefined,
+    ...overrides,
+  } as any);
+
 const build = (router: any = null) =>
-  new PerpsMarketComponent(null, router, null, null, detector());
+  new PerpsMarketComponent(null, router, null, null, datasets(), detector());
 
 describe('PerpsMarketComponent live price', () => {
   it('quotes the live mid and ignores the trailing candle close', () => {
@@ -196,276 +202,132 @@ describe('PerpsMarketComponent trade entry', () => {
   });
 });
 
-describe('PerpsMarketComponent chart dataset', () => {
-  const at = (t: number, close = '100'): PerpsCandle =>
-    ethCandle({ t, T: t + 59_999, c: close });
+describe('PerpsMarketComponent chart presentation', () => {
+  const state = (
+    patch: Partial<PerpsCandleDatasetState> = {}
+  ): PerpsCandleDatasetState => ({
+    availability: 'live',
+    candles: [ethCandle()],
+    updatedAt: 1,
+    ...patch,
+  });
 
-  function watching(initial: PerpsCandle[]) {
-    const frames = new Subject<PerpsCandle>();
+  function showing() {
+    const states = new Subject<PerpsCandleDatasetState>();
+    const loadEarlier = jasmine.createSpy('loadEarlier');
     const cdr = detector();
     const component = new PerpsMarketComponent(
       null,
       null,
       null,
-      service({ subscribe: () => frames }),
+      service(),
+      datasets({ watchDataset: () => states, loadEarlier }),
       cdr
     );
     component.coin = 'ETH';
-    component.candles = initial;
-    (component as any).watchCandles();
-    return { component, frames, cdr };
+    (component as any).watchDataset();
+    return { component, states, loadEarlier, cdr };
   }
 
-  it('replaces the trailing bar while it is still open', () => {
-    const { component, frames, cdr } = watching([at(1000), at(61_000)]);
-
-    frames.next(at(61_000, '111'));
-
-    expect(component.candles.length).toBe(2);
-    expect(component.candles[1].c).toBe('111');
-    // Under OnPush a frame that does not mark the view is a chart that stops.
-    expect(cdr.markForCheck).toHaveBeenCalled();
-  });
-
-  it('appends a new bar instead of trimming the oldest', () => {
-    const { component, frames } = watching([at(1000), at(61_000)]);
-
-    frames.next(at(121_000));
-
-    // The first bar has to survive: dropping it moves the dataset's starting
-    // point, and that is precisely how the chart tells one dataset from
-    // another — so a trimmed window redraws everything and throws away the
-    // zoom the user chose.
-    expect(component.candles.length).toBe(3);
-    expect(component.candles[0].t).toBe(1000);
-  });
-
-  it('ignores a frame for a bar older than the one on screen', () => {
-    const { component, frames } = watching([at(1000), at(61_000)]);
-
-    frames.next(at(1000, '77'));
-
-    expect(component.candles.length).toBe(2);
-    expect(component.candles[0].c).toBe('100');
-  });
-
-  it('folds every frame but refreshes the view once a second', fakeAsync(() => {
-    const { component, frames, cdr } = watching([at(1000), at(61_000)]);
-    cdr.markForCheck.calls.reset();
-
-    frames.next(at(61_000, '101'));
-    frames.next(at(61_000, '102'));
-    frames.next(at(61_000, '103'));
-
-    // The first frame is instant: a chart that waited a second before moving
-    // would read as one that had not loaded.
-    expect(cdr.markForCheck).toHaveBeenCalledTimes(1);
-    // The two behind it are in the dataset all the same, unpainted.
-    expect(component.candles[1].c).toBe('103');
-
-    tick(1000);
-
-    // The tail of a burst lands on its own rather than sitting invisible
-    // until the next trade prints.
-    expect(cdr.markForCheck).toHaveBeenCalledTimes(2);
-    component.ngOnDestroy();
-  }));
-
-  it('keeps the closing print of a bar that rolls over mid-window', fakeAsync(() => {
-    const { component, frames } = watching([at(1000), at(61_000)]);
-
-    frames.next(at(61_000, '111'));
-    frames.next(at(121_000));
-
-    // Rationing the frames themselves would have dropped the close and left
-    // the bar quoting whatever streamed last. The fold runs ahead of the
-    // throttle, so only the redraw is rationed and the dataset stays exact.
-    expect(component.candles.length).toBe(3);
-    expect(component.candles[1].c).toBe('111');
-
-    tick(1000);
-    component.ngOnDestroy();
-  }));
-
-  it('prepends earlier candles without dropping the ones already on screen', () => {
-    const getCandles = jasmine.createSpy('getCandles').and.returnValue(
-      of([at(1000), at(61_000)])
-    );
-    const component = new PerpsMarketComponent(
-      null,
-      null,
-      null,
-      service({ getCandles }),
-      detector()
-    );
-    component.coin = 'ETH';
-    component.interval = '15m';
-    component.chartLoading = false;
-    component.candles = [at(61_000), at(121_000)];
-
-    component.loadEarlierCandles();
-
-    expect(getCandles).toHaveBeenCalledWith(
-      'ETH',
-      '15m',
-      PERPS_CANDLE_LIMIT,
-      61_000
-    );
-    expect(component.candles.map((item) => item.t)).toEqual([
-      1000, 61_000, 121_000,
-    ]);
-  });
-
-  it('stops paging once an earlier snapshot adds nothing new', () => {
-    const getCandles = jasmine.createSpy('getCandles').and.returnValue(
-      of([at(61_000)])
-    );
-    const component = new PerpsMarketComponent(
-      null,
-      null,
-      null,
-      service({ getCandles }),
-      detector()
-    );
-    component.coin = 'ETH';
-    component.chartLoading = false;
-    component.candles = [at(61_000), at(121_000)];
-
-    component.loadEarlierCandles();
-    component.loadEarlierCandles();
-
-    expect(getCandles).toHaveBeenCalledTimes(1);
-  });
-
-  it('paints a market it has already seen before the network answers', () => {
-    const subscribe = jasmine
-      .createSpy('subscribe')
+  it('watches the dataset the market and interval name', () => {
+    const watchDataset = jasmine
+      .createSpy('watchDataset')
       .and.returnValue(new Subject());
     const component = new PerpsMarketComponent(
       null,
       null,
       null,
-      service({
-        cachedCandles: () => [at(1000), at(61_000)],
-        getCandles: () => new Subject(),
-        subscribe,
-      }),
+      service(),
+      datasets({ watchDataset }),
       detector()
     );
-    component.coin = 'ETH';
+    component.coin = 'xyz:SNDK';
+    component.interval = '1h';
 
-    (component as any).loadCandles();
+    (component as any).watchDataset();
 
-    // The snapshot is still in flight, and the chart is already drawn.
+    expect(watchDataset).toHaveBeenCalledWith('xyz:SNDK', '1h');
+    component.ngOnDestroy();
+  });
+
+  it('shows the bars the dataset reports', () => {
+    const { component, states } = showing();
+
+    states.next(state({ candles: [ethCandle({ t: 1000 })] }));
+
+    expect(component.candles.map((candle) => candle.t)).toEqual([1000]);
     expect(component.chartLoading).toBeFalse();
-    expect(component.candles.map((item) => item.t)).toEqual([1000, 61_000]);
-    // Frames start with the paint rather than with the answer, so bars drawn
-    // from memory cannot sit still while the request behind them is slow.
-    expect(subscribe).toHaveBeenCalledWith({
-      type: 'candle',
-      coin: 'ETH',
-      interval: '15m',
-    });
+    expect(component.chartLoadError).toBeFalse();
+    expect(component.chartRecoveryError).toBeFalse();
     component.ngOnDestroy();
   });
 
-  it('merges the snapshot into what it painted from memory', () => {
-    const component = new PerpsMarketComponent(
-      null,
-      null,
-      null,
-      service({
-        cachedCandles: () => [at(1000), at(61_000)],
-        getCandles: () => of([at(61_000, '111'), at(121_000)]),
-      }),
-      detector()
-    );
-    component.coin = 'ETH';
+  it('reads each kind of dataset state as its own screen', () => {
+    const { component, states } = showing();
 
-    (component as any).loadCandles();
+    states.next(state({ availability: 'loading', candles: [] }));
+    expect(component.chartLoading).toBeTrue();
 
-    // Replacing would drop the first bar and move the dataset's starting
-    // point, which is what the chart reads as a different dataset.
-    expect(component.candles.map((item) => item.t)).toEqual([
-      1000, 61_000, 121_000,
-    ]);
-    expect(component.candles[1].c).toBe('111');
+    states.next(state({ availability: 'unavailable', candles: [] }));
+    expect(component.chartLoading).toBeFalse();
+    expect(component.chartLoadError).toBeTrue();
+
+    // Bars are live again, but the ones that closed while the feed was down
+    // are still missing — a different message from a chart that failed.
+    states.next(state({ availability: 'gapped' }));
+    expect(component.chartLoadError).toBeFalse();
+    expect(component.chartRecoveryError).toBeTrue();
+
+    states.next(state());
+    expect(component.chartRecoveryError).toBeFalse();
     component.ngOnDestroy();
   });
 
-  it('lets a live frame received during a snapshot win the same timestamp', () => {
-    const snapshot = new Subject<PerpsCandle[]>();
-    const frames = new Subject<PerpsCandle>();
-    const component = new PerpsMarketComponent(
-      null,
-      null,
-      null,
-      service({
-        cachedCandles: () => [at(1000), at(61_000, '101')],
-        getCandles: () => snapshot,
-        subscribe: () => frames,
-      }),
-      detector()
-    );
-    component.coin = 'ETH';
+  it('takes every state but redraws once a second', fakeAsync(() => {
+    const { component, states, cdr } = showing();
+    // Settle on a kind first: this measures the rationing, not the change of
+    // kind that always marks at once.
+    states.next(state({ candles: [ethCandle({ t: 1000 })] }));
+    cdr.markForCheck.calls.reset();
 
-    (component as any).loadCandles();
-    frames.next(at(61_000, '111'));
-    snapshot.next([at(61_000, '105')]);
+    states.next(state({ candles: [ethCandle({ t: 61_000 })] }));
+    states.next(state({ candles: [ethCandle({ t: 121_000 })] }));
 
-    // REST may have been produced before the websocket frame even when its
-    // response lands later. The live frame is the newer statement.
-    expect(component.candles[1].c).toBe('111');
-    component.ngOnDestroy();
-  });
+    // Under OnPush each frame would otherwise have the page checked and the
+    // canvas repainted to move one bar by a pixel.
+    expect(cdr.markForCheck).not.toHaveBeenCalled();
+    // What the page holds is still exact between redraws.
+    expect(component.candles.map((candle) => candle.t)).toEqual([121_000]);
 
-  it('collapses a burst of interval taps into one more snapshot', fakeAsync(() => {
-    const getCandles = jasmine.createSpy('getCandles').and.returnValue(of([]));
-    const component = new PerpsMarketComponent(
-      null,
-      null,
-      { getStorage: () => of('15m'), setStorage: () => undefined } as any,
-      service({ getCandles }),
-      detector()
-    );
-    component.coin = 'ETH';
-    (component as any).loadChartInterval();
-    getCandles.calls.reset();
+    tick(1000);
 
-    component.selectInterval('1m');
-    component.selectInterval('5m');
-    component.selectInterval('1h');
-    tick(300);
-
-    // Hyperliquid charges a candle snapshot by the bar, so three taps in a
-    // second must not be three of the priciest request this page makes. Only
-    // the interval the user settled on is asked for.
-    expect(getCandles).toHaveBeenCalledTimes(1);
-    expect(getCandles).toHaveBeenCalledWith('ETH', '1h');
+    expect(cdr.markForCheck).toHaveBeenCalledTimes(1);
     component.ngOnDestroy();
   }));
 
-  it('remembers the dataset for the next visit to this market', () => {
-    const rememberCandles = jasmine.createSpy('rememberCandles');
-    const component = new PerpsMarketComponent(
-      null,
-      null,
-      null,
-      service({
-        rememberCandles,
-        getCandles: () => of([at(1000), at(61_000)]),
-      }),
-      detector()
-    );
-    component.coin = 'ETH';
+  it('marks the view at once when the dataset changes kind', fakeAsync(() => {
+    const { component, states, cdr } = showing();
+    states.next(state());
+    cdr.markForCheck.calls.reset();
+
+    states.next(state({ availability: 'gapped' }));
+
+    // A chart that has just lost its closed bars is not news that can wait
+    // for the next throttle window.
+    expect(cdr.markForCheck).toHaveBeenCalled();
+    component.ngOnDestroy();
+    tick(1000);
+  }));
+
+  it('asks the dataset for earlier bars at the left edge', () => {
+    const { component, loadEarlier } = showing();
     component.interval = '15m';
 
-    (component as any).loadCandles();
+    component.loadEarlierCandles();
 
-    expect(rememberCandles).toHaveBeenCalledWith('ETH', '15m', [
-      at(1000),
-      at(61_000),
-    ]);
+    // Whether there is anything further back to ask for is not the page's
+    // bookkeeping any more.
+    expect(loadEarlier).toHaveBeenCalledWith('ETH', '15m');
     component.ngOnDestroy();
   });
 
@@ -496,7 +358,8 @@ describe('PerpsMarketComponent candle intervals', () => {
       null,
       null,
       { getStorage: () => of(saved), setStorage } as any,
-      service({ getCandles: () => of([]) }),
+      service(),
+      datasets(),
       cdr
     );
     component.coin = 'ETH';
@@ -542,23 +405,27 @@ describe('PerpsMarketComponent candle intervals', () => {
   });
 
   it('ignores a stored interval this build no longer ships', () => {
-    const getCandles = jasmine.createSpy('getCandles').and.returnValue(of([]));
+    const watchDataset = jasmine
+      .createSpy('watchDataset')
+      .and.returnValue(new Subject());
     const component = new PerpsMarketComponent(
       null,
       null,
       { getStorage: () => of('4h'), setStorage: () => undefined } as any,
-      service({ getCandles }),
+      service(),
+      datasets({ watchDataset }),
       detector()
     );
     component.coin = 'ETH';
 
     // Storage answers with whatever an older build wrote. `4h` is a plausible
-    // interval this one does not carry, and it must not reach the service:
+    // interval this one does not carry, and it must not reach the dataset:
     // sizing a request window from it throws before the subscription exists,
     // so the chart would spin forever with no error path to land in.
     expect(() => (component as any).loadChartInterval()).not.toThrow();
     expect(component.interval).toBe('15m');
-    expect(getCandles).toHaveBeenCalledWith('ETH', '15m');
+    expect(watchDataset).toHaveBeenCalledWith('ETH', '15m');
+    component.ngOnDestroy();
   });
 
   it('rejects a stored value that is a label rather than a protocol value', () => {
@@ -594,178 +461,6 @@ describe('PerpsMarketComponent candle intervals', () => {
   });
 });
 
-describe('PerpsMarketComponent feed recovery', () => {
-  const at = (t: number, close = '100'): PerpsCandle =>
-    ethCandle({ t, T: t + 59_999, c: close });
-
-  function reconnecting(initialSnapshot: any, recoverySnapshot: any) {
-    const state = new Subject<string>();
-    const getCandles = jasmine
-      .createSpy('getCandles')
-      .and.returnValues(initialSnapshot, recoverySnapshot);
-    const getCandleRange = jasmine
-      .createSpy('getCandleRange')
-      .and.returnValue(recoverySnapshot);
-    const component = new PerpsMarketComponent(
-      { params: of({ coin: 'ETH' }) } as any,
-      null,
-      { getStorage: () => of(undefined), setStorage: () => undefined } as any,
-      service({
-        watchConnectionState: () => state,
-        watchMarketDetail: () => new Subject(),
-        getCandles,
-        getCandleRange,
-        intervalMs: () => 60_000,
-      }),
-      detector()
-    );
-    component.ngOnInit();
-    return { component, state, getCandles, getCandleRange };
-  }
-
-  it('fills the bars that closed while the feed was down', () => {
-    spyOn(Date, 'now').and.returnValue(181_500);
-    const { component, state, getCandles, getCandleRange } = reconnecting(
-      of([at(1000), at(61_000)]),
-      of([at(121_000), at(181_000)])
-    );
-
-    state.next('stale');
-    state.next('live');
-
-    // A reconnected socket replays the subscription but streams only the bar
-    // open right now, so the bars in between arrive from a fresh snapshot —
-    // merged in, since reloading would drop the two already on screen.
-    expect(getCandles).toHaveBeenCalledTimes(1);
-    expect(getCandleRange).toHaveBeenCalledWith(
-      'ETH',
-      '15m',
-      61_000,
-      181_500
-    );
-    expect(component.candles.map((item) => item.t)).toEqual([
-      1000, 61_000, 121_000, 181_000,
-    ]);
-    component.ngOnDestroy();
-  });
-
-  it('loads from scratch when the drop left nothing on screen', fakeAsync(() => {
-    const { component, state, getCandles } = reconnecting(
-      of([]),
-      of([at(121_000)])
-    );
-
-    state.next('stale');
-    state.next('live');
-    // A full load is a snapshot request like any other, so it waits out the
-    // window the first one opened rather than following it immediately.
-    tick(300);
-
-    expect(getCandles).toHaveBeenCalledTimes(2);
-    expect(component.candles.map((item) => item.t)).toEqual([121_000]);
-    component.ngOnDestroy();
-  }));
-
-  it('waits rather than topping up a snapshot still in flight', () => {
-    const first = new Subject<PerpsCandle[]>();
-    const { component, state, getCandles, getCandleRange } = reconnecting(
-      first,
-      of([at(121_000)])
-    );
-
-    state.next('stale');
-    state.next('live');
-
-    // The first load is a REST request, which the socket dropping does not
-    // cancel. Racing a second one against it would have two answers landing
-    // in either order.
-    expect(getCandles).toHaveBeenCalledTimes(1);
-    expect(getCandleRange).not.toHaveBeenCalled();
-
-    first.next([at(61_000)]);
-
-    // The transition is remembered and runs as soon as the first snapshot
-    // settles; otherwise a disconnect during loading permanently loses bars.
-    expect(getCandleRange).toHaveBeenCalledTimes(1);
-    component.ngOnDestroy();
-  });
-
-  it('leaves a live feed alone when it never went stale', () => {
-    const { component, state, getCandles } = reconnecting(
-      of([at(1000)]),
-      of([at(61_000)])
-    );
-
-    state.next('connecting');
-    state.next('live');
-
-    expect(getCandles).toHaveBeenCalledTimes(1);
-    component.ngOnDestroy();
-  });
-
-  it('reloads the available dataset when the gap exceeds 5000 bars', () => {
-    spyOn(Date, 'now').and.returnValue(6001 * 60_000);
-    const recent = [at(5001 * 60_000), at(6000 * 60_000)];
-    const { component, state, getCandleRange } = reconnecting(
-      of([at(0)]),
-      of(recent)
-    );
-
-    state.next('stale');
-    state.next('live');
-
-    expect(getCandleRange).toHaveBeenCalledWith(
-      'ETH',
-      '15m',
-      1001 * 60_000,
-      6001 * 60_000
-    );
-    // Keeping the bar at t=0 would pretend the unavailable middle is intact.
-    expect(component.candles).toEqual(recent);
-    component.ngOnDestroy();
-  });
-
-  it('marks a failed gap fill as an interrupted chart', () => {
-    const { component, state } = reconnecting(
-      of([at(1000)]),
-      throwError(() => new Error('offline'))
-    );
-
-    state.next('stale');
-    state.next('live');
-
-    expect(component.chartRecoveryError).toBeTrue();
-    component.ngOnDestroy();
-  });
-
-  it('drops a gap-fill answer after the candle dataset changes', () => {
-    const range = new Subject<PerpsCandle[]>();
-    const component = new PerpsMarketComponent(
-      null,
-      null,
-      null,
-      service({
-        getCandleRange: () => range,
-        getCandles: () => of([at(500_000)]),
-        intervalMs: () => 60_000,
-      }),
-      detector()
-    );
-    component.coin = 'ETH';
-    component.interval = '1m';
-    component.chartLoading = false;
-    component.candles = [at(1000), at(61_000)];
-    (component as any).recoverCandles();
-
-    component.interval = '5m';
-    (component as any).loadCandles();
-    range.next([at(121_000), at(181_000)]);
-
-    expect(component.candles).toEqual([at(500_000)]);
-    component.ngOnDestroy();
-  });
-});
-
 describe('PerpsMarketComponent change detection', () => {
   // OnPush trades automatic checks for explicit ones, so the failure mode is
   // a screen that quietly stops moving. These pin the paths that feed it.
@@ -779,8 +474,8 @@ describe('PerpsMarketComponent change detection', () => {
       service({
         watchConnectionState: () => state,
         watchMarketDetail: () => new Subject(),
-        getCandles: () => of([]),
       }),
+      datasets(),
       cdr
     );
 
@@ -798,7 +493,8 @@ describe('PerpsMarketComponent change detection', () => {
     const feed = new Subject<PerpsMarket>();
     const component = new PerpsMarketComponent(null, null, null, {
       watchMarketDetail: () => feed,
-    } as any, cdr);
+    } as any,
+ datasets(), cdr);
     component.coin = 'ETH';
     (component as any).loadMarket();
 
@@ -814,7 +510,8 @@ describe('PerpsMarketComponent change detection', () => {
       .and.returnValue(throwError(() => new Error('429')));
     const component = new PerpsMarketComponent(null, null, null, {
       watchMarketDetail,
-    } as any, detector());
+    } as any,
+ datasets(), detector());
     component.coin = 'ETH';
 
     (component as any).loadMarket();
@@ -831,7 +528,8 @@ describe('PerpsMarketComponent change detection', () => {
     const cdr = detector();
     const component = new PerpsMarketComponent(null, null, null, {
       watchMarketDetail: () => of(null),
-    } as any, cdr);
+    } as any,
+ datasets(), cdr);
     component.coin = 'NOPE';
 
     (component as any).loadMarket();
@@ -842,7 +540,7 @@ describe('PerpsMarketComponent change detection', () => {
 
   it('marks the view on every countdown tick', () => {
     const cdr = detector();
-    const component = new PerpsMarketComponent(null, null, null, null, cdr);
+    const component = new PerpsMarketComponent(null, null, null, null, datasets(), cdr);
 
     (component as any).tickCountdown();
 
@@ -878,7 +576,7 @@ describe('PerpsMarketComponent coin switcher', () => {
 
   it('marks the view so the menu appears under OnPush', () => {
     const cdr = detector();
-    const component = new PerpsMarketComponent(null, null, null, null, cdr);
+    const component = new PerpsMarketComponent(null, null, null, null, datasets(), cdr);
 
     component.toggleCoinMenu();
 
@@ -894,8 +592,8 @@ describe('PerpsMarketComponent coin switcher', () => {
       service({
         watchConnectionState: () => new Subject(),
         watchMarketDetail: () => new Subject(),
-        getCandles: () => of([]),
       }),
+      datasets(),
       detector()
     );
     component.ngOnInit();
@@ -922,8 +620,8 @@ describe('PerpsMarketComponent route changes', () => {
       service({
         watchConnectionState: () => new Subject(),
         watchMarketDetail: () => feed,
-        getCandles: () => of([]),
       }),
+      datasets(),
       cdr
     );
     component.ngOnInit();

@@ -14,10 +14,8 @@ import {
   formatBalance,
   isNegativeExact,
   MISSING_DISPLAY,
-  mergeCandles,
   priceDecimals,
 } from './perps.util';
-import { ethCandle } from './perps.test-fixture';
 
 describe('perps sign test', () => {
   it('answers on the decimal itself rather than on a float of it', () => {
@@ -272,47 +270,6 @@ describe('perps utilities', () => {
 
     it('reads most perps sensibly without a market to consult', () => {
       expect(chartPriceDecimals(undefined)).toBe(4);
-    });
-  });
-
-  describe('mergeCandles', () => {
-    const at = (t: number, close = '100') =>
-      ethCandle({ t, T: t + 59_999, c: close });
-
-    it('fills the bars a dropped feed missed', () => {
-      const onScreen = [at(1000), at(61_000)];
-      const snapshot = [at(61_000, '111'), at(121_000), at(181_000)];
-
-      expect(mergeCandles(onScreen, snapshot).map((item) => item.t)).toEqual([
-        1000, 61_000, 121_000, 181_000,
-      ]);
-    });
-
-    it('believes the snapshot where both carry the same bar', () => {
-      // A bar's closing print is not the last value that streamed while it was
-      // still open, so the later reading of it wins.
-      const merged = mergeCandles([at(61_000, '100')], [at(61_000, '111')]);
-
-      expect(merged.length).toBe(1);
-      expect(merged[0].c).toBe('111');
-    });
-
-    it('keeps history the snapshot no longer reaches back to', () => {
-      const paged = [at(1000), at(61_000)];
-
-      // The first bar is the dataset's identity to the chart: losing it
-      // redraws the series and throws away the zoom the user chose.
-      expect(mergeCandles(paged, [at(121_000)])[0].t).toBe(1000);
-    });
-
-    it('answers with the snapshot when there is nothing on screen', () => {
-      expect(mergeCandles([], [at(1000)]).map((item) => item.t)).toEqual([1000]);
-    });
-
-    it('leaves the dataset untouched when the snapshot is empty', () => {
-      const onScreen = [at(1000)];
-
-      expect(mergeCandles(onScreen, [])).toBe(onScreen);
     });
   });
 

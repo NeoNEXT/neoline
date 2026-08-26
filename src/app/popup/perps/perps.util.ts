@@ -1,5 +1,4 @@
 import {
-  PerpsCandle,
   PERPS_PRICE_MAX_DECIMALS,
 } from '@popup/_lib/perps';
 import BigNumber from 'bignumber.js';
@@ -199,33 +198,6 @@ export function chartPriceDecimals(szDecimals?: number): number {
   return szDecimals === undefined
     ? 4
     : Math.max(0, PERPS_PRICE_MAX_DECIMALS - szDecimals);
-}
-
-/**
- * Fold a fresh snapshot into the candles already on screen.
- *
- * A socket that comes back streams the bar that is open now and nothing else,
- * so every bar that closed while the feed was down is a hole the stream will
- * never fill on its own. Merging by open time rather than replacing keeps the
- * history the user paged in, and lets the newer copy of a bar win: a bar's
- * final OHLCV differs from the last value that streamed while it was still
- * open.
- */
-export function mergeCandles(
-  existing: PerpsCandle[],
-  incoming: PerpsCandle[]
-): PerpsCandle[] {
-  if (!existing?.length) {
-    return incoming ? [...incoming] : [];
-  }
-  if (!incoming?.length) {
-    return existing;
-  }
-  const byTime = new Map<number, PerpsCandle>();
-  existing.forEach((candle) => byTime.set(candle.t, candle));
-  // Second, so an overlapping bar is taken from the snapshot.
-  incoming.forEach((candle) => byTime.set(candle.t, candle));
-  return Array.from(byTime.values()).sort((a, b) => a.t - b.t);
 }
 
 /**

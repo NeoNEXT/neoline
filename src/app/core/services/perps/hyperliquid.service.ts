@@ -55,7 +55,6 @@ import {
   PERPS_BUILDER_ADDRESS,
   PERPS_BUILDER_FEE_TENTHS_BPS,
   PERPS_BUILDER_MAX_FEE_RATE,
-  PERPS_CANDLE_LIMIT,
   PERPS_DEPOSIT_CONFIG,
   PERPS_HIP3_DEXES,
 } from '@popup/_lib/perps';
@@ -256,16 +255,6 @@ export class HyperliquidService {
    */
   private readonly channelTeardownMs = 500;
   private channelTeardowns = new Map<string, any>();
-  /**
-   * The candles last shown for a market and interval.
-   *
-   * Keyed by both because they name different datasets, and kept only for the
-   * session: this is what lets a market the user already opened paint before
-   * the network answers, not a store of history.
-   */
-  private candleCache = new Map<string, PerpsCandle[]>();
-  /** Entries are bounded; each dataset itself remains append-only while cached. */
-  private readonly candleCacheEntries = 8;
   /** Accounts whose builder-fee approval this session has already confirmed. */
   private builderFeeApproved = new Set<string>();
   /**
@@ -1537,25 +1526,6 @@ export class HyperliquidService {
     return parsed.isFinite() ? (parsed.isZero() ? '0' : parsed.toFixed()) : '0';
   }
 
-  /**
-   * Historical candles. Hyperliquid returns at most the 5000 most recent candles
-   * and ignores ranges beyond that, so `limit` only trims the tail we render.
-   *
-   * `endTime` pages backward from an already-loaded bar: the chart asks for
-   * the window that ends there rather than always taking "now".
-   */
-  getCandles(
-    coin: string,
-    interval: PerpsCandleInterval,
-    limit = PERPS_CANDLE_LIMIT,
-    endTime = Date.now()
-  ): Observable<PerpsCandle[]> {
-    const startTime = endTime - this.intervalMs(interval) * limit;
-    return this.getCandleRange(coin, interval, startTime, endTime).pipe(
-      map((res) => res.slice(-limit))
-    );
-  }
-
   /** Historical candles for an explicit exchange-time range. */
   getCandleRange(
     coin: string,
@@ -1567,57 +1537,6 @@ export class HyperliquidService {
       type: 'candleSnapshot',
       req: { coin, interval, startTime, endTime },
     }).pipe(map((res) => (Array.isArray(res) ? res : [])));
-  }
-
-  /**
-   * Candles already seen for this market and interval, or `null` when what is
-   * held is too old to put on screen.
-   *
-   * Freshness is measured in bars rather than in seconds: a 1m chart is out of
-   * date within minutes while a 1d chart is not. One missed bar plus transport
-   * jitter is tolerated, which is where the half comes from; past that the gap
-   * would be visible and a snapshot is the honest answer.
-   */
-  cachedCandles(
-    coin: string,
-    interval: PerpsCandleInterval
-  ): PerpsCandle[] | null {
-    const cached = this.candleCache.get(this.candleCacheKey(coin, interval));
-    const last = cached?.[cached.length - 1];
-    if (!last) {
-      return null;
-    }
-    return Date.now() - last.t <= this.intervalMs(interval) * 2.5
-      ? cached
-      : null;
-  }
-
-  /**
-   * Remember what the chart is showing, for the next visit to this market.
-   *
-   * The caller's array is stored as it is rather than copied: it is already
-   * replaced rather than mutated on every update, so the two cannot drift.
-   */
-  rememberCandles(
-    coin: string,
-    interval: PerpsCandleInterval,
-    candles: PerpsCandle[]
-  ) {
-    if (!coin || !candles?.length) {
-      return;
-    }
-    const key = this.candleCacheKey(coin, interval);
-    // Re-inserting moves the key to the end, which keeps the map in
-    // least-recently-used order and makes the first key the one to drop.
-    this.candleCache.delete(key);
-    this.candleCache.set(key, candles);
-    while (this.candleCache.size > this.candleCacheEntries) {
-      this.candleCache.delete(this.candleCache.keys().next().value);
-    }
-  }
-
-  private candleCacheKey(coin: string, interval: PerpsCandleInterval): string {
-    return `${coin}:${interval}`;
   }
 
   getUserFills(address: string): Observable<PerpsFill[]> {
@@ -1708,31 +1627,6 @@ export class HyperliquidService {
       throw new Error(`Hyperliquid ${label} exceeds uint64`);
     }
     return parsed;
-  }
-
-  /**
-   * How long one candle of this interval covers.
-   *
-   * Case is the whole game here: `m` is a minute and `M` is a month, and an
-   * unknown unit must not quietly fall back to either. A month has no fixed
-   * length, so thirty days sizes the request window and nothing else — the
-   * exchange still decides where its monthly bars begin and end.
-   */
-  intervalMs(interval: PerpsCandleInterval): number {
-    const unit = interval.slice(-1);
-    const value = Number(interval.slice(0, -1));
-    const table = {
-      m: 60e3,
-      h: 3600e3,
-      d: 86400e3,
-      w: 7 * 86400e3,
-      M: 30 * 86400e3,
-    };
-    const unitMs = table[unit];
-    if (!unitMs) {
-      throw new Error(`Unsupported Hyperliquid candle interval: ${interval}`);
-    }
-    return value * unitMs;
   }
 
   //#endregion

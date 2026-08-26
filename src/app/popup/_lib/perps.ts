@@ -438,6 +438,35 @@ export function isCandleInterval(value: unknown): value is PerpsCandleInterval {
 }
 
 /**
+ * How long one candle of this interval covers.
+ *
+ * Case is the whole game here: `m` is a minute and `M` is a month, and an
+ * unknown unit must not quietly fall back to either. A month has no fixed
+ * length, so thirty days sizes the request window and nothing else — the
+ * exchange still decides where its monthly bars begin and end.
+ *
+ * Lives beside the intervals themselves rather than on the feed: it reads a
+ * protocol value and returns a duration, which is true of the interval and
+ * not of any one transport.
+ */
+export function perpsIntervalMs(interval: PerpsCandleInterval): number {
+  const unit = interval.slice(-1);
+  const value = Number(interval.slice(0, -1));
+  const table = {
+    m: 60e3,
+    h: 3600e3,
+    d: 86400e3,
+    w: 7 * 86400e3,
+    M: 30 * 86400e3,
+  };
+  const unitMs = table[unit];
+  if (!unitMs) {
+    throw new Error(`Unsupported Hyperliquid candle interval: ${interval}`);
+  }
+  return value * unitMs;
+}
+
+/**
  * How each interval is written on screen.
  *
  * Display and protocol are deliberately separate strings. Hyperliquid's daily
