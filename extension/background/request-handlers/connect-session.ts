@@ -186,13 +186,18 @@ const accountPublicKey: RequestHandlerModule = {
 
 const authenticate: RequestHandlerModule = {
   targets: [requestTargetN3.Authenticate],
-  handle: async ({ request, sendResponse }) => {
+  handle: async ({ request, sender, sendResponse }) => {
     const params = request.parameter;
     const localData =
       (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
     const newData = { ...localData, [request.ID]: params };
     setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
-    createWindow(`neo3-authenticate?messageID=${request.ID}`);
+    // NEP-20 binds the signature to a domain, so the confirmation window has to
+    // check the challenge against the trusted sender, not the page's own claim.
+    const hostname = getTrustedHostname(sender);
+    createWindow(
+      `neo3-authenticate?messageID=${request.ID}&hostname=${encodeURIComponent(hostname)}`
+    );
 
     sendResponse('');
     return;

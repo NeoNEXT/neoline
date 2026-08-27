@@ -7,7 +7,14 @@ import { ChromeService, GlobalService } from '@/app/core';
 import { AppState } from '@/app/reduers';
 import { requestTargetN3 } from '@/models/dapi_neo3';
 import { ERRORS } from '@/models/dapi';
-import { N3MainnetNetwork, N3TestnetNetwork, STORAGE_NAME, Wallet3 } from '../../_lib';
+import {
+  buildNep20AuthenticationSignData,
+  isNep20ChallengeFresh,
+  isNep20DomainTrusted,
+  selectNep20Network,
+  NEP20_AUTHENTICATION_ACTION,
+} from '@cross-runtime/neo3-sign-data';
+import { RpcNetwork, STORAGE_NAME, Wallet3 } from '../../_lib';
 
 interface AuthenticationChallengePayload {
   action: 'Authentication';
@@ -37,13 +44,18 @@ export class PopupNoticeNeo3AuthenticateComponent implements OnInit {
   private messageID = 0;
   private invokeArgsArray;
   payload: AuthenticationChallengePayload;
-  displayNetworks: string;
-  private signHex = '';
-  private responseTimestamp: number;
+  displayNetwork: string;
+  // The hostname the browser reports for the caller, not the one the page claims.
+  private hostname = '';
+  private checked = false;
+  // The network we sign and return: supported by both the challenge and the wallet.
+  private signNetwork: number;
 
   private accountSub: Unsubscribable;
   public address: string;
   currentWallet: Wallet3;
+  private n3Networks: RpcNetwork[];
+  private currentNetwork: number;
   private neo3WIFArr: string[];
   private neo3WalletArr: Wallet3[];
 
@@ -57,14 +69,18 @@ export class PopupNoticeNeo3AuthenticateComponent implements OnInit {
     this.accountSub = account$.subscribe((state) => {
       this.currentWallet = state.currentWallet as Wallet3;
       this.address = state.currentWallet?.accounts[0]?.address;
+      this.n3Networks = state.n3Networks;
+      this.currentNetwork = state.n3Networks[state.n3NetworkIndex]?.magicNumber;
       this.neo3WIFArr = state.neo3WIFArr;
       this.neo3WalletArr = state.neo3WalletArr;
+      this.checkChallenge();
     });
   }
 
   ngOnInit() {
-    this.aRouter.queryParams.subscribe(({ messageID }) => {
+    this.aRouter.queryParams.subscribe(({ messageID, hostname }) => {
       this.messageID = messageID;
+      this.hostname = hostname || '';
 
       this.chrome
         .getStorage(STORAGE_NAME.InvokeArgsArray)
@@ -74,7 +90,7 @@ export class PopupNoticeNeo3AuthenticateComponent implements OnInit {
           if (!this.payload) {
             return;
           }
-          this.displayNetworks = this.getNetworkNames(this.payload.networks);
+          this.checkChallenge();
         });
     });
 
@@ -99,42 +115,51 @@ export class PopupNoticeNeo3AuthenticateComponent implements OnInit {
 
   authenticate() {
     if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-      this.chrome.windowCallback(
-        {
-          error: {
-            ...ERRORS.UNSUPPORTED,
-            description:
-              'Hardware wallets do not support ECDSA-P256 authentication signatures yet.',
-          },
-          return: requestTargetN3.Authenticate,
-          ID: this.messageID,
-        },
-        true,
+      this.reject(
+        ERRORS.UNSUPPORTED,
+        'Hardware wallets do not support ECDSA-P256 authentication signatures yet.',
       );
       return;
     }
 
-    this.responseTimestamp = Math.floor(Date.now() / 1000);
-    this.signHex = this.buildAuthenticationData(this.responseTimestamp);
+    // The window may have been open for a while; a challenge that went stale
+    // meanwhile would only be rejected by the server.
+    if (!isNep20ChallengeFresh(this.payload.timestamp, this.nowInSeconds())) {
+      this.reject(
+        ERRORS.MALFORMED_INPUT,
+        'The authentication challenge has expired, please request a new one.',
+      );
+      return;
+    }
+
+    const responseTimestamp = this.nowInSeconds();
+    const signHex = buildNep20AuthenticationSignData({
+      nonce: this.payload.nonce,
+      timestamp: responseTimestamp,
+      network: this.signNetwork,
+      address: this.address,
+      action: this.payload.action || NEP20_AUTHENTICATION_ACTION,
+      domain: this.payload.domain,
+    });
 
     this.global
       .getWIF(this.neo3WIFArr, this.neo3WalletArr, this.currentWallet)
       .then((wif) => {
         const privateKey = wallet.getPrivateKeyFromWIF(wif);
         const publicKey = wallet.getPublicKeyFromPrivateKey(privateKey);
-        const signature = wallet.sign(this.signHex, privateKey);
-        this.sendMessage(signature, publicKey, this.responseTimestamp);
+        const signature = wallet.sign(signHex, privateKey);
+        this.sendMessage(signature, publicKey, responseTimestamp);
       });
   }
 
   private sendMessage(
     signatureHex: string,
     publicKey: string,
-    responseTimestamp = Math.floor(Date.now() / 1000),
+    responseTimestamp: number,
   ) {
     const response: AuthenticationResponsePayload = {
       algorithm: 'ECDSA-P256',
-      network: this.payload.networks[0],
+      network: this.signNetwork,
       pubkey: publicKey,
       address: this.address,
       nonce: this.payload.nonce,
@@ -152,47 +177,71 @@ export class PopupNoticeNeo3AuthenticateComponent implements OnInit {
     );
   }
 
-  private buildAuthenticationData(responseTimestamp: number): string {
-    const networkHex = this.toLittleEndianHex(this.payload.networks[0], 4);
-    const nonceHex = this.toLittleEndianHex(this.payload.nonce, 8);
-    const timestampHex = this.toLittleEndianHex(responseTimestamp, 4);
-    const hashHex = wallet.getScriptHashFromAddress(this.address).replace(/^0x/i, '');
+  /**
+   * Runs once the challenge and the account state are both available: the user
+   * must never be asked to approve a challenge we would refuse to honour.
+   */
+  private checkChallenge() {
+    if (this.checked || !this.payload || !this.address) {
+      return;
+    }
+    this.checked = true;
 
-    return networkHex + nonceHex + timestampHex + hashHex;
-  }
-
-  private toLittleEndianHex(value: number | string, bytes: number): string {
-    let bigintValue: bigint;
-    try {
-      bigintValue = BigInt(value);
-    } catch {
-      throw new Error(`Invalid integer value: ${value}`);
+    if (!isNep20DomainTrusted(this.payload.domain, this.hostname)) {
+      this.reject(
+        ERRORS.MALFORMED_INPUT,
+        `The challenge domain '${this.payload.domain}' does not belong to the requesting site '${this.hostname}'.`,
+      );
+      return;
     }
 
-    const maxValue = 1n << BigInt(bytes * 8);
-    if (bigintValue < 0 || bigintValue >= maxValue) {
-      throw new Error(`Value out of range for ${bytes} bytes: ${value}`);
+    if (!isNep20ChallengeFresh(this.payload.timestamp, this.nowInSeconds())) {
+      this.reject(
+        ERRORS.MALFORMED_INPUT,
+        'The authentication challenge has expired, please request a new one.',
+      );
+      return;
     }
 
-    return bigintValue
-      .toString(16)
-      .padStart(bytes * 2, '0')
-      .match(/.{2}/g)
-      .reverse()
-      .join('');
+    const network = selectNep20Network(
+      this.payload.networks,
+      this.n3Networks.map((item) => item.magicNumber),
+      this.currentNetwork,
+    );
+    if (network === undefined) {
+      this.reject(
+        ERRORS.UNSUPPORTED,
+        'None of the requested networks is supported by this wallet.',
+      );
+      return;
+    }
+
+    this.signNetwork = network;
+    this.displayNetwork = this.getNetworkName(network);
   }
 
-  private getNetworkNames(networks: number[]) {
-    let networkNames = '';
-    networks.forEach((magic) => {
-      if (N3TestnetNetwork.magicNumber === magic) {
-        networkNames += `${magic}(Testnet), `;
-      } else if (N3MainnetNetwork.magicNumber === magic) {
-        networkNames += `${magic}(Mainnet), `;
-      } else {
-        networkNames += `${magic}, `;
-      }
-    });
-    return networkNames.slice(0, -2);
+  private reject(
+    error: { type: string; description: string; data?: any },
+    description: string,
+  ) {
+    this.chrome.windowCallback(
+      {
+        error: { ...error, description },
+        return: requestTargetN3.Authenticate,
+        ID: this.messageID,
+      },
+      true,
+    );
+  }
+
+  private nowInSeconds(): number {
+    return Math.floor(Date.now() / 1000);
+  }
+
+  private getNetworkName(magic: number): string {
+    const name = this.n3Networks.find(
+      (item) => item.magicNumber === magic,
+    )?.name;
+    return name ? `${magic} (${name})` : `${magic}`;
   }
 }

@@ -28,13 +28,17 @@ import {
   UInt160,
   UInt256,
 } from '../common/data_module_neo3_v2';
+import {
+  encodeNep21MessagePayload,
+  normalizeNep20Nonce,
+} from '../../cross-runtime/neo3-sign-data';
 import { checkNeoXConnectAndLogin, sendMessage } from './common';
 import { N3MainnetNetwork, N3TestnetNetwork } from '../common/constants';
 import {
   handleNeo3StackNumberValue,
   handleNeo3StackStringValue,
 } from '../common';
-import { sc, tx, u, wallet as wallet3 } from '@cityofzion/neon-core-neo3';
+import { sc, tx, wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import BigNumber from 'bignumber.js';
 import { hex2base64 } from '@cityofzion/neon-core-neo3/lib/u';
 import { TransactionAttributeJson } from '@cityofzion/neon-core-neo3/lib/tx';
@@ -78,9 +82,19 @@ class NEOLineN3Controller extends EventEmitter {
       };
     }
 
+    // The nonce is signed as a uint64, so normalise it here rather than let a
+    // lossy value reach the signature.
+    const nonce = normalizeNep20Nonce(payload.nonce);
+    if (nonce === undefined) {
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'nonce' must be a uint64 decimal string; a JavaScript number cannot represent it above 2^53`,
+      };
+    }
+
     return sendAuthorizedMessage<AuthenticationResponsePayload>(
       requestTargetN3.Authenticate,
-      payload,
+      { ...payload, nonce },
     );
   }
 
@@ -312,13 +326,21 @@ class NEOLineN3Controller extends EventEmitter {
       isTypedData: options?.isTypedData ?? false,
     };
 
+    let encodedMessage: ReturnType<typeof encodeNep21MessagePayload>;
+    try {
+      encodedMessage = encodeNep21MessagePayload(
+        message,
+        newOptions.isBase64Encoded,
+      );
+    } catch {
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'message' must be valid base64 when 'options.isBase64Encoded' is true`,
+      };
+    }
+
     if (newOptions.isLedgerCompatible) {
-      let hexMessage: string;
-      if (newOptions.isBase64Encoded) {
-        hexMessage = u.base642hex(message);
-      } else {
-        hexMessage = u.str2hexstring(message);
-      }
+      const hexMessage = encodedMessage.hex;
       try {
         tx.Transaction.deserialize(hexMessage);
       } catch (error) {
@@ -540,7 +562,6 @@ function assertAuthenticationPayload(payload: AuthenticationChallengePayload) {
     !Array.isArray(payload.allowed_algorithms) ||
     !payload.domain ||
     !Array.isArray(payload.networks) ||
-    !payload.nonce ||
     payload.timestamp === undefined
   ) {
     throw {
@@ -740,6 +761,14 @@ function isUint256(param: UInt256): boolean {
 }
 
 function normalizeError(legacyError: any): NEP21Error {
+  if (
+    Number.isInteger(legacyError?.code) &&
+    legacyError.code >= NEP21ErrorCode.UNKNOWN &&
+    legacyError.code <= NEP21ErrorCode.RPC_ERROR &&
+    typeof legacyError.message === 'string'
+  ) {
+    return legacyError;
+  }
   let error: NEP21Error = {
     code: NEP21ErrorCode.UNKNOWN,
     message: legacyError.description,

@@ -4,6 +4,12 @@ import { ChromeService, GlobalService } from '@/app/core';
 import { wallet, u } from '@cityofzion/neon-core-neo3';
 import { requestTargetN3 } from '@/models/dapi_neo3';
 import { ERRORS } from '@/models/dapi';
+import { NEP21ErrorCode } from '@cross-runtime/neo-dapi-error';
+import {
+  encodeNep21MessagePayload,
+  hexToUtf8,
+  utf8ToHex,
+} from '@cross-runtime/neo3-sign-data';
 import { RpcNetwork, ChainType, STORAGE_NAME } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -29,7 +35,11 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
   private invokeArgsArray;
   params: RequestParams;
   displayMessage;
+  // Printable rendering of an encoded message; the signature always covers the
+  // raw bytes, never this.
+  decodedMessage: string;
   hexMessage: string;
+  private payloadBase64: string;
 
   showHardwareSign = false;
 
@@ -59,21 +69,32 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
     });
   }
 
+  // `address` must always be the account that actually signs, because NEP-21
+  // reports it back to the caller.
   private resolveSignerWallet() {
+    const requestedAddress = this.getRequestedAddress();
+    const matched = requestedAddress
+      ? this.neo3WalletArr?.find(
+          (w) => w.accounts[0].address === requestedAddress,
+        )
+      : undefined;
+    this.signerWallet = requestedAddress ? matched : this.currentWallet;
+    this.address = this.signerWallet?.accounts[0]?.address;
+  }
+
+  private getRequestedAddress(): string {
     const accountScriptHash = this.params?.account;
-    if (accountScriptHash) {
-      const scriptHash = accountScriptHash.startsWith('0x')
-        ? accountScriptHash.slice(2)
-        : accountScriptHash;
-      const signerAddress = wallet.getAddressFromScriptHash(scriptHash);
-      const matched = this.neo3WalletArr?.find(
-        (w) => w.accounts[0].address === signerAddress,
+    if (!accountScriptHash) {
+      return '';
+    }
+    try {
+      return wallet.getAddressFromScriptHash(
+        accountScriptHash.startsWith('0x')
+          ? accountScriptHash.slice(2)
+          : accountScriptHash,
       );
-      this.signerWallet = matched ?? this.currentWallet;
-      this.address = signerAddress;
-    } else {
-      this.signerWallet = this.currentWallet;
-      this.address = this.currentWallet?.accounts[0]?.address;
+    } catch {
+      return '';
     }
   }
 
@@ -90,12 +111,16 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
             return;
           }
           this.resolveSignerWallet();
+          const payload = encodeNep21MessagePayload(
+            this.params.message,
+            this.params.options?.isBase64Encoded,
+          );
+          this.hexMessage = payload.hex;
+          this.payloadBase64 = payload.base64;
           this.displayMessage = this.formatMessage(this.params.message);
-          if (this.params.options.isBase64Encoded) {
-            this.hexMessage = u.base642hex(this.params.message);
-          } else {
-            this.hexMessage = u.str2hexstring(this.params.message);
-          }
+          this.decodedMessage = this.params.options?.isBase64Encoded
+            ? this.decodePayload(payload.hex)
+            : '';
         });
     });
     window.onbeforeunload = () => {
@@ -126,7 +151,13 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
   }
 
   signature() {
-    const signer = this.signerWallet ?? this.currentWallet;
+    const signer = this.params?.account
+      ? this.signerWallet
+      : this.signerWallet ?? this.currentWallet;
+    if (!signer?.accounts?.[0]) {
+      this.rejectSignerNotFound();
+      return;
+    }
     if (signer.accounts[0]?.extra?.ledgerSLIP44) {
       this.publicKey = signer.accounts[0]?.extra?.publicKey;
       this.showHardwareSign = true;
@@ -143,9 +174,11 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
 
   private sendMessage(SignedData: string) {
     const data = {
-      payload: this.params.message,
+      payload: this.payloadBase64,
       signature: u.hex2base64(SignedData),
-      account: this.params.account,
+      account: this.address
+        ? wallet.getScriptHashFromAddress(this.address)
+        : undefined,
       pubkey: this.publicKey,
     };
     this.chrome.windowCallback(
@@ -156,6 +189,26 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
       },
       true,
     );
+  }
+
+  private rejectSignerNotFound() {
+    this.chrome.windowCallback(
+      {
+        error: {
+          code: NEP21ErrorCode.NOTFOUND,
+          message: 'The requested signing account was not found',
+        },
+        return: requestTargetN3.SignMessageV3,
+        ID: this.messageID,
+      },
+      true,
+    );
+  }
+
+  /** Only offer a decoded preview when the bytes really are readable UTF-8. */
+  private decodePayload(hex: string): string {
+    const decoded = hexToUtf8(hex);
+    return utf8ToHex(decoded) === hex ? this.formatMessage(decoded) : '';
   }
 
   private formatMessage(message: string): string {

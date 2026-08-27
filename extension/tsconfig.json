@@ -6,7 +6,7 @@
     "sourceMap": false,
     "declaration": false,
     "target": "es2015",
-    "lib": ["dom", "es2017"],
+    "lib": ["dom", "es2017", "es2020.bigint"],
     "outDir": "../dist",
     "rootDir": "..",
     "downlevelIteration": true,

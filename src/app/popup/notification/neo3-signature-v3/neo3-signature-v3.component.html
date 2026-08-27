@@ -18,6 +18,10 @@
   <div class="content">
     <p class="hex-label">{{ "message" | translate | async }}</p>
     <p class="json-box serialize">{{ displayMessage }}</p>
+    <ng-container *ngIf="decodedMessage">
+      <p class="hex-label">UTF-8</p>
+      <p class="json-box serialize">{{ decodedMessage }}</p>
+    </ng-container>
   </div>
   <div class="btn-group">
     <button class="cancel" (click)="cancel()">

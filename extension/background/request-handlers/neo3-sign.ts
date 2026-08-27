@@ -5,6 +5,7 @@ import {
   N3InvokeArgs,
   N3InvokeMultipleArgs,
 } from '../../common/data_module_neo3';
+import { NEP21ErrorCode } from '../../common/data_module_neo3_v2';
 import { N3SendArgs } from '../../../cross-runtime/neo3-shared';
 import { ERRORS } from '../../common/data_module_neo2';
 import { NEO3, GAS3, STORAGE_NAME, WitnessScope } from '../../common/constants';
@@ -116,10 +117,29 @@ const signMessageV3: RequestHandlerModule = {
 
     const currentWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
     const currentAddress = currentWallet?.accounts?.[0]?.address;
+    let signerWallet = currentWallet;
     if (params.account) {
       const address = wallet3.getAddressFromScriptHash(
         remove0xPrefix(params.account),
       );
+      const walletArr =
+        (await getLocalStorage(STORAGE_NAME['walletArr-Neo3'], () => {})) || [];
+      signerWallet =
+        currentAddress === address
+          ? currentWallet
+          : walletArr.find((item) => item?.accounts?.[0]?.address === address);
+      if (!signerWallet) {
+        windowCallback({
+          return: requestTargetN3.SignMessageV3,
+          error: {
+            code: NEP21ErrorCode.NOTFOUND,
+            message: 'The requested signing account was not found',
+          },
+          ID: request.ID,
+        });
+        sendResponse('');
+        return;
+      }
       if (
         currentAddress !== undefined &&
         currentAddress !== address
@@ -142,7 +162,7 @@ const signMessageV3: RequestHandlerModule = {
     }
     if (
       !params.options?.isLedgerCompatible &&
-      currentWallet?.accounts?.[0]?.extra?.ledgerSLIP44
+      signerWallet?.accounts?.[0]?.extra?.ledgerSLIP44
     ) {
       windowCallback({
         return: requestTargetN3.SignMessageV3,
