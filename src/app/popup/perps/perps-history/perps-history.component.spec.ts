@@ -31,7 +31,8 @@ describe('PerpsHistoryComponent order direction', () => {
     null,
     null,
     null,
-      markets()
+      markets(),
+      null
     );
 
   it('labels non-reduce-only orders as opening long or short', () => {
@@ -65,7 +66,8 @@ describe('PerpsHistoryComponent order direction', () => {
       null,
       null,
       channel,
-      markets({ getMarkets: () => throwError(() => ({ status: 429 })) })
+      markets({ getMarkets: () => throwError(() => ({ status: 429 })) }),
+      null
     );
     (rateLimited as any).address = '0xabc';
 
@@ -88,7 +90,8 @@ describe('PerpsHistoryComponent ledger rows', () => {
     null,
     null,
     null,
-      markets()
+      markets(),
+      null
     );
   (component as any).address = WALLET;
 
@@ -184,7 +187,8 @@ describe('PerpsHistoryComponent live fills', () => {
       null,
       null,
       channel,
-      markets()
+      markets(),
+      null
     );
     (component as any).address = '0xabc';
     (component as any).watchLiveActivity();

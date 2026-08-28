@@ -11,6 +11,7 @@ import {
   GlobalService,
 } from '@/app/core';
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
+import { PerpsExchangeWriteService } from '@app/core/services/perps/perps-exchange-write.service';
 import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
 import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import { EvmWalletJSON } from '@popup/_lib/evm';
@@ -109,7 +110,8 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     private evmWallet: EvmWalletService,
     private global: GlobalService,
     private channel: PerpsDataChannel,
-    private markets$: PerpsMarketDatasetService
+    private markets$: PerpsMarketDatasetService,
+    private writes: PerpsExchangeWriteService
   ) {}
 
   ngOnInit() {
@@ -287,7 +289,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
         this.wallet,
         password
       );
-      this.hyperliquid
+      this.writes
         .cancelOrder(privateKey, market.assetId, order.oid)
         .subscribe({
           next: () => {

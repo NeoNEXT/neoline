@@ -13,8 +13,8 @@ import {
 } from '@/app/core';
 import {
   HyperliquidService,
-  PerpsExecutionStatusUnknownError,
 } from '@/app/core/services/perps/hyperliquid.service';
+import { PerpsExchangeWriteService, PerpsExecutionStatusUnknownError } from '@app/core/services/perps/perps-exchange-write.service';
 import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
 import {
@@ -148,7 +148,8 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     private depositChain: PerpsDepositChainService,
     private feeQuote: PerpsFeeQuoteService,
     private pendingDeposits: PerpsPendingDepositsService,
-    private channel: PerpsDataChannel
+    private channel: PerpsDataChannel,
+    private writes: PerpsExchangeWriteService
   ) {}
 
   ngOnInit() {
@@ -995,10 +996,15 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
         this.global.snackBarTip('perpsFeeQuoteChangedReviewAgain');
         return;
       }
-      const request: Observable<unknown> = this.hyperliquid.withdraw(
+      const request: Observable<unknown> = this.writes.withdraw(
         privateKey,
         this.address,
-        this.submissionAmount
+        this.submissionAmount,
+        // A unified account keeps its USDC in spot. An account this page could
+        // not read is treated as standard: the exchange refuses a debit the
+        // balance cannot cover, so the wrong guess costs a rejection rather
+        // than a withdrawal taken from somewhere the user did not mean.
+        { fromSpot: !!this.account?.unified }
       );
       request.subscribe({
         next: () => {

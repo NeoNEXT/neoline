@@ -12,6 +12,7 @@ import {
   GlobalService,
 } from '@/app/core';
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
+import { PerpsExchangeWriteService } from '@app/core/services/perps/perps-exchange-write.service';
 import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
 import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
 import { PerpsTradeOrderService } from '@/app/core/services/perps/perps-trade-order.service';
@@ -234,7 +235,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     private chrome: ChromeService,
     private evmWallet: EvmWalletService,
     private dialog: MatDialog,
-    private markets$: PerpsMarketDatasetService
+    private markets$: PerpsMarketDatasetService,
+    private writes: PerpsExchangeWriteService
   ) {}
 
   ngOnInit() {
@@ -245,7 +247,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         ...this.facts.feeRates,
         // Zero unless this build has a builder configured for the network, so
         // a build without one previews exactly what it will be charged.
-        builderRate: this.hyperliquid.builderAddress
+        builderRate: this.writes.builderAddress
           ? PERPS_BUILDER_FEE_RATE
           : 0,
       },
@@ -1008,7 +1010,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   private queryOrderStatus(cloid: string, attemptsLeft: number) {
     clearTimeout(this.reconciliationTimer);
     this.reconciliationTimer = setTimeout(() => {
-      this.hyperliquid.getOrderStatus(this.address, cloid).subscribe({
+      this.writes.getOrderStatus(this.address, cloid).subscribe({
         next: (result) => {
           if (result?.status === 'order') {
             this.resolveOrderStatus();

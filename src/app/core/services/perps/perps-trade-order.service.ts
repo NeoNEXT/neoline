@@ -15,7 +15,7 @@ import {
   PERPS_MIN_SLIPPAGE_PERCENT,
   perpsPriceDecimals,
 } from '@popup/_lib/perps';
-import { HyperliquidService } from './hyperliquid.service';
+import { PerpsExchangeWriteService } from './perps-exchange-write.service';
 import { PerpsAccountStateService } from './perps-account-state.service';
 import { PerpsOrder, PerpsTradeOrderError } from './perps-trade-order';
 
@@ -57,10 +57,10 @@ export class PerpsTradeOrderService {
   private readonly accounts: PerpsOrderAccounts;
 
   constructor(
-    hyperliquid: HyperliquidService,
+    writes: PerpsExchangeWriteService,
     accountStates: PerpsAccountStateService
   ) {
-    this.exchange = hyperliquid;
+    this.exchange = writes;
     this.accounts = accountStates;
   }
 

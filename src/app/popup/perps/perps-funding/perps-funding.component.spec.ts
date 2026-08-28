@@ -10,8 +10,11 @@ import { Store } from '@ngrx/store';
 import { ChromeService, EvmWalletService, GlobalService } from '@/app/core';
 import {
   HyperliquidService,
-  PerpsExecutionStatusUnknownError,
 } from '@/app/core/services/perps/hyperliquid.service';
+import {
+  PerpsExchangeWriteService,
+  PerpsExecutionStatusUnknownError,
+} from '@app/core/services/perps/perps-exchange-write.service';
 import { PerpsDepositChainService } from '@/app/core/services/perps/perps-deposit-chain.service';
 import { PerpsFeeQuoteService } from '@/app/core/services/perps/perps-fee-quote.service';
 import { PerpsPendingDepositsService } from '@/app/core/services/perps/perps-pending-deposits.service';
@@ -112,6 +115,9 @@ class TranslateStubPipe implements PipeTransform {
   }
 }
 
+const writesStub = () =>
+  jasmine.createSpyObj('PerpsExchangeWriteService', ['withdraw']);
+
 describe('PerpsFundingComponent balance line', () => {
   let fixture: ComponentFixture<PerpsFundingComponent>;
   let component: PerpsFundingComponent;
@@ -149,6 +155,7 @@ describe('PerpsFundingComponent balance line', () => {
         { provide: PerpsDepositChainService, useValue: depositChainStub() },
         { provide: PerpsFeeQuoteService, useValue: feeQuoteStub() },
         { provide: PerpsPendingDepositsService, useValue: pendingStub() },
+        { provide: PerpsExchangeWriteService, useValue: writesStub() },
       ],
     }).compileComponents();
 
@@ -216,7 +223,8 @@ describe('PerpsFundingComponent amount boundaries', () => {
       depositChainStub(),
       feeQuoteStub(),
       pendingStub(),
-      null
+      null,
+      writesStub()
     );
     component.withdrawQuote = { ...QUOTE };
   });
@@ -433,6 +441,7 @@ describe('PerpsFundingComponent amount boundaries', () => {
 describe('PerpsFundingComponent pre-submit refresh', () => {
   let component: PerpsFundingComponent;
   let hyperliquid: jasmine.SpyObj<any>;
+  let writes: jasmine.SpyObj<any>;
   let chrome: jasmine.SpyObj<any>;
   let global: jasmine.SpyObj<any>;
   let evmWallet: jasmine.SpyObj<any>;
@@ -445,12 +454,13 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
   beforeEach(() => {
     hyperliquid = jasmine.createSpyObj(
       'HyperliquidService',
-      ['getAccount', 'withdraw', 'deposit', 'subscribe', 'watchConnectionState'],
+      ['getAccount', 'deposit', 'subscribe', 'watchConnectionState'],
       { depositConfig: { decimals: 6 } }
     );
     hyperliquid.subscribe.and.returnValue(of());
     hyperliquid.watchConnectionState.and.returnValue(of('live'));
-    hyperliquid.withdraw.and.returnValue(of({}));
+    writes = jasmine.createSpyObj('PerpsExchangeWriteService', ['withdraw']);
+    writes.withdraw.and.returnValue(of({}));
     chrome = jasmine.createSpyObj('ChromeService', ['getPassword']);
     chrome.getPassword.and.returnValue(Promise.resolve('pw'));
     global = jasmine.createSpyObj('GlobalService', ['snackBarTip']);
@@ -468,7 +478,8 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
       depositChainStub(),
       feeQuoteStub(),
       pendingStub(),
-      null
+      null,
+      writes
     );
     component.tab = 'withdraw';
     component.withdrawQuote = { ...QUOTE };
@@ -490,7 +501,7 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
     expect(component.refreshFailed).toBeTrue();
     expect(component.submitting).toBeFalse();
     expect(chrome.getPassword).not.toHaveBeenCalled();
-    expect(hyperliquid.withdraw).not.toHaveBeenCalled();
+    expect(writes.withdraw).not.toHaveBeenCalled();
   });
 
   it('stops instead of quietly shrinking a typed amount when the ceiling moves', async () => {
@@ -504,7 +515,43 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
     expect(component.amount).toBe('100');
     expect(component.balanceMovedUnderInput).toBeTrue();
     expect(component.submitting).toBeFalse();
-    expect(hyperliquid.withdraw).not.toHaveBeenCalled();
+    expect(writes.withdraw).not.toHaveBeenCalled();
+  });
+
+  // Which balance a withdrawal debits is this page's to state: it is already
+  // holding the account that answers it, and the write path is told rather
+  // than looking it up.
+  it('debits spot for a unified account, whose USDC lives there', async () => {
+    component.amount = '50';
+    // A unified account's withdrawable ceiling comes from spot, not from the
+    // perps clearinghouse figure a standard account reports.
+    hyperliquid.getAccount.and.returnValue(
+      of({
+        ...account('100'),
+        unified: true,
+        spotUsdcExact: '100',
+        spotUsdcHoldExact: '0',
+      })
+    );
+
+    await component.submit();
+
+    expect(writes.withdraw.calls.mostRecent().args[3]).toEqual({
+      fromSpot: true,
+    });
+  });
+
+  it('debits perps for an account that does not report a unified mode', async () => {
+    component.amount = '50';
+    hyperliquid.getAccount.and.returnValue(of(account('100')));
+
+    await component.submit();
+
+    // The exchange refuses a debit the balance cannot cover, so this is the
+    // guess that cannot move money from a balance the user did not mean.
+    expect(writes.withdraw.calls.mostRecent().args[3]).toEqual({
+      fromSpot: false,
+    });
   });
 
   it('lets a MAX request follow the ceiling down, then asks again', async () => {
@@ -517,10 +564,10 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
     expect(component.amount).toBe('87');
     expect(component.balanceMovedUnderInput).toBeTrue();
     // Following the balance down still does not authorise the send.
-    expect(hyperliquid.withdraw).not.toHaveBeenCalled();
+    expect(writes.withdraw).not.toHaveBeenCalled();
 
     await component.submit();
-    expect(hyperliquid.withdraw).toHaveBeenCalledTimes(1);
+    expect(writes.withdraw).toHaveBeenCalledTimes(1);
   });
 
   it('proceeds when the refreshed balance still covers the amount', async () => {
@@ -531,7 +578,7 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
 
     expect(component.refreshFailed).toBeFalse();
     expect(component.balanceMovedUnderInput).toBeFalse();
-    expect(hyperliquid.withdraw).toHaveBeenCalledTimes(1);
+    expect(writes.withdraw).toHaveBeenCalledTimes(1);
   });
 
   // A response that never arrived is not a refusal. Reporting it as a failure
@@ -539,7 +586,7 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
   it('reports a lost withdrawal response as unknown rather than failed', async () => {
     component.amount = '50';
     hyperliquid.getAccount.and.returnValue(of(account('100')));
-    hyperliquid.withdraw.and.returnValue(
+    writes.withdraw.and.returnValue(
       throwError(() => new PerpsExecutionStatusUnknownError(new Error('socket hang up')))
     );
 
@@ -558,7 +605,7 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
   it('still calls an exchange refusal a failure', async () => {
     component.amount = '50';
     hyperliquid.getAccount.and.returnValue(of(account('100')));
-    hyperliquid.withdraw.and.returnValue(
+    writes.withdraw.and.returnValue(
       throwError(() => new Error('Insufficient balance for withdrawal'))
     );
 
@@ -577,7 +624,7 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
 
     await component.submit();
 
-    expect(hyperliquid.withdraw).not.toHaveBeenCalled();
+    expect(writes.withdraw).not.toHaveBeenCalled();
     expect(component.confirming).toBeTrue();
   });
 
@@ -591,7 +638,7 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
 
     // The user is paid more than the confirmation promised. Sending them back
     // to agree to a better number is friction with no question behind it.
-    expect(hyperliquid.withdraw).toHaveBeenCalled();
+    expect(writes.withdraw).toHaveBeenCalled();
     expect(component.confirming).toBeFalse();
   });
 
@@ -603,7 +650,7 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
 
     await component.submit();
 
-    expect(hyperliquid.withdraw).not.toHaveBeenCalled();
+    expect(writes.withdraw).not.toHaveBeenCalled();
     expect(component.confirming).toBeTrue();
   });
 
@@ -636,7 +683,8 @@ describe('PerpsFundingComponent submit gate', () => {
       depositChainStub(),
       feeQuoteStub(),
       pendingStub(),
-      null
+      null,
+      writesStub()
     );
     component.withdrawQuote = { ...QUOTE };
     component.accountLoading = false;
@@ -821,7 +869,8 @@ describe('PerpsFundingComponent deposit confirmation', () => {
           Promise.resolve({ feeExact: '0.2', maxFeeExact: '0.2' }),
       } as any,
       pendingStub(),
-      null
+      null,
+      writesStub()
     );
     component.tab = 'deposit';
     component.accountLoading = false;
@@ -964,7 +1013,8 @@ describe('PerpsFundingComponent withdrawal quote', () => {
         withdrawQuote: (...args: unknown[]) => withdrawQuote(...args),
       } as any,
       pendingStub(),
-      null
+      null,
+      writesStub()
     );
     component.accountLoading = false;
     component.account = {
@@ -1093,7 +1143,8 @@ describe('PerpsFundingComponent deposit authorisation lifetime', () => {
         depositQuote: (...args: unknown[]) => depositQuote(...args),
       } as any,
       pendingStub(),
-      null
+      null,
+      writesStub()
     );
     component.tab = 'deposit';
     component.accountLoading = false;

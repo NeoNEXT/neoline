@@ -17,13 +17,14 @@ function component(builderAddress = ''): PerpsOrderComponent {
     null,
     null,
     null,
-    { builderAddress } as any,
     null,
     null,
     null,
     null,
     null,
-      null
+    null,
+      null,
+      { builderAddress } as any
     );
 }
 
@@ -233,13 +234,14 @@ describe('PerpsOrderComponent submission seam', () => {
       router,
       null,
       global,
-      { builderAddress: '' } as any,
+      null,
       accountStates,
       tradeOrders,
       chrome,
       evmWallet,
       null,
-      null
+      null,
+      { builderAddress: '' } as any
     );
     value.facts = facts({
       market: {
