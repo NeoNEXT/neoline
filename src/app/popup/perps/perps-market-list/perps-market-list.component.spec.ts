@@ -10,7 +10,7 @@ describe('PerpsMarketListComponent', () => {
   const market = (overrides: Partial<PerpsMarket> = {}): PerpsMarket =>
     ethMarket({ markPxExact: '1885.8', midPxExact: '1885.7', ...overrides });
 
-  const component = () => new PerpsMarketListComponent(null, null);
+  const component = () => new PerpsMarketListComponent(null, null, null);
 
   /** The keyword arrives as an input, so searching is an `ngOnChanges`. */
   const search = (value: PerpsMarketListComponent, keyword = '') => {
@@ -156,7 +156,7 @@ describe('PerpsMarketListComponent', () => {
 
   it('reports the pick as well as routing to it', () => {
     const router = jasmine.createSpyObj('Router', ['navigateByUrl']);
-    const value = new PerpsMarketListComponent(router, null);
+    const value = new PerpsMarketListComponent(router, null, null);
     const picked: string[] = [];
     value.marketSelected.subscribe((coin) => picked.push(coin));
 

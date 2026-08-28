@@ -1,4 +1,8 @@
-import { isCandleInterval, perpsIntervalMs } from './perps';
+import {
+  isCandleInterval,
+  perpsIntervalMs,
+  resolvePerpsTestnet,
+} from './perps';
 
 describe('perps candle intervals', () => {
   it('sizes every interval the product offers', () => {
@@ -30,5 +34,17 @@ describe('perps candle intervals', () => {
     // A label rather than a protocol value, and an interval this build drops.
     expect(isCandleInterval('1D')).toBeFalse();
     expect(isCandleInterval('3d')).toBeFalse();
+  });
+});
+
+describe('resolvePerpsTestnet', () => {
+  it('uses the configured network in local builds', () => {
+    expect(resolvePerpsTestnet('mainnet', false)).toBeFalse();
+    expect(resolvePerpsTestnet('testnet', false)).toBeTrue();
+  });
+
+  it('always selects mainnet in production builds', () => {
+    expect(resolvePerpsTestnet('mainnet', true)).toBeFalse();
+    expect(resolvePerpsTestnet('testnet', true)).toBeFalse();
   });
 });

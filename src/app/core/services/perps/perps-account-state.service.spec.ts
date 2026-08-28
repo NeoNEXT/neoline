@@ -70,7 +70,7 @@ describe('PerpsAccountStateService', () => {
       }
       return channels.get(key);
     });
-    service = new PerpsAccountStateService(source);
+    service = new PerpsAccountStateService(source, source);
   });
 
   it('shares one snapshot and channel set for the same address and DEX', () => {

@@ -3,6 +3,23 @@
  * Docs: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api
  */
 
+import { environment } from '@/environments/environment';
+
+export type PerpsNetwork = 'mainnet' | 'testnet';
+
+/**
+ * Which half of `HYPERLIQUID_API` this build talks to.
+ *
+ * Testnet is a development affordance, so a production build takes mainnet no
+ * matter how the environment file is configured.
+ */
+export function resolvePerpsTestnet(
+  configuredNetwork: PerpsNetwork,
+  production = environment.production
+): boolean {
+  return !production && configuredNetwork === 'testnet';
+}
+
 export const HYPERLIQUID_API = {
   mainnet: {
     info: 'https://api.hyperliquid.xyz/info',

@@ -14,9 +14,9 @@ import {
   HyperliquidService,
   isExchangeAnswer,
   isTransientFetchFailure,
-  resolvePerpsTestnet,
 } from './hyperliquid.service';
 import { PerpsOrder } from './perps-trade-order';
+import { keyOfSubscription } from './perps-channel-identity';
 
 /** One closed minute, at whatever time the test needs it to have closed. */
 const candleAt = (t: number): PerpsCandle => ({
@@ -50,25 +50,41 @@ const ORDER: PerpsOrder = {
   cloid: MARKET_IDENTITY.cloid,
 };
 
-describe('resolvePerpsTestnet', () => {
-  it('uses the configured network in local builds', () => {
-    expect(resolvePerpsTestnet('mainnet', false)).toBeFalse();
-    expect(resolvePerpsTestnet('testnet', false)).toBeTrue();
-  });
-
-  it('always selects mainnet in production builds', () => {
-    expect(resolvePerpsTestnet('mainnet', true)).toBeFalse();
-    expect(resolvePerpsTestnet('testnet', true)).toBeFalse();
-  });
-});
+/**
+ * The 数据通道（Data Channel） as this service uses it.
+ *
+ * Frames are delivered exactly as the channel would deliver them — already
+ * addressed, already protocol-precision — so a test states the frame the
+ * service actually sees rather than the JSON text that produced it.
+ */
+function fakeChannel() {
+  const channels = new Map<string, Subject<any>>();
+  const open = (subscription: any) => {
+    const key = keyOfSubscription(subscription);
+    let channel = channels.get(key);
+    if (!channel) {
+      channel = new Subject<any>();
+      channels.set(key, channel);
+    }
+    return channel;
+  };
+  return {
+    subscribe: (subscription: any) => open(subscription).asObservable(),
+    watchConnectionState: () => new Subject<any>().asObservable(),
+    /** Deliver one frame to whoever subscribed to this channel. */
+    push: (subscription: any, data: any) => open(subscription).next(data),
+  } as any;
+}
 
 describe('HyperliquidService account balances', () => {
   let http: jasmine.SpyObj<HttpClient>;
   let service: HyperliquidService;
+  let channel: any;
 
   beforeEach(() => {
     http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
-    service = new HyperliquidService(http);
+    channel = fakeChannel();
+    service = new HyperliquidService(http, channel);
   });
 
   it('loads both user fee sides and caches them by address', () => {
@@ -446,52 +462,23 @@ describe('HyperliquidService account balances', () => {
     });
   });
 
-  it('uses websocket snapshots for fills without a duplicate REST request', () => {
-    spyOn<any>(service, 'send');
-    const updates = jasmine.createSpy('updates');
-
-    service.watchUserFills('0xABC').subscribe(updates);
-
-    expect(http.post).not.toHaveBeenCalled();
-    (service as any).handleMessage({
-      data: JSON.stringify({
-        channel: 'userFills',
-        data: { user: '0xabc', fills: [], isSnapshot: true },
-      }),
-    });
-    expect(updates).toHaveBeenCalledWith({
-      user: '0xabc',
-      fills: [],
-      isSnapshot: true,
-    });
-  });
-
   it('uses open-order websocket snapshots without refetching on updates', () => {
-    spyOn<any>(service, 'send');
     spyOnProperty(service, 'enabledDexes', 'get').and.returnValue(['', 'xyz']);
     const updates = jasmine.createSpy('updates');
 
     service.watchOpenOrders('0xABC').subscribe(updates);
 
     expect(http.post).not.toHaveBeenCalled();
-    const orders = [{ oid: 42, coin: 'ETH' }];
-    (service as any).handleMessage({
-      data: JSON.stringify({
-        channel: 'openOrders',
-        data: { user: '0xabc', dex: '', orders },
-      }),
-    });
+    channel.push(
+      { type: 'openOrders', user: '0xabc', dex: '' },
+      { user: '0xabc', dex: '', orders: [{ oid: '42', coin: 'ETH' }] }
+    );
+    // Every DEX has to answer before the combined book means anything.
     expect(updates).not.toHaveBeenCalled();
-    (service as any).handleMessage({
-      data: JSON.stringify({
-        channel: 'openOrders',
-        data: {
-          user: '0xabc',
-          dex: 'xyz',
-          orders: [{ oid: 43, coin: 'xyz:NEO' }],
-        },
-      }),
-    });
+    channel.push(
+      { type: 'openOrders', user: '0xabc', dex: 'xyz' },
+      { user: '0xabc', dex: 'xyz', orders: [{ oid: '43', coin: 'xyz:NEO' }] }
+    );
     expect(updates).toHaveBeenCalledWith([
       { oid: '42', coin: 'ETH' },
       { oid: '43', coin: 'xyz:NEO' },
@@ -594,25 +581,6 @@ describe('HyperliquidService account balances', () => {
       '"cancels":[{"a":3,"o":42}]'
     );
   }));
-
-  it('preserves uint64 order and trade ids through websocket decoding', () => {
-    spyOn<any>(service, 'send');
-    const updates = jasmine.createSpy('updates');
-    service.watchUserFills('0xABC').subscribe(updates);
-
-    (service as any).handleMessage({
-      data:
-        '{"channel":"userFills","data":{"user":"0xabc","fills":' +
-        '[{"oid":18446744073709551615,"tid":1125899906842623}]}}',
-    });
-
-    expect(updates).toHaveBeenCalledWith({
-      user: '0xabc',
-      fills: [
-        { oid: '18446744073709551615', tid: '1125899906842623' },
-      ],
-    });
-  });
 
   it('preserves uint64 ids in raw REST JSON before model conversion', () => {
     spyOnProperty(service, 'enabledDexes', 'get').and.returnValue(['', 'xyz']);
@@ -798,54 +766,6 @@ describe('HyperliquidService account balances', () => {
     });
   });
 
-  it('routes spotState updates to the matching user only', () => {
-    spyOn<any>(service, 'send');
-    const first = jasmine.createSpy('first');
-    const second = jasmine.createSpy('second');
-
-    service.subscribe({ type: 'spotState', user: '0xaaa' }).subscribe(first);
-    service.subscribe({ type: 'spotState', user: '0xbbb' }).subscribe(second);
-
-    (service as any).handleMessage({
-      data: JSON.stringify({
-        channel: 'spotState',
-        data: {
-          user: '0xaaa',
-          spotState: { balances: [] },
-        },
-      }),
-    });
-
-    expect(first).toHaveBeenCalled();
-    expect(second).not.toHaveBeenCalled();
-  });
-
-  it('routes clearinghouseState updates to the matching user only', () => {
-    spyOn<any>(service, 'send');
-    const first = jasmine.createSpy('first');
-    const second = jasmine.createSpy('second');
-
-    service
-      .subscribe({ type: 'clearinghouseState', user: '0xaaa' })
-      .subscribe(first);
-    service
-      .subscribe({ type: 'clearinghouseState', user: '0xbbb' })
-      .subscribe(second);
-
-    (service as any).handleMessage({
-      data: JSON.stringify({
-        channel: 'clearinghouseState',
-        data: {
-          user: '0xaaa',
-          clearinghouseState: { marginSummary: {} },
-        },
-      }),
-    });
-
-    expect(first).toHaveBeenCalled();
-    expect(second).not.toHaveBeenCalled();
-  });
-
   it('loads and normalizes directional active asset availability', (done) => {
     http.post.and.returnValue(
       of({
@@ -870,67 +790,6 @@ describe('HyperliquidService account balances', () => {
       done();
     });
   });
-
-  it('routes activeAssetData updates by user and coin', () => {
-    spyOn<any>(service, 'send');
-    const eth = jasmine.createSpy('eth');
-    const btc = jasmine.createSpy('btc');
-
-    service
-      .subscribe({ type: 'activeAssetData', user: '0xaaa', coin: 'ETH' })
-      .subscribe(eth);
-    service
-      .subscribe({ type: 'activeAssetData', user: '0xaaa', coin: 'BTC' })
-      .subscribe(btc);
-
-    (service as any).handleMessage({
-      data: JSON.stringify({
-        channel: 'activeAssetData',
-        data: {
-          user: '0xAaA',
-          coin: 'ETH',
-          availableToTrade: ['100', '80'],
-        },
-      }),
-    });
-
-    expect(eth).toHaveBeenCalled();
-    expect(btc).not.toHaveBeenCalled();
-  });
-
-  it('routes allDexsAssetCtxs market updates', () => {
-    spyOn<any>(service, 'send');
-    const listener = jasmine.createSpy('listener');
-
-    service.subscribe({ type: 'allDexsAssetCtxs' }).subscribe(listener);
-    (service as any).handleMessage({
-      data: JSON.stringify({
-        channel: 'allDexsAssetCtxs',
-        data: { ctxs: [['', []]] },
-      }),
-    });
-
-    expect(listener).toHaveBeenCalledWith({ ctxs: [['', []]] });
-  });
-
-  it('starts and stops the websocket heartbeat with the socket lifecycle', fakeAsync(() => {
-    const send = jasmine.createSpy('send');
-    const socket: any = {
-      readyState: WebSocket.OPEN,
-      send,
-      close: jasmine.createSpy('close'),
-    };
-    (service as any).ws = socket;
-
-    (service as any).startHeartbeat(socket);
-    tick(30000);
-    expect(send).toHaveBeenCalledWith(JSON.stringify({ method: 'ping' }));
-
-    (service as any).stopHeartbeat();
-    send.calls.reset();
-    tick(30000);
-    expect(send).not.toHaveBeenCalled();
-  }));
 
   it('shares repeated account snapshots for the same user', () => {
     mockAccountRequests('unifiedAccount', '0.96');
@@ -1216,48 +1075,6 @@ describe('HyperliquidService account balances', () => {
     });
   });
 
-  it('keeps a shared websocket channel until its last observer leaves', fakeAsync(() => {
-    spyOn<any>(service, 'send');
-    spyOn<any>(service, 'closeSocket');
-
-    const first = service.subscribe({ type: 'allMids' }).subscribe();
-    const second = service.subscribe({ type: 'allMids' }).subscribe();
-
-    expect((service as any).activeSubs.size).toBe(1);
-    first.unsubscribe();
-    expect((service as any).activeSubs.size).toBe(1);
-    second.unsubscribe();
-    // An abandoned channel is held a moment longer, in case whoever left is
-    // on their way back.
-    expect((service as any).activeSubs.size).toBe(1);
-    tick(500);
-    expect((service as any).activeSubs.size).toBe(0);
-  }));
-
-  it('picks an abandoned channel back up instead of redialing it', fakeAsync(() => {
-    const send = spyOn<any>(service, 'send');
-    spyOn<any>(service, 'closeSocket');
-    const candles = { type: 'candle', coin: 'ETH', interval: '15m' };
-
-    const first = service.subscribe(candles).subscribe();
-    first.unsubscribe();
-    tick(200);
-    const second = service.subscribe(candles).subscribe();
-    tick(1000);
-
-    // Stepping off an interval and back is one subscription to the exchange,
-    // never an unsubscribe and a re-subscribe for data that never stopped.
-    expect(send).toHaveBeenCalledTimes(1);
-    expect(send).toHaveBeenCalledWith({
-      method: 'subscribe',
-      subscription: candles,
-    });
-    expect((service as any).activeSubs.size).toBe(1);
-
-    second.unsubscribe();
-    tick(500);
-  }));
-
 });
 
 describe('HyperliquidService withdrawals', () => {
@@ -1266,6 +1083,7 @@ describe('HyperliquidService withdrawals', () => {
   const SIGNER = new ethers.Wallet(PRIVATE_KEY).address;
   let http: jasmine.SpyObj<HttpClient>;
   let service: HyperliquidService;
+  let channel: any;
 
   const exchangeOk = { status: 'ok', response: { type: 'default' } };
 
@@ -1274,7 +1092,8 @@ describe('HyperliquidService withdrawals', () => {
 
   beforeEach(() => {
     http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
-    service = new HyperliquidService(http);
+    channel = fakeChannel();
+    service = new HyperliquidService(http, channel);
   });
 
   it('debits spot for a unified account, where that account keeps its USDC', fakeAsync(() => {
@@ -1367,6 +1186,7 @@ describe('isExchangeAnswer', () => {
 describe('HyperliquidService market detail feed', () => {
   let http: jasmine.SpyObj<HttpClient>;
   let service: HyperliquidService;
+  let channel: any;
 
   const universe = [
     { name: 'BTC', szDecimals: 5, maxLeverage: 40 },
@@ -1398,8 +1218,8 @@ describe('HyperliquidService market detail feed', () => {
 
   beforeEach(() => {
     http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
-    service = new HyperliquidService(http);
-    spyOn<any>(service, 'send');
+    channel = fakeChannel();
+    service = new HyperliquidService(http, channel);
   });
 
   it('seeds from one DEX and then follows that market\'s own frames', () => {
@@ -1417,12 +1237,10 @@ describe('HyperliquidService market detail feed', () => {
     expect(bodies().length).toBe(1);
     expect(bodies()[0]).toEqual({ type: 'metaAndAssetCtxs' });
 
-    (service as any).handleMessage({
-      data: JSON.stringify({
-        channel: 'activeAssetCtx',
-        data: { coin: 'ETH', ctx: ctx('1880.5', '1880') },
-      }),
-    });
+    channel.push(
+      { type: 'activeAssetCtx', coin: 'ETH' },
+      { coin: 'ETH', ctx: ctx('1880.5', '1880') }
+    );
 
     expect(seen.length).toBe(2);
     expect(seen[1].midPxExact).toBe('1880.5');
@@ -1546,12 +1364,7 @@ describe('HyperliquidService market detail feed', () => {
     const seen: any[] = [];
     service.watchMarketDetail('ETH').subscribe((m) => seen.push(m));
 
-    (service as any).handleMessage({
-      data: JSON.stringify({
-        channel: 'activeAssetCtx',
-        data: { coin: 'ETH' },
-      }),
-    });
+    channel.push({ type: 'activeAssetCtx', coin: 'ETH' }, { coin: 'ETH' });
 
     expect(seen.length).toBe(1);
   });
@@ -1561,7 +1374,7 @@ describe('HyperliquidService candle snapshots', () => {
   it('requests an explicit candle range without deriving it from a limit', () => {
     const http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
     http.post.and.returnValue(of([]) as any);
-    const service = new HyperliquidService(http);
+    const service = new HyperliquidService(http, fakeChannel());
 
     (service as any)
       .getCandleRange('NEO', '15m', 1_000, 9_000)
@@ -1584,21 +1397,3 @@ describe('HyperliquidService candle snapshots', () => {
 
 });
 
-describe('HyperliquidService candle websocket routing', () => {
-  it('routes every candle when the protocol sends an array', () => {
-    const service = new HyperliquidService(null);
-    spyOn<any>(service, 'send');
-    const seen: PerpsCandle[] = [];
-    service
-      .subscribe({ type: 'candle', coin: 'ETH', interval: '1m' })
-      .subscribe((candle) => seen.push(candle));
-    const first = candleAt(1_000);
-    const second = candleAt(61_000);
-
-    (service as any).handleMessage({
-      data: JSON.stringify({ channel: 'candle', data: [first, second] }),
-    });
-
-    expect(seen).toEqual([first, second]);
-  });
-});

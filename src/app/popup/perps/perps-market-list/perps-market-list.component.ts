@@ -14,6 +14,7 @@ import BigNumber from 'bignumber.js';
 import { Unsubscribable } from 'rxjs';
 
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
+import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import {
   PerpsConnectionState,
   PerpsMarket,
@@ -116,12 +117,13 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
 
   constructor(
     private router: Router,
-    private hyperliquid: HyperliquidService
+    private hyperliquid: HyperliquidService,
+    private channel: PerpsDataChannel
   ) {}
 
   ngOnInit() {
     this.watchMarkets();
-    this.connectionSub = this.hyperliquid
+    this.connectionSub = this.channel
       .watchConnectionState()
       .subscribe((state) => (this.connectionState = state));
   }

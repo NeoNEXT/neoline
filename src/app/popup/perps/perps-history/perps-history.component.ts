@@ -11,6 +11,7 @@ import {
   GlobalService,
 } from '@/app/core';
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
+import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import { EvmWalletJSON } from '@popup/_lib/evm';
 import {
   PerpsFill,
@@ -105,7 +106,8 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     private hyperliquid: HyperliquidService,
     private chrome: ChromeService,
     private evmWallet: EvmWalletService,
-    private global: GlobalService
+    private global: GlobalService,
+    private channel: PerpsDataChannel
   ) {}
 
   ngOnInit() {
@@ -211,21 +213,23 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
       })
     );
     this.liveSubs.add(
-      this.hyperliquid.watchUserFills(this.address).subscribe({
-        next: (update) => {
-          const incoming: PerpsFill[] = update?.fills || [];
-          this.fills = update?.isSnapshot
-            ? incoming
-            : this.mergeFills(incoming, this.fills);
-          if (update?.isSnapshot) {
-            this.loadedTabs.add('fills');
-            if (this.tab === 'fills') {
-              this.tabLoading = false;
+      this.channel
+        .subscribe({ type: 'userFills', user: this.address.toLowerCase() })
+        .subscribe({
+          next: (update) => {
+            const incoming: PerpsFill[] = update?.fills || [];
+            this.fills = update?.isSnapshot
+              ? incoming
+              : this.mergeFills(incoming, this.fills);
+            if (update?.isSnapshot) {
+              this.loadedTabs.add('fills');
+              if (this.tab === 'fills') {
+                this.tabLoading = false;
+              }
             }
-          }
-        },
-        error: () => (this.loadError = true),
-      })
+          },
+          error: () => (this.loadError = true),
+        })
     );
   }
 

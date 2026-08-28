@@ -13,6 +13,7 @@ import { tap, throttleTime } from 'rxjs/operators';
 
 import { ChromeService } from '@/app/core';
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
+import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import {
   PerpsCandleAvailability,
   PerpsCandleDatasetState,
@@ -124,11 +125,12 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     private chrome: ChromeService,
     private hyperliquid: HyperliquidService,
     private candleDatasets: PerpsCandleDatasetService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private channel: PerpsDataChannel
   ) {}
 
   ngOnInit() {
-    this.connectionSub = this.hyperliquid
+    this.connectionSub = this.channel
       .watchConnectionState()
       .subscribe((state) => {
         // Recovery is the dataset's own business now; the page reads the

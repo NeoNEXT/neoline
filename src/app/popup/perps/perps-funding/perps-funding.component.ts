@@ -15,6 +15,7 @@ import {
   HyperliquidService,
   PerpsExecutionStatusUnknownError,
 } from '@/app/core/services/perps/hyperliquid.service';
+import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
 import {
   coversExact,
@@ -146,7 +147,8 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     private evmWallet: EvmWalletService,
     private depositChain: PerpsDepositChainService,
     private feeQuote: PerpsFeeQuoteService,
-    private pendingDeposits: PerpsPendingDepositsService
+    private pendingDeposits: PerpsPendingDepositsService,
+    private channel: PerpsDataChannel
   ) {}
 
   ngOnInit() {
@@ -155,7 +157,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
       this.tab = 'withdraw';
       void this.loadWithdrawQuote();
     }
-    this.connectionSub = this.hyperliquid
+    this.connectionSub = this.channel
       .watchConnectionState()
       .subscribe((state) => {
         this.connectionState = state;

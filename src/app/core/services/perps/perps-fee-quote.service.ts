@@ -15,8 +15,8 @@ import {
   PERPS_CORE_USER_EXISTS_PRECOMPILE,
   PERPS_DEPOSIT_CONFIG,
   PERPS_HYPEREVM_CONFIG,
+  resolvePerpsTestnet,
 } from '@popup/_lib/perps';
-import { resolvePerpsTestnet } from './hyperliquid.service';
 import {
   delay,
   isRetriable,

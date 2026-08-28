@@ -9,6 +9,7 @@ import {
 } from '@popup/_lib/perps';
 
 import { HyperliquidService } from './hyperliquid.service';
+import { PerpsDataChannel } from './perps-data-channel.service';
 import {
   PerpsCandleDatasetState,
   candlesAreFresh,
@@ -31,8 +32,6 @@ interface PerpsCandleSource {
     startTime: number,
     endTime: number
   ): Observable<PerpsCandle[]>;
-  subscribe(subscription: any): Observable<any>;
-  watchConnectionState(): Observable<PerpsConnectionState>;
 }
 
 /**
@@ -92,7 +91,10 @@ export class PerpsCandleDatasetService {
   private snapshotTimer: any = null;
   private pendingSnapshot: CandleEntry | null = null;
 
-  constructor(hyperliquid: HyperliquidService) {
+  constructor(
+    hyperliquid: HyperliquidService,
+    private readonly channel: PerpsDataChannel
+  ) {
     this.source = hyperliquid;
   }
 
@@ -206,7 +208,7 @@ export class PerpsCandleDatasetService {
     }
 
     entry.subscriptions.add(
-      this.source.watchConnectionState().subscribe((state) => {
+      this.channel.watchConnectionState().subscribe((state) => {
         const recovered =
           entry.connectionState === 'stale' && state === 'live';
         entry.connectionState = state;
@@ -220,7 +222,7 @@ export class PerpsCandleDatasetService {
     // snapshot answers: a bar that closes in between is one nothing else will
     // ever fill, and the buffer below settles the overlap either way.
     entry.subscriptions.add(
-      this.source
+      this.channel
         .subscribe({
           type: 'candle',
           coin: entry.coin,

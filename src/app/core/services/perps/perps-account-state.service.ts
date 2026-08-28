@@ -16,6 +16,7 @@ import {
   PerpsConnectionState,
 } from '@popup/_lib/perps';
 import { HyperliquidService } from './hyperliquid.service';
+import { PerpsDataChannel } from './perps-data-channel.service';
 import {
   aggregatePerpsAccounts,
   updatePerpsAccountFromClearinghouseState,
@@ -29,8 +30,6 @@ interface PerpsAccountSource {
     force?: boolean,
     dex?: string
   ): Observable<PerpsAccount>;
-  subscribe(subscription: any): Observable<any>;
-  watchConnectionState(): Observable<PerpsConnectionState>;
 }
 
 type AccountFrame =
@@ -59,7 +58,10 @@ export class PerpsAccountStateService {
     Observable<PerpsAccountState<PerpsAggregatedAccount>>
   >();
 
-  constructor(hyperliquid: HyperliquidService) {
+  constructor(
+    hyperliquid: HyperliquidService,
+    private readonly channel: PerpsDataChannel
+  ) {
     this.source = hyperliquid;
   }
 
@@ -160,7 +162,7 @@ export class PerpsAccountStateService {
     entry.started = true;
     entry.subscriptions = new Subscription();
     entry.subscriptions.add(
-      this.source.watchConnectionState().subscribe((state) => {
+      this.channel.watchConnectionState().subscribe((state) => {
         const recovered =
           entry.connectionState === 'stale' && state === 'live';
         entry.connectionState = state;
@@ -177,7 +179,7 @@ export class PerpsAccountStateService {
     );
     if (!entry.dex) {
       entry.subscriptions.add(
-        this.source
+        this.channel
           .subscribe({ type: 'spotState', user: entry.user })
           .subscribe((value) =>
             this.applyFrame(entry, { kind: 'spot', value })
@@ -185,7 +187,7 @@ export class PerpsAccountStateService {
       );
     }
     entry.subscriptions.add(
-      this.source
+      this.channel
         .subscribe({
           type: 'clearinghouseState',
           user: entry.user,

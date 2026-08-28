@@ -26,8 +26,11 @@ const source = (overrides: any = {}) =>
     ...overrides,
   } as any);
 
-const build = (overrides: any = {}) =>
-  new PerpsCandleDatasetService(source(overrides));
+const build = (overrides: any = {}) => {
+  // One object answers both the REST source and the 数据通道 it watches.
+  const fake = source(overrides);
+  return new PerpsCandleDatasetService(fake, fake);
+};
 
 /** Watch a dataset and keep every state it publishes. */
 function watching(
@@ -198,7 +201,10 @@ describe('PerpsCandleDatasetService remembered datasets', () => {
       subscribe: () => new Subject<PerpsCandle>(),
       watchConnectionState: () => new Subject(),
     };
-    return { feed, service: new PerpsCandleDatasetService(feed as any) };
+    return {
+      feed,
+      service: new PerpsCandleDatasetService(feed as any, feed as any),
+    };
   }
 
   it('paints a market it has already seen before the network answers', fakeAsync(() => {

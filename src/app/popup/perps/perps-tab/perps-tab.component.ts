@@ -6,6 +6,7 @@ import { Unsubscribable } from 'rxjs';
 
 import { AppState } from '@/app/reduers';
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
+import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
 import {
   PerpsAccountAvailability,
@@ -63,7 +64,8 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     private router: Router,
     private store: Store<AppState>,
     private hyperliquid: HyperliquidService,
-    private accountStates: PerpsAccountStateService
+    private accountStates: PerpsAccountStateService,
+    private channel: PerpsDataChannel
   ) {}
 
   ngOnInit() {
@@ -92,7 +94,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     this.feedAtSub = this.hyperliquid
       .watchMarketFeedAt()
       .subscribe((at) => (this.marketFeedAt = at));
-    this.connectionSub = this.hyperliquid
+    this.connectionSub = this.channel
       .watchConnectionState()
       .subscribe((state) => {
         this.connectionState = state;

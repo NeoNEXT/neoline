@@ -1,6 +1,6 @@
-import { EMPTY, of, throwError } from 'rxjs';
+import { EMPTY, of, Subject, throwError } from 'rxjs';
 
-import { PerpsLedgerUpdate, PerpsOpenOrder } from '@popup/_lib/perps';
+import { PerpsFill, PerpsLedgerUpdate, PerpsOpenOrder } from '@popup/_lib/perps';
 
 import { PerpsHistoryComponent } from './perps-history.component';
 
@@ -21,6 +21,7 @@ describe('PerpsHistoryComponent order direction', () => {
   });
 
   const component = new PerpsHistoryComponent(
+    null,
     null,
     null,
     null,
@@ -51,14 +52,15 @@ describe('PerpsHistoryComponent order direction', () => {
       getOpenOrders: () => of([order('B', false)]),
       getMarkets: () => throwError(() => ({ status: 429 })),
       watchOpenOrders: () => EMPTY,
-      watchUserFills: () => EMPTY,
     };
+    const channel: any = { subscribe: () => EMPTY };
     const rateLimited = new PerpsHistoryComponent(
       null,
       hyperliquid,
       null,
       null,
-      null
+      null,
+      channel
     );
     (rateLimited as any).address = '0xabc';
 
@@ -74,7 +76,14 @@ describe('PerpsHistoryComponent order direction', () => {
 describe('PerpsHistoryComponent ledger rows', () => {
   const WALLET = '0x5be1a4c623a63498d78c08b8890a6e5dad6bf359';
 
-  const component = new PerpsHistoryComponent(null, null, null, null, null);
+  const component = new PerpsHistoryComponent(
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  );
   (component as any).address = WALLET;
 
   const row = (delta: any): PerpsLedgerUpdate => ({
@@ -146,5 +155,59 @@ describe('PerpsHistoryComponent ledger rows', () => {
       component.ledgerFee(row({ type: 'send', fee: '0.0', feeToken: '' }))
     ).toBe('');
     expect(component.ledgerFee(row({ type: 'deposit', usdc: '9.0' }))).toBe('');
+  });
+});
+
+describe('PerpsHistoryComponent live fills', () => {
+  const fill = (tid: string, time: number): PerpsFill =>
+    ({ tid, oid: '1', time, px: '100', sz: '1' } as PerpsFill);
+
+  /** Fills arrive over the 数据通道 only; the page never polls for them. */
+  function watching() {
+    const frames = new Subject<any>();
+    const hyperliquid: any = {
+      getOpenOrders: () => EMPTY,
+      getMarkets: () => EMPTY,
+      watchOpenOrders: () => EMPTY,
+    };
+    const channel: any = { subscribe: () => frames };
+    const component = new PerpsHistoryComponent(
+      null,
+      hyperliquid,
+      null,
+      null,
+      null,
+      channel
+    );
+    (component as any).address = '0xabc';
+    (component as any).watchLiveActivity();
+    return { component, frames };
+  }
+
+  it('takes a snapshot as the whole truth', () => {
+    const { component, frames } = watching();
+
+    frames.next({ fills: [fill('a', 2)], isSnapshot: true });
+    frames.next({ fills: [fill('b', 1)], isSnapshot: true });
+
+    expect(component.fills.map((f) => f.tid)).toEqual(['b']);
+  });
+
+  it('merges later pushes into what is already on screen, newest first', () => {
+    const { component, frames } = watching();
+
+    frames.next({ fills: [fill('a', 1)], isSnapshot: true });
+    frames.next({ fills: [fill('b', 3)] });
+
+    expect(component.fills.map((f) => f.tid)).toEqual(['b', 'a']);
+  });
+
+  it('does not print the same fill twice when a push repeats one', () => {
+    const { component, frames } = watching();
+
+    frames.next({ fills: [fill('a', 1)], isSnapshot: true });
+    frames.next({ fills: [fill('a', 1), fill('b', 2)] });
+
+    expect(component.fills.map((f) => f.tid)).toEqual(['b', 'a']);
   });
 });

@@ -25,12 +25,7 @@ import {
 } from 'rxjs/operators';
 import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
-import {
-  isInteger,
-  isSafeNumber,
-  parse as parseLosslessJson,
-  stringify as stringifyLosslessJson,
-} from 'lossless-json';
+import { stringify as stringifyLosslessJson } from 'lossless-json';
 
 import {
   HYPERLIQUID_API,
@@ -57,6 +52,7 @@ import {
   PERPS_BUILDER_MAX_FEE_RATE,
   PERPS_DEPOSIT_CONFIG,
   PERPS_HIP3_DEXES,
+  resolvePerpsTestnet,
 } from '@popup/_lib/perps';
 import { environment } from '@/environments/environment';
 import {
@@ -69,9 +65,10 @@ import {
   signHyperliquidSendToEvmWithData,
 } from './hyperliquid-signing';
 import { parsePerpsAccount } from './perps-account-state';
+import { normalizeIds, parseProtocolJson } from './perps-protocol-json';
+import { PerpsDataChannel } from './perps-data-channel.service';
 import { PerpsOrder } from './perps-trade-order';
 
-export type PerpsNetwork = 'mainnet' | 'testnet';
 
 interface HyperliquidUserFees {
   /** Taker rate: what crossing the spread costs. */
@@ -130,13 +127,6 @@ export function isTransientFetchFailure(error: any): boolean {
   return !isExchangeAnswer(error);
 }
 
-export function resolvePerpsTestnet(
-  configuredNetwork: PerpsNetwork,
-  production = environment.production
-): boolean {
-  return !production && configuredNetwork === 'testnet';
-}
-
 /**
  * Read-only access to Hyperliquid market and account data.
  *
@@ -144,17 +134,6 @@ export function resolvePerpsTestnet(
  * by a `type` field. Live updates arrive over a single websocket that is opened
  * lazily and shared by all subscribers.
  */
-/**
- * Channels the exchange scopes to one DEX. Their frames carry a `dex`, and one
- * subscription per DEX is required — sharing a channel across DEXes lets the
- * last frame overwrite every other pool.
- */
-const DEX_SCOPED_CHANNELS = new Set([
-  'assetCtxs',
-  'clearinghouseState',
-  'openOrders',
-]);
-
 /**
  * How many times a read-only fetch is repeated before its failure is the answer.
  *
@@ -171,35 +150,6 @@ const FETCH_RETRY_DELAY_MS = 1000;
 export class HyperliquidService {
   private readonly isTestnet = resolvePerpsTestnet(environment.perpsNetwork);
 
-  private ws: WebSocket;
-  private wsReady = false;
-  /** Active subscriptions keyed by channel id, so a reconnect can restore them. */
-  private activeSubs = new Map<string, any>();
-  private channels = new Map<string, Subject<any>>();
-  private channelObservers = new Map<string, number>();
-  private reconnectAttempts = 0;
-  private reconnectTimer: any;
-  /** Hyperliquid closes quiet sockets after 60s; ping well before that. */
-  private heartbeatTimer: any;
-  private readonly heartbeatMs = 30000;
-  /**
-   * How long a `ping` may go unanswered before the socket is treated as dead.
-   *
-   * A socket can stop delivering without ever closing — the extension's
-   * service worker suspends, a laptop sleeps, a NAT drops the flow — and in
-   * that state `readyState` still reads OPEN. Only a missing `pong` reveals it,
-   * which is why the answer is timed rather than merely sent.
-   */
-  private readonly pongTimeoutMs = 10000;
-  private pongTimer: any;
-  /**
-   * Whether the feed is currently believed to be delivering. It is not "did a
-   * message arrive recently": context frames are periodic and a quiet market
-   * still produces them, but silence alone never condemns a healthy socket.
-   */
-  private connectionState$ = new BehaviorSubject<PerpsConnectionState>(
-    'connecting'
-  );
   /** Exchange-time of the newest market frame, for "last updated" display. */
   private marketFeedAt$ = new BehaviorSubject<number | null>(null);
 
@@ -244,17 +194,6 @@ export class HyperliquidService {
     string,
     { expiresAt: number; request: Observable<PerpsUserFeeRates> }
   >();
-  /**
-   * How long a channel outlives its last observer.
-   *
-   * Stepping through chart intervals, or leaving a market and coming back,
-   * passes through zero observers for a few hundred milliseconds at a time.
-   * Telling the exchange to stop and asking again immediately spends two
-   * frames and a re-snapshot on data that never actually stopped arriving, so
-   * a channel is held briefly and picked back up if someone returns.
-   */
-  private readonly channelTeardownMs = 500;
-  private channelTeardowns = new Map<string, any>();
   /** Accounts whose builder-fee approval this session has already confirmed. */
   private builderFeeApproved = new Set<string>();
   /**
@@ -264,7 +203,10 @@ export class HyperliquidService {
    */
   private readonly nonces = new PerpsNonceAllocator();
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private channel: PerpsDataChannel
+  ) {}
 
   private get api() {
     return this.isTestnet ? HYPERLIQUID_API.testnet : HYPERLIQUID_API.mainnet;
@@ -417,54 +359,7 @@ export class HyperliquidService {
         headers: { 'Content-Type': 'application/json' },
         responseType: 'text',
       })
-      .pipe(map((text) => this.parseProtocolJson(text) as T));
-  }
-
-  /** Preserve unsafe JSON integers until endpoint adapters stringify IDs. */
-  private parseProtocolJson(text: unknown): any {
-    if (typeof text !== 'string') {
-      return text;
-    }
-    // HttpClient test doubles and a few browser adapters may already unwrap a
-    // top-level JSON string. Nested payloads still always arrive as JSON text.
-    if (!/^\s*(?:[\[{\"]|-?\d|true\b|false\b|null\b)/.test(text)) {
-      return text;
-    }
-    return parseLosslessJson(text, null, (value) =>
-      isInteger(value) && !isSafeNumber(value) ? value : Number(value)
-    );
-  }
-
-  private normalizeProtocolId(value: unknown): string | undefined {
-    if (typeof value === 'string' && /^\d+$/u.test(value)) {
-      return value;
-    }
-    return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
-      ? String(value)
-      : undefined;
-  }
-
-  /** Normalize every nested oid/tid before data reaches models, UI or storage. */
-  private normalizeIds<T>(value: T): T {
-    if (Array.isArray(value)) {
-      value.forEach((item) => this.normalizeIds(item));
-      return value;
-    }
-    if (!value || typeof value !== 'object') {
-      return value;
-    }
-    const record = value as any;
-    ['oid', 'tid'].forEach((key) => {
-      if (record[key] !== undefined) {
-        const id = this.normalizeProtocolId(record[key]);
-        if (!id) {
-          throw new Error(`Invalid Hyperliquid ${key}`);
-        }
-        record[key] = id;
-      }
-    });
-    Object.keys(record).forEach((key) => this.normalizeIds(record[key]));
-    return value;
+      .pipe(map((text) => parseProtocolJson(text) as T));
   }
 
   /**
@@ -550,8 +445,8 @@ export class HyperliquidService {
       )
       .pipe(
         map((text) => {
-          const response = this.normalizeIds(
-            this.parseProtocolJson(text)
+          const response = normalizeIds(
+            parseProtocolJson(text)
           ) as PerpsExchangeResponse;
           if (response?.status !== 'ok') {
             throw new Error(response?.error || 'Hyperliquid rejected the action');
@@ -596,7 +491,7 @@ export class HyperliquidService {
       type: 'orderStatus',
       user: address.toLowerCase(),
       oid: cloid.toLowerCase(),
-    }).pipe(map((result) => this.normalizeIds(result)));
+    }).pipe(map((result) => normalizeIds(result)));
   }
 
   private clearAccountCache() {
@@ -1004,17 +899,6 @@ export class HyperliquidService {
     return request;
   }
 
-  /**
-   * Whether the live feed is currently delivering.
-   *
-   * Consumers use this — not "how long since the last message" — to decide
-   * whether what is on screen is still live. Context frames are periodic, so a
-   * gap is worth noticing, but only the connection itself can say it is broken.
-   */
-  watchConnectionState(): Observable<PerpsConnectionState> {
-    return this.connectionState$.asObservable();
-  }
-
   /** Local receive time of the newest market frame, for "last updated" display. */
   watchMarketFeedAt(): Observable<number | null> {
     return this.marketFeedAt$.asObservable();
@@ -1082,7 +966,7 @@ export class HyperliquidService {
               // Frames that arrive while the snapshot is in flight are lost,
               // which costs nothing: every frame is a complete context, so the
               // next one restates whatever the missed ones said.
-              this.subscribe({ type: 'activeAssetCtx', coin }).pipe(
+              this.channel.subscribe({ type: 'activeAssetCtx', coin }).pipe(
                 filter((frame) => !!frame?.ctx),
                 map((frame) => ({
                   ...market,
@@ -1161,7 +1045,7 @@ export class HyperliquidService {
     const stream = new Subscription();
     this.enabledDexes.forEach((dex) => {
       stream.add(
-        this.subscribe({ type: 'assetCtxs', dex }).subscribe((update) =>
+        this.channel.subscribe({ type: 'assetCtxs', dex }).subscribe((update) =>
           this.applyAssetContextFrame(dex, update?.ctxs)
         )
       );
@@ -1415,7 +1299,7 @@ export class HyperliquidService {
     const user = address.toLowerCase();
     return concat(
       this.getActiveAssetData(user, coin),
-      this.subscribe({ type: 'activeAssetData', user, coin }).pipe(
+      this.channel.subscribe({ type: 'activeAssetData', user, coin }).pipe(
         map((data) => this.parseActiveAssetData(data))
       )
     ).pipe(filter((data) => !!data));
@@ -1544,14 +1428,8 @@ export class HyperliquidService {
       type: 'userFills',
       user: address.toLowerCase(),
     }).pipe(
-      map((res) => this.normalizeIds(Array.isArray(res) ? res : []))
+      map((res) => normalizeIds(Array.isArray(res) ? res : []))
     );
-  }
-
-  /** Websocket snapshot followed by incremental fill pushes. */
-  watchUserFills(address: string): Observable<any> {
-    const user = address.toLowerCase();
-    return this.subscribe({ type: 'userFills', user });
   }
 
   /** Active orders that can still fill and therefore must remain manageable. */
@@ -1564,7 +1442,7 @@ export class HyperliquidService {
           user,
           dex,
         }).pipe(
-          map((res) => this.normalizeIds(Array.isArray(res) ? res : []))
+          map((res) => normalizeIds(Array.isArray(res) ? res : []))
         )
       )
     ).pipe(map((ordersByDex) => ordersByDex.flat()));
@@ -1575,10 +1453,8 @@ export class HyperliquidService {
     const user = address.toLowerCase();
     return combineLatest(
       this.enabledDexes.map((dex) =>
-        this.subscribe({ type: 'openOrders', user, dex }).pipe(
-          map((data) =>
-            this.normalizeIds(Array.isArray(data?.orders) ? data.orders : [])
-          )
+        this.channel.subscribe({ type: 'openOrders', user, dex }).pipe(
+          map((data) => (Array.isArray(data?.orders) ? data.orders : []))
         )
       )
     ).pipe(map((ordersByDex) => ordersByDex.flat()));
@@ -1590,7 +1466,7 @@ export class HyperliquidService {
       type: 'historicalOrders',
       user: address.toLowerCase(),
     }).pipe(
-      map((res) => this.normalizeIds(Array.isArray(res) ? res : []))
+      map((res) => normalizeIds(Array.isArray(res) ? res : []))
     );
   }
 
@@ -1631,323 +1507,4 @@ export class HyperliquidService {
 
   //#endregion
 
-  //#region websocket
-
-  /**
-   * Subscribe to a websocket channel. The returned observable replays nothing;
-   * callers must provide a REST/cache baseline and preserve frames that race a
-   * concurrent snapshot refresh.
-   */
-  subscribe(subscription: any): Observable<any> {
-    return new Observable<any>((observer) => {
-      const key = this.channelKey(subscription);
-      // A teardown still pending means the exchange was never told to stop:
-      // the channel is alive and is simply picked up again.
-      this.cancelChannelTeardown(key);
-      let channel = this.channels.get(key);
-      if (!channel) {
-        channel = new Subject<any>();
-        this.channels.set(key, channel);
-        this.activeSubs.set(key, subscription);
-        this.send({ method: 'subscribe', subscription });
-      }
-      this.channelObservers.set(
-        key,
-        (this.channelObservers.get(key) || 0) + 1
-      );
-      const channelSub = channel.subscribe(observer);
-      return () => {
-        channelSub.unsubscribe();
-        const observers = (this.channelObservers.get(key) || 1) - 1;
-        if (observers > 0) {
-          this.channelObservers.set(key, observers);
-          return;
-        }
-        this.channelObservers.delete(key);
-        this.scheduleChannelTeardown(key, subscription);
-      };
-    });
-  }
-
-  /**
-   * Close an abandoned channel, once it has stayed abandoned.
-   *
-   * The socket outlives the channel for the same reason: closing it here would
-   * make a market switch redial a connection the next page needs anyway.
-   */
-  private scheduleChannelTeardown(key: string, subscription: any) {
-    this.cancelChannelTeardown(key);
-    this.channelTeardowns.set(
-      key,
-      setTimeout(() => {
-        this.channelTeardowns.delete(key);
-        // A subscriber that came and went inside the window scheduled its own
-        // teardown; only an abandoned channel is closed here.
-        if (this.channelObservers.get(key)) {
-          return;
-        }
-        this.channels.delete(key);
-        this.activeSubs.delete(key);
-        if (this.wsReady) {
-          this.send({ method: 'unsubscribe', subscription });
-        }
-        if (this.channels.size === 0) {
-          this.closeSocket();
-        }
-      }, this.channelTeardownMs)
-    );
-  }
-
-  private cancelChannelTeardown(key: string) {
-    const timer = this.channelTeardowns.get(key);
-    if (timer !== undefined) {
-      clearTimeout(timer);
-      this.channelTeardowns.delete(key);
-    }
-  }
-
-  /**
-   * Channel identity includes every selector that distinguishes subscriptions.
-   *
-   * `dex` is part of that identity even when it is the empty canonical value:
-   * market contexts and clearinghouse state are subscribed once per DEX, and
-   * without it every DEX would share one channel and overwrite the others.
-   */
-  private channelKey(subscription: any): string {
-    const { type, coin, interval } = subscription;
-    const user =
-      typeof subscription.user === 'string'
-        ? subscription.user.toLowerCase()
-        : undefined;
-    // Always present for DEX-scoped channels, defaulting to the canonical DEX,
-    // so that omitting `dex` subscribes to canonical rather than to a key no
-    // frame will ever match.
-    const dex = DEX_SCOPED_CHANNELS.has(type)
-      ? `dex=${subscription.dex ?? ''}`
-      : undefined;
-    return [type, user, dex, coin, interval].filter(Boolean).join(':');
-  }
-
-  private send(payload: any) {
-    if (this.wsReady && this.ws?.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(payload));
-    } else {
-      this.openSocket();
-    }
-  }
-
-  private openSocket() {
-    if (this.ws && this.ws.readyState <= WebSocket.OPEN) {
-      return;
-    }
-    let socket: WebSocket;
-    try {
-      socket = new WebSocket(this.api.ws);
-    } catch (e) {
-      return;
-    }
-    this.ws = socket;
-    socket.onopen = () => {
-      if (this.ws !== socket) {
-        socket.close();
-        return;
-      }
-      this.wsReady = true;
-      this.reconnectAttempts = 0;
-      this.connectionState$.next('live');
-      this.startHeartbeat(socket);
-      this.activeSubs.forEach((subscription) =>
-        socket.send(JSON.stringify({ method: 'subscribe', subscription }))
-      );
-    };
-    socket.onmessage = (event) => {
-      if (this.ws === socket) {
-        this.handleMessage(event);
-      }
-    };
-    socket.onclose = () => {
-      if (this.ws !== socket) {
-        return;
-      }
-      this.wsReady = false;
-      this.stopHeartbeat();
-      this.ws = undefined;
-      if (this.channels.size > 0) {
-        this.markStale();
-        this.scheduleReconnect();
-      }
-    };
-    socket.onerror = () => {
-      // `onclose` always follows, which is where reconnection is handled.
-    };
-  }
-
-  private handleMessage(event: MessageEvent) {
-    let msg: any;
-    try {
-      msg = this.parseProtocolJson(event.data);
-    } catch (e) {
-      return;
-    }
-    if (!msg || !msg.channel) {
-      return;
-    }
-    if (msg.channel === 'pong') {
-      clearTimeout(this.pongTimer);
-      this.pongTimer = undefined;
-      return;
-    }
-    if (msg.channel === 'candle') {
-      const candles = Array.isArray(msg.data) ? msg.data : [msg.data];
-      candles.forEach((candle) => {
-        if (
-          typeof candle?.s === 'string' &&
-          typeof candle?.i === 'string'
-        ) {
-          this.emit(`candle:${candle.s}:${candle.i}`, candle);
-        }
-      });
-      return;
-    }
-    if (msg.channel === 'activeAssetCtx') {
-      this.emit(`activeAssetCtx:${msg.data?.coin}`, msg.data);
-      return;
-    }
-    if (msg.channel === 'assetCtxs') {
-      // One frame per DEX, each carrying that DEX's whole context array.
-      this.emit(`assetCtxs:dex=${msg.data?.dex ?? ''}`, msg.data);
-      return;
-    }
-    if (
-      msg.channel === 'activeAssetData' &&
-      typeof msg.data?.user === 'string' &&
-      typeof msg.data?.coin === 'string'
-    ) {
-      this.emit(
-        `activeAssetData:${msg.data.user.toLowerCase()}:${msg.data.coin}`,
-        msg.data
-      );
-      return;
-    }
-    if (
-      msg.channel === 'spotState' &&
-      typeof msg.data?.user === 'string'
-    ) {
-      this.emit(`spotState:${msg.data.user.toLowerCase()}`, msg.data);
-      return;
-    }
-    if (
-      msg.channel === 'clearinghouseState' &&
-      typeof msg.data?.user === 'string'
-    ) {
-      this.emit(
-        `clearinghouseState:${msg.data.user.toLowerCase()}:dex=${
-          msg.data.dex ?? ''
-        }`,
-        msg.data
-      );
-      return;
-    }
-    if (
-      msg.channel === 'openOrders' &&
-      typeof msg.data?.user === 'string'
-    ) {
-      this.normalizeIds(msg.data);
-      this.emit(
-        `openOrders:${msg.data.user.toLowerCase()}:dex=${msg.data.dex ?? ''}`,
-        msg.data
-      );
-      return;
-    }
-    if (
-      [
-        'userFills',
-        'orderUpdates',
-        'userNonFundingLedgerUpdates',
-      ].includes(msg.channel) &&
-      typeof msg.data?.user === 'string'
-    ) {
-      this.normalizeIds(msg.data);
-      this.emit(
-        `${msg.channel}:${msg.data.user.toLowerCase()}`,
-        msg.data
-      );
-      return;
-    }
-    this.emit(msg.channel, msg.data);
-  }
-
-  private emit(key: string, data: any) {
-    const channel = this.channels.get(key);
-    if (channel) {
-      channel.next(data);
-    }
-  }
-
-  private scheduleReconnect() {
-    clearTimeout(this.reconnectTimer);
-    // Back off to at most 30s so a long outage does not hammer the endpoint.
-    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-    this.reconnectAttempts += 1;
-    this.reconnectTimer = setTimeout(() => {
-      this.openSocket();
-    }, delay);
-  }
-
-  private startHeartbeat(socket: WebSocket) {
-    this.stopHeartbeat();
-    this.heartbeatTimer = setInterval(() => {
-      if (this.ws !== socket || socket.readyState !== WebSocket.OPEN) {
-        return;
-      }
-      socket.send(JSON.stringify({ method: 'ping' }));
-      // Closing the socket ourselves is what makes the failure visible: it
-      // triggers `onclose`, which marks the feed stale and schedules a
-      // reconnect. Waiting for the OS to time the connection out can take
-      // minutes, and the whole time the screen shows prices as if they were live.
-      clearTimeout(this.pongTimer);
-      this.pongTimer = setTimeout(() => {
-        if (this.ws === socket) {
-          this.markStale();
-          try {
-            socket.close();
-          } catch (e) {
-            // Already gone; `onclose` still runs.
-          }
-        }
-      }, this.pongTimeoutMs);
-    }, this.heartbeatMs);
-  }
-
-  private stopHeartbeat() {
-    clearInterval(this.heartbeatTimer);
-    this.heartbeatTimer = undefined;
-    clearTimeout(this.pongTimer);
-    this.pongTimer = undefined;
-  }
-
-  private markStale() {
-    if (this.connectionState$.value !== 'stale') {
-      this.connectionState$.next('stale');
-    }
-  }
-
-  private closeSocket() {
-    clearTimeout(this.reconnectTimer);
-    this.stopHeartbeat();
-    this.wsReady = false;
-    // Deliberate teardown, not a failure: the next subscriber starts over.
-    this.connectionState$.next('connecting');
-    const socket = this.ws;
-    this.ws = undefined;
-    if (socket) {
-      try {
-        socket.close();
-      } catch (e) {
-        // Already closing; nothing to clean up.
-      }
-    }
-  }
-
-  //#endregion
 }

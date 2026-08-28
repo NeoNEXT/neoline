@@ -215,7 +215,8 @@ describe('PerpsFundingComponent amount boundaries', () => {
       null,
       depositChainStub(),
       feeQuoteStub(),
-      pendingStub()
+      pendingStub(),
+      null
     );
     component.withdrawQuote = { ...QUOTE };
   });
@@ -466,7 +467,8 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
       evmWallet,
       depositChainStub(),
       feeQuoteStub(),
-      pendingStub()
+      pendingStub(),
+      null
     );
     component.tab = 'withdraw';
     component.withdrawQuote = { ...QUOTE };
@@ -633,7 +635,8 @@ describe('PerpsFundingComponent submit gate', () => {
       null,
       depositChainStub(),
       feeQuoteStub(),
-      pendingStub()
+      pendingStub(),
+      null
     );
     component.withdrawQuote = { ...QUOTE };
     component.accountLoading = false;
@@ -817,7 +820,8 @@ describe('PerpsFundingComponent deposit confirmation', () => {
         depositQuote: () =>
           Promise.resolve({ feeExact: '0.2', maxFeeExact: '0.2' }),
       } as any,
-      pendingStub()
+      pendingStub(),
+      null
     );
     component.tab = 'deposit';
     component.accountLoading = false;
@@ -959,7 +963,8 @@ describe('PerpsFundingComponent withdrawal quote', () => {
         ...feeQuoteStub(),
         withdrawQuote: (...args: unknown[]) => withdrawQuote(...args),
       } as any,
-      pendingStub()
+      pendingStub(),
+      null
     );
     component.accountLoading = false;
     component.account = {
@@ -1087,7 +1092,8 @@ describe('PerpsFundingComponent deposit authorisation lifetime', () => {
         ...feeQuoteStub(),
         depositQuote: (...args: unknown[]) => depositQuote(...args),
       } as any,
-      pendingStub()
+      pendingStub(),
+      null
     );
     component.tab = 'deposit';
     component.accountLoading = false;

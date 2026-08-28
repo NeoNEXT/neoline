@@ -4,7 +4,7 @@ import { ethMarket } from '../perps.test-fixture';
 // Row order, sorting, paging and search now live in PerpsMarketListComponent,
 // which the tab embeds; their specs moved with them.
 describe('PerpsTabComponent', () => {
-  const component = () => new PerpsTabComponent(null, null, null, null);
+  const component = () => new PerpsTabComponent(null, null, null, null, null);
 
   it('locates a position market by key so HIP-3 namesakes stay apart', () => {
     const value = component();
