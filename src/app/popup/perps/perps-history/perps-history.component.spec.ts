@@ -4,6 +4,10 @@ import { PerpsFill, PerpsLedgerUpdate, PerpsOpenOrder } from '@popup/_lib/perps'
 
 import { PerpsHistoryComponent } from './perps-history.component';
 
+/** The 行情数据集 as this page uses it: names for the rows. */
+const markets = (overrides: any = {}) =>
+  ({ getMarkets: () => EMPTY, ...overrides } as any);
+
 describe('PerpsHistoryComponent order direction', () => {
   const order = (
     side: 'B' | 'A',
@@ -26,8 +30,9 @@ describe('PerpsHistoryComponent order direction', () => {
     null,
     null,
     null,
-    null
-  );
+    null,
+      markets()
+    );
 
   it('labels non-reduce-only orders as opening long or short', () => {
     expect(component.orderDirectionKey(order('B', false))).toBe(
@@ -50,7 +55,6 @@ describe('PerpsHistoryComponent order direction', () => {
   it('still shows open orders when the market snapshot fails', () => {
     const hyperliquid: any = {
       getOpenOrders: () => of([order('B', false)]),
-      getMarkets: () => throwError(() => ({ status: 429 })),
       watchOpenOrders: () => EMPTY,
     };
     const channel: any = { subscribe: () => EMPTY };
@@ -60,7 +64,8 @@ describe('PerpsHistoryComponent order direction', () => {
       null,
       null,
       null,
-      channel
+      channel,
+      markets({ getMarkets: () => throwError(() => ({ status: 429 })) })
     );
     (rateLimited as any).address = '0xabc';
 
@@ -82,8 +87,9 @@ describe('PerpsHistoryComponent ledger rows', () => {
     null,
     null,
     null,
-    null
-  );
+    null,
+      markets()
+    );
   (component as any).address = WALLET;
 
   const row = (delta: any): PerpsLedgerUpdate => ({
@@ -177,7 +183,8 @@ describe('PerpsHistoryComponent live fills', () => {
       null,
       null,
       null,
-      channel
+      channel,
+      markets()
     );
     (component as any).address = '0xabc';
     (component as any).watchLiveActivity();

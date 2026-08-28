@@ -13,7 +13,7 @@ import { Router } from '@angular/router';
 import BigNumber from 'bignumber.js';
 import { Unsubscribable } from 'rxjs';
 
-import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
+import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
 import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import {
   PerpsConnectionState,
@@ -117,7 +117,7 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
 
   constructor(
     private router: Router,
-    private hyperliquid: HyperliquidService,
+    private markets$: PerpsMarketDatasetService,
     private channel: PerpsDataChannel
   ) {}
 
@@ -162,28 +162,33 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private watchMarkets() {
-    this.marketsSub = this.hyperliquid.watchMarkets().subscribe({
-      next: (markets) => {
-        const known = new Set(this.orderedKeys.concat(this.pinnedKeys));
-        const changed =
-          known.size !== markets.length ||
-          markets.some((market) => !known.has(market.key));
-        this.markets = markets;
-        // A new or delisted market has to enter the order; a price move must
-        // not. Coalesce the rest so several DEX frames repaint once.
-        if (changed) {
-          this.resnapshot();
-        } else {
-          this.scheduleRender();
-        }
-        this.loading = false;
-        this.marketLoadError = false;
-        this.marketsLoaded.emit(markets);
-      },
-      error: () => {
+    this.marketsSub = this.markets$.watchMarkets().subscribe((state) => {
+      if (state.availability === 'loading') {
+        return;
+      }
+      // Nothing ever arrived, so there is no list to show — a later retry will
+      // publish one to this same subscriber.
+      if (state.availability === 'unavailable' && !state.markets.length) {
         this.loading = false;
         this.marketLoadError = true;
-      },
+        return;
+      }
+      const markets = state.markets;
+      const known = new Set(this.orderedKeys.concat(this.pinnedKeys));
+      const changed =
+        known.size !== markets.length ||
+        markets.some((market) => !known.has(market.key));
+      this.markets = markets;
+      // A new or delisted market has to enter the order; a price move must
+      // not. Coalesce the rest so several DEX frames repaint once.
+      if (changed) {
+        this.resnapshot();
+      } else {
+        this.scheduleRender();
+      }
+      this.loading = false;
+      this.marketLoadError = false;
+      this.marketsLoaded.emit(markets);
     });
   }
 

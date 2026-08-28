@@ -12,8 +12,6 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   HyperliquidService,
-  isExchangeAnswer,
-  isTransientFetchFailure,
 } from './hyperliquid.service';
 import { PerpsOrder } from './perps-trade-order';
 import { keyOfSubscription } from './perps-channel-identity';
@@ -76,7 +74,7 @@ function fakeChannel() {
   } as any;
 }
 
-describe('HyperliquidService account balances', () => {
+describe('HyperliquidService accounts, fees and writes', () => {
   let http: jasmine.SpyObj<HttpClient>;
   let service: HyperliquidService;
   let channel: any;
@@ -394,74 +392,6 @@ describe('HyperliquidService account balances', () => {
     });
   }));
 
-  it('preserves the current margin-mode metadata in the market model', (done) => {
-    http.post.and.returnValue(
-      of([
-        {
-          universe: [
-            {
-              name: 'CASHCAT',
-              szDecimals: 0,
-              maxLeverage: 3,
-              marginMode: 'strictIsolated',
-            },
-          ],
-        },
-        [
-          {
-            markPx: '1',
-            oraclePx: '1',
-            prevDayPx: '1',
-            dayNtlVlm: '100',
-            openInterest: '10',
-            funding: '0',
-          },
-        ],
-      ]) as any
-    );
-
-    service.getMarkets().subscribe((markets) => {
-      expect(markets[0].marginMode).toBe('strictIsolated');
-      done();
-    });
-  });
-
-  it('loads only supported HIP-3 markets with their protocol asset ids', (done) => {
-    http.post.and.callFake(((_url: string, body: any) => {
-      if (body.type === 'perpDexs') {
-        return of([
-          null,
-          { name: 'unsupported-one' },
-          { name: 'xyz' },
-          { name: 'unsupported-two' },
-        ]);
-      }
-      if (body.type === 'metaAndAssetCtxs' && body.dex === 'xyz') {
-        return of([
-          { universe: [{ name: 'NEO', szDecimals: 2, maxLeverage: 5 }] },
-          [{ markPx: '10', midPx: '10', oraclePx: '10', prevDayPx: '9', dayNtlVlm: '100', openInterest: '2', funding: '0' }],
-        ]);
-      }
-      return of([{ universe: [] }, []]);
-    }) as any);
-
-    service.getMarkets().subscribe((markets) => {
-      const dexRequests = http.post.calls
-        .allArgs()
-        .map((args) => args[1])
-        .filter((body) => body.type === 'metaAndAssetCtxs' && body.dex);
-      expect(dexRequests).toEqual([
-        { type: 'metaAndAssetCtxs', dex: 'xyz' },
-      ]);
-      expect(markets[0].coin).toBe('xyz:NEO');
-      expect(markets[0].key).toBe('xyz:NEO');
-      expect(markets[0].dex).toBe('xyz');
-      // `xyz` remains at registry index 2 even though index 1 is unsupported.
-      expect(markets[0].assetId).toBe(120000);
-      done();
-    });
-  });
-
   it('uses open-order websocket snapshots without refetching on updates', () => {
     spyOnProperty(service, 'enabledDexes', 'get').and.returnValue(['', 'xyz']);
     const updates = jasmine.createSpy('updates');
@@ -484,56 +414,6 @@ describe('HyperliquidService account balances', () => {
       { oid: '43', coin: 'xyz:NEO' },
     ]);
     expect(http.post).not.toHaveBeenCalled();
-  });
-
-  it('does not substitute mark price when a book side is empty', (done) => {
-    http.post.and.returnValue(
-      of([
-        {
-          universe: [
-            { name: 'ETH', szDecimals: 4, maxLeverage: 25 },
-            { name: 'CASHCAT', szDecimals: 0, maxLeverage: 3 },
-          ],
-        },
-        [
-          {
-            markPx: '1900',
-            midPx: '1899.5',
-            oraclePx: '1900',
-            prevDayPx: '1800',
-            dayNtlVlm: '100',
-            openInterest: '10',
-            funding: '0',
-          },
-          {
-            markPx: '1',
-            // Hyperliquid reports a null mid whenever a side of the book is empty.
-            midPx: null,
-            oraclePx: '1',
-            prevDayPx: '1',
-            dayNtlVlm: '100',
-            openInterest: '10',
-            funding: '0',
-          },
-        ],
-      ]) as any
-    );
-
-    service.getMarkets().subscribe((markets) => {
-      const eth = markets.find((market) => market.coin === 'ETH');
-      const cashcat = markets.find((market) => market.coin === 'CASHCAT');
-      expect(eth.midPxExact).toBe('1899.5');
-      // An absent mid is null, never zero: zero is a price, absence is not.
-      expect(cashcat.midPxExact).toBeNull();
-      // The 24h change follows the displayed mid, not the mark beside it.
-      expect(Number(eth.changePercentExact)).toBeCloseTo(
-        ((1899.5 - 1800) / 1800) * 100,
-        8
-      );
-      // No mid means no change to quote — market statistics unavailable.
-      expect(cashcat.changePercentExact).toBeNull();
-      done();
-    });
   });
 
   it('loads frontend open orders and cancels by asset and order id', fakeAsync(() => {
@@ -836,153 +716,32 @@ describe('HyperliquidService account balances', () => {
     ]);
   });
 
-  it('shares repeated market snapshots', () => {
-    http.post.and.returnValue(of([{ universe: [] }, []]) as any);
+  it('reuses the DEX registry far past a market snapshot refresh', fakeAsync(() => {
+    http.post.and.returnValue(of([null, { name: 'xyz' }]) as any);
 
-    service.getMarkets().subscribe();
-    service.getMarkets().subscribe();
-
-    expect(
-      http.post.calls
-        .allArgs()
-        .filter((args) => args[1].type === 'metaAndAssetCtxs').length
-    ).toBe(1);
-  });
-
-  it('merges a dex context frame by universe index, not list position', () => {
-    // The list is volume-sorted, so a market's position in it says nothing
-    // about which context belongs to it; only `dexAssetIndex` does.
-    const markets: any[] = [
-      { key: 'hl:SECOND', dex: '', dexAssetIndex: 1, coin: 'SECOND' },
-      { key: 'hl:FIRST', dex: '', dexAssetIndex: 0, coin: 'FIRST' },
-      { key: 'xyz:OTHER', dex: 'xyz', dexAssetIndex: 0, coin: 'xyz:OTHER' },
-    ];
-    const other = markets[2];
-
-    const updated = service.mergeDexAssetContexts(markets, '', [
-      {
-        markPx: '10',
-        midPx: '10',
-        oraclePx: '11',
-        prevDayPx: '8',
-        dayNtlVlm: '100',
-        openInterest: '2',
-        funding: '0.001',
-      },
-      {
-        markPx: '20',
-        midPx: '20',
-        oraclePx: '21',
-        prevDayPx: '10',
-        dayNtlVlm: '200',
-        openInterest: '3',
-        funding: '0.002',
-      },
-    ] as any);
-
-    const first = updated.find((market) => market.coin === 'FIRST');
-    const second = updated.find((market) => market.coin === 'SECOND');
-    expect(first.markPxExact).toBe('10');
-    expect(first.openInterestExact).toBe('20');
-    expect(second.markPxExact).toBe('20');
-    expect(second.openInterestExact).toBe('60');
-    // A price update must not reorder the list under the user's finger.
-    expect(updated.map((market) => market.coin)).toEqual([
-      'SECOND',
-      'FIRST',
-      'xyz:OTHER',
-    ]);
-    // Another DEX's markets are not even re-created, so `trackBy` sees no churn.
-    expect(updated[2]).toBe(other);
-  });
-
-  it('leaves markets untouched when a frame has no context for them', () => {
-    const markets: any[] = [
-      { key: 'hl:ONLY', dex: '', dexAssetIndex: 7, coin: 'ONLY' },
-    ];
-
-    expect(service.mergeDexAssetContexts(markets, '', [] as any)).toBe(markets);
-    expect(service.mergeDexAssetContexts(markets, 'xyz', [{}] as any)[0]).toBe(
-      markets[0]
-    );
-  });
-
-  it('refreshes the market REST snapshot after its TTL', fakeAsync(() => {
-    http.post.and.returnValue(of([{ universe: [] }, []]) as any);
-
-    service.getMarkets().subscribe();
+    service.getDexRegistry().subscribe();
     tick(15001);
-    service.getMarkets().subscribe();
+    service.getDexRegistry().subscribe();
 
-    expect(
-      http.post.calls
-        .allArgs()
-        .filter((args) => args[1].type === 'metaAndAssetCtxs').length
-    ).toBe(2);
-  }));
-
-  it('reuses the DEX registry across market snapshot refreshes', fakeAsync(() => {
-    http.post.and.callFake(((_url: string, body: any) =>
-      body.type === 'perpDexs'
-        ? of([null, { name: 'xyz' }])
-        : of([{ universe: [] }, []])) as any);
-
-    service.getMarkets().subscribe();
-    tick(15001);
-    service.getMarkets().subscribe();
-
-    const types = http.post.calls.allArgs().map((args) => args[1].type);
-    expect(types.filter((type) => type === 'perpDexs').length).toBe(1);
-    expect(types.filter((type) => type === 'metaAndAssetCtxs').length).toBe(4);
+    // The registry carries no prices, so it outlives every market snapshot.
+    expect(http.post).toHaveBeenCalledTimes(1);
   }));
 
   it('does not keep a failed DEX registry in the long-lived cache', fakeAsync(() => {
-    let registryAttempts = 0;
-    http.post.and.callFake(((_url: string, body: any) => {
-      if (body.type === 'perpDexs') {
-        registryAttempts += 1;
-        return registryAttempts === 1
-          ? throwError(() => new Error('temporary'))
-          : of([null, { name: 'xyz' }]);
-      }
-      return of([{ universe: [] }, []]);
+    let attempts = 0;
+    http.post.and.callFake((() => {
+      attempts += 1;
+      return attempts === 1
+        ? throwError(() => new Error('temporary'))
+        : of([null, { name: 'xyz' }]);
     }) as any);
-    const dexRequests = () =>
-      http.post.calls
-        .allArgs()
-        .filter((args) => args[1].type === 'metaAndAssetCtxs' && args[1].dex)
-        .length;
 
-    service.getMarkets().subscribe();
-    // A registry this refresh could not read leaves canonical markets alone.
-    expect(dexRequests()).toBe(0);
+    service.getDexRegistry().subscribe({ error: () => undefined });
+    tick(1);
+    service.getDexRegistry().subscribe();
 
-    tick(15001);
-    service.getMarkets().subscribe();
-
-    expect(registryAttempts).toBe(2);
-    expect(dexRequests()).toBe(1);
-  }));
-
-  it('waits longer before retrying a rate-limited market snapshot', fakeAsync(() => {
-    http.post.and.returnValue(throwError(() => ({ status: 429 })) as any);
-    (service as any).marketObservers = 1;
-    (service as any).marketState$.next([]);
-    const attempts = () =>
-      http.post.calls
-        .allArgs()
-        .filter((args) => args[1].type === 'metaAndAssetCtxs').length;
-
-    (service as any).loadMarketSnapshot();
-    expect(attempts()).toBe(1);
-
-    // The plain 1s backoff would already have spent another request by here.
-    tick(9999);
-    expect(attempts()).toBe(1);
-    tick(2);
-    expect(attempts()).toBe(2);
-
-    clearTimeout((service as any).marketSnapshotRetryTimer);
+    // A six-hour cache must not be the place a one-off failure goes to live.
+    expect(attempts).toBe(2);
   }));
 
   it('does not keep a failed spot snapshot in the long-lived cache', fakeAsync(() => {
@@ -1145,240 +904,13 @@ describe('HyperliquidService withdrawals', () => {
   }));
 });
 
-describe('isExchangeAnswer', () => {
-  // The two ways a write can not succeed are not the same fact. One says
-  // nothing ran; the other says nobody knows.
-  it('counts anything thrown while reading a response as an answer', () => {
-    expect(isExchangeAnswer(new Error('Insufficient balance'))).toBeTrue();
-  });
-
-  it('counts a refusal the exchange issued as an answer', () => {
-    expect(
-      isExchangeAnswer(new HttpErrorResponse({ status: 422 }))
-    ).toBeTrue();
-  });
-
-  it('does not claim to know the result when the reply was lost', () => {
-    expect(isExchangeAnswer(new HttpErrorResponse({ status: 0 }))).toBeFalse();
-    expect(isExchangeAnswer(new HttpErrorResponse({ status: 502 }))).toBeFalse();
-    expect(isExchangeAnswer(new HttpErrorResponse({ status: 500 }))).toBeFalse();
-  });
-
-  it('reads the same classification as whether a read is worth repeating', () => {
-    // An answered refusal returns the same refusal a second later; rate
-    // limiting is the case that costs something to re-ask.
-    expect(
-      isTransientFetchFailure(new HttpErrorResponse({ status: 429 }))
-    ).toBeFalse();
-    expect(
-      isTransientFetchFailure(new HttpErrorResponse({ status: 422 }))
-    ).toBeFalse();
-    expect(isTransientFetchFailure(new Error('bad json'))).toBeFalse();
-    expect(
-      isTransientFetchFailure(new HttpErrorResponse({ status: 0 }))
-    ).toBeTrue();
-    expect(
-      isTransientFetchFailure(new HttpErrorResponse({ status: 503 }))
-    ).toBeTrue();
-  });
-});
-
-describe('HyperliquidService market detail feed', () => {
-  let http: jasmine.SpyObj<HttpClient>;
-  let service: HyperliquidService;
-  let channel: any;
-
-  const universe = [
-    { name: 'BTC', szDecimals: 5, maxLeverage: 40 },
-    { name: 'ETH', szDecimals: 4, maxLeverage: 25 },
-    { name: 'OLD', szDecimals: 2, maxLeverage: 3, isDelisted: true },
-  ];
-
-  const ctx = (midPx: string | null, markPx = '1875.7') => ({
-    funding: '0.0000125',
-    openInterest: '10',
-    prevDayPx: '1900',
-    dayNtlVlm: '1000',
-    markPx,
-    midPx,
-    oraclePx: '1876',
-  });
-
-  const contexts = [ctx('63000', '63001'), ctx('1875.75'), ctx('1', '1')];
-
-  function answerWith(reply: (body: any) => any) {
-    http.post.and.callFake(
-      (_url: string, body: any) => of(reply(body)) as any
-    );
-  }
-
-  function bodies(): any[] {
-    return http.post.calls.allArgs().map(([, body]) => body);
-  }
-
-  beforeEach(() => {
-    http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
-    channel = fakeChannel();
-    service = new HyperliquidService(http, channel);
-  });
-
-  it('seeds from one DEX and then follows that market\'s own frames', () => {
-    answerWith(() => [{ universe }, contexts]);
-    const seen: any[] = [];
-
-    service.watchMarketDetail('ETH').subscribe((market) => seen.push(market));
-
-    expect(seen.length).toBe(1);
-    expect(seen[0].coin).toBe('ETH');
-    expect(seen[0].assetId).toBe(1);
-    expect(seen[0].midPxExact).toBe('1875.75');
-    // A canonical market is index 0 by definition, so the DEX registry — and
-    // every other DEX's context array — is never requested.
-    expect(bodies().length).toBe(1);
-    expect(bodies()[0]).toEqual({ type: 'metaAndAssetCtxs' });
-
-    channel.push(
-      { type: 'activeAssetCtx', coin: 'ETH' },
-      { coin: 'ETH', ctx: ctx('1880.5', '1880') }
-    );
-
-    expect(seen.length).toBe(2);
-    expect(seen[1].midPxExact).toBe('1880.5');
-    expect(seen[1].markPxExact).toBe('1880');
-    // Static metadata is not re-derived from a context frame.
-    expect(seen[1].szDecimals).toBe(4);
-    expect(seen[1].maxLeverage).toBe(25);
-    expect(seen[1].assetId).toBe(1);
-  });
-
-  it('routes a HIP-3 coin to its own DEX and asset-id space', () => {
-    answerWith((body) =>
-      body.type === 'perpDexs'
-        ? [null, { name: 'xyz' }]
-        : [{ universe: [{ name: 'SNDK', szDecimals: 2, maxLeverage: 5 }] }, [ctx('12.5')]]
-    );
-    const seen: any[] = [];
-
-    service.watchMarketDetail('xyz:SNDK').subscribe((m) => seen.push(m));
-
-    expect(seen[0].coin).toBe('xyz:SNDK');
-    expect(seen[0].symbol).toBe('SNDK');
-    expect(seen[0].dex).toBe('xyz');
-    expect(seen[0].assetId).toBe(110000);
-    expect(bodies()).toContain({ type: 'metaAndAssetCtxs', dex: 'xyz' });
-  });
-
-  it('answers null — not an error — for a coin this build does not carry', () => {
-    answerWith(() => [{ universe }, contexts]);
-    const seen: any[] = [];
-    const failed = jasmine.createSpy('failed');
-
-    service.watchMarketDetail('NOPE').subscribe((m) => seen.push(m), failed);
-    service.watchMarketDetail('OLD').subscribe((m) => seen.push(m), failed);
-    // An unenabled HIP-3 DEX never reaches the network at all.
-    service.watchMarketDetail('other:THING').subscribe((m) => seen.push(m), failed);
-
-    expect(seen).toEqual([null, null, null]);
-    expect(failed).not.toHaveBeenCalled();
-  });
-
-  it('does not repeat a refusal the exchange did answer', fakeAsync(() => {
-    http.post.and.returnValue(
-      throwError(() => new HttpErrorResponse({ status: 429 })) as any
-    );
-    const failed = jasmine.createSpy('failed');
-
-    service.watchMarketDetail('ETH').subscribe({ error: failed });
-    tick(5000);
-
-    // Rate limiting is a reply. Asking the identical question a second later
-    // returns the identical answer and spends another slot out of a budget
-    // that refills over the following minute.
-    expect(http.post).toHaveBeenCalledTimes(1);
-    expect(failed).toHaveBeenCalled();
-  }));
-
-  it('repeats a snapshot the exchange never answered', fakeAsync(() => {
-    let attempts = 0;
-    http.post.and.callFake(
-      () =>
-        (attempts++ === 0
-          ? throwError(() => new HttpErrorResponse({ status: 503 }))
-          : of([{ universe }, contexts])) as any
-    );
-    const seen: any[] = [];
-
-    service.watchMarketDetail('ETH').subscribe((market) => seen.push(market));
-    tick(1000);
-
-    // The page has nothing at all without this snapshot, and a connection that
-    // dropped on the way in decided nothing about whether the market exists.
-    expect(attempts).toBe(2);
-    expect(seen[0].coin).toBe('ETH');
-  }));
-
-  it('spends a bounded budget and then lets the failure stand', fakeAsync(() => {
-    http.post.and.returnValue(
-      throwError(() => new HttpErrorResponse({ status: 500 })) as any
-    );
-    const failed = jasmine.createSpy('failed');
-
-    service.watchMarketDetail('ETH').subscribe({ error: failed });
-    tick(30_000);
-
-    // One attempt plus three evenly spaced retries, and nothing left running
-    // afterwards — `fakeAsync` fails on a timer that outlives the test, so a
-    // standing backoff cannot creep back in unnoticed.
-    expect(http.post).toHaveBeenCalledTimes(4);
-    expect(failed).toHaveBeenCalled();
-  }));
-
-  it('quotes the 24h amount and percent from the same two prices', () => {
-    answerWith(() => [{ universe }, contexts]);
-    const seen: any[] = [];
-    service.watchMarketDetail('ETH').subscribe((m) => seen.push(m));
-
-    // mid 1875.75 against prevDayPx 1900.
-    expect(seen[0].changeAmountExact).toBe('-24.25');
-    expect(seen[0].changePercentExact).toBe('-1.276315789473684211');
-  });
-
-  it('has no 24h change to quote when the book reports no mid', () => {
-    answerWith(() => [
-      { universe },
-      [contexts[0], ctx(null), contexts[2]],
-    ]);
-    const seen: any[] = [];
-    service.watchMarketDetail('ETH').subscribe((m) => seen.push(m));
-
-    // Market statistics unavailable: the mark is a different price kind from
-    // prevDayPx, so there is no honest comparison to make — and `null` is not
-    // the same claim as `0`.
-    expect(seen[0].midPxExact).toBeNull();
-    expect(seen[0].changeAmountExact).toBeNull();
-    expect(seen[0].changePercentExact).toBeNull();
-  });
-
-  it('ignores a frame that carries no context', () => {
-    answerWith(() => [{ universe }, contexts]);
-    const seen: any[] = [];
-    service.watchMarketDetail('ETH').subscribe((m) => seen.push(m));
-
-    channel.push({ type: 'activeAssetCtx', coin: 'ETH' }, { coin: 'ETH' });
-
-    expect(seen.length).toBe(1);
-  });
-});
-
 describe('HyperliquidService candle snapshots', () => {
   it('requests an explicit candle range without deriving it from a limit', () => {
     const http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
     http.post.and.returnValue(of([]) as any);
     const service = new HyperliquidService(http, fakeChannel());
 
-    (service as any)
-      .getCandleRange('NEO', '15m', 1_000, 9_000)
-      .subscribe();
+    service.getCandleRange('NEO', '15m', 1_000, 9_000).subscribe();
 
     expect(http.post).toHaveBeenCalledWith(
       jasmine.any(String),

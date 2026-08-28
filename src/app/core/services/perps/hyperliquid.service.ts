@@ -52,6 +52,7 @@ import {
   PERPS_BUILDER_MAX_FEE_RATE,
   PERPS_DEPOSIT_CONFIG,
   PERPS_HIP3_DEXES,
+  perpsFiniteDecimal,
   resolvePerpsTestnet,
 } from '@popup/_lib/perps';
 import { environment } from '@/environments/environment';
@@ -66,6 +67,10 @@ import {
 } from './hyperliquid-signing';
 import { parsePerpsAccount } from './perps-account-state';
 import { normalizeIds, parseProtocolJson } from './perps-protocol-json';
+import {
+  isExchangeAnswer,
+  retryTransientFetch,
+} from './perps-fetch-failure';
 import { PerpsDataChannel } from './perps-data-channel.service';
 import { PerpsOrder } from './perps-trade-order';
 
@@ -94,64 +99,17 @@ export class PerpsExecutionStatusUnknownError extends Error {
 }
 
 /**
- * Whether a failed write carries an answer from the exchange.
- *
- * Anything thrown while reading a response is an answer by definition — the
- * body arrived and said no. An `HttpErrorResponse` is only an answer when its
- * status is a refusal the exchange itself issued: a 4xx rejects the request
- * before it runs, while a 5xx or a status of zero says the request may have
- * been received and executed with the reply lost on the way back.
- */
-export function isExchangeAnswer(error: any): boolean {
-  const transport =
-    error instanceof HttpErrorResponse || error?.name === 'HttpErrorResponse';
-  if (!transport) {
-    return true;
-  }
-  const status = Number(error?.status);
-  return Number.isFinite(status) && status >= 400 && status < 500;
-}
-
-/**
- * Whether a failed read is worth repeating.
- *
- * The same classification `isExchangeAnswer` makes for writes, read from the
- * other side. If the exchange answered, the read has its result and asking
- * again returns the identical one: a 4xx is a refusal — rate limiting included,
- * where a second-scale retry only spends another slot out of a budget that
- * refills over the following minute — and a body that arrived and failed to
- * parse will fail to parse again. If it did not answer, nothing in the domain
- * was decided and the request is worth resending unchanged.
- */
-export function isTransientFetchFailure(error: any): boolean {
-  return !isExchangeAnswer(error);
-}
-
-/**
  * Read-only access to Hyperliquid market and account data.
  *
  * Every info request is an unauthenticated POST to the same endpoint, discriminated
  * by a `type` field. Live updates arrive over a single websocket that is opened
  * lazily and shared by all subscribers.
  */
-/**
- * How many times a read-only fetch is repeated before its failure is the answer.
- *
- * Bounded and evenly spaced on purpose. Exponential backoff belongs to a
- * process that will still be running in a minute; this one belongs to a popup
- * the user is watching, so the budget is spent inside the time they are
- * already willing to wait for a page, and then it stops. Nothing here reschedules
- * itself afterwards — the next attempt is the user's next action.
- */
-const FETCH_RETRY_ATTEMPTS = 3;
-const FETCH_RETRY_DELAY_MS = 1000;
 
 @Injectable({ providedIn: 'root' })
 export class HyperliquidService {
   private readonly isTestnet = resolvePerpsTestnet(environment.perpsNetwork);
 
-  /** Exchange-time of the newest market frame, for "last updated" display. */
-  private marketFeedAt$ = new BehaviorSubject<number | null>(null);
 
   /**
    * Cache snapshots according to their volatility:
@@ -163,24 +121,12 @@ export class HyperliquidService {
    */
   private readonly accountCacheMs = 3000;
   private readonly accountModeCacheMs = 30 * 60 * 1000;
-  private readonly marketCacheMs = 15000;
   private readonly dexRegistryCacheMs = 6 * 60 * 60 * 1000;
   private readonly userFeeCacheMs = 5 * 60 * 1000;
-  private marketCache: {
-    expiresAt: number;
-    request: Observable<PerpsMarket[]>;
-  };
   private dexRegistryCache: {
     expiresAt: number;
     request: Observable<any[]>;
   };
-  private marketState$ = new BehaviorSubject<PerpsMarket[] | null>(null);
-  private marketError$ = new Subject<any>();
-  private marketLiveSub: Subscription;
-  private marketObservers = 0;
-  private pendingAssetContexts = new Map<string, PerpsAssetCtx[]>();
-  private marketSnapshotRetryTimer: any;
-  private marketSnapshotAttempts = 0;
   private accountCache = new Map<
     string,
     { expiresAt: number; request: Observable<PerpsAccount> }
@@ -327,31 +273,6 @@ export class HyperliquidService {
   }
 
   //#region info requests
-
-  /**
-   * Repeat a read-only fetch while its failure has not answered anything.
-   *
-   * Only a transient fetch failure is repeated: the request never reached the
-   * exchange, or the exchange itself faulted. An answered refusal — any 4xx,
-   * rate limiting included — is a reply, and asking the identical question a
-   * second later gets the identical reply; with a 429 it also spends another
-   * slot out of a budget that refills over the following minute.
-   *
-   * Applied per call site rather than inside `post`, because whether a late
-   * answer is worth having is a property of the caller. A page loading its
-   * market wants one. The order book behind a submission price does not: the
-   * value that arrives three seconds later is not fresher for having been
-   * waited on, it is a stale submission price walking into the freshness check.
-   */
-  private retryTransientFetch<T>(): MonoTypeOperatorFunction<T> {
-    return retry({
-      count: FETCH_RETRY_ATTEMPTS,
-      delay: (error) =>
-        isTransientFetchFailure(error)
-          ? timer(FETCH_RETRY_DELAY_MS)
-          : throwError(() => error),
-    });
-  }
 
   private post<T>(body: any): Observable<T> {
     return this.http
@@ -631,7 +552,7 @@ export class HyperliquidService {
         submittedSizeExact: submitted.toFixed(),
         filledSizeExact: filled.toFixed(),
         remainingSizeExact: remaining.toFixed(),
-        averagePriceExact: this.toFiniteDecimal(status.filled.avgPx),
+        averagePriceExact: perpsFiniteDecimal(status.filled.avgPx),
         raw: response,
       };
     }
@@ -785,7 +706,7 @@ export class HyperliquidService {
    * response is worth caching far longer than the prices it feeds. A failure is
    * never cached: it degrades this refresh to canonical markets and is retried.
    */
-  private getDexRegistry(): Observable<any[]> {
+  getDexRegistry(): Observable<any[]> {
     if (this.supportedHip3Dexes.length === 0) {
       return of([]);
     }
@@ -810,418 +731,15 @@ export class HyperliquidService {
     return request;
   }
 
-  /**
-   * All tradable markets joined with their live context, sorted by 24h volume.
-   * Delisted assets are dropped — they still occupy an index in `universe`, so the
-   * asset id is taken from the original position and must not be recomputed.
-   */
-  getMarkets(): Observable<PerpsMarket[]> {
-    const now = Date.now();
-    if (this.marketCache?.expiresAt > now) {
-      const current = this.marketState$.value;
-      return current !== null ? of(current) : this.marketCache.request;
+  /** One DEX's universe and its live contexts, in matching order. */
+  getMetaAndAssetCtxs(
+    dex?: string
+  ): Observable<[{ universe: PerpsUniverseItem[] }, PerpsAssetCtx[]]> {
+    const body: any = { type: 'metaAndAssetCtxs' };
+    if (dex) {
+      body.dex = dex;
     }
-    const supportedHip3Dexes = this.supportedHip3Dexes;
-    const request = this.getDexRegistry().pipe(
-      switchMap((perpDexs) => {
-        const dexRequests: Array<
-          Observable<{
-            dex: string;
-            dexIndex: number;
-            response: [{ universe: PerpsUniverseItem[] }, PerpsAssetCtx[]];
-          }>
-        > = [
-          this.post<
-            [{ universe: PerpsUniverseItem[] }, PerpsAssetCtx[]]
-          >({ type: 'metaAndAssetCtxs' }).pipe(
-            map((response) => ({ dex: '', dexIndex: 0, response }))
-          ),
-        ];
-        const supportedDexes = new Set(supportedHip3Dexes);
-        (Array.isArray(perpDexs) ? perpDexs : []).forEach((item, dexIndex) => {
-          const dex = item?.name;
-          if (!dex || dexIndex === 0 || !supportedDexes.has(dex)) {
-            return;
-          }
-          dexRequests.push(
-            this.post<
-              [{ universe: PerpsUniverseItem[] }, PerpsAssetCtx[]]
-            >({ type: 'metaAndAssetCtxs', dex }).pipe(
-              map((response) => ({ dex, dexIndex, response })),
-              // One unavailable builder DEX must not hide canonical markets.
-              catchError(() => of(null))
-            )
-          );
-        });
-        return forkJoin(dexRequests);
-      }),
-      map((dexResponses) => {
-        const markets: PerpsMarket[] = [];
-        dexResponses.filter(Boolean).forEach(({ dex, dexIndex, response }) => {
-          const [meta, ctxs] = response || ([] as any);
-          (meta?.universe || []).forEach((item, index) => {
-            const ctx = ctxs?.[index];
-            if (item.isDelisted || !ctx) {
-              return;
-            }
-            markets.push(this.buildMarket(item, ctx, dex, dexIndex, index));
-          });
-        });
-        const sorted = markets.sort((a, b) =>
-          new BigNumber(b.dayVolumeExact)
-            .comparedTo(a.dayVolumeExact)
-        );
-        // Frames that arrived before this snapshot are replayed onto it, so a
-        // slow REST response cannot leave the list a generation behind.
-        let seeded = sorted;
-        this.pendingAssetContexts.forEach((ctxs, dex) => {
-          seeded = this.mergeDexAssetContexts(seeded, dex, ctxs);
-        });
-        return seeded;
-      }),
-      tap((markets) => {
-        this.pendingAssetContexts.clear();
-        this.marketSnapshotAttempts = 0;
-        this.marketState$.next(markets);
-      }),
-      catchError((error) => {
-        if (this.marketCache?.request === request) {
-          this.marketCache = undefined;
-        }
-        throw error;
-      }),
-      shareReplay({ bufferSize: 1, refCount: false })
-    );
-    this.marketCache = {
-      expiresAt: now + this.marketCacheMs,
-      request,
-    };
-    return request;
-  }
-
-  /** Local receive time of the newest market frame, for "last updated" display. */
-  watchMarketFeedAt(): Observable<number | null> {
-    return this.marketFeedAt$.asObservable();
-  }
-
-  /**
-   * Shared live market stream. The first observer opens the websocket and seeds
-   * it from REST; the last observer closes the market subscription.
-   */
-  watchMarkets(): Observable<PerpsMarket[]> {
-    return new Observable<PerpsMarket[]>((observer) => {
-      this.marketObservers += 1;
-      if (this.marketObservers === 1) {
-        this.startMarketStream();
-      }
-      const stateSub = this.marketState$
-        .pipe(
-          filter(
-            (markets): markets is PerpsMarket[] => markets !== null
-          )
-        )
-        .subscribe(observer);
-      const errorSub = this.marketError$.subscribe((error) => observer.error(error));
-      this.loadMarketSnapshot();
-      return () => {
-        stateSub.unsubscribe();
-        errorSub.unsubscribe();
-        this.marketObservers -= 1;
-        if (this.marketObservers === 0) {
-          this.marketLiveSub?.unsubscribe();
-          this.marketLiveSub = undefined;
-          clearTimeout(this.marketSnapshotRetryTimer);
-        }
-      };
-    });
-  }
-
-  /**
-   * One market's live context, from that market's own feed.
-   *
-   * The detail page is what a user watches before tapping Long or Short, so it
-   * follows that market's `activeAssetCtx` channel rather than the market
-   * list's per-DEX periodic frames — see that page's ADR-0001. A frame carries
-   * prices and 24h statistics together, so the page never pairs a price from
-   * one message with a `prevDayPx` from another.
-   *
-   * Emits `null` for a coin this build does not carry: a delisted asset, a DEX
-   * this build does not enable, or a bad route parameter. That is a different
-   * answer from a request that failed, which errors.
-   */
-  watchMarketDetail(coin: string): Observable<PerpsMarket | null> {
-    const dex = coin?.includes(':') ? coin.slice(0, coin.indexOf(':')) : '';
-    if (!coin || !this.enabledDexes.includes(dex)) {
-      return of(null);
-    }
-    return this.getMarketSnapshot(coin, dex).pipe(
-      // The page has nothing at all without this snapshot, and it is a plain
-      // read, so a connection that dropped on the way in is worth asking again
-      // before the user is told the market could not be loaded.
-      this.retryTransientFetch(),
-      switchMap((market) =>
-        market
-          ? concat(
-              of(market),
-              // Frames that arrive while the snapshot is in flight are lost,
-              // which costs nothing: every frame is a complete context, so the
-              // next one restates whatever the missed ones said.
-              this.channel.subscribe({ type: 'activeAssetCtx', coin }).pipe(
-                filter((frame) => !!frame?.ctx),
-                map((frame) => ({
-                  ...market,
-                  ...this.marketContextFields(frame.ctx),
-                }))
-              )
-            )
-          : of(null)
-      )
-    );
-  }
-
-  /**
-   * Static metadata plus one context frame for a single market.
-   *
-   * Only that market's own DEX is asked, which is what keeps the detail page
-   * off the all-DEX snapshot the market list needs. The DEX is read from the
-   * coin itself: a HIP-3 coin carries its DEX as a prefix, and a bare coin is
-   * canonical by definition.
-   */
-  private getMarketSnapshot(
-    coin: string,
-    dex: string
-  ): Observable<PerpsMarket | null> {
-    // The registry only exists to place a HIP-3 DEX in the asset-id space;
-    // canonical markets are index 0 by definition and skip the request.
-    const registry = dex ? this.getDexRegistry() : of([]);
-    return registry.pipe(
-      switchMap((perpDexs) => {
-        const dexIndex = dex
-          ? (Array.isArray(perpDexs) ? perpDexs : []).findIndex(
-              (item) => item?.name === dex
-            )
-          : 0;
-        if (dexIndex < 0) {
-          return of(null);
-        }
-        const request: any = { type: 'metaAndAssetCtxs' };
-        if (dex) {
-          request.dex = dex;
-        }
-        return this.post<
-          [{ universe: PerpsUniverseItem[] }, PerpsAssetCtx[]]
-        >(request).pipe(
-          map(([meta, ctxs]) => {
-            const universe = meta?.universe || [];
-            const index = universe.findIndex(
-              (item) =>
-                (dex && !item.name.includes(':')
-                  ? `${dex}:${item.name}`
-                  : item.name) === coin
-            );
-            const item = universe[index];
-            const ctx = ctxs?.[index];
-            if (!item || item.isDelisted || !ctx) {
-              return null;
-            }
-            return this.buildMarket(item, ctx, dex, dexIndex, index);
-          })
-        );
-      })
-    );
-  }
-
-  /**
-   * One market-context subscription per DEX the product actually shows.
-   *
-   * The alternative, `allDexsAssetCtxs`, broadcasts every deployed HIP-3 DEX in
-   * a single frame — on testnet roughly 170KB of which three quarters is DEXes
-   * NeoLine does not list — and it arrives no more often than the per-DEX
-   * frames do. Each frame carries prices and 24h statistics together, so the
-   * list never has to pair a price from one message with a `prevDayPx` from
-   * another.
-   */
-  private startMarketStream() {
-    const stream = new Subscription();
-    this.enabledDexes.forEach((dex) => {
-      stream.add(
-        this.channel.subscribe({ type: 'assetCtxs', dex }).subscribe((update) =>
-          this.applyAssetContextFrame(dex, update?.ctxs)
-        )
-      );
-    });
-    this.marketLiveSub = stream;
-  }
-
-  private applyAssetContextFrame(dex: string, ctxs: PerpsAssetCtx[]) {
-    if (!Array.isArray(ctxs) || ctxs.length === 0) {
-      return;
-    }
-    this.marketFeedAt$.next(Date.now());
-    const current = this.marketState$.value;
-    if (!current || current.length === 0) {
-      // The REST snapshot defines which markets exist; hold the frame until it
-      // lands rather than inventing markets from a context array.
-      this.pendingAssetContexts.set(dex, ctxs);
-      return;
-    }
-    const updated = this.mergeDexAssetContexts(current, dex, ctxs);
-    this.marketState$.next(updated);
-    this.marketCache = {
-      expiresAt: Date.now() + this.marketCacheMs,
-      request: of(updated),
-    };
-  }
-
-
-  private loadMarketSnapshot() {
-    this.getMarkets().subscribe({
-      error: (error) => {
-        if (this.marketObservers === 0) {
-          return;
-        }
-        if (this.marketState$.value === null) {
-          this.marketError$.next(error);
-          return;
-        }
-        clearTimeout(this.marketSnapshotRetryTimer);
-        // A 429 is an IP budget that only refills over the following minute, so
-        // a one-second retry just spends the next slot on another refusal.
-        const base = error?.status === 429 ? 10000 : 1000;
-        const delay = Math.min(
-          base * Math.pow(2, this.marketSnapshotAttempts),
-          60000
-        );
-        this.marketSnapshotAttempts += 1;
-        this.marketSnapshotRetryTimer = setTimeout(
-          () => this.loadMarketSnapshot(),
-          delay
-        );
-      },
-    });
-  }
-
-  /**
-   * Apply one DEX's context frame to the markets of that DEX.
-   *
-   * Context indexes match that DEX's original universe, so `dexAssetIndex` is
-   * the only valid way in — a market's position in this (volume-sorted) array
-   * is not an asset identifier. Markets on other DEXes keep their exact object
-   * identity, and the array is deliberately not re-sorted: a live price must
-   * not move a row out from under the finger about to tap it.
-   */
-  mergeDexAssetContexts(
-    markets: PerpsMarket[],
-    dex: string,
-    ctxs: PerpsAssetCtx[]
-  ): PerpsMarket[] {
-    if (!Array.isArray(ctxs) || ctxs.length === 0) {
-      return markets;
-    }
-    return markets.map((market) => {
-      if (market.dex !== dex) {
-        return market;
-      }
-      const ctx = ctxs[market.dexAssetIndex];
-      return ctx ? { ...market, ...this.marketContextFields(ctx) } : market;
-    });
-  }
-
-  /**
-   * One universe entry joined with its live context.
-   *
-   * `assetId` is derived from the entry's position in its own DEX's universe,
-   * which is why the caller passes the original index rather than the position
-   * in any list built from it.
-   */
-  private buildMarket(
-    item: PerpsUniverseItem,
-    ctx: PerpsAssetCtx,
-    dex: string,
-    dexIndex: number,
-    index: number
-  ): PerpsMarket {
-    const protocolCoin =
-      dex && !item.name.includes(':') ? `${dex}:${item.name}` : item.name;
-    const symbol = protocolCoin.includes(':')
-      ? protocolCoin.slice(protocolCoin.indexOf(':') + 1)
-      : protocolCoin;
-    const marginMode =
-      item.marginMode === 'strictIsolated' || item.marginMode === 'noCross'
-        ? item.marginMode
-        : null;
-    return {
-      key: `${dex || 'hl'}:${symbol}`,
-      assetId: dex ? 100000 + dexIndex * 10000 + index : index,
-      dex,
-      dexAssetIndex: index,
-      coin: protocolCoin,
-      symbol,
-      szDecimals: item.szDecimals,
-      maxLeverage: item.maxLeverage,
-      marginMode,
-      ...this.marketContextFields(ctx),
-    };
-  }
-
-  private marketContextFields(
-    ctx: PerpsAssetCtx
-  ): Pick<
-    PerpsMarket,
-    | 'markPxExact'
-    | 'midPxExact'
-    | 'oraclePxExact'
-    | 'prevDayPxExact'
-    | 'changePercentExact'
-    | 'changeAmountExact'
-    | 'dayVolumeExact'
-    | 'openInterestExact'
-    | 'openInterestSizeExact'
-    | 'fundingExact'
-  > {
-    const markPxExact = this.toFiniteDecimal(ctx.markPx);
-    const rawMidPxExact =
-      ctx.midPx === null ? null : this.toFiniteDecimal(ctx.midPx);
-    const midPxExact =
-      rawMidPxExact && new BigNumber(rawMidPxExact).isGreaterThan(0)
-        ? rawMidPxExact
-        : null;
-    const oraclePxExact = this.toFiniteDecimal(ctx.oraclePx);
-    const prevDayPxExact = this.toFiniteDecimal(ctx.prevDayPx);
-    const dayVolumeExact = this.toFiniteDecimal(ctx.dayNtlVlm);
-    const openInterestSizeExact = this.toFiniteDecimal(ctx.openInterest);
-    const openInterestExact = new BigNumber(openInterestSizeExact)
-      .times(markPxExact)
-      .toFixed();
-    const fundingExact = this.toFiniteDecimal(ctx.funding);
-    const changeAmount =
-      midPxExact && new BigNumber(prevDayPxExact).isGreaterThan(0)
-        ? new BigNumber(midPxExact).minus(prevDayPxExact)
-        : null;
-    const change = changeAmount
-      ? changeAmount.dividedBy(prevDayPxExact).times(100)
-      : null;
-    return {
-      markPxExact,
-      midPxExact,
-      oraclePxExact,
-      prevDayPxExact,
-      // Quoted against the mid, which is the price every screen displays, so a
-      // price and the change beside it can never disagree. `prevDayPx` is the
-      // mid of 24h ago, so this is mid against mid — the one comparison that
-      // means anything. The mark is an oracle-weighted price that lags the book
-      // by design; it stays reserved for margin, liquidation and valuation, and
-      // must never stand in here. A market with no mid has no change to quote:
-      // that is market statistics unavailable, which is `null` and not `0`.
-      changePercentExact: change ? change.toFixed() : null,
-      // Derived from the same two prices as the percentage, so the amount and
-      // the percentage beside it can never describe different moves.
-      changeAmountExact: changeAmount ? changeAmount.toFixed() : null,
-      dayVolumeExact,
-      openInterestSizeExact,
-      openInterestExact,
-      fundingExact,
-    };
+    return this.post(body);
   }
 
   /**
@@ -1334,7 +852,7 @@ export class HyperliquidService {
       },
       maxTradeSzs,
       availableToTrade,
-      markPxExact: this.toFiniteDecimal(data.markPx),
+      markPxExact: perpsFiniteDecimal(data.markPx),
       markPx: this.toFiniteNumber(data.markPx),
     };
   }
@@ -1402,12 +920,6 @@ export class HyperliquidService {
   private toFiniteNumber(value: any): number {
     const parsed = Number(value ?? 0);
     return Number.isFinite(parsed) ? parsed : 0;
-  }
-
-  /** Keep API decimal strings intact for values that can flow back into a signature. */
-  private toFiniteDecimal(value: any): string {
-    const parsed = new BigNumber(value ?? 0);
-    return parsed.isFinite() ? (parsed.isZero() ? '0' : parsed.toFixed()) : '0';
   }
 
   /** Historical candles for an explicit exchange-time range. */

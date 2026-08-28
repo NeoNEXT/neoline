@@ -11,6 +11,7 @@ import {
   GlobalService,
 } from '@/app/core';
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
+import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
 import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import { EvmWalletJSON } from '@popup/_lib/evm';
 import {
@@ -107,7 +108,8 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     private chrome: ChromeService,
     private evmWallet: EvmWalletService,
     private global: GlobalService,
-    private channel: PerpsDataChannel
+    private channel: PerpsDataChannel,
+    private markets$: PerpsMarketDatasetService
   ) {}
 
   ngOnInit() {
@@ -137,7 +139,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
       this.hyperliquid.getOpenOrders(this.address),
       // Markets only resolve the asset id a cancel needs. A rate-limited or
       // failed market snapshot must not hide orders that loaded fine.
-      this.hyperliquid.getMarkets().pipe(catchError(() => of([]))),
+      this.markets$.getMarkets().pipe(catchError(() => of([]))),
     ]).subscribe(
       ([openOrders, markets]) => {
         this.openOrders = openOrders;

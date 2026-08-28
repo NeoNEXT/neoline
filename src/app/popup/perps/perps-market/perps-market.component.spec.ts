@@ -32,6 +32,13 @@ const service = (overrides: any = {}) =>
     ...overrides,
   } as any);
 
+/** The 行情数据集 as this page uses it: one market, followed live. */
+const markets = (overrides: any = {}) =>
+  ({
+    watchMarketDetail: () => new Subject(),
+    ...overrides,
+  } as any);
+
 /** The 数据通道 as this page uses it: the connection, and nothing else. */
 const channel = (overrides: any = {}) =>
   ({
@@ -55,8 +62,9 @@ const build = (router: any = null) =>
     null,
     datasets(),
     detector(),
-    null
-  );
+    null,
+      markets()
+    );
 
 describe('PerpsMarketComponent live price', () => {
   it('quotes the live mid and ignores the trailing candle close', () => {
@@ -238,7 +246,8 @@ describe('PerpsMarketComponent chart presentation', () => {
       service(),
       datasets({ watchDataset: () => states, loadEarlier }),
       cdr,
-      channel()
+      channel(),
+      markets()
     );
     component.coin = 'ETH';
     (component as any).watchDataset();
@@ -256,7 +265,8 @@ describe('PerpsMarketComponent chart presentation', () => {
       service(),
       datasets({ watchDataset }),
       detector(),
-      channel()
+      channel(),
+      markets()
     );
     component.coin = 'xyz:SNDK';
     component.interval = '1h';
@@ -378,7 +388,8 @@ describe('PerpsMarketComponent candle intervals', () => {
       service(),
       datasets(),
       cdr,
-      channel()
+      channel(),
+      markets()
     );
     component.coin = 'ETH';
     return { component, setStorage, cdr };
@@ -433,7 +444,8 @@ describe('PerpsMarketComponent candle intervals', () => {
       service(),
       datasets({ watchDataset }),
       detector(),
-      channel()
+      channel(),
+      markets()
     );
     component.coin = 'ETH';
 
@@ -491,11 +503,11 @@ describe('PerpsMarketComponent change detection', () => {
       null,
       { getStorage: () => of(undefined), setStorage: () => undefined } as any,
       service({
-        watchMarketDetail: () => new Subject(),
       }),
       datasets(),
       cdr,
-      channel({ watchConnectionState: () => state })
+      channel({ watchConnectionState: () => state }),
+      markets({ watchMarketDetail: () => new Subject() })
     );
 
     component.ngOnInit();
@@ -511,10 +523,10 @@ describe('PerpsMarketComponent change detection', () => {
     const cdr = detector();
     const feed = new Subject<PerpsMarket>();
     const component = new PerpsMarketComponent(null, null, null, {
-      watchMarketDetail: () => feed,
     } as any,
  datasets(), cdr,
-      channel()
+      channel(),
+      markets({ watchMarketDetail: () => feed })
     );
     component.coin = 'ETH';
     (component as any).loadMarket();
@@ -529,11 +541,15 @@ describe('PerpsMarketComponent change detection', () => {
     const watchMarketDetail = jasmine
       .createSpy('watchMarketDetail')
       .and.returnValue(throwError(() => new Error('429')));
-    const component = new PerpsMarketComponent(null, null, null, {
-      watchMarketDetail,
-    } as any,
- datasets(), detector(),
-      channel()
+    const component = new PerpsMarketComponent(
+      null,
+      null,
+      null,
+      null,
+      datasets(),
+      detector(),
+      channel(),
+      markets({ watchMarketDetail })
     );
     component.coin = 'ETH';
 
@@ -549,11 +565,15 @@ describe('PerpsMarketComponent change detection', () => {
 
   it('marks the view when the market turns out not to exist', () => {
     const cdr = detector();
-    const component = new PerpsMarketComponent(null, null, null, {
-      watchMarketDetail: () => of(null),
-    } as any,
- datasets(), cdr,
-      channel()
+    const component = new PerpsMarketComponent(
+      null,
+      null,
+      null,
+      null,
+      datasets(),
+      cdr,
+      channel(),
+      markets({ watchMarketDetail: () => of(null) })
     );
     component.coin = 'NOPE';
 
@@ -566,7 +586,8 @@ describe('PerpsMarketComponent change detection', () => {
   it('marks the view on every countdown tick', () => {
     const cdr = detector();
     const component = new PerpsMarketComponent(null, null, null, null, datasets(), cdr,
-      channel()
+      channel(),
+      markets()
     );
 
     (component as any).tickCountdown();
@@ -604,7 +625,8 @@ describe('PerpsMarketComponent coin switcher', () => {
   it('marks the view so the menu appears under OnPush', () => {
     const cdr = detector();
     const component = new PerpsMarketComponent(null, null, null, null, datasets(), cdr,
-      channel()
+      channel(),
+      markets()
     );
 
     component.toggleCoinMenu();
@@ -619,11 +641,11 @@ describe('PerpsMarketComponent coin switcher', () => {
       null,
       { getStorage: () => of(undefined), setStorage: () => undefined } as any,
       service({
-        watchMarketDetail: () => new Subject(),
       }),
       datasets(),
       detector(),
-      channel({ watchConnectionState: () => new Subject() })
+      channel({ watchConnectionState: () => new Subject() }),
+      markets({ watchMarketDetail: () => new Subject() })
     );
     component.ngOnInit();
     params.next({ coin: 'ETH' });
@@ -647,11 +669,11 @@ describe('PerpsMarketComponent route changes', () => {
       null,
       { getStorage: () => of(undefined), setStorage: () => undefined } as any,
       service({
-        watchMarketDetail: () => feed,
       }),
       datasets(),
       cdr,
-      channel({ watchConnectionState: () => new Subject() })
+      channel({ watchConnectionState: () => new Subject() }),
+      markets({ watchMarketDetail: () => feed })
     );
     component.ngOnInit();
     return component;

@@ -22,8 +22,9 @@ function component(builderAddress = ''): PerpsOrderComponent {
     null,
     null,
     null,
-    null
-  );
+    null,
+      null
+    );
 }
 
 const facts = (overrides: Partial<PerpsOrderFacts> = {}): PerpsOrderFacts => ({
@@ -237,6 +238,7 @@ describe('PerpsOrderComponent submission seam', () => {
       tradeOrders,
       chrome,
       evmWallet,
+      null,
       null
     );
     value.facts = facts({

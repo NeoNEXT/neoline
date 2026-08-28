@@ -12,6 +12,7 @@ import {
   GlobalService,
 } from '@/app/core';
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
+import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
 import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
 import { PerpsTradeOrderService } from '@/app/core/services/perps/perps-trade-order.service';
 import { PerpsTradeOrderError } from '@/app/core/services/perps/perps-trade-order';
@@ -232,7 +233,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     private tradeOrders: PerpsTradeOrderService,
     private chrome: ChromeService,
     private evmWallet: EvmWalletService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private markets$: PerpsMarketDatasetService
   ) {}
 
   ngOnInit() {
@@ -292,7 +294,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    * same one market this page is about.
    */
   private loadMarket() {
-    this.marketsSub = this.hyperliquid.watchMarketDetail(this.coin).subscribe({
+    this.marketsSub = this.markets$.watchMarketDetail(this.coin).subscribe({
       next: (market) => {
         const initialLoad = !this.market;
         this.patchFacts({

@@ -5,7 +5,7 @@ import BigNumber from 'bignumber.js';
 import { Unsubscribable } from 'rxjs';
 
 import { AppState } from '@/app/reduers';
-import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
+import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
 import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
 import {
@@ -63,7 +63,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router,
     private store: Store<AppState>,
-    private hyperliquid: HyperliquidService,
+    private markets$: PerpsMarketDatasetService,
     private accountStates: PerpsAccountStateService,
     private channel: PerpsDataChannel
   ) {}
@@ -91,9 +91,9 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
 
   /** Track shared feed health for the existing stale banner. */
   private watchFeedHealth() {
-    this.feedAtSub = this.hyperliquid
-      .watchMarketFeedAt()
-      .subscribe((at) => (this.marketFeedAt = at));
+    this.feedAtSub = this.markets$
+      .watchMarkets()
+      .subscribe((state) => (this.marketFeedAt = state.updatedAt));
     this.connectionSub = this.channel
       .watchConnectionState()
       .subscribe((state) => {

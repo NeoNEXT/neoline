@@ -13,6 +13,7 @@ import { tap, throttleTime } from 'rxjs/operators';
 
 import { ChromeService } from '@/app/core';
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
+import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
 import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import {
   PerpsCandleAvailability,
@@ -126,7 +127,8 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     private hyperliquid: HyperliquidService,
     private candleDatasets: PerpsCandleDatasetService,
     private cdr: ChangeDetectorRef,
-    private channel: PerpsDataChannel
+    private channel: PerpsDataChannel,
+    private markets$: PerpsMarketDatasetService
   ) {}
 
   ngOnInit() {
@@ -337,7 +339,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
 
   private loadMarket() {
     this.marketsSub?.unsubscribe();
-    this.marketsSub = this.hyperliquid.watchMarketDetail(this.coin).subscribe({
+    this.marketsSub = this.markets$.watchMarketDetail(this.coin).subscribe({
       next: (market) => {
         this.market = market ?? undefined;
         this.marketStatus = market ? 'ready' : 'missing';

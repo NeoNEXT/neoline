@@ -3,6 +3,8 @@
  * Docs: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api
  */
 
+import BigNumber from 'bignumber.js';
+
 import { environment } from '@/environments/environment';
 
 export type PerpsNetwork = 'mainnet' | 'testnet';
@@ -13,6 +15,18 @@ export type PerpsNetwork = 'mainnet' | 'testnet';
  * Testnet is a development affordance, so a production build takes mainnet no
  * matter how the environment file is configured.
  */
+/**
+ * Coerce an API value to a finite protocol-precision decimal string.
+ *
+ * Keeps the exchange's own decimal text intact for anything that can flow back
+ * into a signature, and answers '0' rather than NaN for a field the exchange
+ * omitted (ADR-0001).
+ */
+export function perpsFiniteDecimal(value: any): string {
+  const parsed = new BigNumber(value ?? 0);
+  return parsed.isFinite() ? (parsed.isZero() ? '0' : parsed.toFixed()) : '0';
+}
+
 export function resolvePerpsTestnet(
   configuredNetwork: PerpsNetwork,
   production = environment.production
