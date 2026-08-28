@@ -20,10 +20,8 @@ const ERC20_ABI = [
 ];
 
 /**
- * One call does the whole deposit: the extension pulls the USDC using the
- * user's signed authorisation and burns it through CCTP in the same
- * transaction. The separate approve that `TokenMessengerV2` would need is what
- * this contract exists to avoid.
+ * 一次调用完成整笔入金：扩展合约凭用户签署的授权把 USDC 拉走，并在同一笔交易里通过
+ * CCTP 销毁它。`TokenMessengerV2` 本来需要的那次单独 approve，正是这个合约要省掉的东西。
  */
 const CCTP_EXTENSION_ABI = [
   'function batchDepositForBurnWithAuth(' +
@@ -44,19 +42,17 @@ const RECEIVE_WITH_AUTHORIZATION_TYPES = {
 };
 
 /**
- * What became of a deposit on the source chain.
+ * 一笔入金在源链上的结局。
  *
- * `pending` is not a failure and `reverted` is not a delay; the interface has
- * to be able to say each of them.
+ * `pending` 不是失败，`reverted` 也不是延迟；界面必须能把它们分别说清楚。
  */
 export type PerpsDepositOutcome = 'confirmed' | 'reverted' | 'pending';
 
 /**
- * A signed permission for the extension contract to take exactly this deposit.
+ * 一份已签名的许可，准许扩展合约恰好取走这一笔入金。
  *
- * Held instead of the private key between estimating the fee and broadcasting:
- * it authorises one amount, to one contract, for a bounded time, and it cannot
- * be turned back into a key.
+ * 在估算手续费与广播之间，持有的是它而不是私钥：它只授权一个金额、一个合约、一段有限的
+ * 时间，而且没法再变回私钥。
  */
 export interface PerpsDepositAuthorization {
   from: string;
@@ -73,7 +69,7 @@ export interface PerpsDepositAuthorization {
 export class PerpsDepositChainService {
   constructor(private rpc: PerpsRpcService) {}
 
-  /** Exact token balance, or a `PerpsChainError` when nobody would answer. */
+  /** 精确的代币余额；当没有任何端点作答时返回 `PerpsChainError`。 */
   async tokenBalanceExact(
     config: PerpsDepositConfig,
     address: string
@@ -85,7 +81,7 @@ export class PerpsDepositChainService {
     });
   }
 
-  /** Native balance on the deposit chain — what actually pays for the gas. */
+  /** 入金链上的原生代币余额 —— 真正用来付 gas 的就是它。 */
   async nativeBalanceExact(
     config: PerpsDepositConfig,
     address: string
@@ -97,12 +93,11 @@ export class PerpsDepositChainService {
   }
 
   /**
-   * Sign the authorisation this deposit will be carried by.
+   * 签署这笔入金所依据的授权。
    *
-   * The token's EIP-712 name and version are read from the token rather than
-   * assumed. Getting either wrong produces a signature the contract rejects,
-   * which would surface as an unexplained failure at broadcast; reading them
-   * turns that into an ordinary unreachable-chain error instead.
+   * 代币的 EIP-712 name 和 version 是从代币里读出来的，而不是假定的。任何一个搞错，都会
+   * 产生一个被合约拒绝的签名，最终在广播时表现为一次莫名其妙的失败；把它们读出来，就把
+   * 那种失败变成了一个普通的「链不可达」错误。
    */
   async authorizeDeposit(
     config: PerpsDepositConfig,
@@ -156,13 +151,12 @@ export class PerpsDepositChainService {
   }
 
   /**
-   * What the deposit will cost in the chain's own currency, as a ceiling.
+   * 这笔入金以链自身货币计的成本上限。
    *
-   * Estimated against the real call rather than assumed — on a rollup the true
-   * cost moves with the L1 data fee — and then raised by the same 20% Circle's
-   * own example uses, because an authorisation plus an external call estimates
-   * tightly and a deposit that runs out of gas still burns what it spent. The
-   * buffered limit is both what gets sent and what the user is shown.
+   * 针对真实调用做估算而不是拍脑袋 —— 在 rollup 上真实成本会随 L1 数据费浮动 —— 然后
+   * 按 Circle 自己示例里同样的 20% 上浮，因为「一次授权加一次外部调用」的估算余量很紧，
+   * 而 gas 耗尽的入金照样会烧掉已经花出去的部分。带缓冲的上限既是实际发出去的值，也是
+   * 展示给用户的值。
    */
   async depositFeeExact(
     config: PerpsDepositConfig,
@@ -189,14 +183,12 @@ export class PerpsDepositChainService {
   }
 
   /**
-   * Broadcast the deposit and return its hash; it is not yet confirmed.
+   * 广播这笔入金并返回它的哈希；此时尚未确认。
    *
-   * Signed once, then sent as fixed bytes. The endpoint rotation and retries
-   * underneath exist for reads, and a write handed to them directly would
-   * re-sign on every attempt: a response lost after the node accepted the
-   * transaction would come back as a second burn of the user's USDC. Pinning
-   * the nonce and the fees into one signature makes every resubmission the
-   * same transaction, which a node either already has or has yet to see.
+   * 只签一次名，之后作为固定字节发送。底下的端点轮换和重试是为读取准备的，若把写操作
+   * 直接交给它们，每次尝试都会重新签名：节点已经接受交易之后丢失的那次响应，会以用户
+   * USDC 的第二次销毁的形式回来。把 nonce 和手续费钉进同一个签名里，可以让每一次重发都
+   * 是同一笔交易 —— 节点要么已经有它，要么还没见过它。
    */
   async sendDeposit(
     config: PerpsDepositConfig,
@@ -225,16 +217,12 @@ export class PerpsDepositChainService {
   }
 
   /**
-   * What the deposit transaction did on the source chain, within the caller's
-   * patience.
+   * 在调用方愿意等待的时间内，这笔入金交易在源链上究竟做成了什么。
    *
-   * Three outcomes, because collapsing them loses the one that matters most.
-   * `pending` says only that it has not confirmed yet — the deposit is
-   * broadcast and may still land. `reverted` is the opposite: a receipt with a
-   * failed status is a settled answer, the USDC was never burned, and no
-   * HyperCore credit is ever coming. Reading the presence of a receipt as
-   * success puts a reverted deposit into an unending wait for a credit that
-   * cannot arrive.
+   * 三种结果，因为把它们压成两种会丢掉最要紧的那一种。`pending` 只说明它还没确认 ——
+   * 入金已经广播，仍有可能落块。`reverted` 恰恰相反：一份状态为失败的回执是有定论的
+   * 答案，USDC 从未被销毁，HyperCore 那边的入账也永远不会来。仅凭「有回执」就判定成功，
+   * 会让一笔已经 revert 的入金陷入对一笔不可能到来的入账的无尽等待。
    */
   async depositOutcome(
     config: PerpsDepositConfig,
@@ -258,12 +246,11 @@ export class PerpsDepositChainService {
   }
 
   /**
-   * The two structs the extension is called with.
+   * 调用扩展合约时传入的两个结构体。
    *
-   * `mintRecipient` and `destinationCaller` are both the forwarder on HyperEVM,
-   * never the user: the mint goes to the forwarder, which then credits the
-   * user's HyperCore account from the hook data. Either one pointing anywhere
-   * else strands the money permanently.
+   * `mintRecipient` 和 `destinationCaller` 都是 HyperEVM 上的转发器，绝不是用户本人：
+   * mint 到转发器，再由它依据 hook data 给用户的 HyperCore 账户入账。这两者中任何一个
+   * 指向别处，都会让这笔钱永久搁浅。
    */
   private callArguments(
     config: PerpsDepositConfig,
@@ -301,7 +288,7 @@ export class PerpsDepositChainService {
   }
 
   private bufferedGas(estimate: bigint): bigint {
-    // Held as tenths so a buffer like 1.15 cannot go through Number into BigInt.
+    // 以十分之一为单位保存，这样像 1.15 这样的缓冲系数就不必经由 Number 转成 BigInt。
     const tenths = new BigNumber(PERPS_DEPOSIT_GAS_BUFFER).times(10);
     if (!tenths.isInteger() || !tenths.isPositive()) {
       throw new Error('PERPS_DEPOSIT_GAS_BUFFER must be a positive multiple of 0.1');
@@ -310,12 +297,11 @@ export class PerpsDepositChainService {
   }
 
   /**
-   * The HyperEVM side that belongs to this deposit chain.
+   * 属于这条入金链的 HyperEVM 一侧。
    *
-   * Matched explicitly and refused when it does not match, rather than falling
-   * back to one of them: the forwarder address chosen here becomes the mint
-   * recipient, and a testnet forwarder named in a mainnet burn sends real USDC
-   * somewhere nobody can retrieve it from.
+   * 显式匹配，匹配不上就拒绝，而不是退回到其中某一个：这里选定的转发器地址会成为 mint
+   * 的收款方，而在一次主网销毁里写上测试网转发器，会把真金白银的 USDC 送到谁也取不回来
+   * 的地方。
    */
   private hyperEvmFor(config: PerpsDepositConfig) {
     const paired = Object.values(PERPS_HYPEREVM_CONFIG).find(
@@ -332,11 +318,10 @@ export class PerpsDepositChainService {
 }
 
 /**
- * Hook data telling the forwarder which HyperCore account to credit.
+ * 告诉转发器该给哪个 HyperCore 账户入账的 hook data。
  *
- * The layout is Circle's: a 24-byte `cctp-forward` marker, a version, the
- * length of what follows, the recipient, and which HyperCore balance to credit.
- * Only the perps balance is ever named here.
+ * 布局来自 Circle：24 字节的 `cctp-forward` 标记、一个版本号、后续内容的长度、收款方，
+ * 以及要入账到哪个 HyperCore 余额。这里只会写永续余额。
  */
 export function encodeForwardHookData(
   recipient: string,
@@ -353,7 +338,7 @@ export function encodeForwardHookData(
   return `0x${magic}${version}${dataLength}${address}${dex}`;
 }
 
-/** Whether an exact decimal covers another, without passing through Number. */
+/** 一个精确十进制是否覆盖得住另一个，全程不经过 Number。 */
 export function coversExact(
   available: string | null,
   required: string | null

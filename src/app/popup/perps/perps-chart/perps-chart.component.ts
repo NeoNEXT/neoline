@@ -26,19 +26,19 @@ import BigNumber from 'bignumber.js';
 import { PerpsCandle } from '@popup/_lib/perps';
 import { pad2, stripTrailingZeros } from '../perps.util';
 
-/** Colors shared by both themes; grid/text colors are read from CSS variables. */
+/** 两种主题共用的颜色；网格与文字颜色从 CSS 变量读取。 */
 const UP_COLOR = '#06ccab';
 const DOWN_COLOR = '#fa5555';
-const VOLUME_ALPHA = '59'; // 35% opacity suffix for 8-digit hex colors
-/** Candles stay legible at extension width up to about this many on screen. */
+const VOLUME_ALPHA = '59'; // 8 位十六进制颜色的 35% 不透明度后缀
+/** 在扩展宽度下，同屏最多这么多根 K 线仍然清晰可辨。 */
 const INITIAL_VISIBLE_BARS = 30;
 const RIGHT_OFFSET_BARS = 2;
-/** Logical index below which the chart asks for older bars. */
+/** 逻辑下标低于此值时，图表就去请求更早的柱子。 */
 const HISTORY_LOAD_FROM = 5;
-/** Above this, one setData plus range restore is cheaper than N updates. */
+/** 超过这个数量时，一次 setData 加恢复视口，比 N 次 update 更便宜。 */
 const MAX_INCREMENTAL_TAIL_BARS = 100;
 
-/** What was last handed to the chart, for telling a tick from a new dataset. */
+/** 上次交给图表的内容，用于区分一次行情跳动和一个新数据集。 */
 interface RenderedDataset {
   seriesKey: string;
   firstTime: number;
@@ -46,20 +46,18 @@ interface RenderedDataset {
   count: number;
 }
 
-/** One candle as the chart sees it: the bar and the volume column under it. */
+/** 图表视角下的一根 K 线：柱子本身，以及它下面的成交量柱。 */
 interface CandlePoint {
   bar: CandlestickData;
-  /** `null` when only the volume failed to convert; the bar still draws. */
+  /** 仅成交量换算失败时为 `null`；柱子照画。 */
   volume: HistogramData | null;
 }
 
 /**
- * Candlestick + volume chart backed by the lightweight-charts library.
+ * 基于 lightweight-charts 库的 K 线 + 成交量图表。
  *
- * Candles in, sized chart out. Live ticks go through `series.update` so they
- * don't reset the user's zoom or scroll position — see the market detail
- * page's ADR-0002 for why that distinction is a domain rule and not a
- * rendering detail.
+ * 传入 K 线，输出排好版的图表。实时跳动走 `series.update`，这样不会重置用户的缩放或滚动
+ * 位置 —— 为什么这个区分是领域规则而不是渲染细节，见市场详情页的 ADR-0002。
  */
 @Component({
   selector: 'perps-chart',
@@ -69,21 +67,18 @@ interface CandlePoint {
 export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() candles: PerpsCandle[] = [];
   @Input() loading = false;
-  /** Decimal places used for the price axis. */
+  /** 价格坐标轴使用的小数位数。 */
   @Input() priceDecimals = 4;
   /**
-   * Identity of the dataset on screen, normally market plus interval.
+   * 屏幕上这个数据集的身份，通常是市场加周期。
    *
-   * A change here means these are different candles, not newer ones, so the
-   * whole series is replaced. Without it, a new interval whose first bar
-   * happened to start at the same time as the old one would be mistaken for a
-   * live tick.
+   * 它一变，就说明这是「另一批 K 线」而不是「更新的 K 线」，因此整条序列会被替换。没有
+   * 它的话，一个新周期若恰好首根柱子的起始时间与旧周期相同，就会被误当成一次实时跳动。
    */
   @Input() seriesKey = '';
   /**
-   * The visible window has reached the oldest bar we have. The parent pages
-   * an earlier snapshot and prepends it; this component will not snap the
-   * viewport back to the latest bars when that happens.
+   * 可见窗口已经到达我们手上最老的那根柱子。父组件会翻页取更早的快照并前插进来；
+   * 发生这件事时，本组件不会把视口弹回最新的柱子。
    */
   @Output() needEarlier = new EventEmitter<void>();
 
@@ -96,7 +91,7 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   private themeObserver: MutationObserver;
   private viewReady = false;
   private rendered: RenderedDataset | null = null;
-  /** First-bar time we already asked to extend, so the same edge is not re-paged. */
+  /** 已经请求过延展的首根柱子时间，避免对同一个边缘重复翻页。 */
   private historyRequestedAt: number | null = null;
 
   constructor(private zone: NgZone) {}
@@ -110,7 +105,7 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     if (this.candles?.length) {
       this.render();
     }
-    // Grid and axis text colors differ between the two app themes.
+    // 网格和坐标轴文字的颜色在两种应用主题下不同。
     this.themeObserver = new MutationObserver(() => this.applyThemeColors());
     this.themeObserver.observe(document.documentElement, {
       attributes: true,
@@ -150,9 +145,8 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
         this.createChart();
       }
       if (data.length === 0) {
-        // An empty dataset is an answer, not the absence of one. Leaving the
-        // previous interval's candles up beside a "failed to load" message
-        // shows a market that is not there.
+        // 空数据集是一个答案，而不是没有答案。把上一个周期的 K 线留在「加载失败」的
+        // 提示旁边，展示的是一个并不存在的市场。
         this.candleSeries.setData([]);
         this.volumeSeries.setData([]);
         this.rendered = null;
@@ -166,10 +160,9 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
         count: data.length,
       };
       const prev = this.rendered;
-      // This is a cheap proxy for an unchanged prefix, not its proof: the
-      // producer only replaces the last bar, prepends history, or appends.
-      // Checking the old tail at its old index catches accidental trimming
-      // without comparing the whole array on every frame.
+      // 这是对「前缀未变」的一个廉价近似，而不是证明：生产方只会替换最后一根柱子、
+      // 前插历史，或者追加。在旧位置上检查旧的末根柱子，就能在不逐帧比较整个数组的
+      // 前提下，抓到意外的裁剪。
       const appended = prev ? data.slice(prev.count) : [];
       let appendedAfter = prev?.lastTime ?? 0;
       const appendedInOrder = appended.every((candle) => {
@@ -189,12 +182,11 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
         prev.seriesKey === next.seriesKey &&
         next.firstTime < prev.firstTime &&
         next.count > prev.count;
-      // Assign before viewport changes so a left-edge callback can page.
+      // 在视口变化之前赋值，好让左边缘回调能够翻页。
       this.rendered = next;
       if (isTailUpdate) {
-        // On a roll-over the previous bar is replayed as well: a bar's final
-        // OHLCV can differ from the last value that streamed while it was
-        // still open.
+        // 柱子滚动时，前一根也会被重放一遍：一根柱子最终的 OHLCV，可能与它还开着时
+        // 流式推送的最后一个值不同。
         const appendedCount = next.count - prev.count;
         if (appendedCount <= MAX_INCREMENTAL_TAIL_BARS) {
           data
@@ -259,7 +251,7 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
       lastValueVisible: false,
       priceLineVisible: false,
     });
-    // Volume occupies the bottom fifth, candles keep the rest.
+    // 成交量占底部五分之一，K 线占其余部分。
     this.chart
       .priceScale('volume')
       .applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
@@ -272,15 +264,13 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   }
 
   /**
-   * Keep the bars the user is looking at in the same place on screen after
-   * older history is inserted at index 0. `setData` would otherwise leave the
-   * logical range alone, so the left edge would suddenly show the new oldest
-   * bars instead of the ones they had scrolled to.
+   * 在下标 0 处插入更早的历史之后，让用户正在看的那些柱子仍停在屏幕上的同一位置。
+   * 否则 `setData` 不会动逻辑范围，于是左边缘会突然显示新的最老柱子，而不是用户滚动到
+   * 的那些。
    *
-   * The shift counts bars the chart actually drew ahead of the previous start,
-   * never candles handed in: an unrenderable point is dropped on its way to
-   * the series, so shifting by the raw array difference would move the window
-   * further than the data moved and slide the user's bars off to the right.
+   * 平移量统计的是图表在原起点之前实际画出来的柱子数，绝不是传进来的 K 线数：画不出来
+   * 的点会在送往序列的路上被丢掉，所以按原始数组差值平移，会让窗口移动得比数据更多，
+   * 把用户的柱子甩到右边去。
    */
   private prependHistory(data: PerpsCandle[], prevFirstTime: number) {
     const range = this.chart.timeScale().getVisibleLogicalRange();
@@ -302,7 +292,7 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     });
   }
 
-  /** Replace a large append in bulk without changing existing logical indices. */
+  /** 批量替换一次大规模追加，且不改变已有的逻辑下标。 */
   private replaceTailPreservingViewport(data: PerpsCandle[]) {
     const range = this.chart.timeScale().getVisibleLogicalRange();
     this.setAllData(data);
@@ -335,9 +325,8 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   }
 
   /**
-   * `fitContent` compressed the complete candle snapshot into one screen. Start
-   * at a readable density instead, while leaving later live ticks and user
-   * zoom/scroll untouched.
+   * `fitContent` 会把完整的 K 线快照压进一屏。改为从一个可读的密度开始，
+   * 同时不去动之后的实时跳动和用户的缩放/滚动。
    */
   private showRecentBars(dataLength: number) {
     const lastIndex = dataLength - 1;
@@ -347,7 +336,7 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     });
   }
 
-  /** Returns the bars actually drawn, which invalid points make fewer. */
+  /** 返回实际画出来的柱子数；无效的点会让它变少。 */
   private setAllData(data: PerpsCandle[]): CandlestickData[] {
     const bars: CandlestickData[] = [];
     const volumes: HistogramData[] = [];
@@ -378,22 +367,17 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   }
 
   /**
-   * One candle as chart coordinates, or `null` when it cannot become them.
+   * 把一根 K 线转成图表坐标；转不了时返回 `null`。
    *
-   * Protocol decimals stay as strings through every calculation; this is the
-   * rendering boundary where they become IEEE-754 numbers, and the only one.
-   * A point that cannot survive the conversion is dropped and recorded rather
-   * than drawn at zero: a candle printed at zero is a price claim the market
-   * never made.
+   * 协议小数在所有计算中始终保持字符串形态；这里是它们变成 IEEE-754 数字的渲染边界，
+   * 而且是唯一的一处。挺不过这次换算的点会被丢弃并记录下来，而不是画在零上：画在零上的
+   * K 线，是在替市场做一个它从未做过的价格陈述。
    *
-   * Volume is judged separately and can fail on its own. A price that
-   * converted is a fact the market printed, and it does not stop being one
-   * because the volume field beside it is unusable — so a broken volume costs
-   * this candle its column, not its bar. What it must never do is fall back to
-   * zero: a zero-height column says this interval traded nothing, which is a
-   * claim about the market rather than about our data. An interval that
-   * genuinely traded nothing converts perfectly well and is drawn as the empty
-   * column it is.
+   * 成交量单独判定，可以自己失败。换算成功的价格是市场印出来的事实，它不会因为旁边的
+   * 成交量字段不可用就不再是事实 —— 所以坏掉的成交量只让这根 K 线丢掉它的量柱，而不是
+   * 丢掉它的价格柱。绝不能做的是退回到零：零高度的量柱等于说这个周期没有任何成交，那是
+   * 在陈述市场，而不是在陈述我们的数据。真正没有成交的周期换算得完全正常，会被画成它
+   * 本来的那根空柱子。
    */
   private toPoint(candle: PerpsCandle): CandlePoint | null {
     const time = this.toChartTime(candle?.t);
@@ -405,8 +389,8 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
       return null;
     }
     const [open, high, low, close] = prices;
-    // USD notional, from this candle's own protocol values multiplied exactly.
-    // Hyperliquid quotes candle volume as base-asset size; chart it as USD.
+    // 美元名义价值，由这根 K 线自己的协议值精确相乘得到。
+    // Hyperliquid 把 K 线成交量按基础资产数量报出；这里按美元来画。
     const notional = this.toCoordinate(
       new BigNumber(candle?.v).times(candle?.c),
       true
@@ -424,15 +408,12 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   }
 
   /**
-   * A protocol decimal as a finite chart coordinate, or `null`.
+   * 把一个协议小数转成有限的图表坐标；转不了时返回 `null`。
    *
-   * BigNumber's own `isFinite` is not the test that matters at this boundary:
-   * `1e400` is a perfectly finite decimal that becomes `Infinity` the instant
-   * it is a `number`, and `1e-400` becomes `0`. Magnitude is therefore checked
-   * on the converted value, which is the one the chart will actually plot.
-   * `allowZero` separates the two kinds of quantity crossing here — a price of
-   * zero is never a price this market printed, while a volume of zero is a
-   * real quantity.
+   * 在这个边界上，BigNumber 自己的 `isFinite` 不是要紧的那个判断：`1e400` 是一个完全
+   * 有限的小数，一变成 `number` 就是 `Infinity`，而 `1e-400` 会变成 `0`。所以量级要在
+   * 换算后的值上检查 —— 那才是图表真正会画的那个值。`allowZero` 用来区分经过这里的两类
+   * 数量：价格为零绝不是这个市场印出来的价格，而成交量为零是一个真实的数量。
    */
   private toCoordinate(
     value: BigNumber.Value,
@@ -458,27 +439,24 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   }
 
   /**
-   * The exchange's own UTC seconds, unshifted.
+   * 交易场所自己的 UTC 秒，不做平移。
    *
-   * Nudging timestamps by the local offset would make the axis read as local
-   * time for free, but it also moves every bar boundary: a daily candle would
-   * stop closing when Hyperliquid closes it, and the day a clock changes would
-   * grow a bar of the wrong width. The offset belongs in the labels instead —
-   * see `axisLabel` and `crosshairLabel`.
+   * 按本地时区偏移微调时间戳，可以白得一条按本地时间读的坐标轴，但它同时会挪动每一根
+   * 柱子的边界：日线就不会在 Hyperliquid 收盘的时刻收盘，而调整时钟的那一天还会多出
+   * 一根宽度不对的柱子。时区偏移应当放在标签里 —— 见 `axisLabel` 与 `crosshairLabel`。
    */
   private toChartTime(ms: number): UTCTimestamp | null {
-    // Whole seconds: the library keys bars by this value, and a fractional one
-    // would make two views of the same bar two different bars.
+    // 取整秒：这个库按这个值给柱子建索引，取小数会把同一根柱子的两个视图
+    // 变成两根不同的柱子。
     return Number.isFinite(ms) ? (Math.floor(ms / 1000) as UTCTimestamp) : null;
   }
 
   /**
-   * Axis labels in the reader's own timezone.
+   * 按读者自己的时区显示坐标轴标签。
    *
-   * The library's own formatter would print UTC, which is the one timezone
-   * nobody is in. The tick type is honoured so the axis keeps the library's
-   * density — dates where a day turns over, times in between — instead of
-   * spending the popup's width on a full date at every tick.
+   * 这个库自带的格式化器会打印 UTC，而那恰恰是没人身处其中的那个时区。这里尊重刻度类型，
+   * 好让坐标轴保持库原有的密度 —— 跨天处显示日期，其间显示时刻 —— 而不是把弹窗的宽度
+   * 全花在每个刻度都印一个完整日期上。
    */
   private axisLabel(time: Time, type: TickMarkType): string {
     const date = new Date((time as number) * 1000);
@@ -494,18 +472,17 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
   }
 
   /**
-   * Axis prices at the market's tick, without the padding.
+   * 按市场最小变动价位显示坐标轴价格，去掉补位的零。
    *
-   * `precision` decides how many decimals the scale reserves, and it has to be
-   * the market's full tick so that a round price cannot collapse it. Printing
-   * that width on every label pads $4 out to "4.0000", so the meaningless
-   * zeros come off here — the same rule the header follows.
+   * `precision` 决定刻度尺预留多少位小数，它必须取市场完整的最小变动价位，免得一个整数
+   * 价格把它压塌。可是每个标签都印满这个宽度，会把 $4 补成 "4.0000"，所以这些没有意义的
+   * 零在这里去掉 —— 与标题栏遵循同一条规则。
    */
   private axisPrice(price: number): string {
     return stripTrailingZeros(new BigNumber(price).toFixed(this.priceDecimals));
   }
 
-  /** The crosshair names one bar, so it carries the date as well as the time. */
+  /** 十字光标指向的是某一根柱子，所以它除了时刻还要带上日期。 */
   private crosshairLabel(time: Time): string {
     const date = new Date((time as number) * 1000);
     return `${date.getMonth() + 1}/${date.getDate()} ${pad2(

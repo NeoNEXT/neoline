@@ -46,11 +46,9 @@ describe('Hyperliquid signing', () => {
   });
 
   /**
-   * msgpack integers must take their narrowest format or the exchange, which
-   * re-encodes the action before checking the signature, computes a different
-   * hash and recovers a different signer. Plain numbers already go through the
-   * library's minimal encoder, so a bigint of the same value must hash to
-   * exactly the same thing.
+   * msgpack 整数必须采用最窄的格式，否则交易场所（它会在校验签名前重新编码 action）
+   * 会算出不同的哈希，并恢复出不同的签名者。普通 number 本来就走库的最小编码器，
+   * 所以同值的 bigint 必须哈希出完全相同的结果。
    */
   it('hashes a representable order id the same as a plain number', () => {
     const nonce = 1710000000123;
@@ -152,8 +150,8 @@ describe('Hyperliquid signing', () => {
       ''
     );
 
-    // Hook data of our own would drop the forwarding fee and leave the message
-    // for whoever claims it first on the destination chain.
+    // 换成我们自己的 hook data 会丢掉转发费，让这条消息
+    // 留给目的链上第一个来认领的人。
     expect(action.sourceDex).toBe('');
     expect(action.data).toBe('0x');
     expect(action.token).toBe('USDC');
@@ -162,8 +160,8 @@ describe('Hyperliquid signing', () => {
   });
 
   it('debits spot when that is where the account keeps its USDC', async () => {
-    // A unified account's perps balance is reported as 0 however funded it is,
-    // so a perps-sourced withdrawal from one is a withdrawal of nothing.
+    // 统一账户的永续余额无论有多少资金都报 0，
+    // 所以从永续侧发起的提现等于提了个寂寞。
     const { action } = await signHyperliquidSendToEvmWithData(
       PRIVATE_KEY,
       ADDRESS,
@@ -208,8 +206,8 @@ describe('Hyperliquid signing', () => {
       ],
     };
 
-    // Reading `data` as a string recovers a different signer, which is exactly
-    // how a wrong encoding reaches the exchange looking perfectly valid.
+    // 把 `data` 当成字符串来读会恢复出不同的签名者，
+    // 而这正是一个错误编码看上去完全合法地送到交易场所的方式。
     expect(ethers.verifyTypedData(domain, asString, action, signature)).not.toBe(
       ADDRESS
     );

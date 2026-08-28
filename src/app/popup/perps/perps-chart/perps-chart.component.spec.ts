@@ -124,8 +124,8 @@ describe('PerpsChartComponent dataset updates', () => {
     component.candles = [bar(1000), bar(61_000, '99'), bar(121_000)];
     render();
 
-    // A bar's final OHLCV can differ from its last streamed value, so the bar
-    // that just closed is sent again alongside the one that opened.
+    // 一根柱子最终的 OHLCV 可能与它最后一次流式推送的值不同，
+    // 所以刚刚收盘的那根会和新开的那根一起再发一次。
     expect(series().update).toHaveBeenCalledTimes(2);
     expect(series().update.calls.first().args[0].close).toBe(99);
     expect(setVisibleLogicalRange).not.toHaveBeenCalled();
@@ -189,8 +189,8 @@ describe('PerpsChartComponent dataset updates', () => {
     series().setData.calls.reset();
     setVisibleLogicalRange.calls.reset();
 
-    // Exactly what dropping the oldest bar to hold a fixed window produces —
-    // same length, different first bar — and the cost is the user's viewport.
+    // 这正是「为维持固定窗口而丢弃最老柱子」会产生的结果 —— 长度相同、首根不同 ——
+    // 代价是用户的视口。
     component.candles = [bar(61_000), bar(121_000)];
     render();
 
@@ -227,10 +227,9 @@ describe('PerpsChartComponent dataset updates', () => {
       getVisibleLogicalRange: () => ({ from: 0, to: 2 }),
     });
 
-    // Same series, earlier first bar, more rows: history, not a new market.
-    // Snapping back to the latest bars is exactly how scrolling left went
-    // blank — the user was looking at the left edge and the reload threw
-    // them to the right.
+    // 同一条序列、更早的首根柱子、更多的行数：这是历史，不是新市场。
+    // 弹回最新的柱子，正是当初向左滚动会变成一片空白的原因 ——
+    // 用户正看着最左边，而重新加载把他们甩到了最右边。
     component.candles = [bar(1000), bar(61_000), bar(121_000)];
     render();
 
@@ -282,8 +281,8 @@ describe('PerpsChartComponent rendering coordinates', () => {
 
     render();
 
-    // No local-offset nudge: shifting the axis would move every bar boundary,
-    // so a daily candle would stop closing when Hyperliquid closes it.
+    // 不做本地时区偏移的微调：移动坐标轴会挪动每一根柱子的边界，
+    // 于是日线就不会在 Hyperliquid 收盘的时刻收盘了。
     expect(series().setData.calls.mostRecent().args[0][0].time).toBe(
       1_700_000_000
     );
@@ -301,7 +300,7 @@ describe('PerpsChartComponent rendering coordinates', () => {
 
     render();
 
-    // A candle printed at zero is a price claim the market never made.
+    // 画成零的 K 线，是在替市场做一个它从未做过的价格陈述。
     const drawn = series().setData.calls.mostRecent().args[0];
     expect(drawn.length).toBe(2);
     expect(drawn.map((point) => point.time)).toEqual([1, 181]);
@@ -315,9 +314,8 @@ describe('PerpsChartComponent rendering coordinates', () => {
 
     render();
 
-    // The price converted, so it is still a fact the market printed. What must
-    // not happen is a zero-height column, which would say this interval traded
-    // nothing — a claim about the market rather than about our data.
+    // 价格换算过了，所以它仍然是市场印出来的事实。绝不能出现的是零高度的柱子 ——
+    // 那等于说这个周期内没有任何成交，那是在陈述市场，而不是在陈述我们的数据。
     const bars = series().setData.calls.mostRecent().args[0];
     const volumes = (component as any).volumeSeries.setData.calls.mostRecent()
       .args[0];
@@ -342,8 +340,8 @@ describe('PerpsChartComponent rendering coordinates', () => {
   it('drops a value too large to survive becoming a number', () => {
     spyOn(console, 'warn');
     const { component, render, series } = chartComponent();
-    // Finite as far as BigNumber is concerned, and `Infinity` the instant it
-    // is IEEE-754 — so the magnitude has to be checked after the conversion.
+    // 在 BigNumber 看来是有限的，一转成 IEEE-754 就是 `Infinity` ——
+    // 所以量级必须在换算之后再检查。
     component.candles = [bar(1000), { ...bar(61_000), h: '1e400' }];
 
     render();
@@ -358,8 +356,8 @@ describe('PerpsChartComponent rendering coordinates', () => {
 
     render();
 
-    // The library keys bars by this value, so a fractional one would make two
-    // views of the same bar into two different bars.
+    // 这个库按这个值给柱子建索引，所以取小数会把同一根柱子的两个视图
+    // 变成两根不同的柱子。
     expect(series().setData.calls.mostRecent().args[0][0].time).toBe(
       1_700_000_000
     );
@@ -378,9 +376,8 @@ describe('PerpsChartComponent rendering coordinates', () => {
       getVisibleLogicalRange: () => ({ from: 0, to: 1 }),
     });
 
-    // Two older candles arrive but one cannot be drawn, so the chart grew by
-    // a single bar. Shifting by two would push the bar the user is looking at
-    // off to the right — the reverse of what the shift is for.
+    // 到来两根更老的 K 线，但其中一根画不出来，所以图表只长了一根柱子。若按两根平移，
+    // 会把用户正在看的那根柱子推到右边去 —— 与平移的初衷正好相反。
     component.candles = [bar(1000), { ...bar(61_000), o: '0' }, bar(121_000)];
     render();
 
@@ -393,8 +390,8 @@ describe('PerpsChartComponent axis labels', () => {
     const { component } = chartComponent();
     component.priceDecimals = 4;
 
-    // The scale has to reserve four decimals so a round price cannot collapse
-    // it, but "$4.0000" on a weekly chart is four digits of nothing.
+    // 刻度必须预留四位小数，免得一个整数价格把它压塌；
+    // 但在周线图上，"$4.0000" 就是四位没有意义的数字。
     expect((component as any).axisPrice(4)).toBe('4');
     expect((component as any).axisPrice(3.5)).toBe('3.5');
     expect((component as any).axisPrice(1.6943)).toBe('1.6943');

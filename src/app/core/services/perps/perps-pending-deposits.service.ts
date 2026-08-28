@@ -10,15 +10,13 @@ import {
 } from '@popup/_lib/perps';
 
 /**
- * Deposits that have left the wallet but are not yet spendable.
+ * 已经离开钱包、但还不能动用的入金。
  *
- * A bridge deposit is two facts arriving minutes apart — the transfer is on
- * chain, and the bridge has credited it — and the popup can close between them.
- * Without this record the second half of the operation would simply vanish from
- * the interface, leaving the user to wonder whether their money went anywhere.
+ * 一笔跨桥入金是相隔几分钟到达的两个事实 —— 转账已上链、桥已入账 —— 而弹窗可能在这
+ * 两者之间关闭。没有这份记录，操作的后半段就会从界面上凭空消失，只剩用户纳闷自己的钱
+ * 到底去哪了。
  *
- * The store is scoped to perps: clearing it never touches the wallet's own
- * Neo2, Neo3 or NeoX state.
+ * 这个存储的作用域限于 perps：清空它绝不会碰到钱包自身的 Neo2、Neo3 或 NeoX 状态。
  */
 @Injectable({ providedIn: 'root' })
 export class PerpsPendingDepositsService {
@@ -31,7 +29,7 @@ export class PerpsPendingDepositsService {
     return Array.isArray(stored) ? (stored as PerpsPendingDeposit[]) : [];
   }
 
-  /** Pending deposits for one address on one chain, oldest first. */
+  /** 某条链上某个地址的待入账入金，最早的在前。 */
   async listFor(address: string, chainId: number): Promise<PerpsPendingDeposit[]> {
     const all = await this.list();
     const user = (address || '').toLowerCase();
@@ -64,23 +62,20 @@ export class PerpsPendingDepositsService {
   }
 
   /**
-   * Whether this deposit has been followed for as long as it is worth following.
+   * 这笔入金是否已经跟踪到了值得跟踪的时长上限。
    *
-   * Reaching the limit is not a failure and does not delete the record: the
-   * transfer is on chain and may still be credited, so what the user needs is
-   * the transaction hash and an honest "not credited yet", not a cleared screen.
+   * 到达上限不算失败，也不会删除记录：转账已经上链，仍有可能被入账，所以用户需要的是
+   * 交易哈希和一句诚实的「尚未入账」，而不是一片被清空的界面。
    */
   isStalled(deposit: PerpsPendingDeposit, now = Date.now()): boolean {
     return now - deposit.startedAt >= PERPS_PENDING_DEPOSIT_MAX_MS;
   }
 
   /**
-   * Whether the account has risen above where it stood before this deposit.
+   * 账户是否已经升到高于这笔入金发生之前的水平。
    *
-   * The exchange offers no per-deposit receipt, so the credit is recognised by
-   * the balance it produces. A rise from some other cause would also clear the
-   * record, which is harmless: either way the money the user is waiting on is
-   * no longer missing.
+   * 交易场所不提供逐笔入金的回执，所以入账是靠它带来的余额变化来识别的。由其他原因造成
+   * 的上涨同样会清掉这条记录，这没有害处：无论哪种情况，用户等待的那笔钱都已经不再缺失。
    */
   isCredited(
     deposit: PerpsPendingDeposit,

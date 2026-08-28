@@ -1,8 +1,8 @@
 import { PerpsTabComponent } from './perps-tab.component';
 import { ethMarket } from '../perps.test-fixture';
 
-// Row order, sorting, paging and search now live in PerpsMarketListComponent,
-// which the tab embeds; their specs moved with them.
+// 行的顺序、排序、翻页和搜索现在都在 PerpsMarketListComponent 里，
+// 由这个 tab 内嵌；它们的 spec 也跟着搬过去了。
 describe('PerpsTabComponent', () => {
   const component = () => new PerpsTabComponent(null, null, null, null, null);
 
@@ -16,7 +16,7 @@ describe('PerpsTabComponent', () => {
       symbol: 'IWM',
       szDecimals: 2,
     });
-    // Supplied by the embedded market list rather than a feed of the tab's own.
+    // 由内嵌的市场列表提供，而不是 tab 自己的数据源。
     value.markets = [canonical, hip3];
 
     expect(
@@ -24,8 +24,8 @@ describe('PerpsTabComponent', () => {
     ).toBe(hip3);
   });
 
-  // The account card cannot price a portfolio-margin account, but the positions
-  // are real and so is the close button on them.
+  // 账户卡无法为组合保证金账户估值，但仓位是真的，
+  // 它们上面的平仓按钮也是真的。
   it('lists positions on a portfolio-margin account it cannot value', () => {
     const value = component();
     value.account = {

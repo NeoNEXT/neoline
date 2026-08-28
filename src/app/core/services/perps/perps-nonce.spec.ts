@@ -20,8 +20,7 @@ describe('PerpsNonceAllocator', () => {
   });
 
   it('keeps separate accounts independent', () => {
-    // The exchange tracks nonces per signer, so one account's allocations must
-    // not push another's forward.
+    // 交易场所按签名者跟踪 nonce，因此一个账户的分配不能把另一个账户的往前推。
     const allocator = new PerpsNonceAllocator();
     const first = allocator.next('0xaaa');
     const other = allocator.next('0xbbb');

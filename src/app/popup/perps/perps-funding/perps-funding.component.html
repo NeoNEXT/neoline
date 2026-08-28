@@ -20,14 +20,14 @@
     </div>
   </div>
 
-  <!-- The feed decides whether these figures are current; say so either way. -->
+  <!-- 这些数字是否是当前值由数据源决定；无论哪种情况都要说明。 -->
   <div class="stale-note" *ngIf="feedStale && isWithdraw">
     {{ "perpsFeedStale" | translate | async }}
   </div>
 
-  <!-- Money that has left the wallet but is not yet spendable. Two facts, shown
-       as two facts: on chain, and credited on HyperCore. A reverted transfer
-       is a third and final one — it is never going to be credited. -->
+  <!-- 已经离开钱包、但还不能动用的钱。两个事实，就按两个事实来显示：
+       已上链，以及已在 HyperCore 入账。被 revert 的转账是第三个、也是最终的
+       一个 —— 它永远不会入账了。 -->
   <div
     class="pending-deposit"
     [class.reverted]="deposit.reverted"
@@ -76,8 +76,8 @@
       </ng-container>
       <ng-container *ngIf="isWithdraw">
         {{ "perpsWithdrawable" | translate | async }}
-        <!-- The component's reading of it, not the raw account field: a unified
-             account's perps `withdrawable` is 0 however funded it is. -->
+        <!-- 用组件对它的读数，而不是原始账户字段：无论统一账户有多少资金，
+             它永续侧的 `withdrawable` 都是 0。 -->
         ${{ formatBalance(withdrawableExact) }}
       </ng-container>
       <span class="retry" *ngIf="showRetry" (click)="reload()">
@@ -85,8 +85,8 @@
       </span>
     </div>
 
-    <!-- Percentages of the real balance: a fixed amount on a screen whose
-         balance may be zero or unknown can only produce an error. -->
+    <!-- 按真实余额的百分比：在一个余额可能为零或未知的界面上，
+         固定金额只可能产生报错。 -->
     <div class="preset-row">
       <span
         *ngFor="let percent of presetPercents"
@@ -122,8 +122,8 @@
     </div>
   </div>
 
-  <!-- The transaction happens on the deposit chain, not the one the user has
-       selected, and it is that chain's currency that pays for it. -->
+  <!-- 交易发生在入金链上，而不是用户当前选中的那条链，
+       付钱的也是那条链的货币。 -->
   <p class="chain-notice" *ngIf="isDeposit">
     {{
       "perpsDepositChainNotice"
@@ -180,7 +180,7 @@
     </ng-container>
   </div>
 
-  <!-- One reason, always shown while the control is dead. -->
+  <!-- 一条原因，控件不可用期间始终显示。 -->
   <p class="error-tip" *ngIf="disabledReason">
     {{ disabledReason | translate: disabledReasonParams | async }}
   </p>
@@ -192,10 +192,9 @@
     </button>
   </div>
 
-  <!-- Both intents get one look before they go. A deposit leaves for a contract
-       address the user cannot read and cannot be recalled; a withdrawal is
-       priced by a fee its contract owner can change, and that price is what the
-       user is being asked to agree to. -->
+  <!-- 两种意图在发出之前都要过一遍确认。入金发往一个用户读不懂的合约地址，
+       且无法撤回；提现的定价来自一笔其合约 owner 可以修改的手续费，
+       而用户被要求同意的正是这个价格。 -->
   <div class="confirm-sheet" *ngIf="confirming">
     <div class="sheet">
       <div class="sheet-title">
@@ -259,10 +258,9 @@
             | async
         }}
       </p>
-      <!-- Preparing can settle a question the screen could not answer before the
-           sheet opened — a deposit's network fee is only known here — so the
-           reason has to be readable from inside the sheet too. The copy under
-           the form is behind this overlay. -->
+      <!-- 「准备」能敲定一个确认面板打开之前界面回答不了的问题 —— 入金的网络手续费
+           只有在这里才知道 —— 所以那条原因也必须能在面板里读到。
+           表单下方的那段文案被这层遮罩挡住了。 -->
       <p class="error-tip" *ngIf="disabledReason">
         {{ disabledReason | translate: disabledReasonParams | async }}
       </p>

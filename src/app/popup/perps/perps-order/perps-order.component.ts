@@ -30,7 +30,6 @@ import {
   PERPS_DEFAULT_SLIPPAGE_PERCENT,
   PERPS_HOME_URL,
   PERPS_MAX_SLIPPAGE_PERCENT,
-  PERPS_MIN_ORDER_NOTIONAL,
   PERPS_MIN_SLIPPAGE_PERCENT,
 } from '@popup/_lib/perps';
 import {
@@ -55,37 +54,34 @@ import {
   PerpsReviewBaseline,
 } from './perps-order-composition';
 
-/** Hyperliquid's base fees, used until `userFees` reports the real ones. */
+/** Hyperliquid 的基础费率，在 `userFees` 报出真实费率之前先用它。 */
 const TAKER_FEE_RATE = 0.00045;
 const MAKER_FEE_RATE = 0.00015;
 
-/** USD amounts are typed and submitted to the cent. */
+/** 美元金额按分输入、也按分提交。 */
 const AMOUNT_DECIMALS = 2;
 
 /**
- * How hard the page tries to learn the fate of an order it could not read.
+ * 对于一笔读不到结果的订单，页面会有多努力去查清它的下落。
  *
- * A cloid resolves within a second or two when the exchange has an answer, so
- * a short fixed cadence finds one quickly; what matters more is that the
- * attempts end. An unbounded retry leaves the submit button disabled forever
- * on an order the exchange may never report, and the only escape the user had
- * was to leave the page — which loses the cloid altogether.
+ * 只要交易场所有答案，一个 cloid 一两秒内就能查到，所以短促的固定节奏能很快找到它；更要紧
+ * 的是这些尝试要有个头。无限重试会让提交按钮在一笔交易场所可能永远不会上报的订单上被永久
+ * 禁用，而用户唯一的脱身办法是离开页面 —— 那样 cloid 就彻底丢了。
  */
 const ORDER_RESOLUTION_ATTEMPTS = 4;
 const ORDER_RESOLUTION_INTERVAL_MS = 1500;
 
 /**
- * Reading for a summary row before an amount is typed, matching Hyperliquid's
- * own order form. Distinct from `--`, which this UI uses where the feed owes a
- * value and has not delivered one: here nothing is owed yet.
+ * 还没输入金额时摘要行的读数，与 Hyperliquid 自家下单表单一致。它不同于 `--`：本界面用
+ * `--` 表示数据源欠着一个值却还没给出；而这里还什么都不欠。
  */
 const NOT_APPLICABLE = 'N/A';
 
 /**
- * Which message answers each condition the composition module reports.
+ * 组合模块报出的每一种条件，分别由哪条文案来回答。
  *
- * The module states the rule and this table states the wording, so a rewritten
- * string never reaches the rule and a renamed key never reaches a spec.
+ * 模块陈述规则、这张表陈述措辞，因此改写字符串永远影响不到规则，重命名 key 也永远影响不到
+ * 任何一个 spec。
  */
 const UNAVAILABLE_MESSAGES: Record<PerpsOrderUnavailableCode, string> = {
   'account-unavailable': 'perpsLoadFailed',
@@ -103,10 +99,9 @@ const UNAVAILABLE_MESSAGES: Record<PerpsOrderUnavailableCode, string> = {
 };
 
 /**
- * Whether two readings of the form are the same reading.
+ * 对表单的两次读数是不是同一次读数。
  *
- * Every field is a primitive, so this is exact rather than an approximation of
- * equality — which is what lets the composition memo key on it.
+ * 每个字段都是原始值，所以这是精确判断而不是近似相等 —— 正因如此，组合的记忆化才能以它为键。
  */
 function sameInput(a: PerpsOrderInput, b: PerpsOrderInput): boolean {
   return (
@@ -129,9 +124,8 @@ function sameInput(a: PerpsOrderInput, b: PerpsOrderInput): boolean {
 export class PerpsOrderComponent implements OnInit, OnDestroy {
   coin: string;
   /**
-   * The exchange as this page has read it, handed to the composition module
-   * whole. Every reading the form shows is derived from this, so there is one
-   * account of what is true rather than a field per answer.
+   * 本页面读到的交易场所现状，整体交给组合模块。表单显示的每一个读数都由它推导而来，
+   * 因此「什么是真的」只有一份记述，而不是每个答案各占一个字段。
    */
   facts: PerpsOrderFacts = {
     coin: '',
@@ -150,18 +144,17 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     },
   };
 
-  /** Close mode reduces an existing position instead of opening a new one. */
+  /** 平仓模式是减少已有仓位，而不是新开一个。 */
   closeMode = false;
 
   side: PerpsOrderSide = 'long';
   orderType: PerpsOrderType = 'market';
   /**
-   * Both money boxes hold text, not numbers.
+   * 两个金额输入框装的都是文本，不是数字。
    *
-   * These are the page's only inputs into signed values, and ADR-0001 keeps
-   * those out of JavaScript floats: a `number` model turns a price typed on a
-   * six-decimal market into whatever the nearest double is, and the box then
-   * shows one price while the signature carries another.
+   * 它们是本页面通往签名数值的唯一入口，而 ADR-0001 要求那些数值不经过 JavaScript 浮点：
+   * 用 `number` 建模，会把在一个六位小数市场上输入的价格变成最近的那个双精度值，于是输入框
+   * 显示一个价格，签名里却是另一个。
    */
   limitPrice = '';
   amount = '';
@@ -172,16 +165,14 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   submitting = false;
   reviewing = false;
   /**
-   * The order was signed and sent, and the page never learned what became of
-   * it. Not a failure — it may have filled — so the page says exactly that and
-   * offers another look rather than an apology or a retry.
+   * 订单已经签名并发出，而页面始终没弄清它的下落。这不是失败 —— 它可能已经成交 —— 所以
+   * 页面就照实这么说，并提供再看一眼的入口，而不是道歉或重试。
    */
   executionStatusUnknown = false;
-  /** A cloid query is in flight, so "check again" would only stack another. */
+  /** 有一次 cloid 查询在途，此时「再查一次」只会再叠一个。 */
   resolvingOrderStatus = false;
-  readonly minOrderNotional = PERPS_MIN_ORDER_NOTIONAL;
 
-  //#region template helpers
+  //#region 模板辅助方法
   formatPrice = formatPrice;
   formatSignedPercent = formatSignedPercent;
   formatBalance = formatBalance;
@@ -196,31 +187,28 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   private userFeeSub: Unsubscribable;
   private leverageSelected = false;
   /**
-   * The last composition and the arguments it was derived from.
+   * 上一次组合结果，以及推导它所用的那组参数。
    *
-   * The template reads the composition from sixteen places in a single change
-   * detection pass, and the arguments cannot change inside one — so the first
-   * read computes and the rest are answered from here. The key is the input
-   * itself, which is why this cannot go stale: facts arrive as new objects and
-   * every user input is a primitive, so equal arguments mean an equal answer.
+   * 模板会在一轮变更检测里从十六个地方读取这份组合，而参数在同一轮内不可能变化 —— 所以
+   * 第一次读取时计算，其余的从这里作答。键就是入参本身，这也是它不可能变陈旧的原因：
+   * 事实都以新对象到达，而用户输入全是原始值，因此参数相等就意味着答案相等。
    */
   private lastComposition: PerpsOrderComposition = null;
   private lastFacts: PerpsOrderFacts = null;
   private lastInput: PerpsOrderInput = null;
-  /** Close mode sizes itself from the position once, not on every frame. */
+  /** 平仓模式只按仓位换算一次数量，而不是每一帧都算。 */
   private closeModeSeeded = false;
   private reviewBaseline: PerpsReviewBaseline = null;
   private pendingCloid: string = null;
-  /** Blocks duplicate submission after a transport-ambiguous signed request. */
+  /** 在一次传输结果不明的已签名请求之后，阻止重复提交。 */
   private orderResolutionPending = false;
   private reconciliationTimer: ReturnType<typeof setTimeout>;
-  /** Text being typed into a box, or null when it is showing the live value. */
+  /** 正在输入框里敲的文本；显示实时值时为 null。 */
   private percentDraft: string = null;
   private leverageDraft: string = null;
   /**
-   * Chrome collapses a focus-time `select()` when the click's mouseup lands.
-   * Suppressing that one mouseup keeps the whole value selected, so typing
-   * replaces it; later clicks inside the box still position the caret.
+   * Chrome 会在点击的 mouseup 到达时，把聚焦时的 `select()` 收起来。屏蔽掉那一次 mouseup
+   * 就能保住整段选中，于是输入即替换；之后在框内的点击照样能定位光标。
    */
   private selectingOnFocus = false;
 
@@ -245,8 +233,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       coin: this.coin,
       feeRates: {
         ...this.facts.feeRates,
-        // Zero unless this build has a builder configured for the network, so
-        // a build without one previews exactly what it will be charged.
+        // 除非本版本为当前网络配置了 builder，否则为零，这样没有配置的版本预览到的
+        // 就正好是它实际会被收取的费用。
         builderRate: this.writes.builderAddress
           ? PERPS_BUILDER_FEE_RATE
           : 0,
@@ -281,7 +269,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     clearTimeout(this.reconciliationTimer);
   }
 
-  /** The DEX this route trades on; a HIP-3 coin carries it as a prefix. */
+  /** 本路由所交易的 DEX；HIP-3 币种会把它作为前缀带上。 */
   private get dex(): string {
     return this.coin?.includes(':')
       ? this.coin.slice(0, this.coin.indexOf(':'))
@@ -289,11 +277,10 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * This market's own feed, not the whole enabled-DEX universe.
+   * 这个市场自己的数据源，而不是整个已启用 DEX 的 universe。
    *
-   * Finding one coin by pulling every DEX's context array is what the market
-   * detail page stopped doing (see its ADR-0001), and the order form wants the
-   * same one market this page is about.
+   * 为了找一个币种就把每个 DEX 的上下文数组都拉一遍，正是市场详情页已经不再做的事
+   *（见它的 ADR-0001），而下单表单要的就是本页面所针对的那同一个市场。
    */
   private loadMarket() {
     this.marketsSub = this.markets$.watchMarketDetail(this.coin).subscribe({
@@ -305,8 +292,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
             : { status: 'missing' },
         });
         if (market && initialLoad) {
-          // Seed the limit field with the same reference a market order uses,
-          // already quantised to what this market can quote.
+          // 用市价单所用的同一个参考价为限价输入框播种，
+          // 并已按这个市场能报出的价位做过量化。
           this.limitPrice = normalizeLimitPrice(
             market.midPxExact,
             market.szDecimals
@@ -320,7 +307,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
           ) {
             this.leverage = exchangeLeverage;
           } else {
-            // Default until the user's exchange-side leverage arrives.
+            // 在用户交易场所侧的杠杆到达之前先用默认值。
             this.leverage = Math.min(2, market.maxLeverage);
           }
         }
@@ -332,26 +319,24 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Replace the facts with a new object, never mutate them in place.
+   * 用新对象替换这些事实，绝不就地修改。
    *
-   * The composition memo keys on this reference, so a frame that edited the
-   * old object would be answered from the previous reading.
+   * 组合的记忆化以这个引用为键，所以一帧若是改了旧对象，得到的会是上一次的读数。
    */
   private patchFacts(patch: Partial<PerpsOrderFacts>) {
     this.facts = { ...this.facts, ...patch };
   }
 
   /**
-   * Max slippage is a habit rather than a property of any one market, so it is
-   * remembered once for the wallet — the same way the chart interval is.
+   * 最大滑点是一种习惯，而不是某个市场的属性，所以它按钱包记住一次 ——
+   * 与图表周期的做法相同。
    */
   private loadMaxSlippage() {
     this.chrome
       .getStorage(STORAGE_NAME.perpsMaxSlippage)
       .subscribe((saved) => {
-        // Storage answers with whatever an older build wrote, and the dialog's
-        // range is the whole of the user's price consent — a value outside it
-        // is not a preference worth restoring.
+        // 存储返回的是旧版本写进去的任意值，而对话框的取值范围就是用户价格同意的全部 ——
+        // 落在范围之外的值不是一个值得恢复的偏好。
         const value = Number(saved);
         if (
           Number.isFinite(value) &&
@@ -373,7 +358,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         this.patchFacts({
           activeAssetData: {
             ...data,
-            // Websocket updates omit markPx; retain the REST/market snapshot.
+            // websocket 更新不带 markPx；保留 REST/市场快照里的值。
             markPx:
               data.markPx ||
               this.facts.activeAssetData?.markPx ||
@@ -396,17 +381,14 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * The account, followed rather than polled.
+   * 账户，采用订阅跟随而不是轮询。
    *
-   * Position value moves with the mark price, and the close form's percentage
-   * slider is measured against it — read once every few seconds it was a figure
-   * that visibly lagged the price in the header. `watchAccount` seeds from REST
-   * and then follows the account channel, so this is the page's one account
-   * state kept current, not a second copy of it.
+   * 仓位价值会随标记价格变动，而平仓表单的百分比滑块正是以它为基准 —— 若每隔几秒才读一次，
+   * 它就会明显落后于标题栏里的价格。`watchAccount` 先用 REST 播种，随后跟随账户频道，所以
+   * 这是本页面那一份保持最新的账户状态，而不是它的第二份副本。
    *
-   * The DEX comes from the route: a HIP-3 market's positions live in that
-   * DEX's own clearinghouse, and asking the canonical one finds nothing —
-   * which used to leave close, add and reverse silently inoperable there.
+   * DEX 取自路由：HIP-3 市场的仓位存放在那个 DEX 自己的清算所里，去问标准永续的什么也找
+   * 不到 —— 过去正是这一点让那里的平仓、加仓和反手悄无声息地失效。
    */
   private loadAccount() {
     this.accountStateSub?.unsubscribe();
@@ -415,11 +397,10 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       .subscribe((state) => {
         this.patchFacts({ account: state });
         const position = this.position;
-        // Seeding once: later frames must not overwrite an amount the user
-        // has since typed.
+        // 只播种一次：之后的帧不能覆盖用户此后输入的金额。
         if (this.closeMode && position && !this.closeModeSeeded) {
           this.closeModeSeeded = true;
-          // Closing means taking the opposite side of what is held.
+          // 平仓意味着站到所持仓位的反方向。
           this.side = position.isLong ? 'short' : 'long';
           this.leverage = position.leverage;
           this.amount = new BigNumber(position.positionValueExact).toFixed(
@@ -430,7 +411,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       });
   }
 
-  /** Refresh the same state stream after an exchange write. */
+  /** 在一次交易场所写入之后，刷新这同一条状态流。 */
   private refreshAccount() {
     if (this.address) {
       this.accountStates.refreshAccount(this.address, this.dex).subscribe();
@@ -447,7 +428,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
           this.setPercent(this.activePercent);
         }
       },
-      // The base rates remain a conservative fallback when userFees fails.
+      // userFees 失败时，基础费率仍是一个保守的兜底。
       error: () => {},
     });
   }
@@ -459,12 +440,10 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * This reading of the form: what it would submit, and whether it may.
+   * 对表单的这次读数：它会提交什么，以及它是否被允许提交。
    *
-   * Recomputed only when the facts or the input actually changed. The template
-   * asks for it from sixteen places in a single change detection pass and the
-   * arguments cannot move inside one, so the first read computes and the rest
-   * are answered from {@link lastComposition}.
+   * 只有在事实或输入确实变化时才重新计算。模板会在一轮变更检测里从十六个地方索取它，而
+   * 参数在同一轮内不可能变动，所以第一次读取时计算，其余的从 {@link lastComposition} 作答。
    */
   get composition(): PerpsOrderComposition {
     const input = this.input;
@@ -481,7 +460,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return this.lastComposition;
   }
 
-  /** The form's own state, as the composition module reads it. */
+  /** 表单自身的状态，以组合模块读取它的形式给出。 */
   private get input(): PerpsOrderInput {
     return {
       mode: this.closeMode ? 'close' : 'open',
@@ -495,7 +474,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     };
   }
 
-  //#region readings the template binds
+  //#region 模板绑定的各项读数
   get market(): PerpsMarket {
     return this.composition.market;
   }
@@ -516,7 +495,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return this.composition.preview;
   }
 
-  /** Free collateral for this direction, as Hyperliquid reports it. */
+  /** 该方向上的自由抵押品，取 Hyperliquid 上报的值。 */
   get availableExact(): string {
     return this.composition.availableExact;
   }
@@ -554,11 +533,10 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
   //#endregion
 
-  //#region rendering
+  //#region 渲染
   /**
-   * The summary rows stay on screen with an empty amount box, so the user can
-   * see what an order will be judged on before typing one. Each row reads
-   * `N/A` until there is a preview to quote.
+   * 金额框为空时摘要各行仍留在屏幕上，好让用户在输入之前就能看到一笔订单会被按什么来判定。
+   * 在有预览可供报价之前，每一行都读作 `N/A`。
    */
   get liquidationPriceText(): string {
     const price = this.preview?.liquidationPxExact;
@@ -568,13 +546,11 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * The exchange's liquidation price for the position already open, shown
-   * beside the estimate while adding to it.
+   * 已开仓位在交易场所侧的强平价，在加仓时显示在估算值旁边。
    *
-   * The estimate is arithmetic on inputs; this is what Hyperliquid currently
-   * says. Putting them side by side is the honest way to add to a position:
-   * the user sees which way the estimate moves the real number, rather than
-   * being handed one figure that silently replaces the other.
+   * 估算值是对输入做的算术；这个则是 Hyperliquid 当下所说的。把它们并排放置，才是加仓时
+   * 诚实的做法：用户能看到估算把真实数字往哪个方向推，而不是被塞给一个悄悄替换掉另一个的
+   * 数字。
    */
   get currentLiquidationPriceText(): string {
     const price = this.position?.liquidationPxExact;
@@ -587,7 +563,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return this.preview ? formatUsd(this.preview.marginExact) : NOT_APPLICABLE;
   }
 
-  /** The same size at the market's lot precision, for display. */
+  /** 同一个数量按市场最小变动单位精度呈现，用于显示。 */
   get formattedPositionSize(): string {
     return formatSize(
       this.composition.positionSizeExact,
@@ -599,7 +575,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return `${Number(this.slippagePercent).toFixed(2)}%`;
   }
 
-  /** Hyperliquid's own rates, as the fee tooltip itemises them. */
+  /** Hyperliquid 自己的费率，按手续费提示框逐项列出的形式给出。 */
   get formattedTakerFeeRate(): string {
     return formatFeeRatePercent(this.facts.feeRates.takerRate);
   }
@@ -612,7 +588,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return formatFeeRatePercent(this.facts.feeRates.builderRate);
   }
 
-  /** Rate always, plus what it costs this order once one is sized. */
+  /** 费率始终显示；一旦订单有了数量，再加上它对这笔订单意味着多少钱。 */
   get feeText(): string {
     return this.feeSideText(this.facts.feeRates.takerRate);
   }
@@ -622,12 +598,11 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * A rate, and once the order is sized what it comes to in dollars.
+   * 一个费率，以及订单有了数量之后它折成多少美元。
    *
-   * Both are the total charge — Hyperliquid's rate plus NeoLine's builder fee —
-   * because that is what leaves the account. A negative total keeps its sign:
-   * on a rebate tier the fill pays the account back, and flooring that at
-   * "$0.00" would quietly delete money the user is owed.
+   * 两者都是总收费 —— Hyperliquid 的费率加上 NeoLine 的 builder 费用 —— 因为从账户里出去的
+   * 就是这个数。总额为负时保留符号：在返佣档位上成交会付钱给账户，把它压到 "$0.00" 等于
+   * 悄悄抹掉用户应得的钱。
    */
   private feeSideText(rate: number): string {
     const total = rate + this.facts.feeRates.builderRate;
@@ -641,29 +616,27 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * The one thing standing between this form and a submitted order, worded.
+   * 挡在这张表单与一笔已提交订单之间的那唯一一件事，措辞后的版本。
    *
-   * The module decides which condition applies and this turns it into the
-   * message; see {@link UNAVAILABLE_MESSAGES}.
+   * 由模块决定适用哪个条件，这里把它变成文案；见 {@link UNAVAILABLE_MESSAGES}。
    */
   get orderUnavailableReason(): string | null {
     const availability = this.composition.availability;
     return availability ? UNAVAILABLE_MESSAGES[availability.code] : null;
   }
 
-  /** Values the one reason on screen interpolates, when it takes any. */
+  /** 屏幕上那唯一一条原因需要插值时所用的值。 */
   get orderUnavailableParams(): { [key: string]: string | number } {
     return this.composition.availability?.params ?? {};
   }
   //#endregion
 
   /**
-   * Whether the button is live.
+   * 按钮是否可用。
    *
-   * The composition answers for the order; these two answer for the page. A
-   * submission already in flight is not a property of the order, and neither
-   * is an earlier one whose fate is still unknown — but both must stop a
-   * second press, because that is how one position becomes two.
+   * 组合负责回答订单的事，这两项负责回答页面的事。一次已经在途的提交不是订单的属性，一笔
+   * 下落仍然未知的早前订单也不是 —— 但两者都必须挡住第二次按下，因为那正是一个仓位变成两个
+   * 的方式。
    */
   get canSubmit(): boolean {
     return (
@@ -674,11 +647,10 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Any change to the intent drops the review.
+   * 意图一有任何变化就作废这次审核。
    *
-   * The baseline exists to answer "is this still what was approved", so an
-   * edit invalidates it rather than being compared against it — the user is
-   * sent back to review the thing they just changed.
+   * 基准存在的意义是回答「这还是当初批准的那个吗」，所以一次编辑会让它作废，而不是拿它去
+   * 比对 —— 用户会被送回去，重新审核他们刚刚改动的东西。
    */
   private discardReview() {
     this.reviewing = false;
@@ -710,16 +682,15 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     );
     this.leverageSelected = true;
     this.discardReview();
-    // The amount slider sizes off buying power, which just changed with leverage.
+    // 金额滑块按购买力换算数量，而购买力刚刚随杠杆变了。
     if (this.activePercent !== null && !this.closeMode) {
       this.setPercent(this.activePercent);
     }
   }
 
   /**
-   * What the leverage box shows. While it has focus it echoes the typed text
-   * verbatim, so clamping never fights the caret or refills a box the user is
-   * clearing; leaving the field falls back to the value actually in effect.
+   * 杠杆输入框显示什么。它获得焦点期间会原样回显输入的文本，这样钳制既不会和光标打架，
+   * 也不会把用户正在清空的框重新填满；离开该字段后，退回到实际生效的那个值。
    */
   get leverageBoxText(): string {
     return this.leverageDraft === null
@@ -733,7 +704,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     input.select();
   }
 
-  /** Typing recalculates on every keystroke, exactly as dragging does. */
+  /** 输入时每次按键都会重新计算，与拖动滑块完全一致。 */
   onLeverageInput(value: string) {
     this.leverageDraft = value;
     this.setLeverage(Number(value));
@@ -744,8 +715,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * The amount slider sizes the order off buying power (collateral × leverage) when
-   * opening, and off the position value when closing.
+   * 开仓时金额滑块按购买力（抵押品 × 杠杆）换算订单数量，平仓时按仓位价值换算。
    */
   setPercent(percent: number) {
     this.activePercent = Math.max(0, Math.min(100, Number(percent) || 0));
@@ -753,7 +723,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     this.amount = amountForPercent(this.composition, this.activePercent);
   }
 
-  /** See {@link leverageBoxText}; the percentage box works the same way. */
+  /** 见 {@link leverageBoxText}；百分比输入框的做法完全相同。 */
   get percentBoxText(): string {
     return this.percentDraft === null
       ? String(Math.round(this.amountSliderPercent))
@@ -775,7 +745,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     this.percentDraft = null;
   }
 
-  /** Shared by both boxes; see {@link selectingOnFocus}. */
+  /** 两个输入框共用；见 {@link selectingOnFocus}。 */
   onBoxMouseUp(event: MouseEvent) {
     if (this.selectingOnFocus) {
       this.selectingOnFocus = false;
@@ -784,14 +754,12 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Cents are the most this order can express, so a third decimal never reaches
-   * the model: it is dropped as it is typed rather than accepted and then
-   * explained, the same way the transfer screen's amount field behaves.
+   * 分是这笔订单能表达的最小单位，所以第三位小数永远到不了模型：它在输入的当下就被丢掉，
+   * 而不是先接受再解释 —— 与转账页面的金额输入框行为一致。
    *
-   * The box is written back to directly because a property binding will not do
-   * it here: rejecting the keystroke leaves the model on the value it already
-   * held, Angular sees nothing to update, and the digit the model refused stays
-   * on screen — a box showing more precision than the order carries.
+   * 这里直接写回输入框，因为属性绑定在这里不管用：拒绝这次按键会让模型停在它本来就持有的
+   * 值上，Angular 看不到任何需要更新的东西，于是模型拒掉的那个数字仍然留在屏幕上 —— 一个
+   * 显示精度高于订单实际承载精度的输入框。
    */
   onAmountInput(input: HTMLInputElement) {
     const clamped = clampDecimals(input.value, AMOUNT_DECIMALS);
@@ -809,10 +777,9 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Quantise the typed price to the market's tick and put the result back in
-   * the box, so what the user reads is what gets signed. Doing it on blur
-   * rather than per keystroke leaves a half-typed price alone: "1.2" on its way
-   * to "1.25" must not be rewritten under the caret.
+   * 把输入的价格量化到市场的最小变动价位，并把结果写回输入框，好让用户读到的就是被签名的。
+   * 在失焦时而不是每次按键时做这件事，可以放过输到一半的价格：从 "1.2" 走向 "1.25" 的输入
+   * 不能在光标底下被改写。
    */
   onLimitPriceBlur() {
     const normalized = normalizeLimitPrice(
@@ -869,8 +836,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     if (!this.canSubmit) {
       return;
     }
-    // The price the user is about to be shown, kept so submit can tell whether
-    // the market has since moved further than they agreed to.
+    // 即将展示给用户的那个价格，保存下来，好让提交时能判断行情此后是否已经
+    // 偏离到超出他们同意的范围。
     this.reviewBaseline = {
       priceExact: this.orderPriceExact,
       amount: this.amount,
@@ -884,7 +851,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     this.reviewing = true;
   }
 
-  /** Whether the order is still the one the user approved. */
+  /** 这笔订单是否仍然是用户批准过的那一笔。 */
   private get stillApproved(): boolean {
     return (
       intentUnchanged(this.reviewBaseline, this.input) &&
@@ -892,7 +859,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     );
   }
 
-  /** Send the user back to review, saying why. */
+  /** 把用户送回审核，并说明原因。 */
   private requireReview(message: string) {
     this.discardReview();
     this.global.snackBarTip(message);
@@ -957,10 +924,9 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
                 this.requireReview('perpsPositionChangedReviewAgain');
                 return;
               }
-              // Leverage is written just before the order that uses it, so a
-              // rejected write means nothing was placed. Reporting it as a
-              // failed order would leave the user wondering whether one is
-              // out there — the one thing they must not have to guess at.
+              // 杠杆是在使用它的那笔订单之前立即写入的，所以写入被拒绝就意味着什么都没下
+              // 单。把它报告成一笔失败的订单，会让用户纳闷外面是不是还有一笔订单 ——
+              // 而这恰恰是他们绝不该去猜的事。
               if (error.code === 'leverage-write') {
                 this.discardReview();
                 this.global.snackBarTip(
@@ -980,12 +946,10 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Ask the exchange what became of a signed order it did not answer for.
+   * 向交易场所查询一笔它没有作答的已签名订单的下落。
    *
-   * Per ADR-0006 this is a query and a refresh, nothing more: the cloid is
-   * asked about, and whatever comes back is read off the account. No intent is
-   * persisted, nothing is re-signed, and there is no local order state machine
-   * to fall out of sync.
+   * 按 ADR-0006，这只是一次查询加一次刷新，别无其他：拿 cloid 去问，问到什么就从账户上读回
+   * 什么。不持久化任何意图，不重新签名，也没有会失步的本地订单状态机。
    */
   private startOrderResolution(cloid: string) {
     this.pendingCloid = cloid;
@@ -995,7 +959,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     this.queryOrderStatus(cloid, ORDER_RESOLUTION_ATTEMPTS);
   }
 
-  /** The "check again" button, once the page has run out of its own attempts. */
+  /** 「再查一次」按钮 —— 在页面用完自己的尝试次数之后出现。 */
   retryOrderResolution() {
     if (!this.pendingCloid || this.resolvingOrderStatus) {
       return;
@@ -1016,8 +980,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
             this.resolveOrderStatus();
             return;
           }
-          // Any other answer means the exchange has nothing to report yet,
-          // which is not the same as nothing having happened.
+          // 其他任何答复都意味着交易场所暂时还没有可上报的内容，
+          // 而这与「什么都没发生」不是一回事。
           this.retryOrGiveUp(cloid, attemptsLeft);
         },
         error: () => this.retryOrGiveUp(cloid, attemptsLeft),
@@ -1030,9 +994,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       this.queryOrderStatus(cloid, attemptsLeft - 1);
       return;
     }
-    // Out of attempts. Submission stays blocked — a second order is how one
-    // position becomes two — but the page now says so and offers a way on,
-    // rather than sitting on a permanently disabled button.
+    // 尝试次数用尽。提交仍然被挡住 —— 第二笔订单正是一个仓位变成两个的方式 —— 但页面现在
+    // 会把这件事说出来，并给出一条出路，而不是干坐在一个永久禁用的按钮上。
     this.resolvingOrderStatus = false;
     this.executionStatusUnknown = true;
     this.refreshAccount();

@@ -30,8 +30,8 @@ const ERC20 = new ethers.Interface([
 ]);
 
 /**
- * A token that answers the two EIP-712 domain reads with different values, so a
- * signature built from the wrong one cannot pass by looking symmetrical.
+ * 一个对两处 EIP-712 域读取给出不同值的代币，这样用错域构造出来的签名，
+ * 就不会因为看起来对称而蒙混过关。
  */
 function tokenProvider(seen: { to?: string }[] = []) {
   return {
@@ -61,7 +61,7 @@ describe('CCTP deposit hook data', () => {
     const data = encodeForwardHookData(ADDRESS);
     const body = data.slice(2);
 
-    // 24 magic + 4 version + 4 length + 20 address + 4 dex.
+    // 24 字节 magic + 4 字节版本 + 4 字节长度 + 20 字节地址 + 4 字节 dex。
     expect(body.length).toBe(56 * 2);
     expect(ethers.toUtf8String('0x' + body.slice(0, 24)).replace(/\0+$/, '')).toBe(
       'cctp-forward'
@@ -69,8 +69,8 @@ describe('CCTP deposit hook data', () => {
     expect(body.slice(48, 56)).toBe('00000000');
     expect(parseInt(body.slice(56, 64), 16)).toBe(24);
     expect('0x' + body.slice(64, 104)).toBe(ADDRESS.toLowerCase());
-    // 0 is the perps balance; the spot balance would be 0xffffffff, and money
-    // credited there cannot be traded or withdrawn from inside NeoLine.
+    // 0 是永续余额；现货余额会是 0xffffffff，
+    // 而入账到现货的钱在 NeoLine 内既不能交易也不能提出。
     expect(body.slice(104, 112)).toBe('00000000');
   });
 });
@@ -110,7 +110,7 @@ describe('PerpsDepositChainService deposit call', () => {
     await service.depositFeeExact(CONFIG, AUTHORIZATION, '0.2');
     const burn = burnData();
 
-    // Either one pointing anywhere else strands the deposit permanently.
+    // 这两者中任何一个指向别处，都会让这笔入金永久搁浅。
     expect(burn.mintRecipient).toBe(ethers.zeroPadValue(FORWARDER, 32));
     expect(burn.destinationCaller).toBe(ethers.zeroPadValue(FORWARDER, 32));
     expect(Number(burn.destinationDomain)).toBe(19);
@@ -128,7 +128,7 @@ describe('PerpsDepositChainService deposit call', () => {
   it('prices the deposit at the buffered gas limit, not the bare estimate', async () => {
     const fee = await service.depositFeeExact(CONFIG, AUTHORIZATION, '0.2');
 
-    // 100k estimated, 120k allowed, at 1 gwei.
+    // 预估 100k，放行 120k，按 1 gwei。
     expect(fee).toBe('0.00012');
   });
 
@@ -235,9 +235,8 @@ describe('PerpsDepositChainService source-chain outcome', () => {
     ).toBeResolvedTo('confirmed');
   });
 
-  // A reverted transaction has a receipt too. Reading the receipt alone as
-  // success leaves the deposit waiting forever on a credit that cannot come,
-  // because the USDC was never burned.
+  // 被 revert 的交易同样有回执。只凭回执就判定成功，会让这笔入金永远等待一笔
+  // 不可能到来的入账 —— 因为那些 USDC 根本没有被销毁。
   it('does not mistake a reverted transaction for a confirmed one', async () => {
     receiving({ status: 0 });
 
@@ -306,9 +305,8 @@ describe('PerpsDepositChainService broadcast', () => {
     service = new PerpsDepositChainService(rpc);
   });
 
-  // The retry loop under `withEndpoint` may run its callback many times. A
-  // broadcast placed inside it re-signs on every attempt, so one lost response
-  // becomes a second burn of the user's USDC.
+  // `withEndpoint` 下的重试循环可能把回调跑很多次。把广播放在里面，每次尝试都会重新
+  // 签名，于是一次丢失的响应就变成了用户 USDC 的第二次销毁。
   it('signs the deposit once and hands fixed bytes to the broadcaster', async () => {
     const hash = await service.sendDeposit(CONFIG, PRIVATE_KEY, AUTHORIZATION, '0.2');
 
@@ -318,7 +316,7 @@ describe('PerpsDepositChainService broadcast', () => {
     expect(transaction.from).toBe(ADDRESS);
     expect(transaction.to).toBe(CONFIG.cctp.extension);
     expect(transaction.nonce).toBe(7);
-    // 100k estimated, 120k allowed.
+    // 预估 100k，放行 120k。
     expect(transaction.gasLimit).toBe(120000n);
     expect(hash).toBe(ethers.keccak256(raw));
   });

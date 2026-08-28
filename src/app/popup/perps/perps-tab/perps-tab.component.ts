@@ -24,8 +24,8 @@ import {
 } from '../perps.util';
 
 /**
- * The 永续合约 tab on the home page: account summary, open positions and the
- * market list. Only rendered for NeoX wallets — Hyperliquid keys are secp256k1.
+ * 首页上的永续合约 tab：账户摘要、持仓和市场列表。
+ * 只对 NeoX 钱包渲染 —— Hyperliquid 的密钥是 secp256k1。
  */
 @Component({
   selector: 'app-perps',
@@ -39,12 +39,12 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
 
   account: PerpsAggregatedAccount;
   /**
-   * Reported by the embedded market list, and used only to size positions at
-   * their own market's precision — this tab does not own the market feed.
+   * 由内嵌的市场列表上报，只用来按各仓位自己市场的精度格式化数量 ——
+   * 这个 tab 并不持有行情数据源。
    */
   markets: PerpsMarket[] = [];
 
-  /** Feed health, shown as a banner and by dimming every quoted value. */
+  /** 数据源健康度，以横幅呈现，并把所有报价值调暗。 */
   connectionState: PerpsConnectionState = 'connecting';
   marketFeedAt: number | null = null;
 
@@ -53,7 +53,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   private connectionSub: Unsubscribable;
   private feedAtSub: Unsubscribable;
 
-  //#region template helpers
+  //#region 模板辅助方法
   formatPrice = formatPrice;
   formatUsd = formatUsd;
   formatSignedUsd = formatSignedUsd;
@@ -89,7 +89,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     this.feedAtSub?.unsubscribe();
   }
 
-  /** Track shared feed health for the existing stale banner. */
+  /** 跟踪共享数据源的健康度，供已有的「过期」横幅使用。 */
   private watchFeedHealth() {
     this.feedAtSub = this.markets$
       .watchMarkets()
@@ -101,7 +101,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
       });
   }
 
-  /** Consume account domain state without knowing its REST/WS implementation. */
+  /** 消费账户领域状态，不必知道它底下是 REST 还是 WS 实现。 */
   private watchAccountState(address: string) {
     this.accountStateSub?.unsubscribe();
     this.accountLoadError = false;
@@ -117,7 +117,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
       });
   }
 
-  /** Collateral equity for the active account mode. */
+  /** 当前账户模式下的抵押品权益。 */
   get accountEquityExact(): string | null {
     if (this.unsupportedAccountMode) {
       return null;
@@ -126,8 +126,8 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Whether there is any equity at all. Templates cannot ask this of a decimal
-   * string — `'0'` is truthy — so the question is answered here instead.
+   * 究竟有没有任何权益。模板问不了一个十进制字符串这个问题 —— `'0'` 是真值 ——
+   * 所以改在这里回答。
    */
   get hasEquity(): boolean {
     return (
@@ -136,7 +136,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     );
   }
 
-  /** Buying power, with free spot USDC folded only for Unified/portfolio mode. */
+  /** 购买力；只有统一账户/组合保证金模式才会把空闲的现货 USDC 折算进来。 */
   get availableMarginExact(): string | null {
     if (this.unsupportedAccountMode) {
       return null;
@@ -144,7 +144,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     return this.account?.availableBalanceExact ?? null;
   }
 
-  /** Initial margin in use, reported by the perps clearinghouse. */
+  /** 已占用的起始保证金，由永续清算所上报。 */
   get usedMarginExact(): string {
     return this.account?.totalMarginUsedExact ?? '0';
   }
@@ -154,27 +154,24 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Which pool the margin ratio above describes. Shown whenever it is not the
-   * canonical one, because "25%" means nothing if the user cannot tell which
-   * of their independently-liquidated pools is at 25%.
+   * 上面那个保证金率描述的是哪个资金池。只要不是标准永续那个就显示出来，因为如果用户
+   * 分不清是自己哪个独立清算的池子处在 25%，「25%」就毫无意义。
    */
   get marginRatioDex(): string {
     return this.account?.marginRatioDex || '';
   }
 
   /**
-   * Some DEX did not report, so the totals cover only part of the account.
-   * The figures stay on screen — they are real for the pools that did report —
-   * but they must not be presented as the whole picture.
+   * 有某个 DEX 没有上报，所以这些总额只覆盖了账户的一部分。数字继续留在屏幕上 ——
+   * 对那些确实上报了的池子来说它们是真的 —— 但绝不能把它们当成全貌来呈现。
    */
   get aggregateIncomplete(): boolean {
     return (this.account?.missingDexes?.length || 0) > 0;
   }
 
   /**
-   * Actions that spend or move the account-wide total. Reducing or closing a
-   * position on a DEX that did report stays available: blocking the exit is
-   * worse than showing an incomplete balance.
+   * 会花掉或挪动账户级总额的操作。对确实上报了的 DEX 上的仓位做减仓或平仓仍然可用：
+   * 堵死离场比显示一个不完整的余额更糟。
    */
   get globalActionsDisabled(): boolean {
     return (
@@ -186,9 +183,8 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Spot USDC held outside perps under a standard account: real balance, but it
-   * cannot back a position until it is moved into perps, which NeoLine does not
-   * do. It is surfaced separately rather than inflating the perps equity above.
+   * 标准账户下放在永续之外的现货 USDC：余额是真的，但在被挪进永续之前它撑不起仓位，
+   * 而 NeoLine 不做这件事。所以它单独展示，而不是去抬高上面的永续权益。
    */
   get separateSpotUsdcExact(): string {
     return this.account && !this.account.unified
@@ -200,12 +196,12 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     return new BigNumber(this.separateSpotUsdcExact).isGreaterThan(0);
   }
 
-  /** Values on screen are last-known rather than live. */
+  /** 屏幕上的数值是最后已知值，而不是实时值。 */
   get feedStale(): boolean {
     return this.connectionState === 'stale';
   }
 
-  /** How long ago the newest market frame arrived, for the stale banner. */
+  /** 最新一帧行情是多久以前到的，供「过期」横幅使用。 */
   get lastUpdatedLabel(): string {
     if (!this.marketFeedAt) {
       return '';
@@ -217,21 +213,20 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     return `${Math.floor(seconds / 60)}m`;
   }
 
-  /** A position's market, located by key so HIP-3 namesakes stay distinct. */
+  /** 仓位对应的市场，按市场主键定位，好让 HIP-3 上的同名资产保持区分。 */
   marketFor(position: PerpsPosition): PerpsMarket {
     return this.markets.find((item) => item.key === position.key);
   }
 
-  /** Return on equity arrives as a fraction; the label shows a percentage. */
+  /** 权益回报率以小数形式到达；标签上显示成百分比。 */
   returnOnEquityPercent(position: PerpsPosition): string {
     return new BigNumber(position.returnOnEquityExact).times(100).toFixed();
   }
 
   /**
-   * Positions are reported for every account mode, including Portfolio Margin
-   * whose account-level figures are not. Hiding them there hid the close button
-   * with them, which is the one action that must never depend on our ability to
-   * price the account.
+   * 所有账户模式都会上报仓位，包括账户级数字并不上报的组合保证金账户。在那里把仓位藏
+   * 起来，等于连它们上面的平仓按钮一起藏了 —— 而平仓恰恰是绝不能取决于「我们能不能给
+   * 这个账户估值」的那个动作。
    */
   get hasPositions(): boolean {
     return (this.account?.positions?.length || 0) > 0;
@@ -242,11 +237,9 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * A position's size at its market's lot precision. Located by market key, not
-   * by symbol: the same symbol can exist on the canonical DEX and on a HIP-3 one
-   * with different lot precision. The markets arrive separately from the
-   * account, so an unknown market falls back to sizing by magnitude rather than
-   * showing nothing.
+   * 按仓位所属市场的最小变动单位精度格式化的仓位数量。按市场主键定位，而不是按符号：
+   * 同一个符号可能同时存在于标准永续 DEX 和某个 HIP-3 DEX 上，且精度不同。市场与账户
+   * 是分开到达的，所以遇到未知市场时退回按数量级取精度，而不是什么都不显示。
    */
   positionSize(position: PerpsPosition): string {
     const market = this.marketFor(position);

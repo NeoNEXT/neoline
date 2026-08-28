@@ -25,12 +25,10 @@ import {
 import { formatCompactUsd, formatPrice, formatSignedPercent } from '../perps.util';
 
 /**
- * The market list itself: sorting, pinning, paging and the rows.
+ * 市场列表本身：排序、置顶、翻页以及各行的渲染。
  *
- * It is shared by the home tab and the markets page. Searching and sorting are
- * the markets page's job — the tab just links to it — so the keyword arrives as
- * an input rather than being held here, and the list stays the one place row
- * order is decided.
+ * 它由首页 tab 和市场页共用。搜索和排序是市场页的职责 —— tab 只是链接过去 —— 所以关键词
+ * 是以 input 传进来的，而不是保存在这里；这个列表则始终是决定行顺序的唯一地方。
  */
 @Component({
   selector: 'perps-market-list',
@@ -38,37 +36,33 @@ import { formatCompactUsd, formatPrice, formatSignedPercent } from '../perps.uti
   styleUrls: ['perps-market-list.component.scss'],
 })
 export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
-  /** Filter term. Empty shows everything. */
+  /** 筛选词。为空时显示全部。 */
   @Input() keyword = '';
   /**
-   * Show the sort control. Only the markets page does; the home tab's list is
-   * there to read as "the biggest markets", and it always ranks by volume.
+   * 是否显示排序控件。只有市场页会显示；首页 tab 上的列表要读作「最大的那些市场」，
+   * 它始终按成交量排名。
    */
   @Input() showSort = false;
   /**
-   * The market this list is standing in for, marked as the one already open.
+   * 这个列表所代表的市场，会被标记为「已经打开的那个」。
    *
-   * Only the coin switcher sets it: it is a menu of where the user could go
-   * from where they are, and a menu that does not say where that is makes the
-   * user read the header again to find out.
+   * 只有币种切换器会设置它：那是一份「从当前位置可以去哪儿」的菜单，而一份不说明当前在
+   * 哪儿的菜单，会逼用户回头再读一遍标题栏。
    */
   @Input() activeCoin = '';
   /**
-   * A row the user picked, by coin.
+   * 用户点选的那一行，以币种标识。
    *
-   * The list still routes to it itself — that is the same thing on every
-   * surface. This says a choice was made, which is what a host rendering the
-   * list inside something dismissable needs: picking the market already open
-   * routes nowhere, so a host waiting on the route would stay open on the one
-   * tap that most clearly meant "close".
+   * 列表自己仍然会路由过去 —— 这在所有界面上都一样。这个事件说的是「用户做出了选择」，
+   * 而这正是把列表渲染在某个可关闭容器里的宿主所需要的：点选当前已经打开的那个市场并
+   * 不会路由到任何地方，于是一个等待路由的宿主，会在那次最明确表示「关掉」的点击上
+   * 反而保持打开。
    */
   @Output() marketSelected = new EventEmitter<string>();
   /**
-   * The markets this list is showing. Emitted so a host that needs them for
-   * something else — the home tab sizes its positions by their market's
-   * `szDecimals` — can read them off this subscription instead of opening a
-   * second one: `watchMarkets` refetches per subscriber, and `/info` is charged
-   * against a shared per-IP weight budget.
+   * 这个列表正在展示的市场。之所以发出去，是让另有用途的宿主 —— 首页 tab 要按各市场的
+   * `szDecimals` 格式化仓位数量 —— 可以从这个订阅里读到它们，而不必另开一个：
+   * `watchMarkets` 每来一个订阅者就重新取一次，而 `/info` 是按 IP 共享的权重预算计费的。
    */
   @Output() marketsLoaded = new EventEmitter<PerpsMarket[]>();
 
@@ -76,16 +70,14 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
   marketLoadError = false;
 
   markets: PerpsMarket[] = [];
-  /** Markets kept at the top: favourites and the Neo ecosystem. */
+  /** 置顶的市场：收藏与 Neo 生态。 */
   pinnedMarkets: PerpsMarket[] = [];
-  /** The rows below the pinned block, in ordering-snapshot order. */
+  /** 置顶区下方的各行，按排序快照的顺序排列。 */
   visibleMarkets: PerpsMarket[] = [];
 
   /**
-   * How the list is ranked. Volume every time the list is built: a sort is a
-   * question the user is asking of the page in front of them, not a setting,
-   * and one carried over from a previous visit is an order they cannot see the
-   * reason for.
+   * 列表如何排名。每次构建列表都取成交量：排序是用户对眼前这一页提出的问题，不是一项
+   * 设置；从上次访问延续下来的排序，对用户而言是一个看不出缘由的顺序。
    */
   sortKey: PerpsMarketSortKey = 'volume';
   readonly sortKeys: { key: PerpsMarketSortKey; label: string }[] = [
@@ -94,14 +86,14 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
   ];
   sortMenuOpen = false;
 
-  /** How many rows of the snapshot are materialised so far. */
+  /** 快照中已经实际渲染出来的行数。 */
   visibleCount = PERPS_MARKET_PAGE_SIZE;
   readonly skeletonRows = new Array(6);
 
-  /** Feed health, which dims every quote the list is showing. */
+  /** 数据源健康度，它会把列表显示的所有报价调暗。 */
   connectionState: PerpsConnectionState = 'connecting';
 
-  /** The frozen row order; see `resnapshot`. */
+  /** 被冻结的行顺序；见 `resnapshot`。 */
   private orderedKeys: string[] = [];
   private pinnedKeys: string[] = [];
   private renderTimer: any;
@@ -109,7 +101,7 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
   private marketsSub: Unsubscribable;
   private connectionSub: Unsubscribable;
 
-  //#region template helpers
+  //#region 模板辅助方法
   formatCompactUsd = formatCompactUsd;
   formatPrice = formatPrice;
   formatSignedPercent = formatSignedPercent;
@@ -129,14 +121,13 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    // Typing is a user action, so it re-snapshots — the row order is allowed to
-    // change here, unlike on a price update.
+    // 打字是用户动作，所以要重新取快照 —— 与价格更新不同，行顺序在这里是允许变的。
     if (changes.keyword && !changes.keyword.firstChange) {
       this.resnapshot();
     }
   }
 
-  /** Tapping anywhere else dismisses the sort menu without choosing. */
+  /** 点击别处会关掉排序菜单，且不做选择。 */
   @HostListener('document:click', ['$event.target'])
   onDocumentClick(target: HTMLElement) {
     if (this.sortMenuOpen && !target?.closest?.('.sort-select-wrap')) {
@@ -150,7 +141,7 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
     clearTimeout(this.renderTimer);
   }
 
-  /** Merge bursts of frames into one repaint, ~250ms apart at most. */
+  /** 把成串到达的帧合并成一次重绘，最快也要间隔约 250ms。 */
   private scheduleRender() {
     if (this.renderTimer) {
       return;
@@ -166,8 +157,7 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
       if (state.availability === 'loading') {
         return;
       }
-      // Nothing ever arrived, so there is no list to show — a later retry will
-      // publish one to this same subscriber.
+      // 什么都没到过，所以没有列表可显示 —— 之后的重试会向这同一个订阅者发布一份。
       if (state.availability === 'unavailable' && !state.markets.length) {
         this.loading = false;
         this.marketLoadError = true;
@@ -179,8 +169,8 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
         known.size !== markets.length ||
         markets.some((market) => !known.has(market.key));
       this.markets = markets;
-      // A new or delisted market has to enter the order; a price move must
-      // not. Coalesce the rest so several DEX frames repaint once.
+      // 新上架或已下架的市场必须进入顺序；价格波动则不能。其余情况做合并，
+      // 让多个 DEX 的帧只触发一次重绘。
       if (changed) {
         this.resnapshot();
       } else {
@@ -192,7 +182,7 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  /** The label the sort control shows for whatever is currently selected. */
+  /** 排序控件为当前所选项显示的文案。 */
   get sortKeyLabel(): string {
     return this.sortKeys.find((item) => item.key === this.sortKey)?.label || '';
   }
@@ -216,18 +206,17 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
     return this.orderedKeys.length + this.pinnedKeys.length;
   }
 
-  /** Values on screen are last-known rather than live. */
+  /** 屏幕上的数值是最后已知值，而不是实时值。 */
   get feedStale(): boolean {
     return this.connectionState === 'stale';
   }
 
   /**
-   * Recompute the ordering snapshot.
+   * 重新计算排序快照。
    *
-   * Called only from the things a user does — arriving, searching, changing the
-   * sort, refreshing — never from a price update. Between these calls the row
-   * order is frozen, so a market cannot climb past the one the user is reaching
-   * for, and a tap lands where it was aimed.
+   * 只由用户的动作触发 —— 进入页面、搜索、切换排序、下拉刷新 —— 绝不由价格更新触发。
+   * 在这些调用之间行顺序是冻结的，因此一个市场不可能爬到用户正伸手要点的那一行前面，
+   * 点击也就落在瞄准的地方。
    */
   private resnapshot() {
     const keyword = (this.keyword || '').trim().toUpperCase();
@@ -246,11 +235,10 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   /**
-   * Materialise rows from the frozen key order.
+   * 按冻结的键顺序把行实际渲染出来。
    *
-   * Prices change by replacing market objects, so the rows are looked up afresh
-   * — but always in snapshot order, which is what keeps a live update from
-   * becoming a reshuffle.
+   * 价格变化是通过替换市场对象来体现的，所以这些行会被重新查一遍 —— 但始终按快照顺序，
+   * 这正是让实时更新不至于变成一次重新洗牌的关键。
    */
   private renderRows() {
     const byKey = new Map(this.markets.map((market) => [market.key, market]));
@@ -263,12 +251,12 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
       .filter(Boolean);
   }
 
-  /** Every sort key ranks highest-first; there is no direction to reverse. */
+  /** 每种排序键都是从高到低排名；没有可反转的方向。 */
   private comparator(): (a: PerpsMarket, b: PerpsMarket) => number {
     if (this.sortKey === 'change') {
       return (a, b) => {
-        // A market with no computable change has no place in a ranking by
-        // change: it sinks to the bottom rather than posing as 0%.
+        // 一个算不出涨跌的市场，在按涨跌排名里没有位置：
+        // 它沉到最底下，而不是冒充 0%。
         if (a.changePercentExact === null || b.changePercentExact === null) {
           return a.changePercentExact === b.changePercentExact
             ? 0
@@ -285,30 +273,28 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
       new BigNumber(b.dayVolumeExact).comparedTo(a.dayVolumeExact);
   }
 
-  /** The Neo ecosystem sits above the sorted list. */
+  /** Neo 生态排在已排序列表的上方。 */
   private isPinned(market: PerpsMarket): boolean {
     return PERPS_NEO_COINS.includes(market.symbol);
   }
 
   /**
-   * The price a market row shows: the book mid, or the mark when no two-sided
-   * book exists. The row labels which one it is — a mark is not a price anyone
-   * can trade at, and letting it pass for one is how a user reads an untradeable
-   * market as a tradeable one.
+   * 市场行显示的价格：盘口中间价；没有双边盘口时用标记价格。这一行会标明它是哪一种 ——
+   * 标记价格不是任何人能成交的价格，让它冒充成交价，正是用户把一个不可交易的市场读成
+   * 可交易市场的原因。
    */
   listPrice(market: PerpsMarket): string | null {
     return market.midPxExact ?? market.markPxExact ?? null;
   }
 
-  /** True when the row is quoting the mark because the book has no mid. */
+  /** 盘口没有中间价、因而这一行报的是标记价格时为 true。 */
   usingMarkPrice(market: PerpsMarket): boolean {
     return !market.midPxExact && !!market.markPxExact;
   }
 
   /**
-   * Rows are identified by market key, so a price update rewrites the numbers
-   * in place instead of tearing down and rebuilding every row — which is what
-   * reloads each coin logo and loses the user's scroll position.
+   * 行按市场主键标识，这样价格更新只是就地改写数字，而不是把每一行拆掉重建 ——
+   * 后者会重新加载每个币种图标，并丢掉用户的滚动位置。
    */
   trackByKey(_index: number, market: PerpsMarket): string {
     return market.key;

@@ -31,10 +31,9 @@ const AGENT_TYPES = {
 };
 
 /**
- * The withdrawal is a Core-to-EVM transfer carrying hook data, not the old
- * bridge withdrawal. `data` is a dynamic type, so its EIP-712 encoding is the
- * hash of the bytes rather than the bytes themselves — signing it as a string
- * would produce a valid-looking signature that recovers to the wrong address.
+ * 这里的提现是一次携带 hook data 的 Core→EVM 转账，不是旧的跨桥提现。`data` 是动态
+ * 类型，因此它的 EIP-712 编码是字节的哈希而不是字节本身 —— 若按字符串签名，会产生一个
+ * 看起来合法、却恢复出错误地址的签名。
  */
 const SEND_TO_EVM_WITH_DATA_TYPES = {
   'HyperliquidTransaction:SendToEvmWithData': [
@@ -82,17 +81,13 @@ function concatBytes(...parts: Uint8Array[]): Uint8Array {
 }
 
 /**
- * @msgpack/msgpack 2.x cannot encode bigint. Patch only its integer dispatch so
- * protocol uint64 values survive; every other value continues through the
- * library's normal encoder.
+ * @msgpack/msgpack 2.x 无法编码 bigint。这里只给它的整数分发打补丁，好让协议里的
+ * uint64 值得以保全；其余所有值继续走库自己的编码器。
  *
- * msgpack integers must use the narrowest format that holds the value — that is
- * what the official Python SDK emits and what the exchange re-encodes before
- * checking the signature, so widening an order id to 0xcf would change the
- * action hash and the recovered signer with it. Anything a double can hold
- * exactly therefore goes back through the library's own minimal encoder; only
- * values above 2^53 need the explicit uint64, which is already their narrowest
- * form.
+ * msgpack 整数必须使用能容纳该值的最窄格式 —— 官方 Python SDK 输出的就是这种格式，
+ * 交易场所在校验签名前重新编码时用的也是它，所以把一个订单 id 加宽成 0xcf 会改变
+ * action 哈希，连带改变恢复出的签名者。因此凡是双精度浮点能精确表示的值，都交回库
+ * 自己的最小编码器；只有超过 2^53 的值才需要显式的 uint64，而那本来就是它们最窄的形式。
  */
 const MAX_SAFE_BIGINT = BigInt(Number.MAX_SAFE_INTEGER);
 const MIN_SAFE_BIGINT = BigInt(Number.MIN_SAFE_INTEGER);
@@ -130,8 +125,8 @@ function encodeHyperliquidAction(action: any): Uint8Array {
 }
 
 /**
- * Hash an L1 action exactly as the official Python SDK does:
- * msgpack(action) || uint64(nonce) || no-vault marker.
+ * 完全按官方 Python SDK 的方式对 L1 action 做哈希：
+ * msgpack(action) || uint64(nonce) || 无 vault 标记。
  */
 export function hyperliquidActionHash(
   action: any,
@@ -174,12 +169,10 @@ export async function signHyperliquidL1Action(
 }
 
 /**
- * Which HyperCore balance a withdrawal debits: `''` is the perps balance and
- * `'spot'` is the spot balance. The two are not interchangeable — a standard
- * account keeps them as separate wallets, and a unified account holds all of
- * its USDC in spot while the perps clearinghouse reports figures the docs call
- * not meaningful (`withdrawable` is 0 there however funded the account is).
- * SOURCE: https://developers.circle.com/cctp/howtos/withdraw-usdc-from-hypercore-to-evm
+ * 提现从哪个 HyperCore 余额扣款：`''` 是永续余额，`'spot'` 是现货余额。两者不可互换 ——
+ * 标准账户把它们当作两个独立钱包，而统一账户的 USDC 全部放在现货侧，此时永续清算所报出
+ * 的数字被文档称为「无意义」（无论账户有多少资金，那里的 `withdrawable` 都是 0）。
+ * 来源：https://developers.circle.com/cctp/howtos/withdraw-usdc-from-hypercore-to-evm
  */
 export type PerpsWithdrawSourceDex = '' | 'spot';
 
@@ -202,19 +195,15 @@ export interface SignedSendToEvmWithDataAction {
 }
 
 /**
- * Withdraw USDC from HyperCore to the same address on another chain.
+ * 把 USDC 从 HyperCore 提到另一条链上的同一地址。
  *
- * `sourceDex` names the balance the exchange debits and belongs to the caller:
- * it has to match the account's abstraction mode, and neither value is a safe
- * default for the other. `data` is empty because that is what tells the
- * forwarder to deliver the mint on its own. Anything else in `data` becomes
- * user-supplied hook data: the forwarding fee stops being applied and the
- * message has to be claimed on the destination chain by whoever gets there
- * first.
+ * `sourceDex` 指明交易场所扣款的余额，由调用方决定：它必须与账户的抽象模式相符，而且
+ * 两个取值互相都不是安全的默认值。`data` 留空，因为正是空值告诉转发器自行完成 mint。
+ * `data` 里放任何别的东西都会变成用户自带的 hook data：转发费不再生效，这条消息还得由
+ * 目的链上第一个到场的人去认领。
  *
- * `destinationChainId` is the CCTP domain (3 for Arbitrum), not the EVM chain
- * id. Circle's CoreDepositWallet natspec and the sendToEvmWithData guide both
- * say so; the ABI name is the trap.
+ * `destinationChainId` 是 CCTP domain（Arbitrum 为 3），不是 EVM 链 id。Circle 的
+ * CoreDepositWallet natspec 和 sendToEvmWithData 指南都是这么写的；坑在 ABI 的命名上。
  */
 export async function signHyperliquidSendToEvmWithData(
   privateKey: string,
@@ -248,11 +237,10 @@ export async function signHyperliquidSendToEvmWithData(
 }
 
 /**
- * Authorise a builder to charge up to `maxFeeRate` on this account's orders.
+ * 授权某个 builder 对本账户的订单最多收取 `maxFeeRate` 的费用。
  *
- * The rate is a percentage string ("0.045%") and the approval is a ceiling, not
- * a fixed price: signing it lets the builder attach any fee up to that rate to
- * later orders. It is signed once per account and stays in force until replaced.
+ * 该费率是百分比字符串（"0.045%"），且这次授权是上限而非固定价格：签署之后，builder
+ * 可以给后续订单附加不超过该费率的任意手续费。它每个账户只签一次，在被替换之前一直有效。
  */
 export async function signHyperliquidApproveBuilderFee(
   privateKey: string,

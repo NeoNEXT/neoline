@@ -9,17 +9,14 @@ import {
 } from './perps.util';
 
 /**
- * The perps formatters as pure pipes.
+ * 以纯管道形式提供的 perps 格式化函数。
  *
- * Calling a formatter straight from a template re-runs it on every change
- * detection pass, whatever changed — and the market detail page checks itself
- * once a second for the funding countdown alone. A pure pipe caches on its
- * arguments, so a price that did not move is formatted once and then simply
- * read back.
+ * 直接在模板里调用格式化函数，会在每一轮变更检测中重新执行一遍 —— 无论变的是什么；而
+ * 市场详情页光是为了资金费倒计时就每秒自检一次。纯管道按参数缓存，所以没有变动的价格只
+ * 格式化一次，之后直接读回来。
  *
- * These wrap the functions rather than replacing them: component code and
- * tests still call the functions directly, and there is one implementation of
- * each rule.
+ * 这些管道是包裹那些函数，而不是取代它们：组件代码和测试仍然直接调用函数，每条规则只有
+ * 一份实现。
  */
 
 @Pipe({ name: 'perpsPrice' })
@@ -48,8 +45,8 @@ export class PerpsCompactUsdPipe implements PipeTransform {
 }
 
 /**
- * Not a formatter, but here for the same reason: it builds a BigNumber, and a
- * template calling it directly rebuilds one on every change detection pass.
+ * 它不是格式化函数，但放在这里的理由相同：它会构造 BigNumber，而模板直接调用它，
+ * 会在每一轮变更检测中重新构造一个。
  */
 @Pipe({ name: 'perpsNegative' })
 export class PerpsNegativePipe implements PipeTransform {

@@ -36,8 +36,8 @@ type PerpsActivityTab =
   | 'transfers';
 
 /**
- * Order states that get a friendly label. Hyperliquid ships a long tail of
- * `xxxCanceled` / `xxxRejected` variants, handled by suffix in orderStatusKey.
+ * 有友好文案的订单状态。Hyperliquid 还有一长串 `xxxCanceled` / `xxxRejected` 变体，
+ * 在 orderStatusKey 里按后缀统一处理。
  */
 const ORDER_STATUS_LABELS = {
   filled: 'perpsStatusFilled',
@@ -49,11 +49,9 @@ const ORDER_STATUS_LABELS = {
 };
 
 /**
- * Hyperliquid's own activity table names the action rather than the ledger
- * primitive, and this list follows it: the Arbitrum bridge reads deposit or
- * withdraw, its peer-to-peer USDC action reads send whichever end of it this
- * wallet is on, and moving collateral between the spot and perps balances
- * reads transfer.
+ * Hyperliquid 自己的活动表格命名的是「动作」而不是账本原语，这份列表跟着它来：Arbitrum
+ * 跨桥读作入金或出金，它的点对点 USDC 操作按本钱包处在哪一端读作转出或转入，而在现货与
+ * 永续余额之间挪动抵押品读作划转。
  */
 const LEDGER_TYPE_LABELS = {
   deposit: 'perpsLedgerDeposit',
@@ -64,13 +62,12 @@ const LEDGER_TYPE_LABELS = {
 };
 
 /**
- * Spot transfers carry no fixed label. They are how a HyperEVM or bridge
- * transfer lands, so Hyperliquid names them by which way the money moved:
- * inbound reads deposit, outbound reads withdraw.
+ * 现货转账没有固定文案。HyperEVM 或跨桥转账正是以它的形式落地的，所以 Hyperliquid 按钱
+ * 的流向来命名：转入读作入金，转出读作出金。
  */
 const DIRECTIONAL_LEDGER_TYPES = ['send', 'spotTransfer'];
 
-/** The popup only ever scrolls so far; older rows stay on the web UI. */
+/** 弹窗最多也就能滚这么长；更早的行留给网页端去看。 */
 const MAX_ARCHIVE_ROWS = 200;
 
 @Component({
@@ -84,7 +81,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
   transfers: PerpsLedgerUpdate[] = [];
   tab: PerpsActivityTab = 'orders';
   loading = true;
-  /** Per-tab spinner for the two lazily fetched tabs. */
+  /** 两个按需拉取的 tab 各自的加载指示。 */
   tabLoading = false;
   loadError = false;
   pendingCancelOrderId: string;
@@ -98,9 +95,9 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
   private markets: PerpsMarket[] = [];
   private accountSub: Unsubscribable;
   private liveSubs = new Subscription();
-  /** Tabs already fetched for the current address. */
+  /** 当前地址下已经拉取过的 tab。 */
   private loadedTabs = new Set<PerpsActivityTab>();
-  /** Tabs with a request in flight, so switching back and forth sends one. */
+  /** 有请求在途的 tab，这样来回切换也只会发一次。 */
   private pendingTabs = new Set<PerpsActivityTab>();
 
   constructor(
@@ -139,14 +136,14 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     this.transfers = [];
     forkJoin([
       this.hyperliquid.getOpenOrders(this.address),
-      // Markets only resolve the asset id a cancel needs. A rate-limited or
-      // failed market snapshot must not hide orders that loaded fine.
+      // 市场数据只用于解析取消操作所需的资产 id。一次被限流或失败的市场快照，
+      // 不该把那些加载正常的订单藏起来。
       this.markets$.getMarkets().pipe(catchError(() => of([]))),
     ]).subscribe(
       ([openOrders, markets]) => {
         this.openOrders = openOrders;
-        // `userFills` immediately pushes an `isSnapshot` websocket message.
-        // Do not spend a weighted REST request fetching the same history first.
+        // `userFills` 会立刻推送一条 `isSnapshot` 的 websocket 消息。
+        // 不要再先花一次带权重的 REST 请求去取同样的历史。
         this.fills = [];
         this.markets = markets;
         this.loadedTabs.add('orders');
@@ -161,7 +158,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     );
   }
 
-  /** The two archive tabs are only worth a request once the user opens them. */
+  /** 两个归档 tab 只有在用户真正打开时才值得发一次请求。 */
   private loadTab(tab: PerpsActivityTab) {
     if (tab === 'orders' || tab === 'fills') {
       return;
@@ -181,10 +178,9 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     this.tabLoading = true;
     request.subscribe((res: any[]) => {
       if (tab === 'orderHistory') {
-        // One row per status change, exactly as Hyperliquid's own order
-        // history renders it: an order that rested and then filled shows up
-        // twice. Sorting is stable, so rows sharing a timestamp keep the
-        // API's newest-state-first order.
+        // 每次状态变化一行，与 Hyperliquid 自己的订单历史渲染方式完全一致：一笔先挂单
+        // 后成交的订单会出现两次。排序是稳定的，因此时间戳相同的行保持 API 那种
+        // 「最新状态在前」的顺序。
         this.historicalOrders = (res as PerpsHistoricalOrder[])
           .slice()
           .sort((a, b) => b.statusTimestamp - a.statusTimestamp)
@@ -298,7 +294,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
             this.openOrders = this.openOrders.filter(
               (item) => item.oid !== order.oid
             );
-            // The canceled order now belongs in the archive tab.
+            // 被取消的订单现在归属归档 tab。
             this.loadedTabs.delete('orderHistory');
             this.global.snackBarTip('perpsOrderCanceled');
           },
@@ -321,7 +317,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     return order.side === 'B';
   }
 
-  /** Translate Hyperliquid's side and reduce-only flag into trading intent. */
+  /** 把 Hyperliquid 的方向和 reduce-only 标记翻译成交易意图。 */
   orderDirectionKey(
     order: PerpsOpenOrder
   ): 'perpsOpenLong' | 'perpsOpenShort' | 'perpsCloseLong' | 'perpsCloseShort' {
@@ -344,15 +340,15 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * An order or fill size at its market's lot precision. History spans markets
-   * this wallet may no longer hold, so an unknown coin sizes by magnitude.
+   * 按所属市场的最小变动单位精度格式化的订单或成交数量。历史会跨越本钱包可能已经不再
+   * 持有的市场，所以未知币种按数量级取精度。
    */
   size(value: string | number, coin: string): string {
     const market = this.markets.find((item) => item.coin === coin);
     return formatSize(value, market?.szDecimals);
   }
 
-  /** i18n key for an order state, or '' when it needs the raw value. */
+  /** 订单状态的 i18n key；需要显示原始值时返回 ''。 */
   orderStatusKey(status: string): string {
     if (ORDER_STATUS_LABELS[status]) {
       return ORDER_STATUS_LABELS[status];
@@ -366,7 +362,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     return '';
   }
 
-  /** i18n key for a ledger row, or '' for exotic types (vault, staking, ...). */
+  /** 账本行的 i18n key；遇到冷门类型（vault、staking 等）时返回 ''。 */
   ledgerTypeKey(update: PerpsLedgerUpdate): string {
     const type = update.delta?.type;
     if (DIRECTIONAL_LEDGER_TYPES.indexOf(type) > -1) {
@@ -382,20 +378,18 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     if (delta.type === 'withdraw') {
       return true;
     }
-    // A class transfer moves collateral out of the perps account when it lands
-    // on the spot side.
+    // class transfer 落到现货那一侧时，意味着抵押品被移出了永续账户。
     if (delta.type === 'accountClassTransfer') {
       return delta.toPerp === false;
     }
-    // Peer-to-peer rows carry both sides: we are the sender unless the funds
-    // landed on this address.
+    // 点对点的行同时带着双方：除非钱落到了本地址上，否则我们就是发送方。
     if (delta.destination) {
       return delta.destination.toLowerCase() !== this.address?.toLowerCase();
     }
     return false;
   }
 
-  /** Ledger amounts are USDC for bridge/class rows and token-denominated otherwise. */
+  /** 账本金额在跨桥/class 行里是 USDC，其余情况以对应代币计价。 */
   ledgerAmount(update: PerpsLedgerUpdate): string {
     const delta = update.delta || ({} as any);
     const value = delta.usdc ?? delta.amount;
@@ -407,9 +401,8 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * The fee charged on top of a ledger row, or '' when it carries none. A fee
-   * the protocol reports as zero is no fee: it stays off the row rather than
-   * reading as a charge of nothing.
+   * 一条账本行额外收取的手续费；不收时返回 ''。协议报告为零的手续费就是「没有手续费」：
+   * 它不出现在这一行上，而不是显示成一笔金额为零的收费。
    */
   ledgerFee(update: PerpsLedgerUpdate): string {
     const delta = update.delta || ({} as any);

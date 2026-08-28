@@ -15,15 +15,14 @@ import {
 } from './perps-channel-identity';
 import { normalizeIds, parseProtocolJson } from './perps-protocol-json';
 
-/** `WebSocket.OPEN`, named here so a test double need not be a real socket. */
+/** `WebSocket.OPEN`，在这里起个名字，好让测试替身不必是真的套接字。 */
 export const SOCKET_OPEN = 1;
 
 /**
- * The part of a websocket this module actually uses.
+ * websocket 中本模块真正用到的那一部分。
  *
- * A real `WebSocket` satisfies it structurally, and so does an object with
- * seven members — which is the whole point: nothing here has to reach for the
- * global to be exercised.
+ * 真实的 `WebSocket` 在结构上满足它，一个只有七个成员的对象同样满足 —— 这正是重点：
+ * 这里没有任何东西必须依赖全局对象才能被测试。
  */
 export interface PerpsSocket {
   readyState: number;
@@ -35,7 +34,7 @@ export interface PerpsSocket {
   onerror: ((event: any) => void) | null;
 }
 
-/** Production adapter. The test adapter is a fake socket in the spec. */
+/** 生产环境适配器。测试适配器是 spec 里的一个假套接字。 */
 @Injectable({ providedIn: 'root' })
 export class PerpsSocketFactory {
   open(url: string): PerpsSocket {
@@ -44,39 +43,32 @@ export class PerpsSocketFactory {
 }
 
 /**
- * 数据通道（Data Channel）— the single live connection to the exchange.
+ * 数据通道（Data Channel）—— 与交易场所之间唯一的长连接。
  *
- * One socket is opened lazily and shared by every subscriber. Channels are
- * reference-counted, so N pages watching the same market cost one subscription,
- * and a channel outlives its last observer briefly so that stepping through
- * intervals or leaving a market and coming back does not redial it.
+ * 套接字按需只开一条，由所有订阅者共享。频道做引用计数，因此 N 个页面观察同一个市场只
+ * 花掉一次订阅；而且频道会在最后一个观察者离开后短暂存活，这样在图表周期之间切换、或者
+ * 离开一个市场再回来，都不会重新拨号。
  *
- * ## What this module promises
+ * ## 本模块的承诺
  *
- * - **Frames are protocol-precision values.** Every frame is read through
- *   `parseProtocolJson` and, where it carries ids, `normalizeIds` — so an
- *   oid above 2^53 reaches subscribers as the decimal string the exchange sent
- *   (ADR-0001).
- * - **Subscriptions survive a reconnect; snapshots do not.** After a drop the
- *   channel redials with exponential backoff and re-sends every active
- *   subscription, and the same observable resumes delivering — it does not
- *   error or complete. What it cannot do is replay what was missed, so each
- *   dataset watches `watchConnectionState()` and re-reads its own snapshot when
- *   the state returns to `live`. That division is the contract: the channel
- *   restores the subscription, the dataset restores the truth.
- * - **Nothing is replayed on subscribe.** A new subscriber gets the next frame,
- *   not the last one. Callers provide their own baseline.
+ * - **帧都是协议精度值。** 每一帧都经由 `parseProtocolJson` 读取，携带 id 的还会经过
+ *   `normalizeIds` —— 所以大于 2^53 的 oid 到达订阅者手上时，仍是交易场所发来的那个
+ *   十进制字符串（ADR-0001）。
+ * - **订阅能挺过重连，快照不能。** 断线后通道会以指数退避重新拨号并重发所有活跃订阅，
+ *   同一个 observable 会继续投递 —— 它既不 error 也不 complete。它做不到的是把错过的
+ *   内容补播，所以每个数据集都要观察 `watchConnectionState()`，在状态回到 `live` 时
+ *   重新读一次自己的快照。这条分工就是约定：通道负责恢复订阅，数据集负责恢复事实。
+ * - **订阅时不补播任何内容。** 新订阅者拿到的是下一帧，而不是上一帧。基准值由调用方
+ *   自己提供。
  *
- * Liveness is timed rather than assumed. A socket can stop delivering without
- * ever closing — the service worker suspends, a laptop sleeps, a NAT drops the
- * flow — and `readyState` still reads OPEN throughout. Only an unanswered
- * `ping` reveals it, which is why the answer is timed and the socket is closed
- * from this side when it does not come.
+ * 存活状态靠计时判断，而不是靠假设。套接字可能在完全没有关闭的情况下停止投递 —— service
+ * worker 被挂起、笔记本睡眠、NAT 丢掉了这条流 —— 而整个过程中 `readyState` 一直读作
+ * OPEN。只有一次没被回应的 `ping` 能揭穿它，所以这里给回应计时，并在它迟迟不来时从我们
+ * 这一侧关闭套接字。
  *
- * Hyperliquid can also carry `info` reads over this same socket with
- * `method: "post"` (unique numeric `id`, replies on channel `post`), which is
- * how the official frontend makes zero REST requests. That is not implemented
- * here; REST stays in `HyperliquidService`.
+ * Hyperliquid 其实也能用 `method: "post"` 在这同一条套接字上承载 `info` 读取（唯一的
+ * 数字 `id`，回复走 `post` 频道），官方前端就是靠它做到零 REST 请求的。这里没有实现；
+ * REST 仍留在 `HyperliquidService`。
  */
 @Injectable({ providedIn: 'root' })
 export class PerpsDataChannel {
@@ -88,34 +80,31 @@ export class PerpsDataChannel {
 
   private ws: PerpsSocket;
   private wsReady = false;
-  /** Active subscriptions keyed by channel id, so a reconnect can restore them. */
+  /** 按频道 id 索引的活跃订阅，好让重连时能把它们恢复出来。 */
   private activeSubs = new Map<string, any>();
   private channels = new Map<string, Subject<any>>();
   private channelObservers = new Map<string, number>();
   private reconnectAttempts = 0;
   private reconnectTimer: any;
-  /** Hyperliquid closes quiet sockets after 60s; ping well before that. */
+  /** Hyperliquid 会在 60 秒后关掉安静的套接字；要远早于此发送 ping。 */
   private heartbeatTimer: any;
   private readonly heartbeatMs = 30000;
-  /** How long a `ping` may go unanswered before the socket is treated as dead. */
+  /** 一次 `ping` 可以多久无人应答，超过就认定套接字已死。 */
   private readonly pongTimeoutMs = 10000;
   private pongTimer: any;
   /**
-   * Whether the feed is currently believed to be delivering. It is not "did a
-   * message arrive recently": context frames are periodic and a quiet market
-   * still produces them, but silence alone never condemns a healthy socket.
+   * 当前是否相信数据流还在投递。它问的不是「最近有没有消息到达」：上下文帧是周期性的，
+   * 冷清的市场照样会产生它们，但仅凭沉默永远不能给一条健康的套接字定罪。
    */
   private connectionState$ = new BehaviorSubject<PerpsConnectionState>(
     'connecting'
   );
   /**
-   * How long a channel outlives its last observer.
+   * 一个频道在最后一个观察者离开后还能活多久。
    *
-   * Stepping through chart intervals, or leaving a market and coming back,
-   * passes through zero observers for a few hundred milliseconds at a time.
-   * Telling the exchange to stop and asking again immediately spends two
-   * frames and a re-snapshot on data that never actually stopped arriving, so
-   * a channel is held briefly and picked back up if someone returns.
+   * 在图表周期之间切换，或者离开一个市场再回来，每次都会经历几百毫秒的「零观察者」。
+   * 告诉交易场所停止、紧接着又重新请求，会为一份其实从未中断的数据白白花掉两帧和一次
+   * 重新取快照，所以频道会被短暂保留，有人回来时直接接着用。
    */
   private readonly channelTeardownMs = 500;
   private channelTeardowns = new Map<string, any>();
@@ -127,15 +116,14 @@ export class PerpsDataChannel {
   }
 
   /**
-   * Subscribe to a websocket channel. The returned observable replays nothing;
-   * callers must provide a REST/cache baseline and preserve frames that race a
-   * concurrent snapshot refresh.
+   * 订阅一个 websocket 频道。返回的 observable 不补播任何内容；调用方必须自己提供
+   * REST/缓存基准，并妥善处理与并发快照刷新赛跑的那些帧。
    */
   subscribe(subscription: any): Observable<any> {
     return new Observable<any>((observer) => {
       const key = keyOfSubscription(subscription);
-      // A teardown still pending means the exchange was never told to stop:
-      // the channel is alive and is simply picked up again.
+      // 拆除动作还挂着，说明我们从没告诉交易场所停止：
+      // 这个频道还活着，直接接着用就行。
       this.cancelChannelTeardown(key);
       let channel = this.channels.get(key);
       if (!channel) {
@@ -163,10 +151,10 @@ export class PerpsDataChannel {
   }
 
   /**
-   * Close an abandoned channel, once it has stayed abandoned.
+   * 关闭一个被弃用的频道 —— 前提是它确实一直没人要。
    *
-   * The socket outlives the channel for the same reason: closing it here would
-   * make a market switch redial a connection the next page needs anyway.
+   * 套接字活得比频道更久，理由相同：在这里把它关掉，会让一次市场切换重新拨一条下个页面
+   * 反正也要用的连接。
    */
   private scheduleChannelTeardown(key: string, subscription: any) {
     this.cancelChannelTeardown(key);
@@ -174,8 +162,8 @@ export class PerpsDataChannel {
       key,
       setTimeout(() => {
         this.channelTeardowns.delete(key);
-        // A subscriber that came and went inside the window scheduled its own
-        // teardown; only an abandoned channel is closed here.
+        // 在这个窗口内来了又走的订阅者会安排它自己的拆除；
+        // 这里只关闭真正被弃用的频道。
         if (this.channelObservers.get(key)) {
           return;
         }
@@ -249,7 +237,7 @@ export class PerpsDataChannel {
       }
     };
     socket.onerror = () => {
-      // `onclose` always follows, which is where reconnection is handled.
+      // `onclose` 总会随后触发，重连逻辑在那里处理。
     };
   }
 
@@ -271,7 +259,7 @@ export class PerpsDataChannel {
     if (ID_BEARING_CHANNELS.has(msg.channel)) {
       normalizeIds(msg.data);
     }
-    // A batched channel carries several independently-addressed frames.
+    // 批量频道一次携带多帧，每帧各自寻址。
     const frames =
       BATCHED_CHANNELS.has(msg.channel) && Array.isArray(msg.data)
         ? msg.data
@@ -293,7 +281,7 @@ export class PerpsDataChannel {
 
   private scheduleReconnect() {
     clearTimeout(this.reconnectTimer);
-    // Back off to at most 30s so a long outage does not hammer the endpoint.
+    // 退避上限 30 秒，免得长时间故障时反复捶打端点。
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
     this.reconnectAttempts += 1;
     this.reconnectTimer = setTimeout(() => {
@@ -308,10 +296,9 @@ export class PerpsDataChannel {
         return;
       }
       socket.send(JSON.stringify({ method: 'ping' }));
-      // Closing the socket ourselves is what makes the failure visible: it
-      // triggers `onclose`, which marks the feed stale and schedules a
-      // reconnect. Waiting for the OS to time the connection out can take
-      // minutes, and the whole time the screen shows prices as if they were live.
+      // 由我们自己关闭套接字，才能让这次故障显形：它会触发 `onclose`，从而把数据流标记
+      // 为过期并安排重连。等操作系统把连接超时掉可能要好几分钟，而这段时间里界面一直
+      // 在把价格显示得像是实时的一样。
       clearTimeout(this.pongTimer);
       this.pongTimer = setTimeout(() => {
         if (this.ws === socket) {
@@ -319,7 +306,7 @@ export class PerpsDataChannel {
           try {
             socket.close();
           } catch (e) {
-            // Already gone; `onclose` still runs.
+            // 已经没了；`onclose` 照样会跑。
           }
         }
       }, this.pongTimeoutMs);
@@ -343,7 +330,7 @@ export class PerpsDataChannel {
     clearTimeout(this.reconnectTimer);
     this.stopHeartbeat();
     this.wsReady = false;
-    // Deliberate teardown, not a failure: the next subscriber starts over.
+    // 这是刻意的拆除，不是故障：下一个订阅者会从头开始。
     this.connectionState$.next('connecting');
     const socket = this.ws;
     this.ws = undefined;
@@ -351,7 +338,7 @@ export class PerpsDataChannel {
       try {
         socket.close();
       } catch (e) {
-        // Already closing; nothing to clean up.
+        // 已经在关闭了；没什么要清理的。
       }
     }
   }

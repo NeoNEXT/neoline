@@ -6,13 +6,13 @@ import { PerpsMarketListComponent } from './perps-market-list.component';
 import { ethMarket } from '../perps.test-fixture';
 
 describe('PerpsMarketListComponent', () => {
-  /** Mid and mark deliberately differ, so a row quoting the wrong one shows. */
+  /** 中间价与标记价格刻意取不同的值，这样报错了价格种类的行就会露馅。 */
   const market = (overrides: Partial<PerpsMarket> = {}): PerpsMarket =>
     ethMarket({ markPxExact: '1885.8', midPxExact: '1885.7', ...overrides });
 
   const component = () => new PerpsMarketListComponent(null, null, null);
 
-  /** The keyword arrives as an input, so searching is an `ngOnChanges`. */
+  /** 关键词是以 input 传进来的，所以搜索表现为一次 `ngOnChanges`。 */
   const search = (value: PerpsMarketListComponent, keyword = '') => {
     value.keyword = keyword;
     value.ngOnChanges({ keyword: new SimpleChange('', keyword, false) });
@@ -21,7 +21,7 @@ describe('PerpsMarketListComponent', () => {
   it('quotes the mid, and says so when it has to quote the mark instead', () => {
     const value = component();
     const withBook = market();
-    // PURR and CASHCAT are live on testnet with no two-sided book at all.
+    // PURR 和 CASHCAT 在测试网上是活跃的，但完全没有双边盘口。
     const noBook = market({
       key: 'hl:PURR',
       coin: 'PURR',
@@ -33,11 +33,11 @@ describe('PerpsMarketListComponent', () => {
     expect(value.listPrice(withBook)).toBe('1885.7');
     expect(value.usingMarkPrice(withBook)).toBeFalse();
 
-    // The row still shows a price, but never one the user could trade at
-    // without being told which kind it is.
+    // 这一行仍然显示一个价格，但绝不会在不告诉用户它是哪种价格的前提下，
+    // 显示一个用户其实成交不了的价格。
     expect(value.listPrice(noBook)).toBe('1885.8');
     expect(value.usingMarkPrice(noBook)).toBeTrue();
-    // And the change stays absent rather than being computed mark-against-mid.
+    // 涨跌同样保持缺失，而不是拿标记价格去和中间价相减算出来。
     expect(noBook.changePercentExact).toBeNull();
   });
 
@@ -56,8 +56,8 @@ describe('PerpsMarketListComponent', () => {
 
     search(value, 'NEO');
 
-    // "NEOL:IWM" contains "NEO"; the market named NEO is the only real match.
-    // It lands in the pinned block because NEO is a Neo ecosystem market.
+    // "NEOL:IWM" 里含有 "NEO"；名为 NEO 的那个市场才是唯一真正的匹配。
+    // 它会落在置顶区，因为 NEO 属于 Neo 生态市场。
     expect(value.pinnedMarkets.map((item) => item.symbol)).toEqual(['NEO']);
     expect(value.visibleMarkets).toEqual([]);
 
@@ -75,8 +75,8 @@ describe('PerpsMarketListComponent', () => {
 
     expect(value.visibleMarkets.map((m) => m.symbol)).toEqual(['BIG', 'SMALL']);
 
-    // The small market overtakes on volume; the row order must not follow it
-    // while the user is looking at — and possibly tapping — the list.
+    // 小市场在成交量上反超了；但当用户正在看 —— 甚至正要点 —— 这个列表时，
+    // 行的顺序不能跟着变。
     value.markets = [
       { ...small, dayVolumeExact: '9000' },
       { ...big, dayVolumeExact: '900' },
@@ -86,13 +86,13 @@ describe('PerpsMarketListComponent', () => {
     expect(value.visibleMarkets.map((m) => m.symbol)).toEqual(['BIG', 'SMALL']);
     expect(value.visibleMarkets[1].dayVolumeExact).toBe('9000');
 
-    // Only a deliberate action reorders — here, editing the search box.
+    // 只有刻意的动作才会重排 —— 这里是编辑搜索框。
     search(value);
     expect(value.visibleMarkets.map((m) => m.symbol)).toEqual(['SMALL', 'BIG']);
   });
 
-  // There is no ascending order to fall into: re-picking the active key is a
-  // no-op rather than a hidden reversal.
+  // 没有「升序」可以退回去：重新点选当前生效的排序键是空操作，
+  // 而不是一次隐式的反向排序。
   it('always ranks highest-first, however often a key is picked', () => {
     const value = component();
     value.markets = [
@@ -147,10 +147,8 @@ describe('PerpsMarketListComponent', () => {
 
     value.setSortKey('change');
 
-    // The choice holds while the page is open and is never written down: the
-    // next visit asks its own question rather than inheriting one the user
-    // cannot see the reason for. The list holds no storage at all now, so
-    // there is nowhere for the choice to leak to.
+    // 这个选择只在页面打开期间有效，并且从不写下来：下一次访问会自己问一遍，而不是继承
+    // 一个用户看不出缘由的旧选择。现在这个列表完全不持有任何存储，所以这个选择也无处可漏。
     expect(value.sortKey).toBe('change');
   });
 
@@ -163,14 +161,14 @@ describe('PerpsMarketListComponent', () => {
     value.toMarket('ETH');
 
     expect(router.navigateByUrl).toHaveBeenCalledWith('/popup/perps/market/ETH');
-    // A host that renders this list inside something dismissable cannot wait
-    // for the route: picking the market already open routes nowhere.
+    // 把这个列表渲染在某个可关闭容器里的宿主，等不到路由：
+    // 点选当前已经打开的那个市场并不会路由到任何地方。
     expect(picked).toEqual(['ETH']);
   });
 
   it('batches a long market list instead of truncating it', () => {
     const value = component();
-    // Testnet lists 157 tradable markets; the old list stopped at 30.
+    // 测试网上有 157 个可交易市场；旧的列表到 30 个就停了。
     value.markets = new Array(157).fill(null).map((_, i) =>
       market({
         key: `hl:M${i}`,

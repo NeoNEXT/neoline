@@ -24,10 +24,9 @@
       </span>
     </div>
     <!--
-      Net value / available are computed per account mode: a unified account
-      collateralises perps from spot USDC (folded in), a standard account keeps
-      them separate (perps-only here, with the spot balance shown on its own line
-      below) so an untransferable balance never understates the margin ratio.
+      净值 / 可用余额按账户模式分别计算：统一账户用现货 USDC 给永续做抵押（会折算进来），
+      标准账户把两者分开（这里只算永续，现货余额单独显示在下面一行），
+      这样一笔无法划转的余额就不会把保证金率算低。
     -->
     <div class="card-value" *ngIf="!unsupportedAccountMode && !accountLoadError">
       <span class="value">{{ formatUsd(accountEquityExact) }}</span>

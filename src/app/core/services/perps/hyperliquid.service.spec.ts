@@ -1,33 +1,12 @@
 import { HttpClient } from '@angular/common/http';
-import { fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
+import { fakeAsync, tick } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 
-import {
-  PerpsAccount,
-  PerpsCandle,
-  PerpsUserFeeRates,
-} from '@popup/_lib/perps';
-import { HttpErrorResponse } from '@angular/common/http';
-import {
-  HyperliquidService,
-} from './hyperliquid.service';
+import { PerpsUserFeeRates } from '@popup/_lib/perps';
+import { HyperliquidService } from './hyperliquid.service';
 import { fakePerpsDataChannel } from './perps-data-channel.fake';
 
-/** One closed minute, at whatever time the test needs it to have closed. */
-const candleAt = (t: number): PerpsCandle => ({
-  t,
-  T: t + 59_999,
-  s: 'ETH',
-  i: '1m',
-  o: '90',
-  c: '100',
-  h: '105',
-  l: '85',
-  v: '2',
-  n: 10,
-});
-
-/** The write path as this service uses it: one announcement, no calls. */
+/** 本服务所用的写入路径：只做一次声明，不发起调用。 */
 const writes = () => ({ wrote: () => new Subject<void>() } as any);
 
 describe('HyperliquidService accounts and fees', () => {
@@ -67,8 +46,8 @@ describe('HyperliquidService accounts and fees', () => {
   });
 
   /**
-   * A rebate tier pays the account for resting liquidity. The referral discount
-   * reduces what is paid, so it must not also shrink what is paid back.
+   * 返佣档位是交易场所为挂单流动性付给账户的钱。推荐折扣减少的是账户「付出」的部分，
+   * 因此不能连「收回」的部分也一起缩水。
    */
   it('keeps a negative maker rate whole', () => {
     http.post.and.returnValue(
@@ -105,7 +84,7 @@ describe('HyperliquidService accounts and fees', () => {
     expect(http.post).toHaveBeenCalledTimes(2);
   });
 
-  /** A response missing a side is not a zero-fee account. */
+  /** 缺了一侧的响应不等于零费率账户。 */
   it('rejects a fee response without a maker rate', () => {
     http.post.and.returnValue(of({ userCrossRate: '0.00045' }) as any);
     const errors = jasmine.createSpy('errors');
@@ -126,7 +105,7 @@ describe('HyperliquidService accounts and fees', () => {
       { type: 'openOrders', user: '0xabc', dex: '' },
       { user: '0xabc', dex: '', orders: [{ oid: '42', coin: 'ETH' }] }
     );
-    // Every DEX has to answer before the combined book means anything.
+    // 每个 DEX 都答复之后，合并出来的账目才有意义。
     expect(updates).not.toHaveBeenCalled();
     channel.push(
       { type: 'openOrders', user: '0xabc', dex: 'xyz' },
@@ -405,7 +384,7 @@ describe('HyperliquidService accounts and fees', () => {
     tick(15001);
     service.getDexRegistry().subscribe();
 
-    // The registry carries no prices, so it outlives every market snapshot.
+    // 注册表不携带价格，因此它比任何一份市场快照都活得久。
     expect(http.post).toHaveBeenCalledTimes(1);
   }));
 
@@ -422,7 +401,7 @@ describe('HyperliquidService accounts and fees', () => {
     tick(1);
     service.getDexRegistry().subscribe();
 
-    // A six-hour cache must not be the place a one-off failure goes to live.
+    // 六小时的缓存绝不能变成一次偶发失败的长期栖身之所。
     expect(attempts).toBe(2);
   }));
 

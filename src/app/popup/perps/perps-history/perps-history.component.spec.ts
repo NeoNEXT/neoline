@@ -4,7 +4,7 @@ import { PerpsFill, PerpsLedgerUpdate, PerpsOpenOrder } from '@popup/_lib/perps'
 
 import { PerpsHistoryComponent } from './perps-history.component';
 
-/** The 行情数据集 as this page uses it: names for the rows. */
+/** 本页面视角下的行情数据集：只用来给各行提供名称。 */
 const markets = (overrides: any = {}) =>
   ({ getMarkets: () => EMPTY, ...overrides } as any);
 

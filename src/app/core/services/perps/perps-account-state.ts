@@ -57,7 +57,7 @@ const emptyAccount = (): PerpsAccount => ({
   positions: [],
 });
 
-/** Adapt one Hyperliquid account snapshot into the Perps account model. */
+/** 把一份 Hyperliquid 账户快照适配成 Perps 账户模型。 */
 export function parsePerpsAccount(
   response: any,
   spot?: any,
@@ -164,7 +164,7 @@ export function parsePerpsAccount(
   };
 }
 
-/** Fold a complete spot-state frame into a canonical account snapshot. */
+/** 把一帧完整的现货状态折叠成规范的账户快照。 */
 export function updatePerpsAccountFromSpotState(
   account: PerpsAccount,
   update: any
@@ -194,7 +194,7 @@ export function updatePerpsAccountFromSpotState(
   };
 }
 
-/** Fold a complete per-DEX clearinghouse frame into an account snapshot. */
+/** 把一帧完整的单 DEX 清算所状态折叠成账户快照。 */
 export function updatePerpsAccountFromClearinghouseState(
   account: PerpsAccount,
   update: any
@@ -223,7 +223,7 @@ export function updatePerpsAccountFromClearinghouseState(
   );
 }
 
-/** Combine every readable DEX without inventing canonical account amounts. */
+/** 合并所有可读取的 DEX，同时不臆造账户级金额。 */
 export function aggregatePerpsAccounts(
   snapshots: PerpsAccount[],
   missingDexes: string[] = []

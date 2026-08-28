@@ -1,25 +1,20 @@
 /**
- * One table, read in both directions.
+ * 一张表，双向读取。
  *
- * A frame does not echo the subscription that asked for it, so the 数据通道
- * (Data Channel) has to recognise which channel a frame belongs to from its
- * payload — and that answer must be the same string the subscription produced,
- * or the frame is delivered to nobody and the screen simply stops updating.
+ * 帧不会回显是哪次订阅要的它，所以数据通道（Data Channel）必须从负载里认出一帧属于
+ * 哪个频道 —— 而这个答案必须和订阅时产生的字符串完全一致，否则这一帧谁也收不到，
+ * 界面就这样悄无声息地停止更新。
  *
- * Keeping the two directions apart is what made that a live hazard: adding a
- * channel meant editing a key-builder in one place and a routing branch in
- * another, and getting it wrong compiles, passes, and fails silently at
- * runtime. Both directions build the key through `identityKey` below, so they
- * cannot drift, and a new channel is one row in `CHANNELS`.
+ * 把两个方向分开写，正是这个隐患的来源：新增一个频道要在一处改键的构造、在另一处改
+ * 路由分支，写错了照样能编译、能通过测试，只在运行时静默失败。现在两个方向都通过下面
+ * 的 `identityKey` 构造键，因此不可能漂移，新增频道就是 `CHANNELS` 里的一行。
  */
 
 /**
- * Everything that distinguishes one channel from another, in key order.
+ * 区分频道所需的全部信息，按键的顺序排列。
  *
- * `dex` is present for DEX-scoped channels even when it is the canonical empty
- * value: market contexts, clearinghouse state and open orders are subscribed
- * once per DEX, and sharing one channel across DEXes lets the last frame
- * overwrite every other pool.
+ * DEX 维度的频道即便 `dex` 取规范空值也要带上它：市场上下文、清算所状态和挂单都是
+ * 按 DEX 各订阅一次的，若让多个 DEX 共用一个频道，最后到的那一帧会覆盖掉其他所有池子。
  */
 interface ChannelIdentity {
   type: string;
@@ -32,8 +27,7 @@ interface ChannelIdentity {
 interface ChannelSpec {
   dexScoped?: boolean;
   /**
-   * Reads a frame's own identity out of its payload, or returns null when the
-   * frame does not identify itself well enough to be addressed.
+   * 从帧自身的负载里读出它的身份；当这一帧不足以自我标识、因而无法寻址时返回 null。
    */
   identify: (data: any) => Omit<ChannelIdentity, 'type' | 'dex'> | null;
 }
@@ -41,7 +35,7 @@ interface ChannelSpec {
 const lower = (value: unknown): string | undefined =>
   typeof value === 'string' ? value.toLowerCase() : undefined;
 
-/** Frames addressed by the user they belong to. */
+/** 按所属用户寻址的帧。 */
 const byUser = (data: any) =>
   typeof data?.user === 'string' ? { user: lower(data.user) } : null;
 
@@ -56,7 +50,7 @@ const CHANNELS: Record<string, ChannelSpec> = {
     identify: (data) =>
       typeof data?.coin === 'string' ? { coin: data.coin } : null,
   },
-  // One frame per DEX, each carrying that DEX's whole context array.
+  // 每个 DEX 一帧，各自携带该 DEX 完整的上下文数组。
   assetCtxs: { dexScoped: true, identify: () => ({}) },
   activeAssetData: {
     identify: (data) =>
@@ -72,7 +66,7 @@ const CHANNELS: Record<string, ChannelSpec> = {
   userNonFundingLedgerUpdates: { identify: byUser },
 };
 
-/** Channels whose frames carry ids that must survive as decimal strings. */
+/** 帧中携带的 id 必须以十进制字符串形式保全的频道。 */
 export const ID_BEARING_CHANNELS = new Set([
   'openOrders',
   'userFills',
@@ -80,17 +74,17 @@ export const ID_BEARING_CHANNELS = new Set([
   'userNonFundingLedgerUpdates',
 ]);
 
-/** Channels the exchange may send as an array of independently-addressed frames. */
+/** 交易场所可能以「一组各自寻址的帧」形式下发的频道。 */
 export const BATCHED_CHANNELS = new Set(['candle']);
 
-/** The one place a key is spelled, so both directions spell it the same way. */
+/** 键只在这一处拼写，因此两个方向拼出来必然一致。 */
 function identityKey({ type, user, dex, coin, interval }: ChannelIdentity) {
   return [type, user, dex, coin, interval].filter(Boolean).join(':');
 }
 
 const dexPart = (dex: unknown) => `dex=${dex ?? ''}`;
 
-/** The key a subscription request registers under. */
+/** 一次订阅请求登记时所用的键。 */
 export function keyOfSubscription(subscription: any): string {
   const spec = CHANNELS[subscription.type];
   return identityKey({
@@ -103,11 +97,10 @@ export function keyOfSubscription(subscription: any): string {
 }
 
 /**
- * The key a frame is delivered to, or `undefined` when the frame cannot be
- * addressed.
+ * 一帧被投递到的键；当这一帧无法寻址时返回 `undefined`。
  *
- * A channel with no row is addressed by name alone, which is how a subscription
- * this build does not model still reaches whoever asked for it.
+ * 表里没有对应行的频道只按名字寻址 —— 本版本尚未建模的订阅，就是这样仍能送达到
+ * 请求它的人手里。
  */
 export function keyOfFrame(channel: string, data: any): string | undefined {
   const spec = CHANNELS[channel];

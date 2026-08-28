@@ -8,8 +8,8 @@ import { PerpsCandleDatasetState } from '@/app/core/services/perps/perps-candle-
 import { PerpsMarketComponent } from './perps-market.component';
 import { ethCandle, ethMarket } from '../perps.test-fixture';
 
-// A mid a hair above the mark, down 1.28% on the day: the header has to keep
-// the two apart and quote the move at the market's own precision.
+// 中间价略高于标记价格，当日下跌 1.28%：标题栏必须把两者区分开，
+// 并按这个市场自己的精度报出涨跌。
 const market = ethMarket({
   markPxExact: '1875.7',
   midPxExact: '1875.75',
@@ -19,18 +19,8 @@ const market = ethMarket({
   changeAmountExact: '-24.25',
 });
 
-/** OnPush means an unmarked view stops updating, so tests can watch for it. */
+/** OnPush 意味着没被标记的视图会停止更新，所以测试可以盯住这一点。 */
 const detector = () => jasmine.createSpyObj('ChangeDetectorRef', ['markForCheck']);
-
-/**
- * The feed as this page uses it, over the answers that change nothing. Candles
- * no longer come through here at all — the page reads a dataset instead.
- */
-const service = (overrides: any = {}) =>
-  ({
-    subscribe: () => new Subject(),
-    ...overrides,
-  } as any);
 
 /** The 行情数据集 as this page uses it: one market, followed live. */
 const markets = (overrides: any = {}) =>
@@ -46,7 +36,7 @@ const channel = (overrides: any = {}) =>
     ...overrides,
   } as any);
 
-/** The candle dataset as this page uses it: one state, and a paging request. */
+/** 本页面视角下的 K 线数据集：一个状态，加上一次翻页请求。 */
 const datasets = (overrides: any = {}) =>
   ({
     watchDataset: () => new Subject<PerpsCandleDatasetState>(),
@@ -59,7 +49,6 @@ const build = (router: any = null) =>
     null,
     router,
     null,
-    null,
     datasets(),
     detector(),
     null,
@@ -70,11 +59,11 @@ describe('PerpsMarketComponent live price', () => {
   it('quotes the live mid and ignores the trailing candle close', () => {
     const component = build();
     component.market = market;
-    // A candle only prints on a trade, so it must never set the header price.
+    // K 线只有在有成交时才会印出，所以它绝不能决定标题栏的价格。
     component.candles = [ethCandle({ c: '1875.80' })];
 
     expect(component.displayPrice).toBe('1875.75');
-    // ETH ticks at two decimals (szDecimals 4).
+    // ETH 的最小变动价位是两位小数（szDecimals 为 4）。
     expect(component.priceDecimals).toBe(2);
     expect(component.displayChangePercent).toBe(market.changePercentExact);
 
@@ -101,7 +90,7 @@ describe('PerpsMarketComponent live price', () => {
     component.market = { ...market, midPxExact: null };
 
     expect(component.displayPrice).toBe('1875.7');
-    // The header is quoting a mark, which the page has to say out loud.
+    // 标题栏报的是标记价格，页面必须把这件事明说出来。
     expect(component.usingMid).toBeFalse();
   });
 
@@ -122,8 +111,7 @@ describe('PerpsMarketComponent live price', () => {
       changeAmountExact: null,
     };
 
-    // "No data", not a flat 0% — the page must not invent a comparison
-    // between a mark and a mid.
+    // 「无数据」，而不是平淡的 0% —— 页面不能凭空造出一个标记价格与中间价之间的比较。
     expect(component.hasChange).toBeFalse();
   });
 
@@ -177,7 +165,7 @@ describe('PerpsMarketComponent trade entry', () => {
     component.connectionState = 'stale';
 
     expect(component.canOrder).toBeFalse();
-    // The page banner explains the data; this copy explains the unavailable action.
+    // 页面横幅解释的是数据，这段文案解释的是不可用的那个操作。
     expect(component.orderBlockedKey).toBe('perpsEntryStale');
   });
 
@@ -199,7 +187,7 @@ describe('PerpsMarketComponent trade entry', () => {
   it('explains nothing while the market itself is still unknown', () => {
     const component = build();
 
-    // "Loading" already explains the whole page; there is no entry yet to explain.
+    // 「加载中」已经解释了整个页面；此时还没有入口需要解释。
     expect(component.canOrder).toBeFalse();
     expect(component.orderBlockedKey).toBe('');
   });
@@ -243,7 +231,6 @@ describe('PerpsMarketComponent chart presentation', () => {
       null,
       null,
       null,
-      service(),
       datasets({ watchDataset: () => states, loadEarlier }),
       cdr,
       channel(),
@@ -262,7 +249,6 @@ describe('PerpsMarketComponent chart presentation', () => {
       null,
       null,
       null,
-      service(),
       datasets({ watchDataset }),
       detector(),
       channel(),
@@ -299,8 +285,8 @@ describe('PerpsMarketComponent chart presentation', () => {
     expect(component.chartLoading).toBeFalse();
     expect(component.chartLoadError).toBeTrue();
 
-    // Bars are live again, but the ones that closed while the feed was down
-    // are still missing — a different message from a chart that failed.
+    // 柱子又实时了，但断流期间收盘的那些仍然缺失 ——
+    // 这与一张失败的图表是不同的提示。
     states.next(state({ availability: 'gapped' }));
     expect(component.chartLoadError).toBeFalse();
     expect(component.chartRecoveryError).toBeTrue();
@@ -312,18 +298,17 @@ describe('PerpsMarketComponent chart presentation', () => {
 
   it('takes every state but redraws once a second', fakeAsync(() => {
     const { component, states, cdr } = showing();
-    // Settle on a kind first: this measures the rationing, not the change of
-    // kind that always marks at once.
+    // 先让种类稳定下来：这里量的是节流，而不是那种总会立即标记的种类变化。
     states.next(state({ candles: [ethCandle({ t: 1000 })] }));
     cdr.markForCheck.calls.reset();
 
     states.next(state({ candles: [ethCandle({ t: 61_000 })] }));
     states.next(state({ candles: [ethCandle({ t: 121_000 })] }));
 
-    // Under OnPush each frame would otherwise have the page checked and the
-    // canvas repainted to move one bar by a pixel.
+    // 在 OnPush 下，若不加限制，每一帧都会让页面被检查一遍、画布被重绘一遍，
+    // 只为把一根柱子挪动一个像素。
     expect(cdr.markForCheck).not.toHaveBeenCalled();
-    // What the page holds is still exact between redraws.
+    // 两次重绘之间，页面持有的数据仍然是精确的。
     expect(component.candles.map((candle) => candle.t)).toEqual([121_000]);
 
     tick(1000);
@@ -339,8 +324,7 @@ describe('PerpsMarketComponent chart presentation', () => {
 
     states.next(state({ availability: 'gapped' }));
 
-    // A chart that has just lost its closed bars is not news that can wait
-    // for the next throttle window.
+    // 一张刚刚丢掉收盘柱子的图表，不是可以等到下一个节流窗口再说的消息。
     expect(cdr.markForCheck).toHaveBeenCalled();
     component.ngOnDestroy();
     tick(1000);
@@ -352,8 +336,7 @@ describe('PerpsMarketComponent chart presentation', () => {
 
     component.loadEarlierCandles();
 
-    // Whether there is anything further back to ask for is not the page's
-    // bookkeeping any more.
+    // 再往前是否还有东西可取，已经不再是页面的账本了。
     expect(loadEarlier).toHaveBeenCalledWith('ETH', '15m');
     component.ngOnDestroy();
   });
@@ -368,9 +351,8 @@ describe('PerpsMarketComponent chart presentation', () => {
 
   it('keeps the axis on the market tick when the price lands round', () => {
     const component = build();
-    // NEO ticks at four decimals (szDecimals 2). A mid that happens to be
-    // "1.68" must not drag the axis down to two, which would flatten every
-    // candle between 1.6800 and 1.6900 onto one label.
+    // NEO 的最小变动价位是四位小数（szDecimals 为 2）。一个恰好是 "1.68" 的中间价，不能把
+    // 坐标轴拽到两位，那会把 1.6800 到 1.6900 之间的每一根 K 线都压到同一个标签上。
     component.market = { ...market, szDecimals: 2, midPxExact: '1.68' };
 
     expect(component.priceDecimals).toBe(4);
@@ -385,7 +367,6 @@ describe('PerpsMarketComponent candle intervals', () => {
       null,
       null,
       { getStorage: () => of(saved), setStorage } as any,
-      service(),
       datasets(),
       cdr,
       channel(),
@@ -400,7 +381,7 @@ describe('PerpsMarketComponent candle intervals', () => {
 
     expect(component.intervalLabel('1d')).toBe('1D');
     expect(component.intervalLabel('1w')).toBe('1W');
-    // The two that a case-insensitive comparison would collapse into one.
+    // 这两个若按不区分大小写来比较，就会被合并成一个。
     expect(component.intervalLabel('1M')).toBe('1M');
     expect(component.intervalLabel('1m')).toBe('1m');
   });
@@ -411,7 +392,7 @@ describe('PerpsMarketComponent candle intervals', () => {
     component.interval = '1d';
     expect(component.intervalMenuLabel).toBe('1D');
 
-    // 15m sits in the always-visible row, so the button is just a way in.
+    // 15m 位于始终可见的那一行，所以这个按钮只是个入口。
     component.interval = '15m';
     expect(component.intervalMenuLabel).toBe('');
   });
@@ -441,7 +422,6 @@ describe('PerpsMarketComponent candle intervals', () => {
       null,
       null,
       { getStorage: () => of('4h'), setStorage: () => undefined } as any,
-      service(),
       datasets({ watchDataset }),
       detector(),
       channel(),
@@ -449,10 +429,9 @@ describe('PerpsMarketComponent candle intervals', () => {
     );
     component.coin = 'ETH';
 
-    // Storage answers with whatever an older build wrote. `4h` is a plausible
-    // interval this one does not carry, and it must not reach the dataset:
-    // sizing a request window from it throws before the subscription exists,
-    // so the chart would spin forever with no error path to land in.
+    // 存储返回的是旧版本写进去的任意值。`4h` 是一个看起来合理、但本版本并不承载的周期，
+    // 它绝不能到达数据集：按它换算请求窗口会在订阅建立之前就抛异常，于是图表会永远转圈，
+    // 连个可以落地的错误路径都没有。
     expect(() => (component as any).loadChartInterval()).not.toThrow();
     expect(component.interval).toBe('15m');
     expect(watchDataset).toHaveBeenCalledWith('ETH', '15m');
@@ -464,8 +443,8 @@ describe('PerpsMarketComponent candle intervals', () => {
 
     (component as any).loadChartInterval();
 
-    // `1D` is how `1d` is written on screen. Taking it back in would ask the
-    // exchange for an interval it does not know.
+    // `1D` 是 `1d` 在屏幕上的写法。把它原样收回去，等于向交易场所
+    // 请求一个它并不认识的周期。
     expect(component.interval).toBe('15m');
   });
 
@@ -493,8 +472,8 @@ describe('PerpsMarketComponent candle intervals', () => {
 });
 
 describe('PerpsMarketComponent change detection', () => {
-  // OnPush trades automatic checks for explicit ones, so the failure mode is
-  // a screen that quietly stops moving. These pin the paths that feed it.
+  // OnPush 用显式检查换掉了自动检查，所以它的失败形态是一块悄无声息不再动的屏幕。
+  // 下面这些用例钉住了喂养它的那些路径。
   it('marks the view when the connection state changes', () => {
     const cdr = detector();
     const state = new Subject<string>();
@@ -502,8 +481,6 @@ describe('PerpsMarketComponent change detection', () => {
       { params: of({ coin: 'ETH' }) } as any,
       null,
       { getStorage: () => of(undefined), setStorage: () => undefined } as any,
-      service({
-      }),
       datasets(),
       cdr,
       channel({ watchConnectionState: () => state }),
@@ -522,9 +499,7 @@ describe('PerpsMarketComponent change detection', () => {
   it('marks the view when the market feed delivers', () => {
     const cdr = detector();
     const feed = new Subject<PerpsMarket>();
-    const component = new PerpsMarketComponent(null, null, null, {
-    } as any,
- datasets(), cdr,
+    const component = new PerpsMarketComponent(null, null, null, datasets(), cdr,
       channel(),
       markets({ watchMarketDetail: () => feed })
     );
@@ -545,7 +520,6 @@ describe('PerpsMarketComponent change detection', () => {
       null,
       null,
       null,
-      null,
       datasets(),
       detector(),
       channel(),
@@ -556,9 +530,8 @@ describe('PerpsMarketComponent change detection', () => {
     (component as any).loadMarket();
     tick(60_000);
 
-    // A page that quietly reloads itself while the user is reading the failure
-    // was never asked for; `fakeAsync` also fails here on any timer left
-    // behind, so a retry cannot creep back in unnoticed.
+    // 在用户正读着失败提示时悄悄自我重载的页面，从来没人要过；`fakeAsync` 在这里也会因为
+    // 任何遗留的定时器而失败，所以重试不可能悄悄溜回来。
     expect(component.marketStatus).toBe('error');
     expect(watchMarketDetail).toHaveBeenCalledTimes(1);
   }));
@@ -566,7 +539,6 @@ describe('PerpsMarketComponent change detection', () => {
   it('marks the view when the market turns out not to exist', () => {
     const cdr = detector();
     const component = new PerpsMarketComponent(
-      null,
       null,
       null,
       null,
@@ -585,7 +557,7 @@ describe('PerpsMarketComponent change detection', () => {
 
   it('marks the view on every countdown tick', () => {
     const cdr = detector();
-    const component = new PerpsMarketComponent(null, null, null, null, datasets(), cdr,
+    const component = new PerpsMarketComponent(null, null, null, datasets(), cdr,
       channel(),
       markets()
     );
@@ -617,14 +589,14 @@ describe('PerpsMarketComponent coin switcher', () => {
 
     component.closeCoinMenu();
 
-    // Reopening on the last search would show one market and read as the
-    // whole exchange.
+    // 带着上次的搜索词重新打开，只会显示一个市场，
+    // 而它会被读成整个交易场所。
     expect(component.coinKeyword).toBe('');
   });
 
   it('marks the view so the menu appears under OnPush', () => {
     const cdr = detector();
-    const component = new PerpsMarketComponent(null, null, null, null, datasets(), cdr,
+    const component = new PerpsMarketComponent(null, null, null, datasets(), cdr,
       channel(),
       markets()
     );
@@ -640,8 +612,6 @@ describe('PerpsMarketComponent coin switcher', () => {
       { params } as any,
       null,
       { getStorage: () => of(undefined), setStorage: () => undefined } as any,
-      service({
-      }),
       datasets(),
       detector(),
       channel({ watchConnectionState: () => new Subject() }),
@@ -654,7 +624,7 @@ describe('PerpsMarketComponent coin switcher', () => {
 
     params.next({ coin: 'BTC' });
 
-    // Left up, the menu would be covering the market it was opened to find.
+    // 留着不关，这个菜单就会挡住它当初被打开去寻找的那个市场。
     expect(component.showCoinMenu).toBeFalse();
     expect(component.coinKeyword).toBe('');
     component.ngOnDestroy();
@@ -668,8 +638,6 @@ describe('PerpsMarketComponent route changes', () => {
       { params } as any,
       null,
       { getStorage: () => of(undefined), setStorage: () => undefined } as any,
-      service({
-      }),
       datasets(),
       cdr,
       channel({ watchConnectionState: () => new Subject() }),
@@ -690,8 +658,8 @@ describe('PerpsMarketComponent route changes', () => {
     expect(component.coin).toBe('ETH');
     expect(component.marketStatus).toBe('ready');
 
-    // Angular reuses this component across a parameter change, so without the
-    // stream the second market would render the first one's numbers.
+    // 参数变化时 Angular 会复用这个组件，所以没有这条流的话，
+    // 第二个市场会渲染出第一个市场的数字。
     params.next({ coin: 'BTC' });
 
     expect(component.coin).toBe('BTC');

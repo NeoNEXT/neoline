@@ -10,11 +10,10 @@ import {
 const SOCKET_CLOSED = 3;
 
 /**
- * The exchange's end of the wire.
+ * 电线另一端的交易场所。
  *
- * Seven members is the whole contract, so the tests below drive the channel the
- * way the exchange does — open the socket, deliver a frame, drop the
- * connection — rather than calling into its internals.
+ * 七个成员就是全部约定，所以下面的测试是按交易场所的方式来驱动通道的 —— 打开套接字、
+ * 投递一帧、断开连接 —— 而不是去调它的内部实现。
  */
 class FakeSocket implements PerpsSocket {
   readyState = SOCKET_OPEN;
@@ -22,7 +21,7 @@ class FakeSocket implements PerpsSocket {
   onmessage: ((event: MessageEvent) => void) | null = null;
   onclose: ((event: any) => void) | null = null;
   onerror: ((event: any) => void) | null = null;
-  /** Everything the channel has said to the exchange, in order. */
+  /** 通道对交易场所说过的每一句话，按顺序记录。 */
   readonly sent: any[] = [];
 
   send(data: string) {
@@ -36,14 +35,14 @@ class FakeSocket implements PerpsSocket {
     }
   }
 
-  /** The connection is accepted. */
+  /** 连接被接受。 */
   accept() {
     if (this.onopen) {
       this.onopen(null);
     }
   }
 
-  /** The exchange hangs up without warning. */
+  /** 交易场所不打招呼就挂断。 */
   drop() {
     this.readyState = SOCKET_CLOSED;
     if (this.onclose) {
@@ -51,14 +50,14 @@ class FakeSocket implements PerpsSocket {
     }
   }
 
-  /** A frame arrives, as JSON text — the form the channel actually parses. */
+  /** 一帧以 JSON 文本的形式到达 —— 通道实际解析的就是这种形式。 */
   deliver(message: any) {
     if (this.onmessage) {
       this.onmessage({ data: JSON.stringify(message) } as MessageEvent);
     }
   }
 
-  /** A frame arrives as raw text, for payloads JSON.stringify cannot express. */
+  /** 一帧以原始文本到达，用于 JSON.stringify 表达不了的负载。 */
   deliverRaw(text: string) {
     if (this.onmessage) {
       this.onmessage({ data: text } as MessageEvent);
@@ -78,7 +77,7 @@ function build() {
   return { channel, sockets };
 }
 
-/** What the channel has asked the exchange to do, without the payloads. */
+/** 通道请交易场所做过的事，不含负载。 */
 const methods = (socket: FakeSocket) => socket.sent.map((m) => m.method);
 
 const subscriptions = (socket: FakeSocket) =>
@@ -165,8 +164,7 @@ describe('PerpsDataChannel routing', () => {
       data: { user: '0xaaa', dex: 'xyz', orders: [] },
     });
 
-    // Without the dex in the key both DEXes share one channel, and the last
-    // frame overwrites every other pool.
+    // 键里没有 dex 的话，两个 DEX 会共用一个频道，最后到的那一帧会覆盖掉其他所有池子。
     expect(hip3).toHaveBeenCalled();
     expect(canonical).not.toHaveBeenCalled();
   });
@@ -259,8 +257,7 @@ describe('PerpsDataChannel connection', () => {
     expect(methods(sockets[0])).toEqual(['subscribe']);
 
     second.unsubscribe();
-    // An abandoned channel is held a moment longer, in case whoever left is
-    // on their way back.
+    // 被弃用的频道会多留一会儿，以防离开的人马上又回来。
     expect(methods(sockets[0])).toEqual(['subscribe']);
     tick(500);
     expect(methods(sockets[0])).toEqual(['subscribe', 'unsubscribe']);
@@ -279,8 +276,8 @@ describe('PerpsDataChannel connection', () => {
     const second = channel.subscribe(candles).subscribe();
     tick(1000);
 
-    // Stepping off an interval and back is one subscription to the exchange,
-    // never an unsubscribe and a re-subscribe for data that never stopped.
+    // 切走一个周期再切回来，对交易场所而言只是一次订阅，
+    // 绝不能对一份从未中断的数据先退订再重新订阅。
     expect(methods(sockets[0])).toEqual(['subscribe']);
     expect(sockets.length).toBe(1);
 
@@ -305,7 +302,7 @@ describe('PerpsDataChannel connection', () => {
     sockets[1].accept();
     expect(subscriptions(sockets[1])).toEqual([candles, spot]);
 
-    // The same observable keeps delivering: it neither errored nor completed.
+    // 同一个 observable 继续投递：它既没有 error 也没有 complete。
     sockets[1].deliver({
       channel: 'candle',
       data: { s: 'ETH', i: '1m', c: '100' },
@@ -347,8 +344,8 @@ describe('PerpsDataChannel connection', () => {
     expect(methods(sockets[0])).toEqual(['subscribe', 'ping']);
     expect(states).toEqual(['connecting', 'live']);
 
-    // A socket can stop delivering while `readyState` still reads OPEN, so an
-    // unanswered ping is the only thing that reveals it.
+    // 套接字可能在 `readyState` 仍读作 OPEN 时就已经不再投递数据，
+    // 只有一次没被回应的 ping 能暴露这一点。
     tick(10000);
     expect(states).toEqual(['connecting', 'live', 'stale']);
     expect(sockets[0].readyState).toBe(SOCKET_CLOSED);

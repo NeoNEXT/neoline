@@ -10,7 +10,7 @@ import {
   mergeDexAssetContexts,
 } from './perps-market-dataset';
 
-/** A context frame with every field a market model reads. */
+/** 一帧上下文，字段齐全到市场模型需要读的每一项。 */
 const ctx = (midPx: string | null, markPx = '1875.7') => ({
   funding: '0.0000125',
   openInterest: '10',
@@ -30,9 +30,8 @@ const universe = [
 const contexts = [ctx('63000', '63001'), ctx('1875.75'), ctx('1', '1')];
 
 /**
- * The exchange as this module reads it, over the answers that change nothing:
- * an empty canonical universe and a registry with no HIP-3 DEXes. A test then
- * states only the reads its assertions rest on.
+ * 本模块视角下的交易场所，预置了那些改变不了什么的答复：一个空的标准永续 universe，
+ * 以及一个不含 HIP-3 DEX 的注册表。这样每个测试只需写出它的断言真正依赖的那几次读取。
  */
 const source = (overrides: any = {}) =>
   ({
@@ -52,7 +51,7 @@ function build(overrides: any = {}) {
   };
 }
 
-/** Watch the list and keep every state it publishes. */
+/** 观察这个列表，并保留它发布过的每一个状态。 */
 function watching(service: PerpsMarketDatasetService) {
   const seen: PerpsMarketDatasetState[] = [];
   const subscription = service
@@ -116,7 +115,7 @@ describe('PerpsMarketDatasetService snapshots', () => {
       expect(markets[0].coin).toBe('xyz:NEO');
       expect(markets[0].key).toBe('xyz:NEO');
       expect(markets[0].dex).toBe('xyz');
-      // `xyz` remains at registry index 2 even though index 1 is unsupported.
+      // 即便下标 1 不受支持，`xyz` 仍然停在注册表下标 2 上。
       expect(markets[0].assetId).toBe(120000);
       done();
     });
@@ -144,7 +143,7 @@ describe('PerpsMarketDatasetService snapshots', () => {
             },
             {
               markPx: '1',
-              // Hyperliquid reports a null mid whenever a side is empty.
+              // 只要有一侧盘口为空，Hyperliquid 就会报出 null 的中间价。
               midPx: null,
               oraclePx: '1',
               prevDayPx: '1',
@@ -160,9 +159,9 @@ describe('PerpsMarketDatasetService snapshots', () => {
       const eth = markets.find((market) => market.coin === 'ETH');
       const cashcat = markets.find((market) => market.coin === 'CASHCAT');
       expect(eth.midPxExact).toBe('1899.5');
-      // An absent mid is null, never zero: zero is a price, absence is not.
+      // 缺失的中间价是 null，绝不是零：零是一个价格，缺失不是。
       expect(cashcat.midPxExact).toBeNull();
-      // The 24h change follows the displayed mid, not the mark beside it.
+      // 24 小时涨跌跟随显示用的中间价，而不是它旁边的标记价格。
       expect(Number(eth.changePercentExact)).toBeCloseTo(
         ((1899.5 - 1800) / 1800) * 100,
         8
@@ -216,8 +215,8 @@ describe('PerpsMarketDatasetService snapshots', () => {
     });
     const view = watching(service);
 
-    // A builder DEX that cannot answer must not hide the canonical markets —
-    // but the list that results is not the whole list either.
+    // 一个答不上话的 builder DEX 不能把标准永续市场一起藏起来 ——
+    // 但由此得到的列表也不是完整的列表。
     expect(view.last().availability).toBe('incomplete');
     expect(view.last().markets.length).toBe(1);
     view.stop();
@@ -250,7 +249,7 @@ describe('PerpsMarketDatasetService live list', () => {
     const { service, channel } = build({
       getMetaAndAssetCtxs: () => answer,
     });
-    // The frame beats the snapshot home.
+    // 帧比快照先到家。
     answer = of([
       { universe: [{ name: 'ETH', szDecimals: 4, maxLeverage: 25 }] },
       [ctx('1875.75')],
@@ -258,8 +257,8 @@ describe('PerpsMarketDatasetService live list', () => {
     const view = watching(service);
     channel.push({ type: 'assetCtxs', dex: '' }, { ctxs: [ctx('1880.5')] });
 
-    // A frame cannot invent markets, so it waits — but a slow REST response
-    // must not leave the list a generation behind either.
+    // 帧凭空造不出市场，所以它会等 —— 但一个慢吞吞的 REST 响应，
+    // 也不该让列表落后整整一代。
     expect(view.last().markets[0].midPxExact).toBe('1880.5');
     view.stop();
   });
@@ -277,8 +276,8 @@ describe('PerpsMarketDatasetService live list', () => {
     });
 
     expect(seen[seen.length - 1].availability).toBe('unavailable');
-    // An errored observable is finished, and a retry that succeeds afterwards
-    // would have nobody left to tell.
+    // 一个已经 error 的 observable 就此终结，之后即便重试成功，
+    // 也没人可以通知了。
     expect(failed).not.toHaveBeenCalled();
   });
 
@@ -294,21 +293,21 @@ describe('PerpsMarketDatasetService live list', () => {
     const view = watching(service);
     expect(calls).toBe(1);
 
-    // The exchange starts refusing, with markets already on screen.
+    // 交易场所开始拒绝，而此时屏幕上已经有市场了。
     refuse = true;
     tick(15001);
     const second = watching(service);
     expect(calls).toBe(2);
 
-    // The plain 1s backoff would already have spent another request by here,
-    // out of a budget that only refills over the following minute.
+    // 若是朴素的 1 秒退避，到这里已经又花掉一个请求了，
+    // 而这个额度要到接下来的一分钟才补得回来。
     tick(9999);
     expect(calls).toBe(2);
     tick(2);
     expect(calls).toBe(3);
 
-    // The markets stay on screen throughout: a snapshot that failed is not
-    // the user's problem while the prices in front of them are still arriving.
+    // 整个过程中市场都留在屏幕上：只要用户眼前的价格还在到达，
+    // 一次失败的快照就不是用户的问题。
     expect(view.last().markets.length).toBe(1);
 
     second.stop();
@@ -331,13 +330,13 @@ describe('PerpsMarketDatasetService live list', () => {
     channel.setConnectionState('live');
     channel.setConnectionState('stale');
     expect(view.last().availability).toBe('stale');
-    // Prices on screen are kept: they are old, not wrong.
+    // 屏幕上的价格予以保留：它们是旧的，不是错的。
     expect(view.last().markets.length).toBe(1);
 
     channel.setConnectionState('live');
 
-    // Frames restate prices on their own, but they can neither add nor remove
-    // a market — the set is what the reconnect owes.
+    // 帧自己会重述价格，但它既不能新增也不能移除市场 ——
+    // 「有哪些市场」才是重连欠下的那笔账。
     expect(calls).toBe(2);
     expect(view.last().availability).toBe('live');
 
@@ -357,8 +356,8 @@ describe('PerpsMarketDatasetService live list', () => {
     second.stop();
     channel.push({ type: 'assetCtxs', dex: '' }, { ctxs: [ctx('1899')] });
 
-    // Nobody was watching, so that frame reached nothing — whoever arrives
-    // next sees what the list said when the last observer left.
+    // 当时没人在看，所以那一帧谁也没送到 —— 下一个到来的人，
+    // 看到的是最后一个观察者离开时列表的样子。
     const third = watching(service);
     expect(third.seen[0].markets[0].midPxExact).toBe('1880.5');
     third.stop();
@@ -367,8 +366,8 @@ describe('PerpsMarketDatasetService live list', () => {
 
 describe('perps market folding', () => {
   it('merges a dex context frame by universe index, not list position', () => {
-    // The list is volume-sorted, so a market's position in it says nothing
-    // about which context belongs to it; only `dexAssetIndex` does.
+    // 列表按成交量排序，所以一个市场在其中的位置说明不了哪份上下文属于它；
+    // 只有 `dexAssetIndex` 能。
     const markets: any[] = [
       { key: 'hl:SECOND', dex: '', dexAssetIndex: 1, coin: 'SECOND' },
       { key: 'hl:FIRST', dex: '', dexAssetIndex: 0, coin: 'FIRST' },
@@ -403,13 +402,13 @@ describe('perps market folding', () => {
     expect(first.openInterestExact).toBe('20');
     expect(second.markPxExact).toBe('20');
     expect(second.openInterestExact).toBe('60');
-    // A price update must not reorder the list under the user's finger.
+    // 价格更新不能在用户手指底下把列表重新排序。
     expect(updated.map((market) => market.coin)).toEqual([
       'SECOND',
       'FIRST',
       'xyz:OTHER',
     ]);
-    // Another DEX's markets are not even re-created, so `trackBy` sees no churn.
+    // 其他 DEX 的市场连重建都没有，所以 `trackBy` 察觉不到任何变动。
     expect(updated[2]).toBe(other);
   });
 
@@ -452,8 +451,8 @@ describe('PerpsMarketDatasetService market detail', () => {
     expect(seen[0].coin).toBe('ETH');
     expect(seen[0].assetId).toBe(1);
     expect(seen[0].midPxExact).toBe('1875.75');
-    // A canonical market is index 0 by definition, so the DEX registry — and
-    // every other DEX's context array — is never requested.
+    // 标准永续市场按定义就是下标 0，因此 DEX 注册表 ——
+    // 以及其他每个 DEX 的上下文数组 —— 根本不会被请求。
     expect(asked).toEqual([undefined]);
 
     channel.push(
@@ -464,7 +463,7 @@ describe('PerpsMarketDatasetService market detail', () => {
     expect(seen.length).toBe(2);
     expect(seen[1].midPxExact).toBe('1880.5');
     expect(seen[1].markPxExact).toBe('1880');
-    // Static metadata is not re-derived from a context frame.
+    // 静态元数据不会从上下文帧里重新推导。
     expect(seen[1].szDecimals).toBe(4);
     expect(seen[1].maxLeverage).toBe(25);
     expect(seen[1].assetId).toBe(1);
@@ -500,7 +499,7 @@ describe('PerpsMarketDatasetService market detail', () => {
 
     service.watchMarketDetail('NOPE').subscribe((m) => seen.push(m), failed);
     service.watchMarketDetail('OLD').subscribe((m) => seen.push(m), failed);
-    // An unenabled HIP-3 DEX never reaches the network at all.
+    // 未启用的 HIP-3 DEX 压根不会走到网络。
     service
       .watchMarketDetail('other:THING')
       .subscribe((m) => seen.push(m), failed);
@@ -522,9 +521,8 @@ describe('PerpsMarketDatasetService market detail', () => {
     service.watchMarketDetail('ETH').subscribe({ error: failed });
     tick(5000);
 
-    // Rate limiting is a reply. Asking the identical question a second later
-    // returns the identical answer and spends another slot out of a budget
-    // that refills over the following minute.
+    // 限流是一种回复。一秒后把同样的问题再问一遍，得到的是同样的答案，
+    // 却又从一个要到接下来一分钟才补满的额度里花掉一个名额。
     expect(calls).toBe(1);
     expect(failed).toHaveBeenCalled();
   }));
@@ -542,8 +540,8 @@ describe('PerpsMarketDatasetService market detail', () => {
     service.watchMarketDetail('ETH').subscribe((market) => seen.push(market));
     tick(1000);
 
-    // The page has nothing at all without this snapshot, and a connection that
-    // dropped on the way in decided nothing about whether the market exists.
+    // 没有这份快照，页面就什么都没有；而一条在去程上断掉的连接，
+    // 并没有对「这个市场是否存在」做出任何裁决。
     expect(calls).toBe(2);
     expect(seen[0].coin).toBe('ETH');
   }));
@@ -561,9 +559,8 @@ describe('PerpsMarketDatasetService market detail', () => {
     service.watchMarketDetail('ETH').subscribe({ error: failed });
     tick(30_000);
 
-    // One attempt plus three evenly spaced retries, and nothing left running
-    // afterwards — `fakeAsync` fails on a timer that outlives the test, so a
-    // standing backoff cannot creep back in unnoticed.
+    // 一次尝试外加三次均匀间隔的重试，之后不留下任何还在跑的东西 —— `fakeAsync` 会因
+    // 活得比测试还久的定时器而失败，所以常驻的退避不可能悄悄溜回来。
     expect(calls).toBe(4);
     expect(failed).toHaveBeenCalled();
   }));
@@ -573,7 +570,7 @@ describe('PerpsMarketDatasetService market detail', () => {
     const seen: PerpsMarket[] = [];
     service.watchMarketDetail('ETH').subscribe((m) => seen.push(m));
 
-    // mid 1875.75 against prevDayPx 1900.
+    // 中间价 1875.75 对 prevDayPx 1900。
     expect(seen[0].changeAmountExact).toBe('-24.25');
     expect(seen[0].changePercentExact).toBe('-1.276315789473684211');
   });
@@ -586,9 +583,8 @@ describe('PerpsMarketDatasetService market detail', () => {
     const seen: PerpsMarket[] = [];
     service.watchMarketDetail('ETH').subscribe((m) => seen.push(m));
 
-    // Market statistics unavailable: the mark is a different price kind from
-    // prevDayPx, so there is no honest comparison to make — and `null` is not
-    // the same claim as `0`.
+    // 市场统计不可用：标记价格与 prevDayPx 属于不同种类的价格，因此没有诚实的比较可做
+    // —— 而且 `null` 和 `0` 说的不是同一件事。
     expect(seen[0].midPxExact).toBeNull();
     expect(seen[0].changeAmountExact).toBeNull();
     expect(seen[0].changePercentExact).toBeNull();

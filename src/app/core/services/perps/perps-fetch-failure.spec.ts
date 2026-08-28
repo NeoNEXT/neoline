@@ -6,8 +6,7 @@ import {
 } from './perps-fetch-failure';
 
 describe('isExchangeAnswer', () => {
-  // The two ways a write can not succeed are not the same fact. One says
-  // nothing ran; the other says nobody knows.
+  // 写入不成功的两种方式不是同一个事实：一种说什么都没跑，另一种说没人知道。
   it('counts anything thrown while reading a response as an answer', () => {
     expect(isExchangeAnswer(new Error('Insufficient balance'))).toBeTrue();
   });
@@ -25,8 +24,7 @@ describe('isExchangeAnswer', () => {
   });
 
   it('reads the same classification as whether a read is worth repeating', () => {
-    // An answered refusal returns the same refusal a second later; rate
-    // limiting is the case that costs something to re-ask.
+    // 已答复的拒绝，一秒后还是同样的拒绝；限流才是重新问一次要付出代价的情况。
     expect(
       isTransientFetchFailure(new HttpErrorResponse({ status: 429 }))
     ).toBeFalse();

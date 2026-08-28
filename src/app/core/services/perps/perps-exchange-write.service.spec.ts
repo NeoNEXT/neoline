@@ -29,8 +29,6 @@ describe('PerpsExchangeWriteService orders', () => {
   let http: jasmine.SpyObj<HttpClient>;
   let service: PerpsExchangeWriteService;
 
-  /** The signed bodies, in the order they were sent. */
-  const bodies = () => http.post.calls.allArgs().map((args) => args[1]);
   const lastAction = () => http.post.calls.mostRecent().args[1].action;
 
   beforeEach(() => {
@@ -226,8 +224,8 @@ describe('PerpsExchangeWriteService builder fee', () => {
     service.submitOrder(PRIVATE_KEY, ORDER).subscribe();
     flushMicrotasks();
 
-    // The approval is a one-time signature per account, remembered for the
-    // session — a second order is one request, not three.
+    // 该授权是每个账户一次性的签名，并在整个会话内记住 ——
+    // 第二笔订单只发一个请求，而不是三个。
     expect(http.post).toHaveBeenCalledTimes(1);
     expect(http.post.calls.mostRecent().args[1].action.builder).toEqual({
       b: BUILDER,
@@ -273,10 +271,10 @@ describe('PerpsExchangeWriteService withdrawals', () => {
       .subscribe();
     flushMicrotasks();
 
-    // A unified account's perps clearinghouse reports 0 however funded it is,
-    // so a perps-sourced withdrawal is a withdrawal of nothing.
+    // 统一账户的永续清算所无论有多少资金都报 0，
+    // 所以从永续侧发起的提现等于提了个寂寞。
     expect(sourceDexOfLastAction()).toBe('spot');
-    // Nothing is read to find that out: the caller already knew.
+    // 为查明这一点不需要读取任何东西：调用方本来就知道。
     expect(bodiesOf(http).some((body) => body?.type === 'userAbstraction')).toBeFalse();
   }));
 
@@ -300,8 +298,8 @@ describe('PerpsExchangeWriteService withdrawals', () => {
       .subscribe({ error: (error) => (failure = error) });
     flushMicrotasks();
 
-    // A withdrawal moves principal: a reply that was lost may still have
-    // executed, and must never be reported as a failure.
+    // 提现动的是本金：丢失的回复背后操作也可能已经执行，
+    // 绝不能把它报告成失败。
     expect(failure.name).toBe('PerpsExecutionStatusUnknownError');
   }));
 });
@@ -318,7 +316,7 @@ describe('PerpsExchangeWriteService write notifications', () => {
     flushMicrotasks();
     expect(wrote).toHaveBeenCalledTimes(1);
 
-    // A read is not a write, and a refused write changed nothing.
+    // 读取不是写入，而被拒绝的写入什么都没改变。
     service.getOrderStatus('0xABC', CLOID).subscribe();
     http.post.and.returnValue(
       throwError(() => new HttpErrorResponse({ status: 422 })) as any

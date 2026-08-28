@@ -21,13 +21,12 @@ import { PerpsPendingDepositsService } from '@/app/core/services/perps/perps-pen
 import { PerpsFundingComponent } from './perps-funding.component';
 
 /**
- * A withdrawal is priced by a quote rather than a constant, so these tests state
- * the quote they compute against. One USDC keeps the arithmetic legible; the
- * real figure is whatever the contract says at the time.
+ * 提现的定价来自报价而不是常量，所以这些测试会写明它们据以计算的那份报价。取 1 USDC 是为了
+ * 让算术一目了然；真实数字是合约在当时所说的那个。
  */
 const QUOTE = { feeExact: '1', maxFeeExact: '1' };
 
-/** No deposit is sent in these tests, so nothing is ever recorded as pending. */
+/** 这些测试不发送任何入金，因此永远不会记录待入账记录。 */
 const pendingStub = () =>
   ({
     listFor: () => Promise.resolve([]),
@@ -39,12 +38,11 @@ const pendingStub = () =>
   } as any);
 
 /**
- * Preparing a deposit fails in these tests, and the failure is reported rather
- * than swallowed, so the component needs somewhere to report it to.
+ * 这些测试里准备入金总是失败，而且失败会被上报而不是吞掉，所以组件需要一个上报的去处。
  */
 const globalStub = () => ({ snackBarTip: () => {} } as any);
 
-/** Quotes are never taken in these tests; no deposit is prepared or sent. */
+/** 这些测试里从不取报价；既不准备也不发送入金。 */
 const feeQuoteStub = () =>
   ({
     depositQuote: () => Promise.reject(new Error('not stubbed')),
@@ -53,7 +51,7 @@ const feeQuoteStub = () =>
       new BigNumber(quote.feeExact).times(2).toFixed(),
   } as any);
 
-/** The deposit chain is never reached in these tests; only withdrawals run. */
+/** 这些测试里从不触及入金链；只跑提现。 */
 const depositChainStub = () =>
   ({
     tokenBalanceExact: () => Promise.reject(new Error('not stubbed')),
@@ -64,7 +62,7 @@ const depositChainStub = () =>
     depositOutcome: () => Promise.resolve('pending'),
   } as any);
 
-/** Keep direct construction focused on the page while preserving its account seam. */
+/** 让直接构造保持聚焦在页面本身，同时保留它的账户接缝。 */
 const accountStateStub = (hyperliquid: any = {}) =>
   ({
     watchAccount: () =>
@@ -99,14 +97,12 @@ const accountStateStub = (hyperliquid: any = {}) =>
 
 
 /**
- * Rendering tests, which the rest of this file cannot replace.
+ * 渲染测试 —— 本文件其余部分替代不了它们。
  *
- * Everything above builds the component with `new` and asserts on its getters.
- * That leaves the template free to read something else — and it did: the
- * balance line read `account.withdrawableExact` (the raw protocol field, 0 for
- * a unified account) rather than the identically named getter beside it, so a
- * funded account was shown $0.00 while every getter around it was correct.
- * These tests assert on the rendered text for that reason.
+ * 上面那些全都用 `new` 构造组件并断言它的 getter。这就给模板留下了读别的东西的空间 ——
+ * 而它真的这么干过：余额那一行读的是 `account.withdrawableExact`（原始协议字段，统一账户下
+ * 为 0），而不是它旁边同名的那个 getter，于是一个有资金的账户被显示成 $0.00，而周围每个
+ * getter 都是对的。正因如此，这些测试断言的是渲染出来的文本。
  */
 @Pipe({ name: 'translate' })
 class TranslateStubPipe implements PipeTransform {
@@ -131,8 +127,7 @@ describe('PerpsFundingComponent balance line', () => {
           provide: ActivatedRoute,
           useValue: { snapshot: { queryParams: {} } },
         },
-        // No wallet in the store, so nothing is loaded and the account under
-        // test is only ever the one each case sets.
+        // store 里没有钱包，所以什么都不会加载，被测的账户永远只是每个用例自己设的那个。
         {
           provide: Store,
           useValue: { select: () => of({ currentWallet: null }) },
@@ -166,7 +161,7 @@ describe('PerpsFundingComponent balance line', () => {
 
   afterEach(() => fixture.destroy());
 
-  /** The line under the amount input: the only place this figure is shown. */
+  /** 金额输入框下面那一行：这个数字唯一的显示位置。 */
   const balanceLine = () =>
     fixture.nativeElement
       .querySelector('.balance-tip')
@@ -260,8 +255,8 @@ describe('PerpsFundingComponent amount boundaries', () => {
     expect(component.canSubmit).toBeFalse();
   });
 
-  // The exchange would sign eight decimals, but the withdrawal is delivered as
-  // USDC on the destination chain, which carries six.
+  // 交易场所会签八位小数，但提现最终是以目的链上的 USDC 交付的，
+  // 而那边只有六位。
   it('holds a withdrawal to the decimals the destination token carries', () => {
     component.tab = 'withdraw';
     component.amount = '2.000001';
@@ -315,8 +310,7 @@ describe('PerpsFundingComponent amount boundaries', () => {
 
   it('floors withdraw MAX to the payable precision instead of offering a rejected amount', () => {
     component.tab = 'withdraw';
-    // The exchange reports withdrawable with more decimals than the token that
-    // eventually pays it out can carry.
+    // 交易场所报出的可提余额，其小数位数多于最终付款的那个代币所能承载的。
     component.account = {
       abstractionMode: 'default',
       withdrawableExact: '12.3456789012345',
@@ -333,9 +327,8 @@ describe('PerpsFundingComponent amount boundaries', () => {
 
   it('draws a unified account ceiling from spot, where that account keeps its USDC', () => {
     component.tab = 'withdraw';
-    // The perps clearinghouse reports 0 for a unified account however funded it
-    // is, so reading it here shows a funded account $0 and blocks every
-    // withdrawal it can make. Its hold is reserved collateral, not withdrawable.
+    // 无论统一账户有多少资金，永续清算所都报 0，所以在这里读它，会把一个有资金的账户显示成
+    // $0，并挡下它能做的每一笔提现。它的 hold 是被占用的抵押品，不是可提余额。
     component.account = {
       abstractionMode: 'unifiedAccount',
       unified: true,
@@ -354,8 +347,8 @@ describe('PerpsFundingComponent amount boundaries', () => {
 
   it('leaves a standard account spot balance out of the withdrawal ceiling', () => {
     component.tab = 'withdraw';
-    // Standard accounts hold spot and perps as separate wallets: that spot USDC
-    // is stranded until a transfer moves it and cannot leave through this page.
+    // 标准账户把现货和永续当作两个独立钱包：那笔现货 USDC 在被划转之前一直搁浅，
+    // 也不能从这个页面出去。
     component.account = {
       abstractionMode: 'default',
       unified: false,
@@ -380,8 +373,8 @@ describe('PerpsFundingComponent amount boundaries', () => {
     expect(component.maxAmountKnown).toBeFalse();
 
     component.setMax();
-    // Nothing to offer, so nothing is filled in — and an amount typed against
-    // an unknown balance cannot be called "over balance" either.
+    // 没有可供给出的数额，所以什么都不填 —— 而对着一个未知余额输入的金额，
+    // 也不能被称作「超出余额」。
     expect(component.amount).toBeNull();
     component.amount = '5';
     expect(component.exceedsBalance).toBeFalse();
@@ -483,8 +476,7 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
     );
     component.tab = 'withdraw';
     component.withdrawQuote = { ...QUOTE };
-    // What the confirmation screen was drawn with; `submit` signs only against
-    // a quote the user has already been shown.
+    // 确认页当初是用它画出来的；`submit` 只会对用户已经看过的报价签名。
     component.withdrawConfirmedQuote = { ...QUOTE };
     component.accountLoading = false;
     component.account = account('100') as any;
@@ -510,21 +502,20 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
 
     await component.submit();
 
-    // The number the user typed is still the number on screen — it was not
-    // rewritten to something they never asked for.
+    // 用户输入的数字仍然是屏幕上的那个数字 —— 它没有被改写成一个
+    // 他们从未要过的值。
     expect(component.amount).toBe('100');
     expect(component.balanceMovedUnderInput).toBeTrue();
     expect(component.submitting).toBeFalse();
     expect(writes.withdraw).not.toHaveBeenCalled();
   });
 
-  // Which balance a withdrawal debits is this page's to state: it is already
-  // holding the account that answers it, and the write path is told rather
-  // than looking it up.
+  // 提现从哪个余额扣款由本页面说了算：它手上本来就握着能回答这个问题的账户，
+  // 而写入路径是被告知的，不是自己去查的。
   it('debits spot for a unified account, whose USDC lives there', async () => {
     component.amount = '50';
-    // A unified account's withdrawable ceiling comes from spot, not from the
-    // perps clearinghouse figure a standard account reports.
+    // 统一账户的可提上限来自现货，而不是标准账户所上报的
+    // 永续清算所那个数字。
     hyperliquid.getAccount.and.returnValue(
       of({
         ...account('100'),
@@ -547,8 +538,8 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
 
     await component.submit();
 
-    // The exchange refuses a debit the balance cannot cover, so this is the
-    // guess that cannot move money from a balance the user did not mean.
+    // 交易场所会拒绝余额不足以覆盖的扣款，所以这个猜测不可能
+    // 从用户没打算动的余额里挪走钱。
     expect(writes.withdraw.calls.mostRecent().args[3]).toEqual({
       fromSpot: false,
     });
@@ -563,7 +554,7 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
 
     expect(component.amount).toBe('87');
     expect(component.balanceMovedUnderInput).toBeTrue();
-    // Following the balance down still does not authorise the send.
+    // 跟着余额一起往下走，仍然不构成对这笔转账的授权。
     expect(writes.withdraw).not.toHaveBeenCalled();
 
     await component.submit();
@@ -581,8 +572,8 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
     expect(writes.withdraw).toHaveBeenCalledTimes(1);
   });
 
-  // A response that never arrived is not a refusal. Reporting it as a failure
-  // is how a user withdraws the same balance twice.
+  // 从未到达的响应不是拒绝。把它报告成失败，
+  // 正是用户把同一笔余额提两次的方式。
   it('reports a lost withdrawal response as unknown rather than failed', async () => {
     component.amount = '50';
     hyperliquid.getAccount.and.returnValue(of(account('100')));
@@ -598,7 +589,7 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
       jasmine.anything()
     );
     expect(component.submitting).toBeFalse();
-    // Not cleared: nothing here says the withdrawal is done with.
+    // 不清空：这里没有任何东西说明这笔提现已经了结。
     expect(component.amount).toBe('50');
   });
 
@@ -636,8 +627,8 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
 
     await component.submit();
 
-    // The user is paid more than the confirmation promised. Sending them back
-    // to agree to a better number is friction with no question behind it.
+    // 用户拿到的比确认页承诺的更多。把他们送回去同意一个更好的数字，
+    // 是没有任何问题作为依据的摩擦。
     expect(writes.withdraw).toHaveBeenCalled();
     expect(component.confirming).toBeFalse();
   });
@@ -724,7 +715,7 @@ describe('PerpsFundingComponent submit gate', () => {
     expect(component.disabledReason).toBe('perpsPortfolioMarginNoDeposit');
     expect(component.canSubmit).toBeFalse();
 
-    // Getting money out of an account we cannot model is still the user's right.
+    // 就算账户我们建不了模，把钱取出来仍然是用户的权利。
     component.tab = 'withdraw';
     expect(component.unsupportedAccountMode).toBeFalse();
     expect(component.canSubmit).toBeTrue();
@@ -767,8 +758,8 @@ describe('PerpsFundingComponent submit gate', () => {
     expect(component.submitting).toBeFalse();
   });
 
-  // The recipient was never the part in doubt. What the user is agreeing to is a
-  // fee read from a contract whose owner can change it.
+  // 收款方从来不是有疑问的那一部分。用户要同意的，是一笔从合约里读来的、
+  // 而其 owner 可以修改的手续费。
   it('shows a withdrawal for confirmation rather than sending it on one press', async () => {
     component.tab = 'withdraw';
     component.account = { abstractionMode: 'default', withdrawableExact: '100' } as any;
@@ -801,8 +792,8 @@ describe('PerpsFundingComponent submit gate', () => {
     expect(component.canConfirm).toBeTrue();
   });
 
-  // Everything `submit` checks, the sheet has to check too: it refuses without
-  // a word, so a live-looking confirm button is a button that does nothing.
+  // `submit` 检查的每一项，这个确认面板都得跟着检查：它拒绝时一声不吭，
+  // 所以一个看起来能按的确认按钮，就是一个按了没反应的按钮。
   it('never offers a confirm button that submitting would refuse', () => {
     component.tab = 'withdraw';
     component.account = {
@@ -813,8 +804,8 @@ describe('PerpsFundingComponent submit gate', () => {
     component.withdrawConfirmedQuote = { ...QUOTE };
     expect(component.canConfirm).toBeTrue();
 
-    // The fresh quote raised the floor above what the user had already agreed
-    // to; the sheet reopens on the new number and must not accept the old one.
+    // 新报价把下限抬到了用户已经同意的数额之上；
+    // 面板会以新数字重新打开，并且绝不能接受旧的那个。
     component.amount = '1.5';
 
     expect(component.belowMinimum).toBeTrue();
@@ -833,9 +824,8 @@ describe('PerpsFundingComponent submit gate', () => {
 });
 
 /**
- * A deposit's network fee is only known once the confirmation has prepared it,
- * which means the sheet can be the first thing to learn the wallet cannot pay
- * for the send. What the screen does with that is the subject here.
+ * 一笔入金的网络手续费，要等确认页把它准备好之后才知道，这意味着确认面板可能是第一个发现
+ * 「钱包付不起这笔发送」的地方。界面为此做什么，就是这里要讲的事。
  */
 describe('PerpsFundingComponent deposit confirmation', () => {
   let component: PerpsFundingComponent;
@@ -847,7 +837,7 @@ describe('PerpsFundingComponent deposit confirmation', () => {
     chainName: 'Arbitrum Sepolia',
   };
 
-  /** Enough gas for the estimate below, or not — the only variable that matters. */
+  /** 够不够付下面那笔估算的 gas —— 这是唯一要紧的变量。 */
   function build(nativeBalanceExact: string) {
     const component = new PerpsFundingComponent(
       { snapshot: { queryParams: {} } } as any,
@@ -883,7 +873,7 @@ describe('PerpsFundingComponent deposit confirmation', () => {
     return component;
   }
 
-  /** Let the whole prepare chain settle; every step of it is a resolved promise. */
+  /** 让整条准备链跑完；它的每一步都是一个已 resolve 的 promise。 */
   async function settle() {
     for (let i = 0; i < 10; i++) {
       await Promise.resolve();
@@ -900,9 +890,8 @@ describe('PerpsFundingComponent deposit confirmation', () => {
     expect(component.canConfirm).toBeTrue();
   });
 
-  // The network fee is only known after the sheet has already opened and signed
-  // an authorisation. Leaving the sheet up would hide the form's reason behind
-  // a confirm button that `submit` refuses without a word.
+  // 网络手续费要等确认面板已经打开、并且已经签过一次授权之后才知道。把面板留着不关，
+  // 会把表单给出的原因藏在一个 `submit` 一声不吭就拒绝的确认按钮后面。
   it('closes the sheet when the fee turns out to be unaffordable', async () => {
     component = build('0.000001');
     expect(component.canSubmit).toBeTrue();
@@ -982,9 +971,8 @@ describe('PerpsFundingComponent deposit confirmation', () => {
 });
 
 /**
- * A failed withdrawal quote used to leave the screen with "please retry" and
- * no control that actually retried. The quote is what the floor, the arrival
- * estimate and the button all depend on, so a miss cannot be a dead end.
+ * 提现报价失败过去会在界面上留下一句「请重试」，却没有任何真的能重试的控件。下限、到账估算
+ * 和按钮全都依赖这份报价，所以一次失手不能是死胡同。
  */
 describe('PerpsFundingComponent withdrawal quote', () => {
   let component: PerpsFundingComponent;
@@ -1092,9 +1080,8 @@ describe('PerpsFundingComponent withdrawal quote', () => {
 });
 
 /**
- * The signed authorisation lets the extension contract pull exactly this
- * deposit, and it stays valid for its whole window whatever happens to the send
- * it was signed for. What the screen still holds afterwards is the subject here.
+ * 那份已签名的授权，准许扩展合约恰好取走这一笔入金；无论它所对应的那次发送发生了什么，
+ * 它在自己的有效窗口内始终有效。这之后界面还留着什么，就是这里要讲的事。
  */
 describe('PerpsFundingComponent deposit authorisation lifetime', () => {
   let component: PerpsFundingComponent;
@@ -1162,7 +1149,7 @@ describe('PerpsFundingComponent deposit authorisation lifetime', () => {
     }
   }
 
-  /** Open the confirmation and let it sign, which is where the permission appears. */
+  /** 打开确认面板并让它签名 —— 授权就是在那里出现的。 */
   async function confirmDeposit() {
     component.requestSubmit();
     await settle();
@@ -1175,8 +1162,8 @@ describe('PerpsFundingComponent deposit authorisation lifetime', () => {
     await confirmDeposit();
 
     expect(sendDeposit).toHaveBeenCalled();
-    // The nonce is consumed on chain, so what would be held here is a
-    // permission that can no longer authorise anything.
+    // nonce 已经在链上被消耗掉了，所以此时若还留着它，
+    // 留下的是一份再也授权不了任何东西的许可。
     expect(held()).toBeNull();
     expect(component.depositQuote).toBeNull();
   });
@@ -1190,8 +1177,8 @@ describe('PerpsFundingComponent deposit authorisation lifetime', () => {
     expect(component.submitting).toBeFalse();
   });
 
-  // The exception: the deposit has not been attempted, the sheet is reopening
-  // on the same one, and re-signing would only ask again for what was agreed.
+  // 例外情形：这笔入金还没有被尝试过，面板是就着同一笔重新打开的，
+  // 重新签名也只是把已经同意过的东西再要一次。
   it('keeps the permission when the sheet reopens on a moved quote', async () => {
     component.requestSubmit();
     await settle();

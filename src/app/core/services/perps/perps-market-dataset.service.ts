@@ -33,15 +33,14 @@ import {
   mergeDexAssetContexts,
 } from './perps-market-dataset';
 
-/** One DEX's static metadata paired with its live contexts, same order. */
+/** 某个 DEX 的静态元数据与它的实时上下文配对，顺序一致。 */
 type MetaAndAssetCtxs = [{ universe: PerpsUniverseItem[] }, PerpsAssetCtx[]];
 
 /**
- * What this module needs from the exchange, and nothing more.
+ * 本模块对交易场所的全部需求，多一点都不要。
  *
- * The registry is asked for separately because it only exists to place a HIP-3
- * DEX in the asset-id space: canonical markets are index 0 by definition and
- * skip the request entirely.
+ * 注册表要单独请求，因为它唯一的作用是把某个 HIP-3 DEX 定位到资产 id 空间里：标准永续
+ * 市场按定义就是下标 0，因此完全跳过这次请求。
  */
 interface PerpsMarketSource {
   readonly enabledDexes: string[];
@@ -50,17 +49,16 @@ interface PerpsMarketSource {
 }
 
 /**
- * How old the list may be before a new observer pays for a fresh snapshot.
+ * 列表可以旧到什么程度，超过就由新来的观察者付一次新快照的代价。
  *
- * Frames keep the prices current for free, so this is not about staleness of
- * numbers — it is about the set: a market listed or delisted since the last
- * snapshot is invisible until the next one.
+ * 价格由帧免费保持最新，所以这条规则管的不是数字的新鲜度 —— 它管的是「集合」：上次快照
+ * 之后新上架或已下架的市场，在下一次快照之前都是看不见的。
  */
 const SNAPSHOT_TTL_MS = 15000;
 
-/** A snapshot that failed while markets are already on screen backs off. */
+/** 屏幕上已经有市场时，失败的快照转为退避重试。 */
 const RETRY_BASE_MS = 1000;
-/** A 429 is an IP budget that refills over the following minute. */
+/** 429 是一个按 IP 计的额度，要到接下来的一分钟才补得回来。 */
 const RATE_LIMITED_BASE_MS = 10000;
 const RETRY_CAP_MS = 60000;
 
@@ -71,18 +69,15 @@ const LOADING: PerpsMarketDatasetState = {
 };
 
 /**
- * 行情数据集（Market Dataset）— the market set and its current prices.
+ * 行情数据集（Market Dataset）—— 市场集合及其当前价格。
  *
- * The set comes from snapshots and the numbers come from the 数据通道（Data
- * Channel）'s frames, and the two are arbitrated here rather than at the page:
- * frames that arrive before the first snapshot are held and replayed onto it,
- * so a slow REST response cannot leave the list a generation behind, and a
- * frame can never invent or remove a market — which is why a reconnect asks
- * for a snapshot rather than trusting the stream to catch up.
+ * 集合来自快照，数值来自数据通道（Data Channel）的帧，两者的仲裁放在这里而不是页面上：
+ * 在首次快照之前到达的帧会被暂存、待快照落地后重放到它上面，因此慢吞吞的 REST 响应不会
+ * 让列表落后整整一代；而帧永远不能凭空造出或移除一个市场 —— 这也正是重连之后要重新取
+ * 快照、而不是指望数据流自己追上来的原因。
  *
- * The list is a singleton shared by every page that watches it. Market detail
- * is the other shape entirely: one page reads one market and then follows that
- * market's own channel, with no shared state and no background refresh.
+ * 这个列表是单例，由所有观察它的页面共享。市场详情则完全是另一种形态：一个页面读一个
+ * 市场，然后跟随该市场自己的频道，没有共享状态，也没有后台刷新。
  */
 @Injectable({ providedIn: 'root' })
 export class PerpsMarketDatasetService {
@@ -94,9 +89,9 @@ export class PerpsMarketDatasetService {
   private observers = 0;
   private liveSub: Subscription;
   private connectionState: PerpsConnectionState = 'connecting';
-  /** Frames seen before the first snapshot, per DEX. */
+  /** 首次快照之前见到的帧，按 DEX 分别暂存。 */
   private readonly pendingAssetContexts = new Map<string, PerpsAssetCtx[]>();
-  /** The snapshot currently in flight, shared by everyone who asks. */
+  /** 当前在途的快照，由所有请求方共享。 */
   private snapshotRequest: Observable<PerpsMarket[]> | null = null;
   private retryTimer: any;
   private retryAttempts = 0;
@@ -109,13 +104,11 @@ export class PerpsMarketDatasetService {
   }
 
   /**
-   * The shared live market list.
+   * 共享的实时市场列表。
    *
-   * The first observer opens the per-DEX subscriptions and seeds them from a
-   * snapshot; the last one closes them. A failure is published as
-   * `unavailable` rather than erroring the stream: a retry that succeeds
-   * afterwards has to reach the same subscribers, and an errored observable is
-   * finished.
+   * 第一个观察者会开启各 DEX 的订阅，并用一次快照为它们播下种子；最后一个观察者关闭
+   * 它们。失败会以 `unavailable` 发布出去，而不是让整条流 error：之后重试成功的结果
+   * 必须能送达同一批订阅者，而一个已经 error 的 observable 就此终结。
    */
   watchMarkets(): Observable<PerpsMarketDatasetState> {
     return new Observable<PerpsMarketDatasetState>((observer) => {
@@ -135,7 +128,7 @@ export class PerpsMarketDatasetService {
     });
   }
 
-  /** The current list, snapshotting first only when what is held is too old. */
+  /** 当前列表；只有在手上这份太旧时才先取一次快照。 */
   getMarkets(): Observable<PerpsMarket[]> {
     const current = this.state$.value;
     if (this.isFresh(current)) {
@@ -145,18 +138,15 @@ export class PerpsMarketDatasetService {
   }
 
   /**
-   * One market's live context, from that market's own feed.
+   * 单个市场的实时上下文，来自该市场自己的数据源。
    *
-   * The detail page is what a user watches before tapping Long or Short, so it
-   * follows that market's `activeAssetCtx` channel rather than the list's
-   * per-DEX periodic frames. A frame carries prices and 24h statistics
-   * together, so the page never pairs a price from one message with a
-   * `prevDayPx` from another.
+   * 详情页是用户按下做多或做空之前一直盯着的页面，所以它跟随该市场的 `activeAssetCtx`
+   * 频道，而不是列表那种按 DEX 的周期性帧。一帧会把价格和 24 小时统计一起带来，因此页面
+   * 绝不会把这条消息里的价格与另一条消息里的 `prevDayPx` 配成一对。
    *
-   * Emits `null` for a coin this build does not carry: a delisted asset, a DEX
-   * this build does not enable, or a bad route parameter. That is a different
-   * answer from a request that failed, which errors — the page has nothing to
-   * show either way, but only one of them is worth offering a retry for.
+   * 对于本版本不承载的币种会发出 `null`：可能是已下架的资产、本版本未启用的 DEX，或者
+   * 一个错误的路由参数。这和「请求失败」是不同的答案，后者会 error —— 两种情况下页面都
+   * 没东西可显示，但只有其中一种值得提供重试。
    */
   watchMarketDetail(coin: string): Observable<PerpsMarket | null> {
     const dex = coin?.includes(':') ? coin.slice(0, coin.indexOf(':')) : '';
@@ -164,20 +154,17 @@ export class PerpsMarketDatasetService {
       return of(null);
     }
     return this.marketSnapshot(coin, dex).pipe(
-      // The page has nothing at all without this snapshot, and it is a plain
-      // read, so a connection that dropped on the way in is worth asking again
-      // before the user is told the market could not be loaded. This is the
-      // short, evenly-spaced budget a watching user will wait out — not the
-      // list's background backoff, which exists to keep already-visible prices
-      // alive and has no one staring at a blank screen.
+      // 没有这份快照，页面就什么都没有；而且它只是一次普通读取，所以对于一条在去程上
+      // 断掉的连接，值得在告诉用户「市场加载失败」之前再问一次。这是一份短促、间隔均匀、
+      // 用户盯着也等得起的预算 —— 不是列表那种后台退避，那种退避是为了让已经可见的价格
+      // 保持存活，并没有人在对着一片空白干等。
       retryTransientFetch(),
       switchMap((market) =>
         market
           ? concat(
               of(market),
-              // Frames that arrive while the snapshot is in flight are lost,
-              // which costs nothing: every frame is a complete context, so the
-              // next one restates whatever the missed ones said.
+              // 快照在途期间到达的帧会丢失，而这不付出任何代价：每一帧都是完整的上下文，
+              // 所以下一帧会把错过的那些帧说过的话重述一遍。
               this.channel.subscribe({ type: 'activeAssetCtx', coin }).pipe(
                 filter((frame) => !!frame?.ctx),
                 map((frame) => ({
@@ -192,12 +179,11 @@ export class PerpsMarketDatasetService {
   }
 
   /**
-   * Static metadata plus one context frame for a single market.
+   * 单个市场的静态元数据，外加一帧上下文。
    *
-   * Only that market's own DEX is asked, which is what keeps the detail page
-   * off the all-DEX snapshot the list needs. The DEX is read from the coin
-   * itself: a HIP-3 coin carries its DEX as a prefix, and a bare coin is
-   * canonical by definition.
+   * 只请求该市场自己所属的那个 DEX，这正是详情页得以避开列表所需的全 DEX 快照的原因。
+   * DEX 是从币种本身读出来的：HIP-3 币种会把它的 DEX 作为前缀带上，而不带前缀的币种
+   * 按定义就属于标准永续。
    */
   private marketSnapshot(
     coin: string,
@@ -235,15 +221,14 @@ export class PerpsMarketDatasetService {
     );
   }
 
-  //#region list
+  //#region 列表
 
   /**
-   * One market-context subscription per DEX the product actually shows.
+   * 产品真正会展示的每个 DEX 各订阅一条市场上下文。
    *
-   * The alternative, `allDexsAssetCtxs`, broadcasts every deployed HIP-3 DEX in
-   * a single frame — on testnet roughly 170KB of which three quarters is DEXes
-   * NeoLine does not list — and it arrives no more often than the per-DEX
-   * frames do.
+   * 另一个选择 `allDexsAssetCtxs` 会把所有已部署的 HIP-3 DEX 塞进同一帧广播出来 ——
+   * 在测试网上大约 170KB，其中四分之三是 NeoLine 根本不列出的 DEX —— 而且它到达的频率
+   * 并不比按 DEX 的帧更高。
    */
   private start() {
     const stream = new Subscription();
@@ -263,8 +248,8 @@ export class PerpsMarketDatasetService {
             this.publish({ availability: 'stale' });
           }
         } else if (recovered) {
-          // Frames restate prices on their own, but they can neither add nor
-          // remove a market — so the set is what the reconnect owes.
+          // 帧自己会重述价格，但它既不能新增也不能移除市场 ——
+          // 所以「有哪些市场」才是重连欠下的那笔账。
           this.loadSnapshot().subscribe({ error: () => undefined });
         }
       })
@@ -303,8 +288,8 @@ export class PerpsMarketDatasetService {
       this.publish({ availability: 'unavailable' });
       return;
     }
-    // Markets are already on screen, so the failure is not the user's problem
-    // yet — keep showing them and ask again on a widening interval.
+    // 市场已经在屏幕上了，所以这次失败还不是用户的问题 ——
+    // 继续显示它们，并以逐渐拉长的间隔再问。
     clearTimeout(this.retryTimer);
     const base = error?.status === 429 ? RATE_LIMITED_BASE_MS : RETRY_BASE_MS;
     const delay = Math.min(
@@ -316,11 +301,10 @@ export class PerpsMarketDatasetService {
   }
 
   /**
-   * All tradable markets joined with their live context, sorted by 24h volume.
+   * 所有可交易市场与它们的实时上下文合并的结果，按 24 小时成交量排序。
    *
-   * Delisted assets are dropped — they still occupy an index in `universe`, so
-   * the asset id is taken from the original position and must not be
-   * recomputed.
+   * 已下架的资产会被剔除 —— 但它们在 `universe` 里仍然占着一个下标，所以资产 id 取自
+   * 原始位置，绝不能重新计算。
    */
   private loadSnapshot(): Observable<PerpsMarket[]> {
     if (this.snapshotRequest) {
@@ -344,8 +328,8 @@ export class PerpsMarketDatasetService {
         this.snapshotRequest = null;
         throw error;
       }),
-      // One in-flight snapshot, shared: several pages arriving together must
-      // not each spend a request out of the same IP budget.
+      // 在途快照只有一份，大家共享：同时到来的多个页面，不该各自从同一个 IP 额度里
+      // 花掉一个请求。
       shareReplay({ bufferSize: 1, refCount: false })
     );
     this.snapshotRequest = request;
@@ -369,8 +353,8 @@ export class PerpsMarketDatasetService {
       requests.push(
         this.source.getMetaAndAssetCtxs(dex).pipe(
           map((response) => ({ dex, dexIndex, response })),
-          // One unavailable builder DEX must not hide canonical markets — but
-          // the list that results is `incomplete`, not `live`.
+          // 一个不可用的 builder DEX 不能把标准永续市场藏起来 ——
+          // 但由此得到的列表是 `incomplete`，不是 `live`。
           catchError(() => of(null))
         )
       );
@@ -395,8 +379,8 @@ export class PerpsMarketDatasetService {
     const sorted = markets.sort((a, b) =>
       new BigNumber(b.dayVolumeExact).comparedTo(a.dayVolumeExact)
     );
-    // Frames that arrived before this snapshot are replayed onto it, so a slow
-    // REST response cannot leave the list a generation behind.
+    // 在这次快照之前到达的帧会被重放到它上面，这样慢吞吞的 REST 响应就不会让列表落后
+    // 整整一代。
     let seeded = sorted;
     this.pendingAssetContexts.forEach((ctxs, dex) => {
       seeded = mergeDexAssetContexts(seeded, dex, ctxs);
@@ -410,8 +394,8 @@ export class PerpsMarketDatasetService {
     }
     const current = this.state$.value;
     if (!current.markets.length) {
-      // The snapshot defines which markets exist; hold the frame until it
-      // lands rather than inventing markets from a context array.
+      // 快照才定义有哪些市场存在；在它落地之前先把帧攥着，
+      // 而不是从一个上下文数组里凭空造出市场。
       this.pendingAssetContexts.set(dex, ctxs);
       return;
     }

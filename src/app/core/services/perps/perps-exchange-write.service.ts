@@ -29,12 +29,10 @@ import { normalizeIds, parseProtocolJson } from './perps-protocol-json';
 import { PerpsOrder } from './perps-trade-order';
 
 /**
- * A signed write whose result the client never learned.
+ * 一次已签名、但客户端始终不知道结果的写入。
  *
- * Not a failure: the exchange may well have executed the action, and the only
- * honest thing the interface can say is that it does not know. Nothing may be
- * re-signed off the back of one — a second signature is how one withdrawal
- * becomes two.
+ * 这不是失败：交易场所很可能已经执行了该操作，界面唯一诚实的说法就是「不知道」。绝不能
+ * 因为它而重新签名任何东西 —— 第二个签名正是一笔提现变成两笔的方式。
  */
 export class PerpsExecutionStatusUnknownError extends Error {
   constructor(readonly reason?: unknown) {
@@ -43,43 +41,38 @@ export class PerpsExecutionStatusUnknownError extends Error {
   }
 }
 
-/** Which balance a withdrawal debits. */
+/** 提现从哪个余额扣款。 */
 export interface PerpsWithdrawSource {
   /**
-   * True for a unified account, whose USDC lives in spot.
+   * 统一账户为 true，它的 USDC 放在现货里。
    *
-   * Callers that cannot say pass `false`: the exchange refuses a debit the
-   * balance cannot cover, so guessing perps costs a rejection rather than a
-   * withdrawal taken from somewhere the user did not mean.
+   * 说不准的调用方传 `false`：交易场所会拒绝余额不足以覆盖的扣款，所以猜成永续的代价
+   * 只是一次拒绝，而不是从用户没打算动的地方扣走一笔提现。
    */
   fromSpot: boolean;
 }
 
 /**
- * 交易场所写入（Exchange Write） — everything that spends the user's key.
+ * 交易场所写入（Exchange Write）—— 一切要动用用户私钥的操作。
  *
- * One module holds nonce allocation, EIP-712 signing, the builder-fee
- * approval an order's fee field depends on, lossless wire encoding, the one
- * safe re-signature, and the translation of Hyperliquid's answer into an
- * 执行结果（Execution Result）. Callers hand it an already-normalized action
- * and get back a decidable result — or 执行状态未知（Execution Status
- * Unknown), which is not the same as a failure.
+ * 一个模块囊括了 nonce 分配、EIP-712 签名、订单手续费字段所依赖的 builder 费用授权、
+ * 无损的上链编码、唯一一次安全的重新签名，以及把 Hyperliquid 的答复翻译成执行结果
+ *（Execution Result）。调用方交给它一个已经规范化的 action，拿回一个可判定的结果 ——
+ * 或者执行状态未知（Execution Status Unknown），而后者不等于失败。
  *
- * It reads nothing it does not write. A withdrawal is told which balance to
- * debit rather than looking the account up, so this module owes the account
- * side one thing only: `wrote()`, which says the facts it holds are now out of
- * date. That is a notification and stays one — no local order state machine,
- * no cross-window arbitration, no persisted intent (ADR-0003, ADR-0006).
+ * 它不读取任何自己不写的东西。提现是被告知该扣哪个余额，而不是自己去查账户，所以本模块
+ * 只欠账户那一侧一件事：`wrote()`，它宣告「你手上的事实现在过期了」。这是一个通知，而且
+ * 会一直只是通知 —— 没有本地订单状态机，没有跨窗口仲裁，也不持久化交易意图
+ *（ADR-0003、ADR-0006）。
  */
 @Injectable({ providedIn: 'root' })
 export class PerpsExchangeWriteService {
   private readonly isTestnet = resolvePerpsTestnet(environment.perpsNetwork);
   /**
-   * Nonces are tracked per signer by the exchange, so they are allocated per
-   * signer here too.
+   * 交易场所是按签名者跟踪 nonce 的，所以这里也按签名者分配。
    */
   private readonly nonces = new PerpsNonceAllocator();
-  /** Accounts whose builder-fee approval this session has already confirmed. */
+  /** 本次会话已经确认过 builder 费用授权的那些账户。 */
   private readonly builderFeeApproved = new Set<string>();
   private readonly wrote$ = new Subject<void>();
 
@@ -90,18 +83,18 @@ export class PerpsExchangeWriteService {
   }
 
   /**
-   * Fires after every accepted write.
+   * 每次被接受的写入之后触发。
    *
-   * Whoever holds account facts is expected to treat them as out of date; what
-   * it does about that is its own decision, not this module's.
+   * 手上持有账户事实的一方应当把它们视为已过期；至于要为此做什么，是它自己的决定，
+   * 不归本模块管。
    */
   wrote(): Observable<void> {
     return this.wrote$.asObservable();
   }
 
-  //#region builder fee
+  //#region builder 费用
 
-  /** Empty when this build has no builder configured for the active network. */
+  /** 本版本没有为当前网络配置 builder 时为空。 */
   get builderAddress(): string {
     const address = this.isTestnet
       ? PERPS_BUILDER_ADDRESS.testnet
@@ -109,7 +102,7 @@ export class PerpsExchangeWriteService {
     return address ? address.toLowerCase() : '';
   }
 
-  /** The `builder` field orders carry, or undefined when the fee is disabled. */
+  /** 订单携带的 `builder` 字段；费用被禁用时为 undefined。 */
   private get builderField(): { b: string; f: number } | undefined {
     return this.builderAddress && PERPS_BUILDER_FEE_TENTHS_BPS > 0
       ? { b: this.builderAddress, f: PERPS_BUILDER_FEE_TENTHS_BPS }
@@ -117,16 +110,15 @@ export class PerpsExchangeWriteService {
   }
 
   /**
-   * Attach the builder fee to an order action, leaving the action untouched when
-   * no builder is configured. Hyperliquid rejects an order whose builder fee
-   * exceeds what the account approved, so the two must move together.
+   * 把 builder 费用附加到下单 action 上；没有配置 builder 时原样返回，不作改动。
+   * Hyperliquid 会拒绝 builder 费用超出账户已授权额度的订单，所以两者必须同步。
    */
   private withBuilder(action: any): any {
     const builder = this.builderField;
     return builder ? { ...action, builder } : action;
   }
 
-  /** Tenths of a basis point this account has already approved for our builder. */
+  /** 该账户已经为我们的 builder 授权的额度，单位是十分之一个基点。 */
   getMaxBuilderFee(address: string): Observable<number> {
     if (!this.builderAddress) {
       return of(0);
@@ -144,14 +136,12 @@ export class PerpsExchangeWriteService {
   }
 
   /**
-   * Make sure the account has approved our builder fee before an order carries
-   * it. The approval is a one-time signature per account, so the result is
-   * remembered for the session.
+   * 在订单携带 builder 费用之前，确保账户已经授权它。该授权对每个账户是一次性签名，
+   * 所以结果会在本次会话内记住。
    *
-   * A failed *query* is not fatal — the approval is attempted anyway, and a
-   * redundant one is harmless. A failed *approval* is: the order that follows
-   * would be rejected by the exchange, so the error is surfaced rather than
-   * swallowed into a silent no-fee order.
+   * *查询*失败不致命 —— 无论如何都会尝试授权一次，多余的授权没有害处。*授权*失败则是
+   * 致命的：随后的订单会被交易场所拒绝，所以这个错误要抛出来，而不是被吞掉、悄悄变成
+   * 一笔不带手续费的订单。
    */
   private ensureBuilderFeeApproved(privateKey: string): Observable<void> {
     if (!this.builderField) {
@@ -178,7 +168,7 @@ export class PerpsExchangeWriteService {
     );
   }
 
-  /** Sign the one-time approval letting our builder charge its fee. */
+  /** 签署这份一次性授权，允许我们的 builder 收取它的费用。 */
   approveBuilderFee(privateKey: string): Observable<PerpsExchangeResponse> {
     const nonce = this.nextNonce(privateKey);
     return from(
@@ -198,9 +188,9 @@ export class PerpsExchangeWriteService {
 
   //#endregion
 
-  //#region writes
+  //#region 写入
 
-  /** Serialize, sign and send one already-normalized protocol order. */
+  /** 序列化、签名并发送一个已经规范化的协议订单。 */
   submitOrder(
     privateKey: string,
     order: PerpsOrder
@@ -236,8 +226,8 @@ export class PerpsExchangeWriteService {
           map((response) =>
             this.parseOrderExecution(response, order.sizeExact, order.cloid)
           ),
-          // Once the signed order was sent, a transport failure cannot prove
-          // rejection. Preserve cloid and stop: retrying could duplicate risk.
+          // 已签名的订单一旦发出，传输故障就证明不了「被拒绝」。
+          // 保住 cloid 并就此停手：重试可能让风险敞口翻倍。
           catchError((error) =>
             isExchangeAnswer(error)
               ? throwError(() => error)
@@ -283,15 +273,14 @@ export class PerpsExchangeWriteService {
   }
 
   /**
-   * Withdraw from HyperCore to the same address on the deposit chain.
+   * 从 HyperCore 提现到入金链上的同一地址。
    *
-   * The exchange debits HyperCore and the rest happens without the user: the
-   * amount crosses to HyperEVM, is burned through CCTP, and is delivered by the
-   * forwarder. None of those legs is a transaction the user signs or pays gas
-   * for, so this stays a single signed action from the caller's point of view.
+   * 交易场所从 HyperCore 扣款，余下的事都不需要用户参与：这笔钱跨到 HyperEVM、经由 CCTP
+   * 销毁，再由转发器投递。这几段中没有任何一段是用户要签名或付 gas 的交易，所以从调用方
+   * 的角度看，它仍然是一次单独的已签名操作。
    *
-   * Which balance is debited is the caller's to state, because the caller is
-   * already holding the account that answers it — see `PerpsWithdrawSource`.
+   * 扣哪个余额由调用方说了算，因为调用方手上本来就握着能回答这个问题的账户 ——
+   * 见 `PerpsWithdrawSource`。
    */
   withdraw(
     privateKey: string,
@@ -300,10 +289,9 @@ export class PerpsExchangeWriteService {
     { fromSpot }: PerpsWithdrawSource
   ): Observable<PerpsExchangeResponse> {
     const amountWire = this.floatToWire(amount);
-    // Circle names this field chainId; the value is the CCTP domain of the
-    // destination (Arbitrum = 3), not the EVM chain id 42161. Passing the chain
-    // id sends the burn to a domain that does not exist.
-    // SOURCE: CoreDepositWallet natspec and
+    // Circle 把这个字段命名为 chainId；但它的值是目的地的 CCTP domain（Arbitrum = 3），
+    // 而不是 EVM 链 id 42161。传链 id 会把这次销毁发往一个并不存在的 domain。
+    // 来源：CoreDepositWallet natspec 以及
     // https://developers.circle.com/cctp/howtos/withdraw-usdc-from-hypercore-to-evm
     const destinationChainId = this.depositConfig.cctp.sourceDomain;
     return this.withNonceRetry(privateKey, (nonce) =>
@@ -324,9 +312,8 @@ export class PerpsExchangeWriteService {
       )
     ).pipe(
       tap(() => this.wrote$.next()),
-      // A withdrawal moves principal, so the two ways it can not succeed have
-      // to stay apart all the way to the screen: an exchange that answered "no"
-      // executed nothing, while a response that never arrived may have.
+      // 提现动的是本金，所以它不成功的两种方式必须一路区分到屏幕上：交易场所答了「不」
+      // 就是什么都没执行，而一个从未到达的响应背后，操作却可能已经跑过了。
       catchError((error) => {
         throw isExchangeAnswer(error)
           ? error
@@ -335,7 +322,7 @@ export class PerpsExchangeWriteService {
     );
   }
 
-  /** Resolve a transport-ambiguous order by its stable client id. */
+  /** 用稳定的客户端订单标识，查清一笔传输结果不明的订单。 */
   getOrderStatus(address: string, cloid: string): Observable<any> {
     assertCloid(cloid);
     return this.postInfo<any>({
@@ -347,7 +334,7 @@ export class PerpsExchangeWriteService {
 
   //#endregion
 
-  //#region transport
+  //#region 传输
 
   private get depositConfig() {
     return this.isTestnet
@@ -376,12 +363,11 @@ export class PerpsExchangeWriteService {
   }
 
   /**
-   * Sign and send, re-signing once if the exchange refuses the nonce itself.
+   * 签名并发送；若交易场所拒绝的正是 nonce 本身，则重新签名一次。
    *
-   * Safe precisely because the exchange answered: a refusal means nothing was
-   * executed, so a second attempt cannot duplicate the action. A lost or failed
-   * response is the opposite case — the action may have run — and is rethrown
-   * untouched for the caller to resolve as an unknown execution.
+   * 之所以安全，恰恰是因为交易场所作了答：被拒绝意味着什么都没执行，所以第二次尝试不可能
+   * 让操作重复。丢失或失败的响应属于相反的情形 —— 操作可能已经跑过 —— 它会被原样重新抛出，
+   * 交由调用方按「执行状态未知」处理。
    */
   private withNonceRetry(
     privateKey: string,
@@ -400,8 +386,8 @@ export class PerpsExchangeWriteService {
   }
 
   private isDeterministicNonceRejection(error: unknown): boolean {
-    // A transport failure is not an answer; the action's fate is unknown and it
-    // must never be signed again on our own initiative.
+    // 传输故障不是答复；这个操作的命运是未知的，
+    // 绝不能由我们自作主张再签一次名。
     if (error instanceof HttpErrorResponse) {
       return false;
     }
@@ -446,7 +432,7 @@ export class PerpsExchangeWriteService {
       );
   }
 
-  /** The two unauthenticated reads that only exist to serve a write. */
+  /** 仅仅是为写入服务而存在的那两次免鉴权读取。 */
   private postInfo<T>(body: any): Observable<T> {
     return this.http
       .post(this.api.info, body, {
@@ -457,7 +443,7 @@ export class PerpsExchangeWriteService {
   }
 
   /**
-   * Hyperliquid wire numbers allow at most 8 decimals and no trailing zeroes.
+   * Hyperliquid 的上链数字最多 8 位小数，且不允许尾随零。
    */
   private floatToWire(value: string): string {
     const decimal = new BigNumber(value);
@@ -528,7 +514,7 @@ export class PerpsExchangeWriteService {
   //#endregion
 }
 
-/** The client order id both submission and its recovery are addressed by. */
+/** 提交与事后追查共同据以寻址的客户端订单标识。 */
 function assertCloid(cloid: string) {
   if (!/^0x[0-9a-fA-F]{32}$/u.test(cloid)) {
     throw new Error('Invalid Hyperliquid cloid');

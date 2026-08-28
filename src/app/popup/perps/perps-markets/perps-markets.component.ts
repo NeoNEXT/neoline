@@ -3,12 +3,11 @@ import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
 import { PERPS_HOME_URL } from '@popup/_lib/perps';
 
 /**
- * The markets page: search across every listed market, on its own screen.
+ * 市场页：在独立的一屏里搜索所有已上架的市场。
  *
- * The home tab shows the same list but hands searching over here, so a keyword
- * gets the full popup height instead of one row's worth of results under the
- * account card. The list itself — order, paging, pinning — stays in
- * `perps-market-list`, which both surfaces render.
+ * 首页 tab 展示的是同一个列表，但把搜索交到这里来做，这样一个关键词能用上弹窗的整个高度，
+ * 而不是在账户卡下面只剩一行结果的位置。列表本身 —— 排序、翻页、置顶 —— 仍留在
+ * `perps-market-list` 里，两个界面渲染的都是它。
  */
 @Component({
   selector: 'app-perps-markets',
@@ -22,9 +21,8 @@ export class PerpsMarketsComponent implements AfterViewInit {
   readonly homeUrl = PERPS_HOME_URL;
 
   /**
-   * Arriving here is always a decision to search, so the field takes focus
-   * itself. The `autofocus` attribute does not fire for an element Angular
-   * creates after the document has loaded.
+   * 来到这里必然是为了搜索，所以输入框自己抢焦点。对于 Angular 在文档加载完成之后才
+   * 创建的元素，`autofocus` 属性不会生效。
    */
   ngAfterViewInit() {
     this.searchInput?.nativeElement.focus();

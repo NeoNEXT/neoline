@@ -21,12 +21,10 @@ import {
 import { ethMarket, ethPosition } from '../perps.test-fixture';
 
 /**
- * The arithmetic the order form is built on, exercised directly.
+ * 直接检验下单表单所依赖的那些算术。
  *
- * These are internal to the composition module — the page only ever calls
- * `composeOrder` — but they are where the protocol's rounding rules live, and
- * an edge case is far cheaper to state here than to reach through a full
- * composition.
+ * 它们对组合模块而言是内部的 —— 页面只会调用 `composeOrder` —— 但协议的舍入规则就住在
+ * 这里，而把一个边界情况写在这里，远比从一次完整组合里绕过去便宜得多。
  */
 describe('perps order arithmetic', () => {
   it('selects Hyperliquid long and short availability independently', () => {
@@ -41,7 +39,7 @@ describe('perps order arithmetic', () => {
 
     expect(availableToTradeForSide(data, 'long')).toBe('1008.75');
     expect(availableToTradeForSide(data, 'short')).toBe('989.78');
-    // The per-asset size cap binds well before the collateral does here.
+    // 这里按单资产的数量上限先卡住，远早于抵押品卡住它。
     expect(maxOrderNotionalForSide(data, 'long', 2).toNumber()).toBeCloseTo(
       0.5323 * 1895,
       8
@@ -49,9 +47,8 @@ describe('perps order arithmetic', () => {
   });
 
   it('reads availableToTrade as collateral, not as a leverage-scaled notional', () => {
-    // Verified against the API: on an account with no position, availableToTrade
-    // equals withdrawable exactly while leverage sits at 20x. Previewing another
-    // leverage must not move it.
+    // 已对照 API 验证：在没有仓位的账户上，杠杆处于 20 倍时 availableToTrade 与
+    // withdrawable 完全相等。预览另一个杠杆不能让它变动。
     const data = {
       user: '0xabc',
       coin: 'ETH',
@@ -75,27 +72,27 @@ describe('perps order arithmetic', () => {
       markPx: 1925,
     };
 
-    // 4.8 USDC at 3x buys 14.4 of notional, so a 10 USDC order fits — the old
-    // leverage-scaling rejected it as insufficient margin.
+    // 4.8 USDC 在 3 倍杠杆下能买 14.4 的名义价值，所以一笔 10 USDC 的订单放得下 ——
+    // 旧的按杠杆缩放会把它当成保证金不足而拒绝。
     const max = maxOrderNotionalForSide(data, 'long', 3);
     expect(max.toNumber()).toBeCloseTo(14.4, 8);
     expect(max.isGreaterThan(10)).toBeTrue();
 
     expect(collateralToNotional(4.8, 10)).toBeCloseTo(48, 8);
-    // Leverage below 1x cannot buy more than the collateral itself.
+    // 低于 1 倍的杠杆，买不到比抵押品本身更多的东西。
     expect(collateralToNotional(4.8, 0.5)).toBeCloseTo(4.8, 8);
   });
 
   it('trims the 100% notional to the market lot, as Hyperliquid does', () => {
-    // Cross-checked against Hyperliquid's own form: 4.80 USDC at 10x with ETH
-    // at 1925.57 shows 47.95, not the raw 48.00 — floor(48/1925.57) to four
-    // decimals is 0.0249, which prices back out to 47.9467.
+    // 与 Hyperliquid 自己的表单交叉核对过：4.80 USDC、10 倍杠杆、ETH 在 1925.57 时显示的
+    // 是 47.95 而不是原始的 48.00 —— floor(48/1925.57) 取四位小数是 0.0249，
+    // 再乘回价格得到 47.9467。
     expect(notionalAtLotSize(48, 1925.57, 4)).toBeCloseTo(0.0249 * 1925.57, 8);
     expect(Number(notionalAtLotSize(48, 1925.57, 4).toFixed(2))).toBe(47.95);
 
-    // A whole-unit market cannot express any fraction of a contract.
+    // 只能整数计量的市场，表达不了合约的任何小数部分。
     expect(notionalAtLotSize(48, 1925.57, 0)).toBeCloseTo(0, 8);
-    // Without a usable price there is nothing to quantise against.
+    // 没有可用的价格，就没有可供量化的基准。
     expect(notionalAtLotSize(48, 0, 4)).toBe(48);
   });
 
@@ -151,8 +148,8 @@ describe('perps order arithmetic', () => {
       markPx: 1895,
     };
 
-    // A zero price makes the per-asset cap zero, which means "not loaded yet"
-    // rather than "no capacity" — pinning it to zero empties the % buttons.
+    // 价格为零会让单资产上限也变成零，而那意味着「还没加载」而不是「没有容量」——
+    // 把它钉成零会让百分比按钮全都归零。
     expect(maxOrderNotionalForSide(data, 'long', 3, 0).toFixed()).toBe(
       '3026.25'
     );
@@ -219,8 +216,8 @@ describe('perps order arithmetic', () => {
   });
 
   it('falls back to the mid, not the mark, without an execution price', () => {
-    // The mark can sit outside the spread; the mid is what a market order is
-    // actually priced from, so it must be what sizing falls back to.
+    // 标记价格可能落在价差之外；市价单实际是按中间价定价的，
+    // 所以数量换算也必须回退到中间价。
     const preview = previewOrder({
       market: ethMarket({ markPxExact: '100', midPxExact: '80' }),
       notionalExact: '800',
@@ -231,7 +228,7 @@ describe('perps order arithmetic', () => {
 
     expect(preview.sizeExact).toBe('10');
 
-    // A market with no two-sided mid cannot be sized from the mark.
+    // 没有双边中间价的市场，不能拿标记价格来换算数量。
     expect(
       previewOrder({
         market: ethMarket({ markPxExact: '100', midPxExact: null }),
@@ -287,13 +284,12 @@ describe('perps order arithmetic', () => {
   });
 
   /**
-   * Adding to a position does not create a second one. The exchange marks the
-   * merged position, so an estimate that priced this order on its own — with
-   * only its own margin behind it — quotes a level the account is never
-   * liquidated at.
+   * 加仓不会新建出第二个仓位。交易场所是对合并后的仓位计算保证金的，所以一个只按这笔
+   * 订单单独定价的估算 —— 背后只有它自己的保证金 —— 报出的是一个账户永远不会在那里被
+   * 强平的价位。
    */
   describe('liquidation estimate when adding to a position', () => {
-    /** 10 ETH long, entered at $100, held at 2x — so $500 of margin. */
+    /** 10 ETH 多头，$100 入场，2 倍杠杆持有 —— 也就是 $500 保证金。 */
     const heldLong = () =>
       ethPosition({
         sziExact: '10',
@@ -315,9 +311,8 @@ describe('perps order arithmetic', () => {
         feeRate: 0,
       }).liquidationPxExact;
 
-    // Doubling a position at its own price and leverage changes nothing about
-    // where it liquidates — the clearest check that the merge is arithmetic on
-    // the whole position rather than on this order alone.
+    // 以自身的价格和杠杆把仓位翻倍，强平价不会有任何变化 —— 这是最能说明「合并是对整个
+    // 仓位做算术，而不是只对这笔订单」的检验。
     it('leaves the level unmoved when the order matches what is held', () => {
       const preview = previewOrder({
         market: ethMarket(),
@@ -336,8 +331,8 @@ describe('perps order arithmetic', () => {
       expect(Number(preview.liquidationPxExact)).toBeCloseTo(51.0204, 4);
     });
 
-    // Buying higher drags the size-weighted entry up, so the merged level sits
-    // above the position's own and below what this order would face alone.
+    // 在更高价位买入会把按数量加权的入场价拉高，所以合并后的价位高于仓位自身的，
+    // 又低于这笔订单单独面对的。
     it('weights the entry by size when the order fills higher', () => {
       const merged = Number(
         previewOrder({
@@ -355,8 +350,8 @@ describe('perps order arithmetic', () => {
       expect(merged).toBeLessThan(Number(standalone('120')));
     });
 
-    // The margin figure is still this order's own: it is what the order locks,
-    // not what the merged position holds.
+    // 保证金数字仍然是这笔订单自己的：它是这笔订单锁定的金额，
+    // 而不是合并后仓位持有的金额。
     it('still reports the margin this order locks', () => {
       const preview = previewOrder({
         market: ethMarket(),
@@ -371,8 +366,8 @@ describe('perps order arithmetic', () => {
       expect(preview.marginExact).toBe('500');
     });
 
-    // An order on the other side is a reduce or a reverse, and the order form
-    // refuses to guess which — so there is nothing to merge with.
+    // 反方向的订单要么是减仓要么是反手，而下单表单拒绝去猜是哪一种 ——
+    // 所以没有东西可供合并。
     it('ignores a position held on the other side', () => {
       const preview = previewOrder({
         market: ethMarket(),
@@ -396,8 +391,8 @@ describe('perps order arithmetic', () => {
       );
     });
 
-    // Below one lot there is no order to merge, and dividing by a zero size
-    // would answer with an infinity rather than a price.
+    // 不足一手就没有订单可以合并，而除以为零的数量
+    // 得到的会是一个无穷大而不是一个价格。
     it('falls back to the ratio when the order cannot reach one lot', () => {
       const preview = previewOrder({
         market: ethMarket({ szDecimals: 0 }),
@@ -415,8 +410,8 @@ describe('perps order arithmetic', () => {
   });
 
   /**
-   * Max slippage is the whole of the user's consent about price, so it is also
-   * what decides whether the price they reviewed still stands at submit time.
+   * 最大滑点就是用户对价格的全部同意，所以它同时也决定了用户审核过的那个价格在提交时
+   * 是否依然成立。
    */
   describe('exceedsMaxSlippage', () => {
     it('allows a move inside the tolerance, in either direction', () => {
@@ -424,7 +419,7 @@ describe('perps order arithmetic', () => {
       expect(exceedsMaxSlippage('100', '99.5', 1)).toBeFalse();
     });
 
-    // The boundary is the agreed limit, not one tick past it.
+    // 边界就是约定的上限本身，而不是再多一个最小变动价位。
     it('allows a move that lands exactly on the tolerance', () => {
       expect(exceedsMaxSlippage('100', '101', 1)).toBeFalse();
       expect(exceedsMaxSlippage('100', '99', 1)).toBeFalse();
@@ -435,13 +430,13 @@ describe('perps order arithmetic', () => {
       expect(exceedsMaxSlippage('100', '98.99', 1)).toBeTrue();
     });
 
-    // Six-decimal markets move by amounts a float comparison rounds away.
+    // 六位小数的市场，其波动幅度会被浮点比较抹掉。
     it('measures the move on the decimals, not on a float of them', () => {
       expect(exceedsMaxSlippage('0.000001', '0.00000106', 5)).toBeTrue();
       expect(exceedsMaxSlippage('0.000001', '0.00000104', 5)).toBeFalse();
     });
 
-    // No price is not a price that has not moved.
+    // 「没有价格」不等于「价格没变」。
     it('refuses when either side has no price at all', () => {
       expect(exceedsMaxSlippage(null, '100', 1)).toBeTrue();
       expect(exceedsMaxSlippage('100', null, 1)).toBeTrue();
@@ -452,22 +447,19 @@ describe('perps order arithmetic', () => {
   });
 
   /**
-   * The signed price has to be the price on screen, so the box is normalised
-   * through the same rule the wire price is quantised against.
+   * 签名的价格必须就是屏幕上的价格，所以输入框也要经过上链价格所依据的同一条规则做规范化。
    */
   describe('normalizeLimitPrice', () => {
     it('quantises to the tighter of the tick and five significant figures', () => {
-      // BTC (szDecimals 5) quotes one decimal, but five significant figures
-      // bind first at this magnitude.
+      // BTC（szDecimals 为 5）报一位小数，但在这个量级上先卡住的是五位有效数字。
       expect(normalizeLimitPrice('63393.55', 5)).toBe('63394');
-      // SOL (szDecimals 2) quotes four decimals; significance allows three.
+      // SOL（szDecimals 为 2）报四位小数；有效数字只允许三位。
       expect(normalizeLimitPrice('75.7565', 2)).toBe('75.757');
-      // PUMP (szDecimals 0) quotes six, and the tick is what binds.
+      // PUMP（szDecimals 为 0）报六位，此时卡住的是最小变动价位。
       expect(normalizeLimitPrice('0.0029794', 0)).toBe('0.002979');
     });
 
-    // Running it twice must not keep moving the price, or the box would drift
-    // every time it lost focus.
+    // 跑两遍不能让价格继续移动，否则输入框每次失焦都会漂一点。
     it('is a no-op on a price it has already quantised', () => {
       ['63393.55', '75.7565', '0.0029794', '1886'].forEach((price) => {
         const once = normalizeLimitPrice(price, 2);
@@ -475,7 +467,7 @@ describe('perps order arithmetic', () => {
       });
     });
 
-    // A box mid-edit belongs to the user; only a finished price is rewritten.
+    // 正在编辑中的输入框属于用户；只有输入完成的价格才会被改写。
     it('leaves a box that holds no price alone', () => {
       expect(normalizeLimitPrice('', 2)).toBe('');
       expect(normalizeLimitPrice('.', 2)).toBe('');
@@ -490,9 +482,8 @@ describe('perps order arithmetic', () => {
   });});
 
 /**
- * The form read as a whole: what it would submit, and the single reason it
- * may not. Every case here used to be stated by assigning fields on a
- * half-constructed page component and reading its getters.
+ * 把整张表单作为一个整体来读：它会提交什么，以及它不能提交的那唯一一条理由。这里的每个
+ * 用例过去都要靠在一个半构造的页面组件上赋字段、再读它的 getter 来表达。
  */
 describe('composeOrder', () => {
   const facts = (overrides: Partial<PerpsOrderFacts> = {}): PerpsOrderFacts => ({
@@ -521,7 +512,7 @@ describe('composeOrder', () => {
     ...overrides,
   });
 
-  /** One market quoted flat at `price`, so a preview's arithmetic is visible. */
+  /** 一个价格恒为 `price` 的市场，好让预览的算术一目了然。 */
   const priced = (
     coin: string,
     price: number,
@@ -579,10 +570,9 @@ describe('composeOrder', () => {
   });
 
   /**
-   * A lot worth less than half a cent — 36 of Hyperliquid's markets trade this
-   * way — used to lose to the cent rounding: the base is already the largest
-   * placeable notional, so rounding its last cent up bought one lot more than
-   * the account could cover and 100% disabled its own submit button.
+   * 一手价值不到半分钱的市场 —— Hyperliquid 上有 36 个这样交易的市场 —— 过去会输给分位
+   * 舍入：基数本身已经是可下单的最大名义价值，所以把它的最后一分向上舍入，就多买了一手，
+   * 超出账户能覆盖的范围，于是 100% 按钮把自己的提交按钮给禁用了。
    */
   it('keeps 100% inside the cap on a market whose lot is worth under a cent', () => {
     const price = 0.002718;
@@ -595,7 +585,7 @@ describe('composeOrder', () => {
 
     const amount = amountForPercent(composeOrder(f, at100), 100);
 
-    // Max applies the confirmed 0.5% reserve before lot quantisation.
+    // 最大值会在按手量化之前，先扣掉那笔已确认的 0.5% 预留。
     expect(Number(amount)).toBeLessThanOrEqual(37.706814);
     expect(reason(f, { ...at100, amount })).toBeNull();
     expect(composeOrder(f, { ...at100, amount }).submittable).toBeTrue();
@@ -620,15 +610,14 @@ describe('composeOrder', () => {
   });
 
   /**
-   * Hyperliquid measures its $10 floor against the order it receives, which is
-   * the lot-floored size priced back out — $10 of a whole-coin market at $3.33
-   * is three coins, or $9.99.
+   * Hyperliquid 的 $10 下限是对着它收到的那笔订单量的，也就是按手向下取整后再乘回价格的
+   * 结果 —— 在一个价格 $3.33 的整币市场上，$10 就是三个币，也就是 $9.99。
    */
   it('rejects an amount whose lot-floored notional falls under the $10 floor', () => {
     const f = facts({
       coin: 'SOME',
       market: priced('SOME', 3.33, 0),
-      // Enough capacity that the margin check, which is asked first, passes.
+      // 容量足够，好让先被问到的保证金检查能够通过。
       activeAssetData: capacity('SOME', 3.33, '100', '1000'),
     });
 
@@ -675,7 +664,7 @@ describe('composeOrder', () => {
 
     const { preview } = composeOrder(f, input({ leverage: 2, amount: '39.9' }));
 
-    // 11 lots at 3.33 is 36.63, not the 39.90 that was typed.
+    // 11 手乘 3.33 是 36.63，而不是输入的 39.90。
     expect(preview.sizeExact).toBe('11');
     expect(preview.marginExact).toBe('18.315');
     expect(preview.feeExact).toBe('0.0164835');
@@ -700,7 +689,7 @@ describe('composeOrder', () => {
     ).toBeTrue();
   });
 
-  // A rebate pays the account, so the sign has to survive all the way out.
+  // 返佣是付给账户的钱，所以正负号必须一路带到最外面。
   it('reports a negative maker total as a rebate', () => {
     const f = facts({
       market: priced('ETH', 2000, 4),
@@ -737,9 +726,8 @@ describe('composeOrder', () => {
   });
 
   /**
-   * The exchange has no flip order: a reverse is |position| + amount on one
-   * ticket. Reading a plain opposite-side order as one signs several times the
-   * risk the form previewed, so the page asks what was meant instead.
+   * 交易场所没有「翻转」这种订单：反手是在一张单子上下 |仓位| + 数量。把一笔普通的反方向
+   * 订单读成反手，会签下数倍于表单所预览的风险，所以页面改为直接问用户本意是什么。
    */
   it('refuses to read an opposite-side order as a reverse', () => {
     const f = facts({
@@ -800,15 +788,13 @@ describe('composeOrder', () => {
     expect(composed.increasesPosition).toBeTrue();
     expect(composed.operation).toBe('increase');
     expect(composed.availability).toBeNull();
-    // The exchange's own figure is shown beside the estimate.
+    // 交易场所自己给出的数字会显示在估算值旁边。
     expect(composed.showsCurrentLiquidationPrice).toBeTrue();
   });
 
   /**
-   * Portfolio Margin's account figures are unusable, so an order that adds risk
-   * cannot be sized or previewed. Closing reads the position instead, and a
-   * position the user cannot exit from here is the one outcome worth avoiding
-   * (ADR-0007).
+   * 组合保证金账户的账户级数字不可用，所以增加风险的订单既不能换算数量也不能预览。平仓
+   * 改为读取仓位本身，而「用户在这里退不出仓位」是唯一值得竭力避免的结局（ADR-0007）。
    */
   it('bars a portfolio-margin account from opening but not from closing', () => {
     const position = ethPosition({ isLong: true, sziExact: '0.75' });
@@ -832,9 +818,8 @@ describe('composeOrder', () => {
   });
 
   /**
-   * The deployer's share on a HIP-3 market is not reported anywhere, so the fee
-   * row must say so rather than quote the canonical rate — but it must not stop
-   * the order, which the fee does not change.
+   * HIP-3 市场上部署方分成的那一份在任何地方都没有上报，所以手续费那一行必须如实说明，
+   * 而不是照报标准永续的费率 —— 但它不能拦下订单，因为手续费并不改变订单本身。
    */
   it('declines to quote a fee on a HIP-3 market without blocking the order', () => {
     const canonical = facts({ market: priced('ETH', 100, 2) });
@@ -881,7 +866,7 @@ describe('composeOrder', () => {
     });
 
     expect(reason(f, input({ amount: '20' }))).toBe('no-execution-price');
-    // A limit order prices itself, so the missing mid is not its problem.
+    // 限价单自己定价，所以缺失的中间价不是它的问题。
     expect(
       reason(f, input({ orderType: 'limit', limitPrice: '100', amount: '20' }))
     ).toBeNull();
@@ -926,7 +911,7 @@ describe('composeOrder', () => {
   });
 });
 
-/** The two questions a review baseline exists to answer. */
+/** 审核基准存在的意义，就是回答这两个问题。 */
 describe('review baseline', () => {
   const baseline: PerpsReviewBaseline = {
     priceExact: '100',
@@ -965,7 +950,7 @@ describe('review baseline', () => {
     expect(intentUnchanged(baseline, formInput)).toBeTrue();
     expect(intentUnchanged(baseline, { ...formInput, amount: '21' })).toBeFalse();
     expect(intentUnchanged(baseline, { ...formInput, side: 'short' })).toBeFalse();
-    // A percentage button that lands on the same amount changed nothing.
+    // 落在同一个金额上的百分比按钮，什么都没有改变。
     expect(
       intentUnchanged(baseline, { ...formInput, activePercent: 50 })
     ).toBeTrue();
@@ -976,7 +961,7 @@ describe('review baseline', () => {
     expect(withinReviewedSlippage(baseline, marketAt('104'), formInput)).toBeFalse();
   });
 
-  /** A limit order prices itself, so it cannot drift out of its own window. */
+  /** 限价单自己定价，所以它不可能漂出自己的窗口。 */
   it('is inert for a limit order', () => {
     const limit = {
       ...formInput,

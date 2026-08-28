@@ -3,15 +3,14 @@ import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { coinColor, coinLogo } from '../perps.util';
 
 /**
- * A market's mark, resolved in one place so every Perps surface degrades the
- * same way: bundled asset, then Hyperliquid's icon CDN, then a letter chip.
+ * 市场的图标，在一处统一解析，好让所有 Perps 界面以同样的方式降级：先用内置资源，
+ * 再用 Hyperliquid 的图标 CDN，最后退回字母色块。
  *
- * The CDN reports a missing mark as the Hyperliquid app's HTML shell under a
- * `200`, so the fallback hangs off the image's `error` event; there is no
- * status code to branch on. HIP-3 markets and freshly listed coins land here.
+ * CDN 在图标缺失时会返回 `200`，内容却是 Hyperliquid 应用的 HTML 外壳，所以降级挂在
+ * 图片的 `error` 事件上；没有可供分支判断的状态码。HIP-3 市场和刚上架的币种就会走到这里。
  *
- * Size and letter size come from the host element, leaving each surface in
- * charge of its own layout: `perps-coin-logo { width: 36px; font-size: 15px; }`.
+ * 尺寸和字母大小取自宿主元素，把布局的话语权留给各个界面自己：
+ * `perps-coin-logo { width: 36px; font-size: 15px; }`。
  */
 @Component({
   selector: 'perps-coin-logo',
@@ -20,14 +19,13 @@ import { coinColor, coinLogo } from '../perps.util';
 })
 export class PerpsCoinLogoComponent implements OnChanges {
   /**
-   * Display symbol. Drives the letter chip and its colour, so a HIP-3 market
-   * falls back to `S` for SNDK rather than to the `x` of its `xyz:` prefix.
+   * 展示符号。它决定字母色块及其颜色，因此 HIP-3 市场会退回到 SNDK 的 `S`，
+   * 而不是它 `xyz:` 前缀里的 `x`。
    */
   @Input() symbol: string;
   /**
-   * Protocol coin, which is what the CDN keys marks by. Defaults to the symbol,
-   * which is the same string on the canonical DEX; HIP-3 callers must pass it,
-   * or their markets resolve to a bare symbol the CDN does not carry.
+   * 协议币种，CDN 就是按它给图标建索引的。默认取展示符号，在标准永续 DEX 上两者是同一个
+   * 字符串；HIP-3 的调用方必须显式传入，否则它们的市场会解析到一个 CDN 上并不存在的裸符号。
    */
   @Input() coin: string;
 
@@ -43,7 +41,7 @@ export class PerpsCoinLogoComponent implements OnChanges {
     }
   }
 
-  /** The CDN has no mark for this coin; show the letter chip instead. */
+  /** CDN 上没有这个币种的图标；改为显示字母色块。 */
   onLoadError(): void {
     this.src = '';
   }

@@ -32,7 +32,7 @@ import { PERPS_FORMAT_PIPES } from './perps-format.pipe';
     ...PERPS_FORMAT_PIPES,
   ],
   imports: [CommonModule, FormsModule, ShareModule, PerpsRoutingModule],
-  // The tab is embedded by the home page, the rest are routed.
+  // 这个 tab 由首页内嵌，其余的走路由。
   exports: [PerpsTabComponent],
 })
 export class PerpsModule {}

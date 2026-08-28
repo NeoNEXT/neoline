@@ -14,9 +14,8 @@ const at = (t: number, close = '100'): PerpsCandle =>
   ethCandle({ t, T: t + 59_999, c: close });
 
 /**
- * The exchange as this module uses it, over the answers that change nothing: a
- * range nobody answers and channels that never speak. A test then states only
- * the calls its assertions rest on.
+ * 本模块视角下的交易场所，预置了那些改变不了什么的答复：一个没人作答的时间范围，以及
+ * 一批永不出声的频道。这样每个测试只需写出它的断言真正依赖的那几次调用。
  */
 const source = (overrides: any = {}) =>
   ({
@@ -32,7 +31,7 @@ const build = (overrides: any = {}) => {
   return new PerpsCandleDatasetService(fake, fake);
 };
 
-/** Watch a dataset and keep every state it publishes. */
+/** 观察一个数据集，并保留它发布过的每一个状态。 */
 function watching(
   service: PerpsCandleDatasetService,
   coin = 'ETH',
@@ -76,8 +75,8 @@ describe('PerpsCandleDatasetService live frames', () => {
 
     frames.next(at(121_000));
 
-    // Dropping the oldest bar would move the dataset's starting point, which
-    // is how the chart tells one dataset from another.
+    // 丢弃最老的柱子会移动数据集的起点，
+    // 而图表正是靠起点来区分不同数据集的。
     expect(view.times()).toEqual([1000, 61_000, 121_000]);
     view.stop();
   });
@@ -94,7 +93,7 @@ describe('PerpsCandleDatasetService live frames', () => {
     frames.next(at(1000));
 
     expect(view.times()).toEqual([61_000]);
-    // A late arrival for a settled bar is not worth publishing either.
+    // 一根已定型柱子的迟到消息同样不值得发布。
     expect(view.seen.length).toBe(before);
     view.stop();
   });
@@ -112,8 +111,8 @@ describe('PerpsCandleDatasetService live frames', () => {
     frames.next(at(61_000, '102'));
     frames.next(at(121_000, '103'));
 
-    // Dropping whole frames here would lose a bar's closing print when it
-    // rolls over mid-window, so the dataset stays exact and the view throttles.
+    // 在这里整帧丢弃，会在柱子于窗口中途滚动时丢掉它的收盘价，
+    // 所以数据集保持精确，节流交给视图去做。
     expect(view.seen.length).toBe(before + 3);
     expect(view.times()).toEqual([1000, 61_000, 121_000]);
     expect(view.last().candles[1].c).toBe('102');
@@ -132,8 +131,8 @@ describe('PerpsCandleDatasetService snapshots', () => {
     });
     const view = watching(service);
 
-    // Nothing was remembered, and the snapshot is still in flight — the bars
-    // that close in between are ones nothing else would ever fill.
+    // 什么都没记住，而快照还在途中 —— 其间收盘的那些柱子，
+    // 是别的东西永远补不上的。
     expect(subscribe).toHaveBeenCalledWith({
       type: 'candle',
       coin: 'ETH',
@@ -154,7 +153,7 @@ describe('PerpsCandleDatasetService snapshots', () => {
     frames.next(at(61_000, '222'));
     snapshot.next([at(1000), at(61_000, '111')]);
 
-    // The REST answer is older than the frame even though it landed later.
+    // REST 的答复虽然后到，内容却比那一帧更旧。
     expect(view.times()).toEqual([1000, 61_000]);
     expect(view.last().candles[1].c).toBe('222');
     view.stop();
@@ -192,8 +191,8 @@ describe('PerpsCandleDatasetService snapshots', () => {
 
 describe('PerpsCandleDatasetService remembered datasets', () => {
   /**
-   * A feed whose answers can change between visits, so the second visit is
-   * genuinely reading what the first one left behind rather than refetching.
+   * 一个两次访问之间答复会变化的数据源，这样第二次访问才是真的在读第一次留下的东西，
+   * 而不是重新取了一遍。
    */
   function revisitable(first: any) {
     const feed = {
@@ -215,7 +214,7 @@ describe('PerpsCandleDatasetService remembered datasets', () => {
     watching(service).stop();
     tick(300);
 
-    // Second visit: the snapshot is never answered, and bars are on screen.
+    // 第二次访问：快照始终无人作答，而屏幕上已经有柱子了。
     feed.getCandleRange = () => new Subject<PerpsCandle[]>();
     const second = watching(service);
 
@@ -233,8 +232,8 @@ describe('PerpsCandleDatasetService remembered datasets', () => {
     watching(service).stop();
     tick(300);
 
-    // Four 15m bars later, what was remembered is a visible gap behind the
-    // live edge rather than a chart.
+    // 四根 15 分钟柱子之后，记住的内容在实时边缘之后留下的是一段可见的缺口，
+    // 而不是一张图。
     (Date.now as jasmine.Spy).and.returnValue(stale + 4 * 15 * 60_000);
     feed.getCandleRange = () => new Subject<PerpsCandle[]>();
     const second = watching(service);
@@ -256,8 +255,7 @@ describe('PerpsCandleDatasetService remembered datasets', () => {
     feed.getCandleRange = () => new Subject<PerpsCandle[]>();
     const other = watching(service, 'ETH', '5m');
 
-    // Bars from another interval under this interval's label would be a chart
-    // of something the user did not ask for.
+    // 在这个周期的标签下画另一个周期的柱子，等于画了一张用户没要过的东西的图。
     expect(other.last().availability).toBe('loading');
     expect(other.last().candles).toEqual([]);
     other.stop();
@@ -278,7 +276,7 @@ describe('PerpsCandleDatasetService remembered datasets', () => {
     const oldest = watching(service, 'COIN0', '1m');
     const newest = watching(service, 'COIN8', '1m');
 
-    // The market visited longest ago is the one dropped.
+    // 被淘汰的是最久没访问过的那个市场。
     expect(oldest.last().candles).toEqual([]);
     expect(newest.times()).toEqual([now - 60_000]);
     oldest.stop();
@@ -308,8 +306,8 @@ describe('PerpsCandleDatasetService remembered datasets', () => {
 
     const second = watching(service, 'ETH', '1m');
 
-    // Paging back grows a dataset past what one snapshot returns. What is
-    // remembered is the whole of it, not the last window.
+    // 向前翻页会把数据集撑得比一次快照返回的还大。记住的是它的全部，
+    // 而不是最后那一个窗口。
     expect(second.last().candles.length).toBe(1001);
     second.stop();
     tick(300);
@@ -326,7 +324,7 @@ describe('PerpsCandleDatasetService remembered datasets', () => {
     feed.getCandleRange = () => throwError(() => new Error('offline'));
     const second = watching(service);
 
-    // An empty chart is not the more honest answer for a top-up that failed.
+    // 对于一次失败的增量补充，空白图表并不是更诚实的答案。
     expect(second.times()).toEqual([now - 60_000]);
     expect(second.last().availability).toBe('live');
     second.stop();
@@ -341,7 +339,7 @@ describe('PerpsCandleDatasetService request rationing', () => {
       .and.returnValue(of([at(1000)]));
     const service = build({ getCandleRange });
 
-    // Four taps in well under the window, as stepping the interval row is.
+    // 在远小于窗口的时间内点四次，正如在周期切换栏上依次点过去那样。
     const a = watching(service, 'ETH', '1m');
     a.stop();
     const b = watching(service, 'ETH', '5m');
@@ -350,12 +348,12 @@ describe('PerpsCandleDatasetService request rationing', () => {
     c.stop();
     const d = watching(service, 'ETH', '1h');
 
-    // The first tap fetched at once so a single one feels instant.
+    // 第一次点击立刻发起了请求，好让单独点一下感觉是即时的。
     expect(getCandleRange).toHaveBeenCalledTimes(1);
 
     tick(300);
 
-    // The rest of the burst collapsed into the tap that ended it.
+    // 这一串点击中余下的部分坍缩到了结束它的那一次上。
     expect(getCandleRange).toHaveBeenCalledTimes(2);
     expect(getCandleRange.calls.mostRecent().args[1]).toBe('1h');
     d.stop();
@@ -377,7 +375,7 @@ describe('PerpsCandleDatasetService request rationing', () => {
 
     tick(300);
 
-    // Nobody is watching the queued one by the time the window opens.
+    // 窗口开启时，已经没人在看那个排队中的数据集了。
     expect(getCandleRange).toHaveBeenCalledTimes(1);
   }));
 });
@@ -392,7 +390,7 @@ describe('PerpsCandleDatasetService history paging', () => {
 
     service.loadEarlier('ETH', '15m');
 
-    // The window ends at the oldest bar already on screen.
+    // 窗口结束于屏幕上已有的最老那根柱子。
     expect(getCandleRange.calls.mostRecent().args).toEqual([
       'ETH',
       '15m',
@@ -413,7 +411,7 @@ describe('PerpsCandleDatasetService history paging', () => {
     service.loadEarlier('ETH', '15m');
     service.loadEarlier('ETH', '15m');
 
-    // The second call must not have reached the exchange at all.
+    // 第二次调用绝不能走到交易场所。
     expect(getCandleRange).toHaveBeenCalledTimes(2);
     expect(view.times()).toEqual([61_000]);
     view.stop();
@@ -470,8 +468,8 @@ describe('PerpsCandleDatasetService feed recovery', () => {
     state.next('stale');
     state.next('live');
 
-    // A reconnected socket replays the subscription but streams only the bar
-    // open right now, so the bars in between arrive from a fresh snapshot.
+    // 重连后的套接字会重放订阅，但只推送此刻正开着的那根柱子，
+    // 所以中间那些柱子要靠一次新的快照才能到达。
     expect(getCandleRange.calls.mostRecent().args).toEqual([
       'ETH',
       '15m',
@@ -520,7 +518,7 @@ describe('PerpsCandleDatasetService feed recovery', () => {
     state.next('stale');
     state.next('live');
 
-    // The gap fill cannot start while the first answer is still outstanding.
+    // 第一次答复还悬着的时候，补缺不能开始。
     expect(getCandleRange).toHaveBeenCalledTimes(1);
 
     snapshot.next([at(1000), at(61_000)]);
@@ -546,7 +544,7 @@ describe('PerpsCandleDatasetService feed recovery', () => {
       1001 * bar,
       6001 * bar,
     ]);
-    // Keeping the bar at t=0 would pretend the unavailable middle is intact.
+    // 保留 t=0 那根柱子，等于假装取不到的中间段是完好的。
     expect(view.last().candles).toEqual(recent);
     view.stop();
   });
@@ -561,7 +559,7 @@ describe('PerpsCandleDatasetService feed recovery', () => {
     state.next('live');
 
     expect(view.last().availability).toBe('gapped');
-    // Price frames may be live again while the closed bars stay incomplete.
+    // 价格帧可能已经恢复实时，而收盘的柱子仍然残缺。
     expect(view.times()).toEqual([1000]);
     view.stop();
   });
@@ -585,7 +583,7 @@ describe('PerpsCandleDatasetService feed recovery', () => {
     state.next('live');
     frames.next(at(61_000));
 
-    // A live trailing bar says nothing about the closed bars still missing.
+    // 一根实时的尾部柱子，说明不了仍然缺失的那些收盘柱子。
     expect(view.last().availability).toBe('gapped');
     view.stop();
   });
@@ -601,8 +599,8 @@ describe('PerpsCandleDatasetService feed recovery', () => {
     const second = watching(service, 'ETH', '5m');
     tick(300);
 
-    // The abandoned dataset's answer arrives after the user moved on. No
-    // monotonic token rejects it — it lands in an entry nobody is watching.
+    // 被弃用数据集的答复在用户走开之后才到。没有任何单调递增的令牌去拒绝它 ——
+    // 它落进了一个没人在看的条目里。
     slow.next([at(1000), at(61_000)]);
 
     expect(second.times()).toEqual([500_000]);
@@ -622,8 +620,8 @@ describe('mergeCandles', () => {
   });
 
   it('believes the snapshot where both carry the same bar', () => {
-    // A bar's closing print is not the last value that streamed while it was
-    // still open, so the later reading of it wins.
+    // 一根柱子的收盘价，不等于它还开着时流式推送的最后一个值，
+    // 所以对它更晚的那次读数获胜。
     const merged = mergeCandles([at(61_000, '100')], [at(61_000, '111')]);
 
     expect(merged.length).toBe(1);
@@ -633,8 +631,8 @@ describe('mergeCandles', () => {
   it('keeps history the snapshot no longer reaches back to', () => {
     const paged = [at(1000), at(61_000)];
 
-    // The first bar is the dataset's identity to the chart: losing it redraws
-    // the series and throws away the zoom the user chose.
+    // 对图表而言，第一根柱子就是数据集的身份：丢了它就会重绘整条序列，
+    // 并把用户选定的缩放丢掉。
     expect(mergeCandles(paged, [at(121_000)])[0].t).toBe(1000);
   });
 

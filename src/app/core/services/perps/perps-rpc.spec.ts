@@ -11,7 +11,7 @@ import {
 const PRIVATE_KEY =
   '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
 
-/** The shape ethers gives a non-2xx response: one code, whatever the status. */
+/** ethers 给非 2xx 响应的形状：无论状态码是什么，都是同一个 code。 */
 function serverError(status: string) {
   return {
     code: 'SERVER_ERROR',
@@ -21,8 +21,8 @@ function serverError(status: string) {
 }
 
 describe('perps RPC retry policy', () => {
-  // Money is at the other end of this rule, so what may be repeated and what
-  // may not is stated per case rather than left to a single code check.
+  // 这条规则的另一端是钱，所以什么可以重发、什么不可以，都逐个用例写清楚，
+  // 而不是丢给一次统一的 code 判断。
   it('does not retry a 500 carrying an answer', () => {
     expect(isRetriable(serverError('500 Internal Server Error'))).toBeFalse();
   });
@@ -38,16 +38,15 @@ describe('perps RPC retry policy', () => {
     expect(isRetriable(serverError('429 Too Many Requests'))).toBeFalse();
   });
 
-  // Status zero is ethers saying nothing answered, which is not a refusal.
+  // 状态码为 0 是 ethers 在说「没有任何回应」，这不是拒绝。
   it('retries when no server answered at all', () => {
     expect(isRetriable(serverError('0 '))).toBeTrue();
     expect(isRetriable({ code: 'TIMEOUT', message: 'timeout' })).toBeTrue();
     expect(isRetriable(new TypeError('Failed to fetch'))).toBeTrue();
   });
 
-  // The fee quote does not go out through ethers: it is an `HttpClient` call
-  // bounded by rxjs `timeout`, and neither shape carries a code or a status the
-  // checks above would recognise.
+  // 手续费报价不走 ethers：它是一次由 rxjs `timeout` 限定的 `HttpClient` 调用，
+  // 这两种形状都不带上面的检查能识别的 code 或 status。
   it('retries a request that outlived its own deadline', () => {
     expect(isRetriable(new TimeoutError())).toBeTrue();
   });
@@ -126,7 +125,7 @@ describe('PerpsRpcService broadcast', () => {
     );
   });
 
-  // The transaction it already knows about is this one: the bytes are identical.
+  // 它已经知道的那笔交易就是这一笔：字节完全相同。
   it('accepts an endpoint saying it already has this transaction', async () => {
     spyOn(rpc, 'withEndpoint').and.returnValue(
       Promise.reject(new PerpsChainError('rejected', 'already known'))

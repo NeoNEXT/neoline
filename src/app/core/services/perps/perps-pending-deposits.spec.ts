@@ -68,7 +68,7 @@ describe('PerpsPendingDepositsService', () => {
     const item = deposit();
     expect(service.isCredited(item, '10')).toBeFalse();
     expect(service.isCredited(item, '60')).toBeTrue();
-    // An unknown balance proves nothing either way.
+    // 余额未知，两个方向都证明不了。
     expect(service.isCredited(item, null)).toBeFalse();
   });
 

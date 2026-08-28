@@ -12,7 +12,6 @@ import { asyncScheduler, Unsubscribable } from 'rxjs';
 import { tap, throttleTime } from 'rxjs/operators';
 
 import { ChromeService } from '@/app/core';
-import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
 import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
 import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import {
@@ -42,31 +41,27 @@ const PERPS_BASICS_URL =
   'https://hyperliquid.gitbook.io/hyperliquid-docs/trading/perpetual-futures';
 
 /**
- * How often candle updates are allowed to redraw the chart.
+ * K 线更新允许以多高的频率重绘图表。
  *
- * Every state is still absorbed the moment it lands — this rations only the
- * check that redraws the chart. An active market prints
- * several trades a second, and under OnPush each one would otherwise have the
- * page checked and the canvas repainted to move one bar by a pixel.
+ * 每一个状态仍会在到达的当下被吸收 —— 这里限的只是那次触发图表重绘的检查。活跃的市场每秒
+ * 会印出好几笔成交，在 OnPush 下，若不加限制，每一笔都会让整个页面被检查一遍、画布被重绘
+ * 一遍，只为把一根柱子挪动一个像素。
  */
 const CANDLE_REFRESH_MS = 1000;
 
 @Component({
   templateUrl: 'perps-market.component.html',
   styleUrls: ['perps-market.component.scss'],
-  // Everything on this page arrives from a subscription, and the funding
-  // countdown alone would otherwise have the whole popup re-checked once a
-  // second. Every callback below marks the view itself; one that forgets to is
-  // a view that silently stops updating.
+  // 本页面上的一切都来自订阅，而光是资金费倒计时，就会让整个弹窗每秒被重新检查一次。
+  // 下面每个回调都会自己标记视图；漏标的那个，就是一个悄无声息停止更新的视图。
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PerpsMarketComponent implements OnInit, OnDestroy {
   coin: string;
   market: PerpsMarket;
   /**
-   * How much of this market is known. `missing` is the exchange answering that
-   * it does not carry this coin, which is a settled fact and not worth
-   * retrying; `error` is a request that failed, which is.
+   * 关于这个市场，我们知道多少。`missing` 是交易场所答复它不承载这个币种，那是一个已有
+   * 定论的事实，不值得重试；`error` 是请求失败，那才值得。
    */
   marketStatus: 'loading' | 'ready' | 'missing' | 'error' = 'loading';
   connectionState: PerpsConnectionState = 'connecting';
@@ -74,39 +69,36 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   candles: PerpsCandle[] = [];
   chartLoading = true;
   chartLoadError = false;
-  /** The live stream recovered, but its closed-candle gap could not be filled. */
+  /** 实时流恢复了，但它断流期间收盘的 K 线缺口没能补上。 */
   chartRecoveryError = false;
   interval: PerpsCandleInterval = '15m';
-  /** Intraday granularities, always on screen. */
+  /** 日内粒度，始终显示在屏幕上。 */
   readonly quickIntervals: PerpsCandleInterval[] = ['1m', '5m', '15m', '1h'];
-  /** The longer ones, behind the menu, where they are picked far less often. */
+  /** 较长的那些放在菜单里，因为它们被选中的次数少得多。 */
   readonly longIntervals: PerpsCandleInterval[] = ['12h', '1d', '1w', '1M'];
   showIntervalMenu = false;
 
-  /** Whether the market switcher is open under the header. */
+  /** 市场切换器是否在标题栏下方展开。 */
   showCoinMenu = false;
   /**
-   * What the switcher is filtered by.
+   * 切换器当前按什么筛选。
    *
-   * Held here rather than in the list so it can be cleared when the menu
-   * closes: a keyword left over from the last time it was opened would hide
-   * every market but one, and the user would be reading that as the whole
-   * exchange.
+   * 保存在这里而不是列表里，是为了能在菜单关闭时清掉它：上次打开时留下的关键词会把除一个
+   * 之外的所有市场都藏起来，而用户会把那一个读成整个交易场所。
    */
   coinKeyword = '';
 
-  /** Time to the next hourly funding settlement, as HH:MM:SS. */
+  /** 距离下一次整点资金费结算的时间，格式为 HH:MM:SS。 */
   fundingCountdown = '';
-  /** Placeholder rows standing in for the stats card before the first frame. */
+  /** 首帧到达之前，占位统计卡片的骨架行。 */
   readonly statsSkeletonRows = [0, 1, 2, 3];
 
   /**
-   * The switcher's search field, focused the moment it exists.
+   * 切换器的搜索框，一存在就抢焦点。
    *
-   * A setter rather than `ngAfterViewInit`: the field is created and destroyed
-   * with the menu, so there is no one moment after init to focus it. Opening
-   * the switcher is already the decision to look for another market, and this
-   * is what lets that continue at the keyboard instead of at the mouse.
+   * 用 setter 而不是 `ngAfterViewInit`：这个输入框随菜单一起创建和销毁，所以并不存在
+   * 「init 之后的某一刻」可以去聚焦它。打开切换器本身已经是「要找另一个市场」的决定，
+   * 而这样做能让这件事继续在键盘上完成，而不是回到鼠标上。
    */
   @ViewChild('coinSearch') set coinSearch(field: ElementRef<HTMLInputElement>) {
     field?.nativeElement.focus();
@@ -116,7 +108,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   private marketsSub: Unsubscribable;
   private connectionSub: Unsubscribable;
   private datasetSub: Unsubscribable;
-  /** What the dataset last said, so a change of kind is never held back. */
+  /** 数据集上一次说的是什么，好让「种类的变化」永远不被压住。 */
   private datasetAvailability: PerpsCandleAvailability = 'loading';
   private countdownTimer: any;
 
@@ -124,7 +116,6 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private chrome: ChromeService,
-    private hyperliquid: HyperliquidService,
     private candleDatasets: PerpsCandleDatasetService,
     private cdr: ChangeDetectorRef,
     private channel: PerpsDataChannel,
@@ -135,8 +126,8 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     this.connectionSub = this.channel
       .watchConnectionState()
       .subscribe((state) => {
-        // Recovery is the dataset's own business now; the page reads the
-        // connection only to say whether what is on screen is still live.
+        // 恢复现在是数据集自己的事；页面读取连接状态，只是为了说明屏幕上的东西
+        // 是否仍然实时。
         this.connectionState = state;
         this.cdr.markForCheck();
       });
@@ -148,24 +139,20 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Point the page at a market.
+   * 把页面指向某个市场。
    *
-   * Driven by the parameter stream rather than by the route snapshot: Angular
-   * reuses this component when only the parameter changes, and a snapshot read
-   * once at init would leave the previous market's price, statistics and
-   * candles on screen under the new market's URL.
+   * 由参数流驱动，而不是路由快照：只有参数变化时 Angular 会复用这个组件，而在 init 时读一次
+   * 快照，会让上一个市场的价格、统计和 K 线留在新市场的 URL 底下。
    */
   private openMarket(coin: string) {
-    // Invalidate before changing the series key. Otherwise Angular can render
-    // the previous coin's bars under the new coin while storage is answering
-    // which interval to load.
+    // 在改动序列键之前先作废。否则在存储回答「该加载哪个周期」的这段时间里，
+    // Angular 可能会把上一个币种的柱子渲染在新币种底下。
     this.invalidateCandleDataset();
     this.coin = coin;
     this.market = undefined;
     this.marketStatus = 'loading';
-    // Arriving at another market is the switcher's job done, however the
-    // navigation was started — the menu belongs to the market it was opened
-    // over, and left up it would be covering the answer it just gave.
+    // 无论这次导航是怎么发起的，到达另一个市场就说明切换器的活已经干完了 —— 这个菜单属于
+    // 它被打开时所覆盖的那个市场，留着不关，它就会挡住自己刚给出的答案。
     this.closeCoinMenu();
     this.loadMarket();
     this.loadChartInterval();
@@ -181,57 +168,52 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   }
 
   get priceDecimals(): number {
-    // The axis follows the market's own tick, not whatever precision the
-    // current price happens to be carrying: a price that lands on a round
-    // number would otherwise drag the whole axis down with it.
+    // 坐标轴跟随市场自己的最小变动价位，而不是当前价格恰好带着的精度：
+    // 否则一个正好落在整数上的价格，会把整条坐标轴一起拽下去。
     return chartPriceDecimals(this.market?.szDecimals);
   }
 
   /**
-   * What identifies the candles on screen. Changing either half means the next
-   * array is a different dataset rather than a newer view of this one.
+   * 屏幕上这批 K 线的身份标识。任何一半发生变化，都意味着下一个数组是另一个数据集，
+   * 而不是同一个数据集的更新视图。
    */
   get chartSeriesKey(): string {
     return `${this.coin}:${this.interval}`;
   }
 
   /**
-   * The name to show. The route carries the protocol coin, which on a HIP-3
-   * market is prefixed with its DEX; that prefix belongs in the badge beside
-   * the name, not inside it.
+   * 要显示的名称。路由里带的是协议币种，在 HIP-3 市场上它带有 DEX 前缀；那个前缀属于名称
+   * 旁边的徽标，而不属于名称本身。
    */
   get symbol(): string {
     return this.market?.symbol ?? this.coin;
   }
 
-  /** Whether the header price is the book mid rather than the mark fallback. */
+  /** 标题栏的价格是盘口中间价，还是退回到标记价格的兜底值。 */
   get usingMid(): boolean {
     return !!this.market?.midPxExact;
   }
 
   /**
-   * Whether what is on screen is still live.
+   * 屏幕上的东西是否仍然实时。
    *
-   * Read from the connection itself rather than from how long ago a frame
-   * arrived: a quiet market still produces periodic frames, but silence alone
-   * never condemns a healthy socket.
+   * 从连接本身读取，而不是从「上一帧是多久以前到的」推断：冷清的市场照样会产生周期性的帧，
+   * 而仅凭沉默永远不能给一条健康的套接字定罪。
    */
   get isStale(): boolean {
     return this.connectionState === 'stale';
   }
 
-  /** Nothing to show yet, as opposed to shown and genuinely absent. */
+  /** 「还没东西可显示」，区别于「已经显示过，而它确实不存在」。 */
   get isLoading(): boolean {
     return this.marketStatus === 'loading';
   }
 
   /**
-   * Whether Long and Short may lead to the order form.
+   * 做多和做空是否可以通往下单表单。
    *
-   * A feed that is no longer live and a market with no two-sided book are
-   * different faults with the same consequence: there is no price the order
-   * form could honestly quote from here, so the entry closes rather than
-   * handing the problem downstream.
+   * 「数据源不再实时」和「市场没有双边盘口」是两种不同的故障，后果却相同：从这里出发，
+   * 下单表单没有任何可以诚实报出的价格，所以这个入口直接关闭，而不是把问题甩给下游。
    */
   get canOrder(): boolean {
     return (
@@ -242,20 +224,18 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Why the trade entry is closed, as a translation key, or `''` when open.
+   * 交易入口为什么关闭，以翻译 key 的形式给出；开放时为 `''`。
    *
-   * Only speaks for a market that loaded. Before that there is no entry on
-   * screen to explain: the page is showing a skeleton or saying why it has no
-   * market at all, and a second sentence about the buttons would be answering
-   * a question the user cannot yet have asked.
+   * 它只为已经加载成功的市场发声。在那之前，屏幕上根本没有入口需要解释：页面要么在显示骨架，
+   * 要么在说明为什么它压根没有市场，此时再来一句关于按钮的话，是在回答一个用户还提不出来的
+   * 问题。
    */
   get orderBlockedKey(): string {
     if (this.canOrder || this.marketStatus !== 'ready') {
       return '';
     }
-    // Not the banner's wording: the banner says what happened to the data,
-    // this says what it costs the user. Repeating one sentence twice on one
-    // screen reads as a rendering fault rather than as two facts.
+    // 不用横幅的措辞：横幅说的是数据发生了什么，这里说的是它让用户付出什么代价。
+    // 同一句话在同一屏上重复两遍，读起来像是渲染出了故障，而不像两个事实。
     if (this.connectionState !== 'live') {
       return this.isStale ? 'perpsEntryStale' : 'perpsEntryConnecting';
     }
@@ -263,70 +243,62 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * The live mid from this market's own feed, falling back to the mark, which
-   * the header then labels as such.
+   * 来自这个市场自己数据源的实时中间价；没有时退回标记价格，并由标题栏如实标注。
    *
-   * The chart's trailing candle is deliberately not used: a candle only moves
-   * when a trade prints, so a quiet market freezes the header while the book
-   * keeps moving, and changing interval would change what the header quotes.
-   * Mark and oracle also keep their own rows in the stats card, where their
-   * jobs — margin and liquidation, funding — are named.
+   * 刻意不使用图表的最后一根 K 线：K 线只有在有成交印出时才会动，所以冷清的市场会把标题栏
+   * 冻住，而盘口仍在移动；而且切换周期还会改变标题栏所报的东西。标记价格和预言机价格在统计
+   * 卡片里各有自己的一行，那里会点明它们的用途 —— 保证金与强平、资金费。
    */
   get displayPrice(): string | null {
     return this.market?.midPxExact ?? this.market?.markPxExact ?? null;
   }
 
-  /** Quoted off the same price shown beside it, against yesterday's close. */
+  /** 以旁边显示的同一个价格为基准，对昨日收盘价报出。 */
   get displayChangePercent(): string | null {
     return this.market?.changePercentExact ?? null;
   }
 
   /**
-   * Whether a 24h change can be quoted at all.
+   * 究竟能不能报出 24 小时涨跌。
    *
-   * A market whose header price fell back to the mark has no change to show:
-   * `prevDayPx` is a mid, and comparing it to a mark would invent a number.
-   * That is market statistics unavailable, which reads as "no data" — never as
-   * `0%`.
+   * 标题价格退回到标记价格的市场没有涨跌可显示：`prevDayPx` 是中间价，拿它和标记价格比较
+   * 等于凭空造一个数字。那属于市场统计不可用，读作「无数据」—— 绝不是 `0%`。
    */
   get hasChange(): boolean {
     return this.displayChangePercent !== null;
   }
 
-  /** Funding is quoted per hour; show it the way Hyperliquid's own UI does. */
+  /** 资金费按小时报价；按 Hyperliquid 自家界面的方式显示。 */
   get fundingPercent(): string {
     return formatFundingPercent(this.market?.fundingExact);
   }
 
   /**
-   * How an interval is written on screen.
+   * 周期在屏幕上怎么写。
    *
-   * Never the protocol value: `1d` and `1w` are shown capitalised, and the
-   * monthly `1M` sits one capital away from the minute `1m`. Comparisons,
-   * storage and requests all stay on the protocol value.
+   * 绝不用协议值：`1d` 和 `1w` 显示为大写，而月线 `1M` 与分钟线 `1m` 只差一个大小写。
+   * 比较、存储和请求一律仍用协议值。
    */
   intervalLabel(interval: PerpsCandleInterval): string {
     return PERPS_CANDLE_INTERVAL_LABELS[interval];
   }
 
   /**
-   * What the menu button reads.
+   * 菜单按钮上写什么。
    *
-   * It names the current interval when the selection lives inside the menu,
-   * and otherwise says there is more in here — showing a fixed `1D` while the
-   * user is looking at 15-minute candles states the wrong thing about what is
-   * on screen.
+   * 当选中项就在菜单里时，它显示当前周期；否则它表示「这里还有更多」—— 用户正看着 15 分钟
+   * K 线，按钮却固定写着 `1D`，那是在对屏幕上的东西作出错误陈述。
    */
   get intervalMenuLabel(): string {
     return this.intervalInMenu ? this.intervalLabel(this.interval) : '';
   }
 
-  /** Whether the menu holds the current selection, and so reads as chosen. */
+  /** 菜单里是否含有当前选中项，从而应当显示为已选中。 */
   get intervalInMenu(): boolean {
     return this.longIntervals.includes(this.interval);
   }
 
-  /** Funding settles on the hour; count down to the next boundary. */
+  /** 资金费在整点结算；倒计时到下一个整点。 */
   private tickCountdown() {
     const hourMs = 3600 * 1000;
     const remaining = hourMs - (Date.now() % hourMs);
@@ -352,7 +324,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     });
   }
 
-  //#region coin switcher
+  //#region 币种切换器
 
   toggleCoinMenu() {
     if (this.showCoinMenu) {
@@ -365,15 +337,15 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
 
   closeCoinMenu() {
     this.showCoinMenu = false;
-    // The keyword goes with the menu: the next market the user looks for is a
-    // new search, not a continuation of the one they abandoned.
+    // 关键词随菜单一起走：用户下一次要找的市场是一次新的搜索，
+    // 而不是上一次半途放弃的那次的延续。
     this.coinKeyword = '';
     this.cdr.markForCheck();
   }
 
   //#endregion
 
-  //#region candles
+  //#region K 线
 
   private watchDataset() {
     this.unwatchDataset();
@@ -383,14 +355,11 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     this.datasetSub = this.candleDatasets
       .watchDataset(this.coin, this.interval)
       .pipe(
-        // Absorbed before the throttle, never inside it: dropping whole states
-        // would lose a bar's closing print when it rolls over mid-window. Only
-        // the redraw is rationed, and what the page holds stays exact.
+        // 在节流之前吸收，绝不放进节流里面：整帧丢弃会在柱子于窗口中途滚动时丢掉它的
+        // 收盘价。这里限的只是重绘，页面持有的数据始终精确。
         tap((state: PerpsCandleDatasetState) => this.absorbDataset(state)),
-        // `leading` keeps the first state after subscribing instant, so a
-        // freshly opened chart never waits a second to appear; `trailing`
-        // guarantees the last frame of a burst still lands rather than sitting
-        // invisible until the next trade prints.
+        // `leading` 让订阅后的第一个状态立刻生效，这样刚打开的图表绝不会等上一秒才出现；
+        // `trailing` 保证一串更新里的最后一帧仍会落地，而不是一直隐形到下一笔成交印出。
         throttleTime(CANDLE_REFRESH_MS, asyncScheduler, {
           leading: true,
           trailing: true,
@@ -400,11 +369,10 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Take one dataset state, without redrawing for it.
+   * 接收一个数据集状态，但不为它重绘。
    *
-   * A change of kind is marked at once rather than rationed: a chart that has
-   * just failed, or has just lost the bars that closed while the feed was
-   * down, is saying something that must not wait for the next throttle window.
+   * 种类的变化会立即标记而不受节流限制：一张刚刚失败的图表，或者刚刚丢掉了断流期间收盘柱子
+   * 的图表，说的是不能等到下一个节流窗口的话。
    */
   private absorbDataset(state: PerpsCandleDatasetState) {
     const changedKind = this.datasetAvailability !== state.availability;
@@ -424,10 +392,9 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Another page of bars older than what is already on screen.
+   * 再取一页比屏幕上已有内容更早的柱子。
    *
-   * The chart emits this when the user scrolls to the left edge; whether there
-   * is anything further back to ask for is the dataset's own bookkeeping.
+   * 用户滚动到左边缘时图表会发出它；再往前是否还有东西可取，是数据集自己的账本。
    */
   loadEarlierCandles() {
     if (this.coin) {
@@ -445,18 +412,16 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * The interval the user last chose, which is a viewing habit rather than a
-   * property of any one market — so it is remembered once, not per market.
+   * 用户上次选择的周期，它是一种观看习惯而非某个市场的属性 —— 所以只记住一次，
+   * 而不是每个市场各记一份。
    */
   private loadChartInterval() {
     this.chrome
       .getStorage(STORAGE_NAME.perpsChartInterval)
       .subscribe((saved) => {
-        // Storage answers with whatever an older build wrote. An interval this
-        // build no longer ships must not reach the dataset, which sizes its
-        // request window from the interval and throws — synchronously, before
-        // the subscription exists — on one it cannot size, leaving the chart
-        // spinning with no error path to land in.
+        // 存储返回的是旧版本写进去的任意值。本版本不再提供的周期绝不能到达数据集：数据集
+        // 会按周期换算请求窗口，遇到换算不了的周期会抛出异常 —— 而且是同步抛出，在订阅
+        // 建立之前 —— 于是图表会一直转圈，连个可以落地的错误路径都没有。
         if (isCandleInterval(saved)) {
           this.interval = saved;
         }

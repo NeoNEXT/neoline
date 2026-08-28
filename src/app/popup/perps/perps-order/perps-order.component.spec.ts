@@ -5,11 +5,10 @@ import { PerpsOrderFacts } from './perps-order-composition';
 import { ethMarket } from '../perps.test-fixture';
 
 /**
- * The page over a composition it did not have to build.
+ * 页面，架在一份它不必自己搭建的组合之上。
  *
- * What is left here is what the page itself decides: how a reading is worded,
- * and what it does with the answer the exchange gives back. The rules the
- * readings follow are stated in perps-order-composition.spec.
+ * 留在这里的是页面自己决定的事：读数如何措辞，以及拿交易场所给回来的答案做什么。
+ * 这些读数所遵循的规则写在 perps-order-composition.spec 里。
  */
 function component(builderAddress = ''): PerpsOrderComponent {
   return new PerpsOrderComponent(
@@ -61,8 +60,8 @@ const facts = (overrides: Partial<PerpsOrderFacts> = {}): PerpsOrderFacts => ({
 
 describe('PerpsOrderComponent summary rows', () => {
   /**
-   * The summary is on screen from the moment the form is, so an empty amount
-   * box has to read as "no order yet" rather than as a zero-value order.
+   * 表单一出现，摘要就已经在屏幕上，所以空的金额输入框必须读作「还没有订单」，
+   * 而不是一笔金额为零的订单。
    */
   it('reads N/A on every summary row before an amount is typed', () => {
     const value = component();
@@ -72,7 +71,7 @@ describe('PerpsOrderComponent summary rows', () => {
     expect(value.preview).toBeNull();
     expect(value.liquidationPriceText).toBe('N/A');
     expect(value.marginText).toBe('N/A');
-    // The rate is known without an order; only its cost is not.
+    // 没有订单也能知道费率；不知道的只是它折成多少钱。
     expect(value.feeText).toBe('0.045%');
   });
 
@@ -83,7 +82,7 @@ describe('PerpsOrderComponent summary rows', () => {
     value.amount = '200';
 
     expect(value.marginText).toBe('$20');
-    // The fee's cash amount, not the `--` an absent field used to render.
+    // 是手续费的金额，而不是过去缺字段时渲染出来的 `--`。
     expect(value.feeText).toBe('0.045% ($0.09)');
     expect(value.liquidationPriceText).toContain('$');
   });
@@ -101,8 +100,8 @@ describe('PerpsOrderComponent summary rows', () => {
     expect(value.feeText).toBe('0.045% ($0.09)');
   });
 
-  // A rebate pays the account. Showing it as "$0.00" would delete money the
-  // fill actually returns, so the sign is carried all the way to the row.
+  // 返佣是付给账户的钱。把它显示成 "$0.00" 等于抹掉成交实际返还的钱，
+  // 所以正负号要一路带到这一行上。
   it('shows a negative maker rate as a rebate rather than zero', () => {
     const value = component();
     value.facts = facts({
@@ -117,7 +116,7 @@ describe('PerpsOrderComponent summary rows', () => {
     expect(value.makerFeeText).toBe('-0.002% (-$<0.01)');
   });
 
-  // Both rows quote what leaves the account, so NeoLine's cut is in each.
+  // 两行报的都是「从账户里出去多少」，所以 NeoLine 抽的那份两边都算在内。
   it('includes the builder fee on both sides', () => {
     const value = component('0xbuilder');
     value.facts = facts({
@@ -132,7 +131,7 @@ describe('PerpsOrderComponent summary rows', () => {
     expect(value.feeText).toBe('0.09% ($0.18)');
   });
 
-  /** The module states a condition; the page is the only thing that words it. */
+  /** 模块负责陈述条件；只有页面负责为它措辞。 */
   it('words the one condition blocking submission', () => {
     const value = component();
     value.facts = facts({
@@ -154,9 +153,8 @@ describe('PerpsOrderComponent summary rows', () => {
 });
 
 /**
- * The composition is read from sixteen places in one change detection pass, so
- * the page memoises it. The failure mode worth guarding is the quiet one: a
- * reading that keeps answering with what was true before the user typed.
+ * 这份组合在一轮变更检测里会被十六处读取，所以页面对它做了记忆化。值得防的是那种安静的
+ * 失败：某个读数一直用用户输入之前的旧值来作答。
  */
 describe('PerpsOrderComponent composition memo', () => {
   it('answers the same reading while nothing has changed', () => {
@@ -291,7 +289,7 @@ describe('PerpsOrderComponent submission seam', () => {
       orderType: 'market',
       maxSlippagePercent: value.slippagePercent,
     });
-    // The page never decides these: they belong to the trade order module.
+    // 这些从来不由页面决定：它们属于交易订单模块。
     expect((submitted as any).reduceOnly).toBeUndefined();
     expect((submitted as any).timeInForce).toBeUndefined();
     expect((submitted as any).cloid).toBeUndefined();

@@ -262,7 +262,7 @@
         *ngIf="!feeEstimateUnavailable && !quotesBothFeeSides"
         >{{ feeText }}</span
       >
-      <!-- A resting limit order usually fills as maker, so both are quoted. -->
+      <!-- 挂在盘口上的限价单通常以 maker 成交，所以两侧费率都报出来。 -->
       <span
         class="value fee-sides"
         *ngIf="!feeEstimateUnavailable && quotesBothFeeSides"
@@ -298,14 +298,14 @@
     </div>
   </div>
 
-  <!-- One reason at a time: see orderUnavailableReason. -->
+  <!-- 一次只说一条原因：见 orderUnavailableReason。 -->
   <p class="error-tip" *ngIf="orderUnavailableReason">
     {{ orderUnavailableReason | translate: orderUnavailableParams | async }}
   </p>
 
   <!--
-    The order was sent and its result never came back. It may well have filled,
-    so the page says so and offers another look rather than a second order.
+    订单已经发出，而它的结果始终没有回来。它很可能已经成交，
+    所以页面照实这么说，并提供再看一眼的入口，而不是再下一笔订单。
   -->
   <div class="status-unknown" *ngIf="executionStatusUnknown">
     <p>{{ "perpsExecutionStatusUnknown" | translate | async }}</p>

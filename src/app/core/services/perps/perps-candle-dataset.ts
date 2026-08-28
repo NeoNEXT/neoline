@@ -6,13 +6,11 @@ import {
 } from '@popup/_lib/perps';
 
 /**
- * How much of a candle dataset is known right now.
+ * 当前对一个 K 线数据集究竟知道多少。
  *
- * `gapped` is the one that does not simplify away: the feed is live and the
- * trailing bar is moving, but bars that closed while it was down could not be
- * refilled, so the middle of the series is missing and the user has to be told.
- * `unavailable` is the market-data-unavailable state — nothing trustworthy to
- * draw — and is not the same as a market that does not exist.
+ * `gapped` 是无法被简化掉的那个状态：数据流是实时的、最后一根柱子在动，但断线期间收盘
+ * 的那些柱子没能补回来，于是序列中间是缺的，必须告诉用户。`unavailable` 是行情不可用
+ * 状态 —— 没有任何可信的数据可画 —— 它不等于市场不存在。
  */
 export type PerpsCandleAvailability =
   | 'loading'
@@ -21,11 +19,10 @@ export type PerpsCandleAvailability =
   | 'unavailable';
 
 /**
- * A (market key, candle interval) dataset as the page sees it.
+ * 页面视角下的（市场主键, K 线周期）数据集。
  *
- * Candles are ascending by open time and only ever grow: the chart tells one
- * dataset from another by its starting point, so trimming the front to hold a
- * fixed window would redraw the series and throw away the user's zoom.
+ * K 线按开盘时间升序排列，并且只增不减：图表是靠起点来区分不同数据集的，所以为了维持
+ * 固定窗口而裁掉前端，会导致整条序列重绘，并丢掉用户的缩放状态。
  */
 export interface PerpsCandleDatasetState {
   availability: PerpsCandleAvailability;
@@ -34,14 +31,12 @@ export interface PerpsCandleDatasetState {
 }
 
 /**
- * Fold a fresh snapshot into the candles already on screen.
+ * 把一份新快照折叠进屏幕上已有的 K 线。
  *
- * A socket that comes back streams the bar that is open now and nothing else,
- * so every bar that closed while the feed was down is a hole the stream will
- * never fill on its own. Merging by open time rather than replacing keeps the
- * history the user paged in, and lets the newer copy of a bar win: a bar's
- * final OHLCV differs from the last value that streamed while it was still
- * open.
+ * 套接字恢复后只会推送当前正在走的那根柱子，别的都不推，所以断流期间收盘的每一根柱子
+ * 都是数据流自己永远补不上的窟窿。按开盘时间合并（而不是整体替换）既保住了用户翻页取回
+ * 的历史，又让同一根柱子的较新副本获胜：一根柱子最终的 OHLCV，与它还开着时流式推送的
+ * 最后一个值并不相同。
  */
 export function mergeCandles(
   existing: PerpsCandle[],
@@ -55,19 +50,17 @@ export function mergeCandles(
   }
   const byTime = new Map<number, PerpsCandle>();
   existing.forEach((candle) => byTime.set(candle.t, candle));
-  // Second, so an overlapping bar is taken from the snapshot.
+  // 放在后面，这样重叠的柱子以快照为准。
   incoming.forEach((candle) => byTime.set(candle.t, candle));
   return Array.from(byTime.values()).sort((a, b) => a.t - b.t);
 }
 
 /**
- * Fold one live frame into the dataset.
+ * 把一帧实时数据折叠进数据集。
  *
- * Append only. Dropping the oldest bar to hold a fixed window would move the
- * dataset's starting point, which is exactly how the chart tells one dataset
- * from another — so every roll-over would redraw the whole series and throw
- * away the user's zoom. A frame older than the trailing bar is a late arrival
- * for a bar already settled and is ignored rather than reopened.
+ * 只做追加。为了维持固定窗口而丢弃最老的柱子，会移动数据集的起点，而图表恰恰就是靠起点
+ * 区分不同数据集的 —— 于是每次滚动都会重绘整条序列，并丢掉用户的缩放状态。比最后一根
+ * 柱子还老的帧，是一根已经定型的柱子的迟到消息，直接忽略，而不是把它重新打开。
  */
 export function foldCandle(
   candles: PerpsCandle[],
@@ -87,12 +80,11 @@ export function foldCandle(
 }
 
 /**
- * Whether remembered candles are still worth putting on screen.
+ * 记住的 K 线是否还值得放到屏幕上。
  *
- * Freshness is measured in bars rather than in seconds: a 1m chart is out of
- * date within minutes while a 1d chart is not. One missed bar plus transport
- * jitter is tolerated, which is where the half comes from; past that the gap
- * would be visible and a snapshot is the honest answer.
+ * 新鲜度以「根」而不是「秒」来衡量：1 分钟图几分钟就过时了，日线图则不会。允许错过一根
+ * 柱子外加传输抖动，那半根的余量就是从这儿来的；超过之后缺口就看得见了，此时重新取快照
+ * 才是诚实的答案。
  */
 export function candlesAreFresh(
   candles: PerpsCandle[],
@@ -107,11 +99,10 @@ export function candlesAreFresh(
 }
 
 /**
- * The time range one snapshot of `limit` bars covers.
+ * 一次 `limit` 根柱子的快照所覆盖的时间范围。
  *
- * Hyperliquid returns at most the 5000 most recent candles and ignores ranges
- * beyond that, so this only sizes the request; paging backward moves `endTime`
- * to an already-loaded bar rather than always taking "now".
+ * Hyperliquid 最多返回最近 5000 根 K 线，超出的范围会被忽略，所以这里只用于确定请求的
+ * 大小；向前翻页时会把 `endTime` 移到一根已加载的柱子上，而不是永远取「现在」。
  */
 export function snapshotWindow(
   interval: PerpsCandleInterval,
@@ -122,11 +113,10 @@ export function snapshotWindow(
 }
 
 /**
- * The range that refills what the feed missed, and whether it can be joined on.
+ * 用于补上数据流缺失部分的范围，以及这段数据能否接得上。
  *
- * Once the gap is older than the exchange's 5000-bar history the available
- * range is a genuinely different dataset: joining across the hole would draw a
- * continuous series over a middle nobody can fetch, so it is reloaded instead.
+ * 一旦缺口比交易场所 5000 根的历史还老，可取到的范围就属于另一个数据集了：跨过窟窿硬接
+ * 会画出一条中间段谁也取不到的连续曲线，所以此时改为整体重新加载。
  */
 export function recoveryWindow(
   candles: PerpsCandle[],

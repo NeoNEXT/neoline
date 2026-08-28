@@ -1,20 +1,18 @@
 /**
- * Account-scoped nonce allocation for Hyperliquid write actions.
+ * Hyperliquid 写操作的账户级 nonce 分配。
  *
- * In memory, and deliberately not persisted — see
- * `docs/adr/0002-no-local-nonce-persistence.md`. Hyperliquid validates a nonce
- * against the hundred highest it has seen for that signer plus a time window,
- * not against this client's history, so the authoritative floor lives at the
- * exchange and cannot be reconstructed here. The one problem this allocator can
- * actually solve is two of our own writes landing in the same millisecond.
+ * 只存在于内存中，且刻意不做持久化 —— 见
+ * `docs/adr/0002-no-local-nonce-persistence.md`。Hyperliquid 校验 nonce 时，比对的是
+ * 它为该签名者见过的最高一百个 nonce 加上一个时间窗口，而不是本客户端的历史；
+ * 权威下界因此在交易场所那边，这里无法重建。这个分配器真正能解决的问题只有一个：
+ * 我们自己的两次写入落在同一毫秒。
  *
- * It has no Angular dependency on purpose: the same instance has to move into
- * the background trade executor once that exists, and be shared by every window.
+ * 它刻意不依赖 Angular：等后台交易执行器出现后，同一个实例要挪进去，并被所有窗口共享。
  */
 export class PerpsNonceAllocator {
   private last = new Map<string, number>();
 
-  /** Next nonce for `account`, never equal to one this allocator already gave it. */
+  /** `account` 的下一个 nonce，绝不等于本分配器已经给过它的值。 */
   next(account: string): number {
     const key = (account || '').toLowerCase();
     const previous = this.last.get(key) ?? 0;
@@ -23,21 +21,19 @@ export class PerpsNonceAllocator {
     return nonce;
   }
 
-  /** Forget an account's allocations — used when its wallet is removed. */
+  /** 清除某个账户的分配记录 —— 该钱包被移除时使用。 */
   forget(account: string) {
     this.last.delete((account || '').toLowerCase());
   }
 }
 
 /**
- * Whether the exchange refused an action because of its nonce.
+ * 交易场所是否因为 nonce 而拒绝了某个操作。
  *
- * A refusal is a settled answer: nothing was executed, so re-signing with a
- * fresh nonce cannot duplicate anything. That is the opposite of a lost
- * response, where the action may well have run and a retry would send it twice.
- * Matching on the word is deliberate — Hyperliquid returns prose here, and the
- * failure mode of matching too narrowly (a real nonce refusal surfacing as a
- * bare "action failed") is worse than of matching too broadly.
+ * 拒绝是一个已经确定的答案：什么都没有执行，所以用新 nonce 重新签名不会造成重复。
+ * 这与响应丢失正好相反 —— 那种情况下操作很可能已经执行，重试会把它发送两次。
+ * 这里按关键词匹配是刻意的：Hyperliquid 在这里返回的是自然语言，而匹配过窄的后果
+ *（真正的 nonce 拒绝以一句干巴巴的 "action failed" 呈现）比匹配过宽更糟。
  */
 export function isNonceRejection(error: unknown): boolean {
   const message =

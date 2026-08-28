@@ -8,7 +8,7 @@ import { PerpsFundingComponent } from './perps-funding/perps-funding.component';
 import { PerpsHistoryComponent } from './perps-history/perps-history.component';
 
 const routes: Routes = [
-  // `markets` is the searchable list, `market/:coin` one market's detail.
+  // `markets` 是可搜索的列表，`market/:coin` 是单个市场的详情。
   {
     path: 'markets',
     component: PerpsMarketsComponent,

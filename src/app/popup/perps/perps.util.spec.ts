@@ -8,7 +8,6 @@ import {
   formatFundingPercent,
   formatPrice,
   formatSignedPercent,
-  formatSignedPrice,
   formatSize,
   formatUsd,
   formatBalance,
@@ -30,7 +29,7 @@ describe('perps sign test', () => {
   });
 
   it('gives a missing value no sign at all', () => {
-    // `--` is the absence of a number, not a number that happens to be down.
+    // `--` 是「没有数字」，不是一个恰好在下跌的数字。
     expect(isNegativeExact(null)).toBeFalse();
     expect(isNegativeExact(undefined)).toBeFalse();
     expect(isNegativeExact('')).toBeFalse();
@@ -39,26 +38,26 @@ describe('perps sign test', () => {
 });
 
 describe('perps utilities', () => {
-  // The amount field runs this on every keystroke, so a digit the transfer
-  // cannot express never reaches the model in the first place.
+  // 金额输入框每次按键都会跑这个函数，因此一个转账表达不了的数字，
+  // 从一开始就到不了模型。
   it('cuts amount text to the decimals a transfer can carry', () => {
     expect(clampDecimals('5.0000001', 6)).toBe('5.000000');
     expect(clampDecimals('12.3456789012', 8)).toBe('12.34567890');
     expect(clampDecimals('1.23', 6)).toBe('1.23');
-    // A decimal point on its own has to survive, or it could never be typed.
+    // 单独一个小数点必须能留下来，否则它根本没法被输入。
     expect(clampDecimals('1.', 6)).toBe('1.');
-    // Everything an amount is not: a currency mark, a sign, a second point.
+    // 一切不属于金额的东西：货币符号、正负号、第二个小数点。
     expect(clampDecimals('$12.5', 6)).toBe('12.5');
     expect(clampDecimals('-1.5', 6)).toBe('1.5');
     expect(clampDecimals('1.2.3', 6)).toBe('1.2');
     expect(clampDecimals('abc', 6)).toBe('');
     expect(clampDecimals('', 6)).toBe('');
-    // A whole-unit token takes no decimal point at all.
+    // 只能整数计量的代币，压根不接受小数点。
     expect(clampDecimals('1.5', 0)).toBe('1');
   });
 
-  // Hyperliquid lists 232 perps against a handful of bundled marks, so the CDN
-  // is the normal path and the bundled map is the exception, not the reverse.
+  // Hyperliquid 上架了 232 个永续，而内置图标只有寥寥几个，所以 CDN 才是常规路径，
+  // 内置映射是例外，而不是反过来。
   it('resolves a coin mark, preferring the bundled asset', () => {
     expect(coinLogo('ETH')).toBe('assets/images/token/eth.webp');
     expect(coinLogo('BTC')).toBe('https://app.hyperliquid.xyz/coins/BTC.svg');
@@ -66,37 +65,37 @@ describe('perps utilities', () => {
     expect(coinLogo(undefined)).toBe('');
   });
 
-  // The Neo pair were bundled before the CDN was wired up; they are drawn there
-  // like every other row, so the local copies no longer stand in for them.
+  // Neo 这一对是在接通 CDN 之前内置的；它们在 CDN 上的画法和其他所有行一样，
+  // 所以本地副本不再替它们出场。
   it('takes the Neo markets from the CDN like any other coin', () => {
     expect(coinLogo('NEO')).toBe('https://app.hyperliquid.xyz/coins/NEO.svg');
     expect(coinLogo('GAS')).toBe('https://app.hyperliquid.xyz/coins/GAS.svg');
   });
 
-  // The CDN's path segments are case-sensitive: `btc.svg` is not `BTC.svg`.
+  // CDN 的路径片段区分大小写：`btc.svg` 不是 `BTC.svg`。
   it('asks the CDN in the casing it answers to', () => {
     expect(coinLogo('btc')).toBe('https://app.hyperliquid.xyz/coins/BTC.svg');
   });
 
-  // A HIP-3 mark is filed under the whole protocol coin. The bare symbol gets
-  // the app's HTML shell, and re-casing the lowercase DEX name misses too.
+  // HIP-3 的图标归档在完整的协议币种名下。裸符号取到的是应用的 HTML 外壳，
+  // 而把小写的 DEX 名改成大写同样会未命中。
   it('keeps the dex prefix, untouched, for a HIP-3 market', () => {
     expect(coinLogo('xyz:SNDK')).toBe(
       'https://app.hyperliquid.xyz/coins/xyz%3ASNDK.svg'
     );
-    // Natural gas on a HIP-3 dex keeps its own mark, not Neo GAS's.
+    // HIP-3 dex 上的天然气保留它自己的图标，而不是 Neo GAS 的。
     expect(coinLogo('flx:GAS')).toBe(
       'https://app.hyperliquid.xyz/coins/flx%3AGAS.svg'
     );
     expect(coinLogo('GAS')).toBe('https://app.hyperliquid.xyz/coins/GAS.svg');
   });
 
-  // `k` is the 1000x contract-size prefix, not part of the asset: kPEPE is
-  // quoted in 1000-PEPE lots and the CDN files its mark under PEPE.
+  // `k` 是表示 1000 倍合约面值的前缀，不属于资产本身：kPEPE 以 1000 个 PEPE 为一手报价，
+  // CDN 把它的图标归档在 PEPE 名下。
   it('drops the k multiplier prefix before asking for a mark', () => {
     expect(coinLogo('kPEPE')).toBe('https://app.hyperliquid.xyz/coins/PEPE.svg');
     expect(coinLogo('kBONK')).toBe('https://app.hyperliquid.xyz/coins/BONK.svg');
-    // Not a multiplier: real symbols are uppercase throughout.
+    // 这不是倍数前缀：真实符号通篇都是大写。
     expect(coinLogo('KAITO')).toBe('https://app.hyperliquid.xyz/coins/KAITO.svg');
   });
 
@@ -106,27 +105,26 @@ describe('perps utilities', () => {
     expect(formatFeeRatePercent(0)).toBe('0%');
   });
 
-  // The expectations below are real testnet values at their real `szDecimals`.
-  // Users read this screen beside Hyperliquid's own, and a price that shows
-  // 63,394 in one place and 63,393.5 in the other looks like disagreeing data.
+  // 下面的期望值是测试网上的真实数值，配上它们真实的 `szDecimals`。用户会把这个界面和
+  // Hyperliquid 自己的并排看，一个价格这边显示 63,394、那边显示 63,393.5，看起来就是数据打架。
   it('prices at the market tick, not at a magnitude band', () => {
-    // BTC ticks at one decimal (szDecimals 5); five significant figures would
-    // have rounded the real mid 63393.5 to 63,394.
+    // BTC 的最小变动价位是一位小数（szDecimals 为 5）；
+    // 若按五位有效数字，真实中间价 63393.5 会被舍成 63,394。
     expect(formatPrice('63393.5', 5)).toBe('63,393.5');
-    // SOL ticks at four (szDecimals 2) and uses all of them.
+    // SOL 是四位（szDecimals 为 2），而且四位全都用上了。
     expect(formatPrice('75.7565', 2)).toBe('75.7565');
     expect(formatPrice('1.6697', 2)).toBe('1.6697');
-    // PUMP ticks at six (szDecimals 0).
+    // PUMP 是六位（szDecimals 为 0）。
     expect(formatPrice('0.002979', 0)).toBe('0.002979');
     expect(formatPrice('0.92505', 1)).toBe('0.92505');
   });
 
   it('treats the tick as a ceiling rather than a target', () => {
-    // 294.0 at a four-decimal tick is still $294, not $294.0000.
+    // 在四位小数的最小变动价位下，294.0 仍然是 $294，而不是 $294.0000。
     expect(formatPrice('294.0', 2)).toBe('294');
     expect(formatPrice('1886', 4)).toBe('1,886');
     expect(formatPrice('0', 2)).toBe('0');
-    // A mid is the average of two ticks, so it may carry one decimal more.
+    // 中间价是两个最小变动价位的平均值，所以它可能多带一位小数。
     expect(formatPrice('63393.55', 5, true)).toBe('63,393.55');
     expect(formatPrice('63393.55', 5)).toBe('63,393.6');
   });
@@ -145,7 +143,7 @@ describe('perps utilities', () => {
     expect(priceDecimals('1886.9', 4)).toBe(1);
     expect(priceDecimals('63712', 5)).toBe(0);
     expect(priceDecimals('76.252', 2)).toBe(3);
-    // Capped by the market tick when the value carries more.
+    // 数值带的小数更多时，由市场的最小变动价位来封顶。
     expect(priceDecimals('76.2525551', 2)).toBe(4);
   });
 
@@ -160,13 +158,13 @@ describe('perps utilities', () => {
     expect(formatUsd(0.004)).toBe('$<0.01');
     expect(formatUsd('0.0000001')).toBe('$<0.01');
     expect(formatUsd(-0.004)).toBe('-$<0.01');
-    // An actual zero is a zero, and a missing value is neither.
+    // 真正的零就是零，而缺失的值两者都不是。
     expect(formatUsd(0)).toBe('$0');
     expect(formatUsd(null)).toBe(MISSING_DISPLAY);
   });
 
   it('rounds a spendable balance down, never up', () => {
-    // Rounding up would offer more than the wallet holds.
+    // 向上取整会给出多于钱包实际持有的金额。
     expect(formatBalance('10.999')).toBe('10.99');
     expect(formatBalance('1234.5678')).toBe('1,234.56');
     expect(formatBalance('100')).toBe('100.00');
@@ -186,8 +184,8 @@ describe('perps utilities', () => {
     expect(formatCompactUsd('1490000000')).toBe('$1.49B');
     expect(formatCompactUsd('1700000000')).toBe('$1.7B');
     expect(formatCompactUsd('650800000')).toBe('$650.8M');
-    // Thousands carry decimals like every other band, so $90.5K and $1.7B do
-    // not look like they were measured to different precisions.
+    // 千位档和其他所有档一样带小数，这样 $90.5K 和 $1.7B 不会看起来像是
+    // 用不同精度量出来的。
     expect(formatCompactUsd('123456')).toBe('$123.46K');
     expect(formatCompactUsd('90500')).toBe('$90.5K');
     expect(formatCompactUsd('474.810476')).toBe('$474.81');
@@ -199,7 +197,7 @@ describe('perps utilities', () => {
     expect(formatSize(1.23456, 4)).toBe('1.2346');
     expect(formatSize(0.01, 4)).toBe('0.01');
     expect(formatSize(3, 4)).toBe('3');
-    // szDecimals of 0 leaves no decimal point for the zero-stripping to eat.
+    // szDecimals 为 0 时根本没有小数点可供去零逻辑吃掉。
     expect(formatSize(10, 0)).toBe('10');
     expect(formatSize(0, 4)).toBe('0');
   });
@@ -231,8 +229,8 @@ describe('perps utilities', () => {
     });
 
     it('never flattens a rate that exists into a rate that does not', () => {
-      // A market charging 0.00003% is a different fact from one charging
-      // nothing, and "0.0000%" tells the user the second.
+      // 一个收 0.00003% 的市场，和一个什么都不收的市场是不同的事实，
+      // 而 "0.0000%" 告诉用户的是后者。
       expect(formatFundingPercent('0.0000003')).toBe('<0.0001%');
       expect(formatFundingPercent('-0.0000003')).toBe('-<0.0001%');
     });
@@ -243,22 +241,9 @@ describe('perps utilities', () => {
     });
   });
 
-  describe('formatSignedPrice', () => {
-    it('carries the sign and the market\'s own precision', () => {
-      expect(formatSignedPrice('24.25', 4)).toBe('+24.25');
-      expect(formatSignedPrice('-24.25', 4)).toBe('-24.25');
-      // szDecimals 2 ticks at four decimals, and trailing zeros still go.
-      expect(formatSignedPrice('-0.0042', 2)).toBe('-0.0042');
-    });
-
-    it('reads an absent change as absent, not as no change', () => {
-      expect(formatSignedPrice(null, 4)).toBe(MISSING_DISPLAY);
-    });
-  });
-
   describe('chartPriceDecimals', () => {
     it('follows the market tick, not the current price', () => {
-      // BTC (szDecimals 5) ticks at one decimal, PUMP (0) at six.
+      // BTC（szDecimals 为 5）的最小变动价位是一位小数，PUMP（为 0）是六位。
       expect(chartPriceDecimals(5)).toBe(1);
       expect(chartPriceDecimals(2)).toBe(4);
       expect(chartPriceDecimals(0)).toBe(6);

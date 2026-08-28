@@ -2,8 +2,8 @@
   width: 100%;
   position: relative;
 
-  /* Always occupies its footprint so the chart never initializes at width 0,
-     which would make fitContent compute a broken visible range. */
+  /* 始终占住自己的位置，这样图表就绝不会在宽度为 0 时初始化 ——
+     那会让 fitContent 算出一个坏掉的可见区间。 */
   .chart-container {
     width: 100%;
     height: 250px;

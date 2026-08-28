@@ -65,7 +65,7 @@ export class PerpsAccountStateService {
     this.source = hyperliquid;
   }
 
-  /** One DEX account, shared by every caller observing the same address. */
+  /** 单个 DEX 的账户，由观察同一地址的所有调用方共享。 */
   watchAccount(
     address: string,
     dex = ''
@@ -89,7 +89,7 @@ export class PerpsAccountStateService {
     });
   }
 
-  /** A fresh single-DEX snapshot folded into the same live state. */
+  /** 把一份新的单 DEX 快照折叠进同一份实时状态。 */
   refreshAccount(
     address: string,
     dex = ''
@@ -101,7 +101,7 @@ export class PerpsAccountStateService {
     return this.refresh(entry);
   }
 
-  /** Every enabled DEX, sharing the same single-DEX streams as other pages. */
+  /** 所有启用的 DEX，与其他页面共享同一批单 DEX 数据流。 */
   watchAggregatedAccount(
     address: string
   ): Observable<PerpsAccountState<PerpsAggregatedAccount>> {
@@ -119,7 +119,7 @@ export class PerpsAccountStateService {
     return stream;
   }
 
-  /** Refresh every enabled DEX, sharing in-flight work per DEX. */
+  /** 刷新所有启用的 DEX，按 DEX 共享进行中的请求。 */
   refreshAggregatedAccount(
     address: string
   ): Observable<PerpsAccountState<PerpsAggregatedAccount>> {

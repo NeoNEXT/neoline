@@ -1,17 +1,16 @@
 import { PerpsCandle, PerpsMarket, PerpsPosition } from '@popup/_lib/perps';
 
 /**
- * The market and the candle every perps spec starts from.
+ * 所有 perps 测试的共同起点：一个市场和一根 K 线。
  *
- * `PerpsMarket` has nineteen required fields, and a given test cares about two
- * or three of them. Hand-copying the other sixteen into each spec is what made
- * adding `changeAmountExact` a one-line edit in three files at once; keeping the
- * boilerplate here lets a spec state only the values its assertions rest on.
+ * `PerpsMarket` 有十九个必填字段，而一个具体的测试只关心其中两三个。把另外十六个手抄进
+ * 每个 spec，正是当初新增 `changeAmountExact` 时要同时在三个文件里各改一行的原因；把这些
+ * 样板放在这里，spec 就只需写出它的断言真正依赖的那几个值。
  */
 
 /**
- * ETH at a round $100 — the arithmetic a preview does to it stays checkable by
- * eye, so a test can assert `800` at 2x becomes 10 ETH without a calculator.
+ * ETH 取整数 $100 —— 这样预览对它做的算术一眼就能验算，
+ * 测试可以断言 `800` 在 2 倍杠杆下变成 10 ETH，不用按计算器。
  */
 export function ethMarket(overrides: Partial<PerpsMarket> = {}): PerpsMarket {
   return {
@@ -39,11 +38,10 @@ export function ethMarket(overrides: Partial<PerpsMarket> = {}): PerpsMarket {
 }
 
 /**
- * One closed minute of ETH.
+ * ETH 的一根已收盘的分钟线。
  *
- * The timestamp is a real millisecond epoch rather than a small integer: the
- * chart divides it down to the exchange's UTC seconds, and a `t` of 1 cannot
- * tell a correct conversion from a missing one.
+ * 时间戳用的是真实的毫秒时间戳，而不是一个小整数：图表会把它换算成交易场所的 UTC 秒，
+ * 而 `t` 取 1 的话，正确的换算和漏掉换算根本分不出来。
  */
 export function ethCandle(overrides: Partial<PerpsCandle> = {}): PerpsCandle {
   return {
@@ -62,10 +60,9 @@ export function ethCandle(overrides: Partial<PerpsCandle> = {}): PerpsCandle {
 }
 
 /**
- * A small short in ETH, cross-margined.
+ * ETH 上一个小额空头仓位，全仓。
  *
- * Deliberately not the mirror of `ethMarket`: a position whose numbers differ
- * from the market's makes it obvious which of the two an assertion is reading.
+ * 刻意不与 `ethMarket` 镜像对称：仓位的数字与市场的不同，断言在读哪一个就一目了然。
  */
 export function ethPosition(
   overrides: Partial<PerpsPosition> = {}

@@ -45,11 +45,10 @@ export type PerpsTradeSubmission = {
 };
 
 /**
- * Turns one user-confirmed trade intent into one canonical protocol order.
+ * 把一个用户已确认的交易意图，变成一个规范的协议订单。
  *
- * Callers do not decide reduce-only, refresh exact close/reverse sizes, quantize
- * wire values, or combine leverage changes with an order. Those invariants all
- * live behind this interface and are tested through `submit`.
+ * 调用方不决定 reduce-only、不刷新精确的平仓/反手数量、不做上链数值的量化，也不负责
+ * 把杠杆变更与订单组合在一起。这些不变式全都藏在这个接口后面，并通过 `submit` 测试。
  */
 @Injectable({ providedIn: 'root' })
 export class PerpsTradeOrderService {
@@ -89,10 +88,9 @@ export class PerpsTradeOrderService {
               intent.market.maxLeverage
             )
             .pipe(
-              // A refused write means no order was sent, which the caller has
-              // to be able to say. `updateLeverage` is bounded by the margin
-              // tier the notional falls into, not by the market's static
-              // maximum, so this is a rejection the client cannot pre-empt.
+              // 写入被拒绝意味着订单从未发出，调用方必须能够说出这一点。
+              // `updateLeverage` 受限于名义价值所落入的保证金档位，而不是市场的静态
+              // 上限，所以这是客户端无法预先拦下的拒绝。
               catchError((error) => {
                 throw new PerpsTradeOrderError(
                   'leverage-write',
@@ -172,19 +170,16 @@ export class PerpsTradeOrderService {
   }
 
   /**
-   * Whether this order writes its leverage to the exchange before it is placed.
+   * 这个订单在下单之前是否要把杠杆写到交易场所。
    *
-   * Leverage is an order parameter, not an account setting the client tracks:
-   * the value the user picked is written immediately before the order that uses
-   * it, so there is no window in which an exchange-side setting and a form can
-   * disagree. Comparing against a cached current value would reintroduce one.
+   * 杠杆是订单参数，不是客户端跟踪的账户设置：用户选定的值会在使用它的那笔订单之前
+   * 立即写入，因此不存在交易场所侧的设置与表单不一致的时间窗口。若改成与缓存的当前值
+   * 比较，反而会把这个窗口重新引入。
    *
-   * A reduce-only exit is exempt. Its leverage is the position's own — the form
-   * does not offer the control in close mode — so the write would set the value
-   * that is already in effect, while still being able to fail: `updateLeverage`
-   * is bounded by the margin tier the position's notional falls into, not by
-   * the market's static maximum. An exit must not acquire a failure mode for a
-   * write that changes nothing.
+   * reduce-only 的离场是例外。它的杠杆就是仓位自己的杠杆 —— 平仓模式下表单也不提供这个
+   * 控件 —— 所以这次写入设置的是本来就已生效的值，却依然可能失败：`updateLeverage` 受限
+   * 于该仓位名义价值所落入的保证金档位，而不是市场的静态上限。一次离场不该为一次什么都
+   * 不改变的写入，平白多出一种失败方式。
    */
   private setsLeverage(intent: PerpsTradeOrderIntent): boolean {
     return intent.operation !== 'reduce' && intent.operation !== 'close';

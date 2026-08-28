@@ -95,9 +95,8 @@ describe('PerpsTradeOrderService', () => {
   });
 
   /**
-   * Leverage is written immediately before the order that uses it, in the same
-   * operation. The user presses the button once: an exchange-side value that
-   * disagreed with the form used to cost them a second press.
+   * 杠杆在使用它的那笔订单之前立即写入，属于同一次操作。用户只按一次按钮：交易场所侧
+   * 的值与表单不一致，过去要让用户多按一次。
    */
   it('writes leverage and places the order in one submission', () => {
     let submission: PerpsTradeSubmission;
@@ -111,7 +110,7 @@ describe('PerpsTradeOrderService', () => {
     expect(submission.kind).toBe('order-submitted');
   });
 
-  /** A failed write leaves no order behind: the exchange never saw one. */
+  /** 写入失败不会留下任何订单：交易场所压根没见过订单。 */
   it('places no order when the leverage write is rejected', () => {
     const errors = jasmine.createSpy('errors');
     exchange.updateLeverage.and.returnValue(

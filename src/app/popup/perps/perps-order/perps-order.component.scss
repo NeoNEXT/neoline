@@ -159,7 +159,7 @@
       font-family: NeverMind-DemiBold;
       font-size: 20px;
       color: var(--important-title-color);
-      /* Number inputs render spinners that break the right-aligned layout. */
+      /* number 类型的输入框会渲染出微调按钮，破坏右对齐布局。 */
       -moz-appearance: textfield;
       &::-webkit-outer-spin-button,
       &::-webkit-inner-spin-button {
@@ -292,9 +292,9 @@
     }
   }
 
-  /* Same field layout as Hyperliquid: the value starts at the left padding and
-     the unit is pinned right, so the number keeps its position as digits change.
-     70px keeps "100%" clear of both edges at our 14px font. */
+  /* 与 Hyperliquid 相同的字段布局：数值从左内边距开始，单位钉在右侧，
+     这样数字位数变化时它的位置保持不变。
+     在我们 14px 的字号下，70px 能让 "100%" 与两侧都留出空隙。 */
   .range-value {
     flex: 0 0 70px;
     width: 70px;
@@ -340,8 +340,8 @@
 .amount-range {
   padding-top: 12px;
 
-  /* Symmetric 14px track: a soft teal fill up to the thumb, grey for the rest.
-     One hard-stop gradient avoids overlapping layers; the tick dots sit above. */
+  /* 对称的 14px 轨道：滑块之前是柔和的青色填充，之后是灰色。
+     用一个硬断点渐变可以避免图层重叠；刻度圆点浮在上面。 */
   .range-track::before {
     content: "";
     position: absolute;
@@ -361,8 +361,8 @@
     );
   }
 
-  /* The track visuals are layered behind; keep the input itself clear and put
-     its thumb above the dots. */
+  /* 轨道的视觉效果铺在后面；输入框本身保持透明，
+     并把它的滑块放在圆点之上。 */
   input[type="range"] {
     z-index: 3;
     background: transparent;
@@ -377,8 +377,8 @@
 }
 
 .leverage-range {
-  /* Same symmetric 12px capsule as the amount slider, but with no tick dots, so
-     the track is painted straight onto the input rather than a layered ::before. */
+  /* 与金额滑块相同的对称 12px 胶囊，但没有刻度圆点，
+     所以轨道直接画在输入框上，而不是画在分层的 ::before 上。 */
   > input[type="range"] {
     flex: 1;
     min-width: 0;
