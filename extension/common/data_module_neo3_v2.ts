@@ -21,6 +21,11 @@ export enum EventNameEnum {
   NETWORK_CHANGED = 'networkchanged',
 }
 
+// NEP-21 hands provider events to listeners as `CustomEvent`s, so the payload
+// is read off `event.detail` rather than from a positional argument.
+export type AccountChangedEvent = CustomEvent<{ accounts: Account[] }>;
+export type NetworkChangedEvent = CustomEvent<{ network: Network }>;
+
 type ContractParameterType =
   | 'Any'
   | 'Boolean'

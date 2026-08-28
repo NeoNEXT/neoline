@@ -3,6 +3,7 @@ import { ERRORS as LEGACY_ERRORS, EVENT } from '../common/data_module_neo2';
 import { requestTargetN3, EVENT as EVENT_N3 } from '../common/data_module_neo3';
 import {
   Account,
+  AccountChangedEvent,
   Address,
   ApplicationLog,
   Argument,
@@ -19,6 +20,7 @@ import {
   InvocationArguments,
   InvocationResult,
   Network,
+  NetworkChangedEvent,
   NetworkEnum,
   SignedMessage,
   Signer,
@@ -32,6 +34,7 @@ import {
   encodeNep21MessagePayload,
   normalizeNep20Nonce,
 } from '../../cross-runtime/neo3-sign-data';
+import manifest from '../manifest/base.json';
 import { checkNeoXConnectAndLogin, sendMessage } from './common';
 import { N3MainnetNetwork, N3TestnetNetwork } from '../common/constants';
 import {
@@ -55,9 +58,13 @@ type LegacyInvokeResult = {
 
 class NEOLineN3Controller extends EventEmitter {
   name = 'NeoLine';
-  version = '1.0';
+  // NEP-21 keeps the two apart: `version` identifies this provider build,
+  // `dapiVersion` the protocol it speaks. Reporting the extension version lets
+  // a dApp tell a fixed build from an older one without falling back to
+  // `new window.NEOLineN3.Init().getProvider()`.
+  version = manifest.version;
   dapiVersion = '1.0';
-  compatibility = ['NEP-11', 'NEP-17', 'NEP-21'];
+  compatibility = ['NEP-11', 'NEP-17', 'NEP-20', 'NEP-21'];
   connected = false;
   network: Network = NetworkEnum.MAINNET;
   supportedNetworks: Network[] = [NetworkEnum.MAINNET, NetworkEnum.TESTNET];
@@ -521,10 +528,22 @@ window.addEventListener('message', (event) => {
       announceProvider();
       break;
     case EVENT.ACCOUNT_CHANGED:
-      provider.connected = Array.isArray(response.data)
-        ? response.data.length > 0
-        : !!response.data;
-      provider.emit(EventNameEnum.ACCOUNTS_CHANGED, response.data);
+      // This event is broadcast to every tab for every chain. Only the N3 path
+      // sends an array of accounts; a Neo2 wallet switch sends a single legacy
+      // `{ address, label }` object, which must never surface here as an N3
+      // account.
+      if (!Array.isArray(response.data)) {
+        break;
+      }
+      // Update the provider state before emitting, so a listener reading
+      // `provider.connected` sees what the event says.
+      provider.connected = response.data.length > 0;
+      provider.emit(
+        EventNameEnum.ACCOUNTS_CHANGED,
+        new CustomEvent(EventNameEnum.ACCOUNTS_CHANGED, {
+          detail: { accounts: response.data as Account[] },
+        }) as AccountChangedEvent,
+      );
       break;
     case EVENT.NETWORK_CHANGED:
       const { chainId } = response.data || {};
@@ -538,7 +557,12 @@ window.addEventListener('message', (event) => {
 
       if (network != null) {
         provider.network = network;
-        provider.emit(EventNameEnum.NETWORK_CHANGED, network);
+        provider.emit(
+          EventNameEnum.NETWORK_CHANGED,
+          new CustomEvent(EventNameEnum.NETWORK_CHANGED, {
+            detail: { network },
+          }) as NetworkChangedEvent,
+        );
       }
       break;
   }
