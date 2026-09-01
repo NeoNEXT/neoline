@@ -1,30 +1,16 @@
 import { Injectable } from '@angular/core';
 import BigNumber from 'bignumber.js';
-import {
-  BehaviorSubject,
-  Observable,
-  Subscription,
-  concat,
-  forkJoin,
-  of,
-} from 'rxjs';
-import {
-  catchError,
-  filter,
-  map,
-  shareReplay,
-  switchMap,
-  tap,
-} from 'rxjs/operators';
+import { Observable, concat, forkJoin, merge, of } from 'rxjs';
+import { catchError, filter, map, switchMap, tap } from 'rxjs/operators';
 
 import {
   PerpsAssetCtx,
-  PerpsConnectionState,
   PerpsMarket,
   PerpsUniverseItem,
 } from '@popup/_lib/perps';
 import { HyperliquidService } from './hyperliquid.service';
 import { PerpsDataChannel } from './perps-data-channel.service';
+import { PerpsDataset } from './perps-dataset';
 import { retryTransientFetch } from './perps-fetch-failure';
 import {
   PerpsMarketDatasetState,
@@ -33,14 +19,14 @@ import {
   mergeDexAssetContexts,
 } from './perps-market-dataset';
 
-/** 某个 DEX 的静态元数据与它的实时上下文配对，顺序一致。 */
+/** 一个 DEX 的静态元数据，与它的实时上下文按同一顺序配对。 */
 type MetaAndAssetCtxs = [{ universe: PerpsUniverseItem[] }, PerpsAssetCtx[]];
 
 /**
- * 本模块对交易场所的全部需求，多一点都不要。
+ * 本模块需要交易场所提供的全部东西，不多不少。
  *
- * 注册表要单独请求，因为它唯一的作用是把某个 HIP-3 DEX 定位到资产 id 空间里：标准永续
- * 市场按定义就是下标 0，因此完全跳过这次请求。
+ * 注册表之所以单独问一次，是因为它唯一的用处是把一个 HIP-3 DEX 放进 asset-id 空间：
+ * 标准永续按定义就是索引 0，直接跳过这次请求。
  */
 interface PerpsMarketSource {
   readonly enabledDexes: string[];
@@ -48,19 +34,28 @@ interface PerpsMarketSource {
   getMetaAndAssetCtxs(dex?: string): Observable<MetaAndAssetCtxs>;
 }
 
+/** 一个 DEX 的实时上下文，保持频道推送过来的样子。 */
+interface PerpsMarketUpdate {
+  dex: string;
+  ctxs: PerpsAssetCtx[];
+}
+
 /**
- * 列表可以旧到什么程度，超过就由新来的观察者付一次新快照的代价。
+ * 列表能陈旧到什么程度，超过它新来的观察者就要为一次新快照买单。
  *
- * 价格由帧免费保持最新，所以这条规则管的不是数字的新鲜度 —— 它管的是「集合」：上次快照
- * 之后新上架或已下架的市场，在下一次快照之前都是看不见的。
+ * 帧会免费把价格保持在最新，所以这跟数值新不新鲜无关 —— 它关心的是**集合**：
+ * 上一次快照之后新上市或已下市的市场，在下一次快照之前是看不见的。
  */
 const SNAPSHOT_TTL_MS = 15000;
 
-/** 屏幕上已经有市场时，失败的快照转为退避重试。 */
+/** 屏幕上已经有市场时，一次失败的快照转入退避。 */
 const RETRY_BASE_MS = 1000;
-/** 429 是一个按 IP 计的额度，要到接下来的一分钟才补得回来。 */
+/** 429 说的是一份按 IP 计的配额，它会在接下来的一分钟里回满。 */
 const RATE_LIMITED_BASE_MS = 10000;
 const RETRY_CAP_MS = 60000;
+
+/** 列表就是一个数据集，所以它的条目只有一个名字。 */
+const MARKET_LIST = { id: 'markets' };
 
 const LOADING: PerpsMarketDatasetState = {
   availability: 'loading',
@@ -69,30 +64,33 @@ const LOADING: PerpsMarketDatasetState = {
 };
 
 /**
- * 行情数据集（Market Dataset）—— 市场集合及其当前价格。
+ * **行情数据集** —— 市场集合及其当前价格。
  *
- * 集合来自快照，数值来自数据通道（Data Channel）的帧，两者的仲裁放在这里而不是页面上：
- * 在首次快照之前到达的帧会被暂存、待快照落地后重放到它上面，因此慢吞吞的 REST 响应不会
- * 让列表落后整整一代；而帧永远不能凭空造出或移除一个市场 —— 这也正是重连之后要重新取
- * 快照、而不是指望数据流自己追上来的原因。
+ * 快照与帧的仲裁归共享的**数据集**核心，见
+ * [ADR-0008](../../../../../docs/adr/0008-shared-dataset-snapshot-frame-arbiter.md)。
+ * 只有行情特有的东西留在这里：一次快照如何跨 DEX 拼装、失败后走什么退避、
+ * 一个集合可以多久不被核对，以及市场详情的数据源。
  *
- * 这个列表是单例，由所有观察它的页面共享。市场详情则完全是另一种形态：一个页面读一个
- * 市场，然后跟随该市场自己的频道，没有共享状态，也没有后台刷新。
+ * 市场详情完全是另一种形状：一个页面读一个市场，然后跟随那个市场自己的频道，
+ * 没有共享状态也没有后台刷新，所以它根本不走数据集。
  */
 @Injectable({ providedIn: 'root' })
 export class PerpsMarketDatasetService {
   private readonly source: PerpsMarketSource;
+  private readonly dataset: PerpsDataset<
+    { id: string },
+    PerpsMarketDatasetState,
+    PerpsMarketUpdate
+  >;
 
-  private readonly state$ = new BehaviorSubject<PerpsMarketDatasetState>(
-    LOADING
-  );
+  /**
+   * 本会话最后一次持有的列表。
+   *
+   * 核心会在没人观察时忘掉一个条目，但市场列表是被来来去去的页面读取的：
+   * 留住最后一份，下一个页面就能立刻出图，而它的年龄仍然能回答「是否欠一次新集合」。
+   */
+  private lastState: PerpsMarketDatasetState = LOADING;
   private observers = 0;
-  private liveSub: Subscription;
-  private connectionState: PerpsConnectionState = 'connecting';
-  /** 首次快照之前见到的帧，按 DEX 分别暂存。 */
-  private readonly pendingAssetContexts = new Map<string, PerpsAssetCtx[]>();
-  /** 当前在途的快照，由所有请求方共享。 */
-  private snapshotRequest: Observable<PerpsMarket[]> | null = null;
   private retryTimer: any;
   private retryAttempts = 0;
 
@@ -101,52 +99,72 @@ export class PerpsMarketDatasetService {
     private readonly channel: PerpsDataChannel
   ) {
     this.source = hyperliquid;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
+    this.dataset = new PerpsDataset(channel, {
+      // 新条目从本会话已经持有的那份列表起步，这正是下一个页面能立刻出图的原因 ——
+      // 核心在没人观察时会忘掉条目，但列表比任何单个页面活得久。
+      get initial() {
+        return self.lastState;
+      },
+      keyOf: (key) => key.id,
+      frames: () => this.openUpdates(),
+      load: (_key, current) => this.loadSnapshot(current),
+      foldFrame: (state, update) => this.foldUpdate(state, update),
+      onConnectionState: (state, current) =>
+        state === 'stale' && current.markets.length
+          ? { ...current, availability: 'stale' }
+          : current,
+    });
   }
 
   /**
    * 共享的实时市场列表。
    *
-   * 第一个观察者会开启各 DEX 的订阅，并用一次快照为它们播下种子；最后一个观察者关闭
-   * 它们。失败会以 `unavailable` 发布出去，而不是让整条流 error：之后重试成功的结果
-   * 必须能送达同一批订阅者，而一个已经 error 的 observable 就此终结。
+   * 失败以 `unavailable` 的形式发布出去，而不是让流报错：之后一次成功的重试必须能送达
+   * 同一批订阅者，而一个已经出错的 observable 就到此为止了。
    */
   watchMarkets(): Observable<PerpsMarketDatasetState> {
     return new Observable<PerpsMarketDatasetState>((observer) => {
       this.observers += 1;
-      if (this.observers === 1) {
-        this.start();
-      }
-      const subscription = this.state$.subscribe(observer);
+      const subscription = this.dataset
+        .watch(MARKET_LIST)
+        .pipe(tap((state) => this.retain(state)))
+        .subscribe(observer);
       this.ensureSnapshot();
       return () => {
         subscription.unsubscribe();
-        this.observers -= 1;
+        this.observers = Math.max(0, this.observers - 1);
         if (this.observers === 0) {
-          this.stop();
+          clearTimeout(this.retryTimer);
+          this.retryTimer = undefined;
         }
       };
     });
   }
 
-  /** 当前列表；只有在手上这份太旧时才先取一次快照。 */
+  /** 当前列表；只有在手里那份太旧时才先取一次快照。 */
   getMarkets(): Observable<PerpsMarket[]> {
-    const current = this.state$.value;
+    const current = this.dataset.peek(MARKET_LIST);
     if (this.isFresh(current)) {
       return of(current.markets);
     }
-    return this.loadSnapshot();
+    return this.dataset.refresh(MARKET_LIST).pipe(
+      tap((state) => this.retain(state)),
+      map((state) => state.markets)
+    );
   }
 
   /**
-   * 单个市场的实时上下文，来自该市场自己的数据源。
+   * 单个市场的实时上下文，来自那个市场自己的数据源。
    *
-   * 详情页是用户按下做多或做空之前一直盯着的页面，所以它跟随该市场的 `activeAssetCtx`
-   * 频道，而不是列表那种按 DEX 的周期性帧。一帧会把价格和 24 小时统计一起带来，因此页面
-   * 绝不会把这条消息里的价格与另一条消息里的 `prevDayPx` 配成一对。
+   * 详情页是用户按下做多或做空之前盯着看的东西，所以它跟随该市场的 `activeAssetCtx`
+   * 频道，而不是列表那套按 DEX 的周期性帧。一帧同时带着价格和 24 小时统计，
+   * 因此页面绝不会把一条消息里的价格和另一条里的 `prevDayPx` 配到一起。
    *
-   * 对于本版本不承载的币种会发出 `null`：可能是已下架的资产、本版本未启用的 DEX，或者
-   * 一个错误的路由参数。这和「请求失败」是不同的答案，后者会 error —— 两种情况下页面都
-   * 没东西可显示，但只有其中一种值得提供重试。
+   * 对本版本不承载的币种发出 `null`：已下市的资产、本版本没有启用的 DEX，
+   * 或者一个错的路由参数。这与「请求失败」是不同的答案，后者会报错 ——
+   * 两种情况下页面都没东西可显示，但只有其中一种值得给出重试入口。
    */
   watchMarketDetail(coin: string): Observable<PerpsMarket | null> {
     const dex = coin?.includes(':') ? coin.slice(0, coin.indexOf(':')) : '';
@@ -154,17 +172,17 @@ export class PerpsMarketDatasetService {
       return of(null);
     }
     return this.marketSnapshot(coin, dex).pipe(
-      // 没有这份快照，页面就什么都没有；而且它只是一次普通读取，所以对于一条在去程上
-      // 断掉的连接，值得在告诉用户「市场加载失败」之前再问一次。这是一份短促、间隔均匀、
-      // 用户盯着也等得起的预算 —— 不是列表那种后台退避，那种退避是为了让已经可见的价格
-      // 保持存活，并没有人在对着一片空白干等。
+      // 没有这次快照，页面就什么都没有；而它只是一次普通读取，所以在告诉用户「市场加载
+      // 不出来」之前，值得为路上掉线的连接再问一次。这是一份短促、均匀的尝试预算 ——
+      // 一个正在盯着看的用户等得起。它不同于列表那套后台退避：那套是为了让已经显示出来的
+      // 价格活着，没有人对着一块空白屏幕干等。
       retryTransientFetch(),
       switchMap((market) =>
         market
           ? concat(
               of(market),
-              // 快照在途期间到达的帧会丢失，而这不付出任何代价：每一帧都是完整的上下文，
-              // 所以下一帧会把错过的那些帧说过的话重述一遍。
+              // 快照在飞期间到达的帧会丢掉，而这不花任何代价：每一帧都是一份完整的
+              // 上下文，所以下一帧会把错过的那些重新说一遍。
               this.channel.subscribe({ type: 'activeAssetCtx', coin }).pipe(
                 filter((frame) => !!frame?.ctx),
                 map((frame) => ({
@@ -179,11 +197,11 @@ export class PerpsMarketDatasetService {
   }
 
   /**
-   * 单个市场的静态元数据，外加一帧上下文。
+   * 单个市场的静态元数据，加上一帧上下文。
    *
-   * 只请求该市场自己所属的那个 DEX，这正是详情页得以避开列表所需的全 DEX 快照的原因。
-   * DEX 是从币种本身读出来的：HIP-3 币种会把它的 DEX 作为前缀带上，而不带前缀的币种
-   * 按定义就属于标准永续。
+   * 只问这个市场自己所在的 DEX —— 正是这一点让详情页避开了列表所需的全 DEX 快照。
+   * DEX 从币种本身读出：HIP-3 币种把它的 DEX 作为前缀带着，而一个不带前缀的币种
+   * 按定义就是标准永续。
    */
   private marketSnapshot(
     coin: string,
@@ -224,44 +242,43 @@ export class PerpsMarketDatasetService {
   //#region 列表
 
   /**
-   * 产品真正会展示的每个 DEX 各订阅一条市场上下文。
+   * 产品真正展示的每个 DEX 各订一条市场上下文，外加本会话已经画出来的那份列表。
    *
-   * 另一个选择 `allDexsAssetCtxs` 会把所有已部署的 HIP-3 DEX 塞进同一帧广播出来 ——
-   * 在测试网上大约 170KB，其中四分之三是 NeoLine 根本不列出的 DEX —— 而且它到达的频率
+   * 另一个选择 `allDexsAssetCtxs` 会把所有已部署的 HIP-3 DEX 塞进一帧广播出来 ——
+   * 测试网上大约 170KB，其中四分之三是 NeoLine 根本不列出的 DEX —— 而它到达的频率
    * 并不比按 DEX 的帧更高。
    */
-  private start() {
-    const stream = new Subscription();
-    this.source.enabledDexes.forEach((dex) => {
-      stream.add(
+  private openUpdates(): Observable<PerpsMarketUpdate> {
+    return merge(
+      ...this.source.enabledDexes.map((dex) =>
         this.channel
           .subscribe({ type: 'assetCtxs', dex })
-          .subscribe((update) => this.applyFrame(dex, update?.ctxs))
-      );
-    });
-    stream.add(
-      this.channel.watchConnectionState().subscribe((state) => {
-        const recovered = this.connectionState === 'stale' && state === 'live';
-        this.connectionState = state;
-        if (state === 'stale') {
-          if (this.state$.value.markets.length) {
-            this.publish({ availability: 'stale' });
-          }
-        } else if (recovered) {
-          // 帧自己会重述价格，但它既不能新增也不能移除市场 ——
-          // 所以「有哪些市场」才是重连欠下的那笔账。
-          this.loadSnapshot().subscribe({ error: () => undefined });
-        }
-      })
+          .pipe(map((update) => ({ dex, ctxs: update?.ctxs })))
+      )
     );
-    this.liveSub = stream;
   }
 
-  private stop() {
-    this.liveSub?.unsubscribe();
-    this.liveSub = undefined;
-    clearTimeout(this.retryTimer);
-    this.retryTimer = undefined;
+  private foldUpdate(
+    state: PerpsMarketDatasetState,
+    update: PerpsMarketUpdate
+  ): PerpsMarketDatasetState {
+    if (!Array.isArray(update.ctxs) || update.ctxs.length === 0) {
+      return state;
+    }
+    // 快照定义哪些市场存在，一个上下文数组造不出新市场来。什么都还没加载时也就没有
+    // 东西可更新 —— 而取数还开着时到达的帧，会改为回放到它的结果上。
+    if (!state.markets.length) {
+      return state;
+    }
+    return {
+      availability: state.availability === 'incomplete' ? 'incomplete' : 'live',
+      markets: mergeDexAssetContexts(state.markets, update.dex, update.ctxs),
+      updatedAt: Date.now(),
+    };
+  }
+
+  private retain(state: PerpsMarketDatasetState) {
+    this.lastState = state;
   }
 
   private isFresh(state: PerpsMarketDatasetState): boolean {
@@ -271,25 +288,57 @@ export class PerpsMarketDatasetService {
   }
 
   private ensureSnapshot() {
-    const current = this.state$.value;
-    if (this.snapshotRequest || this.isFresh(current)) {
+    if (this.isFresh(this.dataset.peek(MARKET_LIST))) {
       return;
     }
-    this.loadSnapshot().subscribe({
-      error: (error) => this.onSnapshotError(error),
-    });
+    this.dataset
+      .refresh(MARKET_LIST)
+      .subscribe({ error: () => undefined });
   }
 
-  private onSnapshotError(error: any) {
+  /**
+   * 所有可交易市场与它们的实时上下文合并，按 24 小时成交量排序。
+   *
+   * 已下市的资产被丢掉 —— 但它们仍然在 `universe` 里占着一个索引，所以 asset id
+   * 取自原始位置，绝不能重新计算。
+   */
+  private loadSnapshot(
+    current: PerpsMarketDatasetState
+  ): Observable<PerpsMarketDatasetState> {
+    return this.source.getDexRegistry().pipe(
+      switchMap((perpDexs) => this.snapshotRequests(perpDexs)),
+      map((responses) => {
+        const { markets, missing } = this.foldSnapshot(responses);
+        this.retryAttempts = 0;
+        return {
+          availability: missing
+            ? ('incomplete' as const)
+            : ('live' as const),
+          markets,
+          updatedAt: Date.now(),
+        };
+      }),
+      catchError((error) => {
+        this.scheduleRetry(error);
+        // 已经在屏幕上的市场还不构成用户的问题：原样继续显示，
+        // 并按逐渐拉长的间隔再问一次。
+        return of(
+          current.markets.length
+            ? current
+            : {
+                availability: 'unavailable' as const,
+                markets: [],
+                updatedAt: current.updatedAt,
+              }
+        );
+      })
+    );
+  }
+
+  private scheduleRetry(error: any) {
     if (this.observers === 0) {
       return;
     }
-    if (!this.state$.value.markets.length) {
-      this.publish({ availability: 'unavailable' });
-      return;
-    }
-    // 市场已经在屏幕上了，所以这次失败还不是用户的问题 ——
-    // 继续显示它们，并以逐渐拉长的间隔再问。
     clearTimeout(this.retryTimer);
     const base = error?.status === 429 ? RATE_LIMITED_BASE_MS : RETRY_BASE_MS;
     const delay = Math.min(
@@ -298,42 +347,6 @@ export class PerpsMarketDatasetService {
     );
     this.retryAttempts += 1;
     this.retryTimer = setTimeout(() => this.ensureSnapshot(), delay);
-  }
-
-  /**
-   * 所有可交易市场与它们的实时上下文合并的结果，按 24 小时成交量排序。
-   *
-   * 已下架的资产会被剔除 —— 但它们在 `universe` 里仍然占着一个下标，所以资产 id 取自
-   * 原始位置，绝不能重新计算。
-   */
-  private loadSnapshot(): Observable<PerpsMarket[]> {
-    if (this.snapshotRequest) {
-      return this.snapshotRequest;
-    }
-    const request = this.source.getDexRegistry().pipe(
-      switchMap((perpDexs) => this.snapshotRequests(perpDexs)),
-      map((responses) => this.foldSnapshot(responses)),
-      tap(({ markets, missing }) => {
-        this.pendingAssetContexts.clear();
-        this.retryAttempts = 0;
-        this.snapshotRequest = null;
-        this.publish({
-          availability: missing ? 'incomplete' : 'live',
-          markets,
-          updatedAt: Date.now(),
-        });
-      }),
-      map(({ markets }) => markets),
-      catchError((error) => {
-        this.snapshotRequest = null;
-        throw error;
-      }),
-      // 在途快照只有一份，大家共享：同时到来的多个页面，不该各自从同一个 IP 额度里
-      // 花掉一个请求。
-      shareReplay({ bufferSize: 1, refCount: false })
-    );
-    this.snapshotRequest = request;
-    return request;
   }
 
   private snapshotRequests(
@@ -353,8 +366,8 @@ export class PerpsMarketDatasetService {
       requests.push(
         this.source.getMetaAndAssetCtxs(dex).pipe(
           map((response) => ({ dex, dexIndex, response })),
-          // 一个不可用的 builder DEX 不能把标准永续市场藏起来 ——
-          // 但由此得到的列表是 `incomplete`，不是 `live`。
+          // 一个取不到的 builder DEX 不能把标准永续市场一起藏掉 ——
+          // 但这样得到的列表是 `incomplete`，不是 `live`。
           catchError(() => of(null))
         )
       );
@@ -376,39 +389,12 @@ export class PerpsMarketDatasetService {
         markets.push(buildMarket(item, ctx, dex, dexIndex, index));
       });
     });
-    const sorted = markets.sort((a, b) =>
-      new BigNumber(b.dayVolumeExact).comparedTo(a.dayVolumeExact)
-    );
-    // 在这次快照之前到达的帧会被重放到它上面，这样慢吞吞的 REST 响应就不会让列表落后
-    // 整整一代。
-    let seeded = sorted;
-    this.pendingAssetContexts.forEach((ctxs, dex) => {
-      seeded = mergeDexAssetContexts(seeded, dex, ctxs);
-    });
-    return { markets: seeded, missing: responses.some((r) => r === null) };
-  }
-
-  private applyFrame(dex: string, ctxs: PerpsAssetCtx[]) {
-    if (!Array.isArray(ctxs) || ctxs.length === 0) {
-      return;
-    }
-    const current = this.state$.value;
-    if (!current.markets.length) {
-      // 快照才定义有哪些市场存在；在它落地之前先把帧攥着，
-      // 而不是从一个上下文数组里凭空造出市场。
-      this.pendingAssetContexts.set(dex, ctxs);
-      return;
-    }
-    this.publish({
-      markets: mergeDexAssetContexts(current.markets, dex, ctxs),
-      updatedAt: Date.now(),
-      availability:
-        current.availability === 'incomplete' ? 'incomplete' : 'live',
-    });
-  }
-
-  private publish(patch: Partial<PerpsMarketDatasetState>) {
-    this.state$.next({ ...this.state$.value, ...patch });
+    return {
+      markets: markets.sort((a, b) =>
+        new BigNumber(b.dayVolumeExact).comparedTo(a.dayVolumeExact)
+      ),
+      missing: responses.some((r) => r === null),
+    };
   }
 
   //#endregion

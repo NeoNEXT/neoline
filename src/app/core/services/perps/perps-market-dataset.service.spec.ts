@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { discardPeriodicTasks, fakeAsync, tick } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 
 import { PerpsMarket } from '@popup/_lib/perps';
 import { fakePerpsDataChannel } from './perps-data-channel.fake';
@@ -341,6 +341,47 @@ describe('PerpsMarketDatasetService live list', () => {
     expect(view.last().availability).toBe('live');
 
     view.stop();
+    discardPeriodicTasks();
+  }));
+
+  it('keeps a frame that arrived while a snapshot was in flight', fakeAsync(() => {
+    const answers: Subject<any>[] = [];
+    const ethAt = (midPx: string) => [
+      { universe: [{ name: 'ETH', szDecimals: 4, maxLeverage: 25 }] },
+      [ctx(midPx)],
+    ];
+    const { service, channel } = build({
+      getMetaAndAssetCtxs: () => {
+        const answer = new Subject<any>();
+        answers.push(answer);
+        return answer;
+      },
+    });
+    const land = (index: number, midPx: string) => {
+      answers[index].next(ethAt(midPx));
+      answers[index].complete();
+    };
+
+    const view = watching(service);
+    land(0, '1875.75');
+    expect(view.last().markets[0].midPxExact).toBe('1875.75');
+
+    // TTL 过期后再来一个观察者，于是又发出一次快照。
+    tick(15001);
+    const second = watching(service);
+
+    // 这一帧在那次快照还没回来时到达。
+    channel.push({ type: 'assetCtxs', dex: '' }, { ctxs: [ctx('1899')] });
+    expect(view.last().markets[0].midPxExact).toBe('1899');
+
+    // 快照带着更旧的价格回来。它定义市场集合，但不能把这段时间里
+    // 已经收到的更新的帧覆盖掉 —— 否则价格会回退一个快照的年龄。
+    land(1, '1875.75');
+
+    expect(view.last().markets[0].midPxExact).toBe('1899');
+
+    view.stop();
+    second.stop();
     discardPeriodicTasks();
   }));
 

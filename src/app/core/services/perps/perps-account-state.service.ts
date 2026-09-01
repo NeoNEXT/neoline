@@ -1,13 +1,6 @@
 import { Injectable } from '@angular/core';
-import {
-  BehaviorSubject,
-  combineLatest,
-  forkJoin,
-  Observable,
-  ReplaySubject,
-  Subscription,
-} from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
+import { EMPTY, Observable, combineLatest, forkJoin, merge, of } from 'rxjs';
+import { catchError, map, shareReplay } from 'rxjs/operators';
 
 import {
   PerpsAccount,
@@ -17,12 +10,16 @@ import {
 } from '@popup/_lib/perps';
 import { HyperliquidService } from './hyperliquid.service';
 import { PerpsDataChannel } from './perps-data-channel.service';
+import { PerpsDataset } from './perps-dataset';
 import {
   aggregatePerpsAccounts,
   updatePerpsAccountFromClearinghouseState,
   updatePerpsAccountFromSpotState,
 } from './perps-account-state';
 
+/**
+ * 本模块需要交易场所提供的全部东西，不多不少。
+ */
 interface PerpsAccountSource {
   readonly enabledDexes: string[];
   getAccount(
@@ -32,76 +29,109 @@ interface PerpsAccountSource {
   ): Observable<PerpsAccount>;
 }
 
+/** 一个地址在一个 DEX 上的账户。 */
+interface PerpsAccountKey {
+  user: string;
+  dex: string;
+}
+
 type AccountFrame =
   | { kind: 'spot'; value: any }
   | { kind: 'clearinghouse'; value: any };
 
-interface AccountEntry {
-  key: string;
-  user: string;
-  dex: string;
-  subject: BehaviorSubject<PerpsAccountState<PerpsAccount>>;
-  observers: number;
-  started: boolean;
-  connectionState: PerpsConnectionState;
-  subscriptions: Subscription;
-  refreshBuffer: AccountFrame[];
-  refresh$: Observable<PerpsAccountState<PerpsAccount>>;
-}
+const LOADING: PerpsAccountState<PerpsAccount> = {
+  availability: 'loading',
+  account: null,
+  missingDexes: [],
+  updatedAt: null,
+};
 
+/**
+ * **账户状态** —— 交易场所此刻对一个地址的说法。
+ *
+ * 快照与帧的仲裁归共享的**数据集**核心，见
+ * [ADR-0008](../../../../../docs/adr/0008-shared-dataset-snapshot-frame-arbiter.md)。
+ * 只有账户特有的东西留在这里：哪些频道承载账户、一次失败的读取如何在不声称事实为零的
+ * 前提下被报告出来，以及跨所有已启用 DEX 的那份只读汇总。
+ */
 @Injectable({ providedIn: 'root' })
 export class PerpsAccountStateService {
   private readonly source: PerpsAccountSource;
-  private readonly entries = new Map<string, AccountEntry>();
+  private readonly dataset: PerpsDataset<
+    PerpsAccountKey,
+    PerpsAccountState<PerpsAccount>,
+    AccountFrame
+  >;
   private readonly aggregateStreams = new Map<
     string,
     Observable<PerpsAccountState<PerpsAggregatedAccount>>
   >();
+  /**
+   * 连接态变化**做什么**由核心决定；本数据集还得知道它当前**是什么**，因为可用性要点名它：
+   * 数据源已经断开时一次经由 REST 成功的读取，不是实时数据。
+   */
+  private connectionState: PerpsConnectionState = 'connecting';
 
-  constructor(
-    hyperliquid: HyperliquidService,
-    private readonly channel: PerpsDataChannel
-  ) {
+  constructor(hyperliquid: HyperliquidService, channel: PerpsDataChannel) {
     this.source = hyperliquid;
+    channel
+      .watchConnectionState()
+      .subscribe((state) => (this.connectionState = state));
+    this.dataset = new PerpsDataset(channel, {
+      initial: LOADING,
+      keyOf: ({ user, dex }) => `${user}:dex=${dex}`,
+      frames: ({ user, dex }) =>
+        merge(
+          channel
+            .subscribe({ type: 'clearinghouseState', user, dex })
+            .pipe(
+              map((value) => ({ kind: 'clearinghouse' as const, value }))
+            ),
+          // 现货钱包是账户级的，所以只有标准条目去读它 ——
+          // 把它折进抵押品这件事不能每个 DEX 各做一次。
+          dex
+            ? EMPTY
+            : channel
+                .subscribe({ type: 'spotState', user })
+                .pipe(map((value) => ({ kind: 'spot' as const, value })))
+        ),
+      load: (key, current) => this.loadAccount(key, current),
+      foldFrame: (state, frame) => this.foldFrame(state, frame),
+      onConnectionState: (state, current) =>
+        state === 'stale'
+          ? {
+              ...current,
+              availability: current.account ? 'stale' : 'unavailable',
+            }
+          : current,
+    });
   }
 
-  /** 单个 DEX 的账户，由观察同一地址的所有调用方共享。 */
+  /** 一个 DEX 上的账户，由所有观察同一地址的调用方共享。 */
   watchAccount(
     address: string,
     dex = ''
   ): Observable<PerpsAccountState<PerpsAccount>> {
-    const user = address.toLowerCase();
-    return new Observable((observer) => {
-      const entry = this.entry(user, dex);
-      entry.observers += 1;
-      const subscription = entry.subject.subscribe(observer);
-      if (!entry.started) {
-        this.start(entry);
+    const key = { user: address.toLowerCase(), dex };
+    return new Observable<PerpsAccountState<PerpsAccount>>((observer) => {
+      const subscription = this.dataset.watch(key).subscribe(observer);
+      // 这个地址还什么都没读过，所以刚订上来的观察者欠他第一次读取。
+      if (this.dataset.peek(key).availability === 'loading') {
+        this.dataset.refresh(key).subscribe({ error: () => undefined });
       }
-      if (!entry.refresh$ && entry.subject.value.availability === 'loading') {
-        this.refresh(entry);
-      }
-      return () => {
-        subscription.unsubscribe();
-        entry.observers = Math.max(0, entry.observers - 1);
-        this.stopIfUnused(entry);
-      };
+      return () => subscription.unsubscribe();
     });
   }
 
-  /** 把一份新的单 DEX 快照折叠进同一份实时状态。 */
+  /** 重新取一次单个 DEX 的快照，折叠进同一份实时状态。 */
   refreshAccount(
     address: string,
     dex = ''
   ): Observable<PerpsAccountState<PerpsAccount>> {
-    const entry = this.entry(address.toLowerCase(), dex);
-    if (!entry.started) {
-      this.start(entry);
-    }
-    return this.refresh(entry);
+    return this.dataset.refresh({ user: address.toLowerCase(), dex });
   }
 
-  /** 所有启用的 DEX，与其他页面共享同一批单 DEX 数据流。 */
+  /** 所有已启用的 DEX，与其他页面共用同一批单 DEX 数据流。 */
   watchAggregatedAccount(
     address: string
   ): Observable<PerpsAccountState<PerpsAggregatedAccount>> {
@@ -119,7 +149,7 @@ export class PerpsAccountStateService {
     return stream;
   }
 
-  /** 刷新所有启用的 DEX，按 DEX 共享进行中的请求。 */
+  /** 刷新所有已启用的 DEX，每个 DEX 上共用在飞的那次请求。 */
   refreshAggregatedAccount(
     address: string
   ): Observable<PerpsAccountState<PerpsAggregatedAccount>> {
@@ -129,151 +159,65 @@ export class PerpsAccountStateService {
     ).pipe(map((states) => this.aggregate(states)));
   }
 
-  private entry(user: string, dex: string): AccountEntry {
-    const key = `${user}:dex=${dex}`;
-    let entry = this.entries.get(key);
-    if (!entry) {
-      entry = {
-        key,
-        user,
-        dex,
-        subject: new BehaviorSubject({
-          availability: 'loading',
-          account: null,
-          missingDexes: [],
-          updatedAt: null,
-        }),
-        observers: 0,
-        started: false,
-        connectionState: 'connecting',
-        subscriptions: new Subscription(),
-        refreshBuffer: [],
-        refresh$: null,
-      };
-      this.entries.set(key, entry);
-    }
-    return entry;
-  }
-
-  private start(entry: AccountEntry) {
-    if (entry.started) {
-      return;
-    }
-    entry.started = true;
-    entry.subscriptions = new Subscription();
-    entry.subscriptions.add(
-      this.channel.watchConnectionState().subscribe((state) => {
-        const recovered =
-          entry.connectionState === 'stale' && state === 'live';
-        entry.connectionState = state;
-        const current = entry.subject.value;
-        if (state === 'stale') {
-          entry.subject.next({
-            ...current,
-            availability: current.account ? 'stale' : 'unavailable',
-          });
-        } else if (recovered) {
-          this.refresh(entry);
-        }
+  /**
+   * 一次失败的读取对余额什么都没说 —— 它不能把余额报成零。数据源断开期间，已经拿到的
+   * 东西继续留在屏幕上；什么都没拿到时，这个 DEX 改报为缺失。
+   */
+  private loadAccount(
+    key: PerpsAccountKey,
+    current: PerpsAccountState<PerpsAccount>
+  ): Observable<PerpsAccountState<PerpsAccount>> {
+    return this.source.getAccount(key.user, true, key.dex).pipe(
+      map((account) => ({
+        availability:
+          this.connectionState === 'stale'
+            ? ('stale' as const)
+            : ('live' as const),
+        account,
+        missingDexes: [],
+        updatedAt: Date.now(),
+      })),
+      catchError(() => {
+        const keepsStale =
+          this.connectionState === 'stale' && !!current.account;
+        return of({
+          availability: keepsStale
+            ? ('stale' as const)
+            : ('unavailable' as const),
+          account: keepsStale ? current.account : null,
+          missingDexes: keepsStale ? [] : [key.dex],
+          updatedAt: current.updatedAt,
+        });
       })
     );
-    if (!entry.dex) {
-      entry.subscriptions.add(
-        this.channel
-          .subscribe({ type: 'spotState', user: entry.user })
-          .subscribe((value) =>
-            this.applyFrame(entry, { kind: 'spot', value })
-          )
-      );
-    }
-    entry.subscriptions.add(
-      this.channel
-        .subscribe({
-          type: 'clearinghouseState',
-          user: entry.user,
-          dex: entry.dex,
-        })
-        .subscribe((value) =>
-          this.applyFrame(entry, { kind: 'clearinghouse', value })
-        )
-    );
   }
 
-  private refresh(
-    entry: AccountEntry
-  ): Observable<PerpsAccountState<PerpsAccount>> {
-    if (entry.refresh$) {
-      return entry.refresh$;
+  /**
+   * 把一帧频道数据折叠进账户。
+   *
+   * 帧更新的是已经读到的事实上的数值，它建立不了账户本身 —— 所以什么都还没读到时，
+   * 也就没有东西可供折叠。可用性原样保留：一条已经被报为陈旧的数据源上来了一帧，
+   * 并不会让它重新变回实时。
+   */
+  private foldFrame(
+    state: PerpsAccountState<PerpsAccount>,
+    frame: AccountFrame
+  ): PerpsAccountState<PerpsAccount> {
+    if (!state.account) {
+      return state;
     }
-    entry.refreshBuffer = [];
-    const result = new ReplaySubject<PerpsAccountState<PerpsAccount>>(1);
-    const observable = result.asObservable();
-    entry.refresh$ = observable;
-    this.source.getAccount(entry.user, true, entry.dex).subscribe({
-      next: (snapshot) => {
-        const account = entry.refreshBuffer.reduce(
-          (current, frame) => this.foldFrame(current, frame),
-          snapshot
-        );
-        entry.refreshBuffer = [];
-        const state: PerpsAccountState<PerpsAccount> = {
-          availability:
-            entry.connectionState === 'stale' ? 'stale' : 'live',
-          account,
-          missingDexes: [],
-          updatedAt: Date.now(),
-        };
-        entry.subject.next(state);
-        result.next(state);
-        result.complete();
-        this.finishRefresh(entry);
-      },
-      error: () => {
-        entry.refreshBuffer = [];
-        const current = entry.subject.value;
-        const keepsStale =
-          entry.connectionState === 'stale' && !!current.account;
-        const state: PerpsAccountState<PerpsAccount> = {
-          availability: keepsStale ? 'stale' : 'unavailable',
-          account: keepsStale ? current.account : null,
-          missingDexes: keepsStale ? [] : [entry.dex],
-          updatedAt: current.updatedAt,
-        };
-        entry.subject.next(state);
-        result.next(state);
-        result.complete();
-        this.finishRefresh(entry);
-      },
-    });
-    return observable;
-  }
-
-  private finishRefresh(entry: AccountEntry) {
-    entry.refresh$ = null;
-    this.stopIfUnused(entry);
-  }
-
-  private applyFrame(entry: AccountEntry, frame: AccountFrame) {
-    if (entry.refresh$) {
-      entry.refreshBuffer.push(frame);
-    }
-    const current = entry.subject.value;
-    if (!current.account) {
-      return;
-    }
-    entry.subject.next({
-      availability:
-        entry.connectionState === 'stale' ? 'stale' : 'live',
-      account: this.foldFrame(current.account, frame),
+    return {
+      availability: state.availability,
+      account:
+        frame.kind === 'spot'
+          ? updatePerpsAccountFromSpotState(state.account, frame.value)
+          : updatePerpsAccountFromClearinghouseState(
+              state.account,
+              frame.value
+            ),
       missingDexes: [],
       updatedAt: Date.now(),
-    });
-  }
-
-  private foldFrame(account: PerpsAccount, frame: AccountFrame): PerpsAccount {
-    return frame.kind === 'spot'
-      ? updatePerpsAccountFromSpotState(account, frame.value)
-      : updatePerpsAccountFromClearinghouseState(account, frame.value);
+    };
   }
 
   private aggregate(
@@ -314,16 +258,5 @@ export class PerpsAccountStateService {
       missingDexes,
       updatedAt: updated.length ? Math.min(...updated) : null,
     };
-  }
-
-  private stopIfUnused(entry: AccountEntry) {
-    if (entry.observers > 0 || entry.refresh$) {
-      return;
-    }
-    entry.subscriptions.unsubscribe();
-    entry.started = false;
-    if (this.entries.get(entry.key) === entry) {
-      this.entries.delete(entry.key);
-    }
   }
 }
