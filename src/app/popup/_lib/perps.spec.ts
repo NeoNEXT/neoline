@@ -1,6 +1,7 @@
 import {
   isCandleInterval,
   perpsIntervalMs,
+  perpsSizeAtLot,
   resolvePerpsTestnet,
 } from './perps';
 
@@ -46,5 +47,36 @@ describe('resolvePerpsTestnet', () => {
   it('always selects mainnet in production builds', () => {
     expect(resolvePerpsTestnet('mainnet', true)).toBeFalse();
     expect(resolvePerpsTestnet('testnet', true)).toBeFalse();
+  });
+});
+
+describe('perpsSizeAtLot', () => {
+  it('floors to the market lot, never rounds up', () => {
+    // 向上取整会下出一笔比用户所选更大的订单。
+    expect(perpsSizeAtLot('0.02499', 4)).toBe('0.0249');
+    expect(perpsSizeAtLot('0.02491', 4)).toBe('0.0249');
+    expect(perpsSizeAtLot('10.5', 0)).toBe('10');
+  });
+
+  /**
+   * 这个数量会回流进签名，所以整条路径都不经过 `Number`（ADR-0001）：
+   * `0.025599999999999999` 走一趟双精度会变成 `0.0256`，于是下的订单比用户选的更大。
+   */
+  it('truncates the decimals without going through a float', () => {
+    expect(perpsSizeAtLot('0.025599999999999999', 4)).toBe('0.0255');
+    expect(perpsSizeAtLot('24836370.4400000013', 4)).toBe('24836370.44');
+  });
+
+  it('answers zero for anything that is not a positive size', () => {
+    expect(perpsSizeAtLot('0', 4)).toBe('0');
+    expect(perpsSizeAtLot('-1', 4)).toBe('0');
+    expect(perpsSizeAtLot('abc', 4)).toBe('0');
+    expect(perpsSizeAtLot('', 4)).toBe('0');
+    // 不足一手就是没有数量，而不是一个很小的数量。
+    expect(perpsSizeAtLot('0.5', 0)).toBe('0');
+  });
+
+  it('treats a negative lot precision as whole units', () => {
+    expect(perpsSizeAtLot('10.9', -2)).toBe('10');
   });
 });

@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Unsubscribable } from 'rxjs';
+import { firstValueFrom, Unsubscribable } from 'rxjs';
 import BigNumber from 'bignumber.js';
 
 import { AppState } from '@/app/reduers';
@@ -51,8 +51,12 @@ import {
   PerpsOrderFacts,
   PerpsOrderInput,
   PerpsOrderUnavailableCode,
-  PerpsReviewBaseline,
 } from './perps-order-composition';
+import {
+  PerpsOrderLifecycle,
+  PerpsOrderLifecycleState,
+} from './perps-order-lifecycle';
+import { seedForm, PerpsOrderUserSetField } from './perps-order-seeding';
 
 /** Hyperliquid 的基础费率，在 `userFees` 报出真实费率之前先用它。 */
 const TAKER_FEE_RATE = 0.00045;
@@ -60,16 +64,6 @@ const MAKER_FEE_RATE = 0.00015;
 
 /** 美元金额按分输入、也按分提交。 */
 const AMOUNT_DECIMALS = 2;
-
-/**
- * 对于一笔读不到结果的订单，页面会有多努力去查清它的下落。
- *
- * 只要交易场所有答案，一个 cloid 一两秒内就能查到，所以短促的固定节奏能很快找到它；更要紧
- * 的是这些尝试要有个头。无限重试会让提交按钮在一笔交易场所可能永远不会上报的订单上被永久
- * 禁用，而用户唯一的脱身办法是离开页面 —— 那样 cloid 就彻底丢了。
- */
-const ORDER_RESOLUTION_ATTEMPTS = 4;
-const ORDER_RESOLUTION_INTERVAL_MS = 1500;
 
 /**
  * 还没输入金额时摘要行的读数，与 Hyperliquid 自家下单表单一致。它不同于 `--`：本界面用
@@ -162,16 +156,6 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   slippagePercent = PERPS_DEFAULT_SLIPPAGE_PERCENT;
   activePercent: number = null;
 
-  submitting = false;
-  reviewing = false;
-  /**
-   * 订单已经签名并发出，而页面始终没弄清它的下落。这不是失败 —— 它可能已经成交 —— 所以
-   * 页面就照实这么说，并提供再看一眼的入口，而不是道歉或重试。
-   */
-  executionStatusUnknown = false;
-  /** 有一次 cloid 查询在途，此时「再查一次」只会再叠一个。 */
-  resolvingOrderStatus = false;
-
   //#region 模板辅助方法
   formatPrice = formatPrice;
   formatSignedPercent = formatSignedPercent;
@@ -185,7 +169,18 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   private marketsSub: Unsubscribable;
   private activeAssetDataSub: Unsubscribable;
   private userFeeSub: Unsubscribable;
-  private leverageSelected = false;
+  /**
+   * 这一单走到哪一步了 —— 审核、提交、下落未明。页面自己的那道闸门整个在里面；
+   * 见 {@link PerpsOrderLifecycle}。
+   */
+  private lifecycle: PerpsOrderLifecycle;
+  /**
+   * 用户亲手给过值的字段。
+   *
+   * 表单播种只填不在这里的字段，所以这个集合就是「别再动它」的全部含义 —— 过去那三个
+   * 各管各的一次性闩锁（`leverageSelected` / `closeModeSeeded` / `initialLoad`）塌成了它。
+   */
+  private readonly touched = new Set<PerpsOrderUserSetField>();
   /**
    * 上一次组合结果，以及推导它所用的那组参数。
    *
@@ -196,13 +191,6 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   private lastComposition: PerpsOrderComposition = null;
   private lastFacts: PerpsOrderFacts = null;
   private lastInput: PerpsOrderInput = null;
-  /** 平仓模式只按仓位换算一次数量，而不是每一帧都算。 */
-  private closeModeSeeded = false;
-  private reviewBaseline: PerpsReviewBaseline = null;
-  private pendingCloid: string = null;
-  /** 在一次传输结果不明的已签名请求之后，阻止重复提交。 */
-  private orderResolutionPending = false;
-  private reconciliationTimer: ReturnType<typeof setTimeout>;
   /** 正在输入框里敲的文本；显示实时值时为 null。 */
   private percentDraft: string = null;
   private leverageDraft: string = null;
@@ -225,7 +213,20 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private markets$: PerpsMarketDatasetService,
     private writes: PerpsExchangeWriteService
-  ) {}
+  ) {
+    this.lifecycle = new PerpsOrderLifecycle(
+      {
+        schedule: (run, ms) => {
+          const timer = setTimeout(run, ms);
+          return () => clearTimeout(timer);
+        },
+        // 地址在这里绑掉：生命周期不需要知道页面在为谁下单。
+        queryOrderStatus: (cloid) =>
+          firstValueFrom(this.writes.getOrderStatus(this.address, cloid)),
+      },
+      (from, to) => this.onLifecycleChange(from, to)
+    );
+  }
 
   ngOnInit() {
     this.coin = this.route.snapshot.params.coin;
@@ -266,7 +267,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     this.marketsSub?.unsubscribe();
     this.activeAssetDataSub?.unsubscribe();
     this.userFeeSub?.unsubscribe();
-    clearTimeout(this.reconciliationTimer);
+    this.lifecycle.dispose();
   }
 
   /** 本路由所交易的 DEX；HIP-3 币种会把它作为前缀带上。 */
@@ -285,32 +286,12 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   private loadMarket() {
     this.marketsSub = this.markets$.watchMarketDetail(this.coin).subscribe({
       next: (market) => {
-        const initialLoad = !this.market;
         this.patchFacts({
           market: market
             ? { status: 'ready', market }
             : { status: 'missing' },
         });
-        if (market && initialLoad) {
-          // 用市价单所用的同一个参考价为限价输入框播种，
-          // 并已按这个市场能报出的价位做过量化。
-          this.limitPrice = normalizeLimitPrice(
-            market.midPxExact,
-            market.szDecimals
-          );
-          const exchangeLeverage = this.facts.activeAssetData?.leverage.value;
-          if (
-            exchangeLeverage &&
-            !this.leverageSelected &&
-            exchangeLeverage >= 1 &&
-            exchangeLeverage <= market.maxLeverage
-          ) {
-            this.leverage = exchangeLeverage;
-          } else {
-            // 在用户交易场所侧的杠杆到达之前先用默认值。
-            this.leverage = Math.min(2, market.maxLeverage);
-          }
-        }
+        this.applySeed();
       },
       error: () => {
         this.patchFacts({ market: { status: 'error' } });
@@ -325,6 +306,48 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    */
   private patchFacts(patch: Partial<PerpsOrderFacts>) {
     this.facts = { ...this.facts, ...patch };
+  }
+
+  /**
+   * 让表单跟上刚到的事实。
+   *
+   * 每帧都跑，因为播种是幂等的纯映射：它只填用户没亲手给过值的字段，所以「哪一帧先到」
+   * 不再改变结果 —— 过去三条播种规则散在三个订阅回调里各带各的守卫，行情先到和账户先到
+   * 会得出不同的杠杆。审核态下整个跳过：用户批准的就是屏幕上这些值。
+   */
+  private applySeed() {
+    const seed = seedForm(
+      this.facts,
+      this.input,
+      this.touched,
+      this.lifecycle.reviewing
+    );
+    Object.assign(this, seed);
+  }
+
+  /**
+   * 提交生命周期动了。
+   *
+   * 刷新账户和说哪句话都由「从哪来、到哪去」决定 —— 生命周期只管状态，措辞和账户都归页面
+   * （见 ADR-0006：恢复就是按 cloid 查一次、再刷一次账户，没有别的）。
+   */
+  private onLifecycleChange(
+    from: PerpsOrderLifecycleState,
+    to: PerpsOrderLifecycleState
+  ) {
+    // 从「下落未明」回到编辑态：交易场所终于给了答案。
+    if (from.kind === 'unknown' && to.kind === 'composing') {
+      this.global.snackBarTip('perpsOrderStatusResolved');
+      this.refreshAccount();
+      return;
+    }
+    // 一次提交有了结局，或者查询的尝试次数用尽 —— 两种情况下账户都可能已经变了。
+    if (
+      (from.kind === 'submitting' && to.kind === 'composing') ||
+      (to.kind === 'unknown' && !to.resolving)
+    ) {
+      this.refreshAccount();
+    }
   }
 
   /**
@@ -365,18 +388,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
               Number(market?.markPxExact ?? 0),
           },
         });
-        if (
-          !this.closeMode &&
-          !this.leverageSelected &&
-          market &&
-          data.leverage.value >= 1 &&
-          data.leverage.value <= market.maxLeverage
-        ) {
-          this.leverage = data.leverage.value;
-        }
-        if (this.activePercent !== null && !this.closeMode) {
-          this.setPercent(this.activePercent);
-        }
+        this.applySeed();
+        this.repricePercent();
       });
   }
 
@@ -396,18 +409,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       .watchAccount(this.address, this.dex)
       .subscribe((state) => {
         this.patchFacts({ account: state });
-        const position = this.position;
-        // 只播种一次：之后的帧不能覆盖用户此后输入的金额。
-        if (this.closeMode && position && !this.closeModeSeeded) {
-          this.closeModeSeeded = true;
-          // 平仓意味着站到所持仓位的反方向。
-          this.side = position.isLong ? 'short' : 'long';
-          this.leverage = position.leverage;
-          this.amount = new BigNumber(position.positionValueExact).toFixed(
-            AMOUNT_DECIMALS
-          );
-          this.activePercent = 100;
-        }
+        this.applySeed();
       });
   }
 
@@ -424,9 +426,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     this.userFeeSub = this.hyperliquid.getUserFeeRates(this.address).subscribe({
       next: ({ takerRate, makerRate }) => {
         this.setFeeRates(takerRate, makerRate);
-        if (this.activePercent !== null && !this.closeMode) {
-          this.setPercent(this.activePercent);
-        }
+        this.repricePercent();
       },
       // userFees 失败时，基础费率仍是一个保守的兜底。
       error: () => {},
@@ -639,39 +639,39 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    * 的方式。
    */
   get canSubmit(): boolean {
-    return (
-      !this.submitting &&
-      !this.orderResolutionPending &&
-      this.composition.submittable
-    );
+    return this.lifecycle.gateOpen && this.composition.submittable;
   }
 
-  /**
-   * 意图一有任何变化就作废这次审核。
-   *
-   * 基准存在的意义是回答「这还是当初批准的那个吗」，所以一次编辑会让它作废，而不是拿它去
-   * 比对 —— 用户会被送回去，重新审核他们刚刚改动的东西。
-   */
-  private discardReview() {
-    this.reviewing = false;
-    this.reviewBaseline = null;
-    this.pendingCloid = null;
+  //#region 生命周期的读数，直接绑给模板
+  get reviewing(): boolean {
+    return this.lifecycle.reviewing;
   }
+
+  get executionStatusUnknown(): boolean {
+    return this.lifecycle.executionStatusUnknown;
+  }
+
+  get resolvingOrderStatus(): boolean {
+    return this.lifecycle.resolvingOrderStatus;
+  }
+  //#endregion
 
   setSide(side: PerpsOrderSide) {
     if (this.closeMode) {
       return;
     }
     this.side = side;
-    this.discardReview();
+    this.touched.add('side');
+    this.lifecycle.edited();
     if (this.activePercent !== null) {
       this.setPercent(this.activePercent);
     }
   }
 
   setOrderType(type: PerpsOrderType) {
+    // 订单类型没有播种规则，所以不进「用户给定」—— 标记它只会留下一个没人读的位。
     this.orderType = type;
-    this.discardReview();
+    this.lifecycle.edited();
   }
 
   setLeverage(leverage: number) {
@@ -680,8 +680,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       1,
       Math.min(max, Math.round(Number(leverage) || 1))
     );
-    this.leverageSelected = true;
-    this.discardReview();
+    this.touched.add('leverage');
+    this.lifecycle.edited();
     // 金额滑块按购买力换算数量，而购买力刚刚随杠杆变了。
     if (this.activePercent !== null && !this.closeMode) {
       this.setPercent(this.activePercent);
@@ -716,10 +716,35 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
 
   /**
    * 开仓时金额滑块按购买力（抵押品 × 杠杆）换算订单数量，平仓时按仓位价值换算。
+   *
+   * 这是用户自己按下百分比时走的那条路，所以它作废审核：用户改了金额，就该重新审核他改
+   * 出来的东西。行情帧走的是另一条 —— 见 {@link repricePercent}。
    */
   setPercent(percent: number) {
     this.activePercent = Math.max(0, Math.min(100, Number(percent) || 0));
-    this.discardReview();
+    // 标的是 `amount` 而不是 `activePercent`：用户点 50% 表达的是「金额由我定」，
+    // 只标后者的话，下一帧播种就会用仓位价值把金额盖掉，50% 当场失效。
+    this.touched.add('amount');
+    this.lifecycle.edited();
+    this.amount = amountForPercent(this.composition, this.activePercent);
+  }
+
+  /**
+   * 帧到达时，按当前购买力重算百分比所对应的金额。
+   *
+   * 审核态下什么都不做。屏幕上那个美元数正是用户批准的东西，背着他重算等于改掉他批准的
+   * 输入 —— 而按 ADR-0006，页面保存的基线就是「用户输入 + 审核价」。
+   * `activeAssetData` 是一条实时订阅，所以过去这里每来一帧就静默作废一次审核：用户点完
+   * 百分比再点审核，下一帧就把他退回编辑态，而 CTA 绑的是 `reviewing ? submit() : review()`，
+   * 于是那一下点击换来的是重新审核，不是下单。
+   *
+   * 容量在审核期间下跌的风险已经有人管：`composeOrder` 会给出 `insufficient-margin`，
+   * 提交按钮自己就禁用并说明原因，不需要在这里抢先改数字。
+   */
+  private repricePercent() {
+    if (this.reviewing || this.closeMode || this.activePercent === null) {
+      return;
+    }
     this.amount = amountForPercent(this.composition, this.activePercent);
   }
 
@@ -768,12 +793,14 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     }
     this.amount = clamped;
     this.activePercent = null;
-    this.discardReview();
+    this.touched.add('amount');
+    this.lifecycle.edited();
   }
 
   onLimitPriceInput(value: string) {
     this.limitPrice = value;
-    this.discardReview();
+    this.touched.add('limitPrice');
+    this.lifecycle.edited();
   }
 
   /**
@@ -788,7 +815,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     );
     if (normalized !== this.limitPrice) {
       this.limitPrice = normalized;
-      this.discardReview();
+      this.touched.add('limitPrice');
+      this.lifecycle.edited();
     }
   }
 
@@ -818,7 +846,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
           STORAGE_NAME.perpsMaxSlippage,
           this.slippagePercent
         );
-        this.discardReview();
+        this.lifecycle.edited();
       });
   }
 
@@ -838,7 +866,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     }
     // 即将展示给用户的那个价格，保存下来，好让提交时能判断行情此后是否已经
     // 偏离到超出他们同意的范围。
-    this.reviewBaseline = {
+    this.lifecycle.review({
       priceExact: this.orderPriceExact,
       amount: this.amount,
       limitPrice: this.limitPrice,
@@ -847,38 +875,33 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       leverage: this.leverage,
       slippagePercent: this.slippagePercent,
       mode: this.closeMode ? 'close' : 'open',
-    };
-    this.reviewing = true;
+    });
   }
 
   /** 这笔订单是否仍然是用户批准过的那一笔。 */
   private get stillApproved(): boolean {
+    const baseline = this.lifecycle.baseline;
     return (
-      intentUnchanged(this.reviewBaseline, this.input) &&
-      withinReviewedSlippage(this.reviewBaseline, this.facts, this.input)
+      intentUnchanged(baseline, this.input) &&
+      withinReviewedSlippage(baseline, this.facts, this.input)
     );
   }
 
-  /** 把用户送回审核，并说明原因。 */
-  private requireReview(message: string) {
-    this.discardReview();
-    this.global.snackBarTip(message);
-  }
-
   async submit() {
-    if (!this.canSubmit || !this.reviewing || !this.reviewBaseline) {
+    if (!this.canSubmit || !this.lifecycle.reviewing) {
       return;
     }
-    if (!this.stillApproved) {
-      this.requireReview('perpsMarketChangedReviewAgain');
-      return;
-    }
+    // 签不了名就先说签不了：这比先告诉用户价格变了更有用，而价格对一个根本无法签名的
+    // 钱包来说是没有意义的信息。
     const walletExtra = this.wallet?.accounts[0]?.extra;
     if (walletExtra?.ledgerSLIP44 || walletExtra?.qrBasedXFP) {
       this.global.snackBarTip('perpsSigningUnavailable');
       return;
     }
-    this.submitting = true;
+    if (!this.lifecycle.beginSubmit(this.stillApproved)) {
+      this.global.snackBarTip('perpsMarketChangedReviewAgain');
+      return;
+    }
     try {
       const password = await this.chrome.getPassword();
       const privateKey = await this.evmWallet.getPrivateKey(
@@ -887,129 +910,65 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       );
       const intent = this.composition.intent;
       if (!intent) {
-        this.submitting = false;
-        this.requireReview('perpsMarketChangedReviewAgain');
+        this.lifecycle.settled();
+        this.global.snackBarTip('perpsMarketChangedReviewAgain');
         return;
       }
-      this.tradeOrders
-        .submit(privateKey, intent)
-        .subscribe({
-          next: (submission) => {
-            this.submitting = false;
-            const result = submission.result;
-            const message = {
-              filled: 'perpsOrderFilled',
-              partial: 'perpsOrderPartiallyFilled',
-              resting: 'perpsOrderResting',
-              unfilled: 'perpsOrderUnfilled',
-              rejected: 'perpsOrderRejected',
-              unknown: 'perpsOrderUnknown',
-            }[result.status];
-            this.global.snackBarTip(message, result.error);
-            if (result.status === 'unknown') {
-              this.startOrderResolution(result.cloid);
+      this.tradeOrders.submit(privateKey, intent).subscribe({
+        next: (submission) => {
+          const result = submission.result;
+          const message = {
+            filled: 'perpsOrderFilled',
+            partial: 'perpsOrderPartiallyFilled',
+            resting: 'perpsOrderResting',
+            unfilled: 'perpsOrderUnfilled',
+            rejected: 'perpsOrderRejected',
+            unknown: 'perpsOrderUnknown',
+          }[result.status];
+          this.global.snackBarTip(message, result.error);
+          if (result.status === 'unknown') {
+            this.lifecycle.unresolved(result.cloid);
+            return;
+          }
+          this.lifecycle.settled();
+          if (result.status === 'filled') {
+            this.router.navigateByUrl(PERPS_HOME_URL);
+          }
+        },
+        error: (error) => {
+          this.lifecycle.settled();
+          if (error instanceof PerpsTradeOrderError) {
+            if (error.code === 'position-changed') {
+              this.global.snackBarTip('perpsPositionChangedReviewAgain');
               return;
             }
-            if (result.status === 'filled') {
-              this.router.navigateByUrl(PERPS_HOME_URL);
-            } else {
-              this.discardReview();
-              this.refreshAccount();
+            // 杠杆是在使用它的那笔订单之前立即写入的，所以写入被拒绝就意味着什么都没下
+            // 单。把它报告成一笔失败的订单，会让用户纳闷外面是不是还有一笔订单 ——
+            // 而这恰恰是他们绝不该去猜的事。
+            if (error.code === 'leverage-write') {
+              this.global.snackBarTip(
+                'perpsLeverageUpdateFailed',
+                error.message
+              );
+              return;
             }
-          },
-          error: (error) => {
-            this.submitting = false;
-            if (error instanceof PerpsTradeOrderError) {
-              if (error.code === 'position-changed') {
-                this.requireReview('perpsPositionChangedReviewAgain');
-                return;
-              }
-              // 杠杆是在使用它的那笔订单之前立即写入的，所以写入被拒绝就意味着什么都没下
-              // 单。把它报告成一笔失败的订单，会让用户纳闷外面是不是还有一笔订单 ——
-              // 而这恰恰是他们绝不该去猜的事。
-              if (error.code === 'leverage-write') {
-                this.discardReview();
-                this.global.snackBarTip(
-                  'perpsLeverageUpdateFailed',
-                  error.message
-                );
-                return;
-              }
-            }
-            this.global.snackBarTip('txFailed', error?.message || error);
-          },
-        });
+          }
+          this.global.snackBarTip('txFailed', error?.message || error);
+        },
+      });
     } catch (error) {
-      this.submitting = false;
+      this.lifecycle.settled();
       this.global.snackBarTip('verifyFailed', error?.message || error);
     }
   }
 
-  /**
-   * 向交易场所查询一笔它没有作答的已签名订单的下落。
-   *
-   * 按 ADR-0006，这只是一次查询加一次刷新，别无其他：拿 cloid 去问，问到什么就从账户上读回
-   * 什么。不持久化任何意图，不重新签名，也没有会失步的本地订单状态机。
-   */
-  private startOrderResolution(cloid: string) {
-    this.pendingCloid = cloid;
-    this.orderResolutionPending = true;
-    this.executionStatusUnknown = false;
-    this.resolvingOrderStatus = true;
-    this.queryOrderStatus(cloid, ORDER_RESOLUTION_ATTEMPTS);
-  }
-
-  /** 「再查一次」按钮 —— 在页面用完自己的尝试次数之后出现。 */
+  /** 「再查一次」—— 在页面用完自己的尝试次数之后出现。 */
   retryOrderResolution() {
-    if (!this.pendingCloid || this.resolvingOrderStatus) {
-      return;
-    }
-    this.startOrderResolution(this.pendingCloid);
+    this.lifecycle.retryResolution();
   }
 
   viewHistory() {
     this.router.navigateByUrl('/popup/perps/history');
-  }
-
-  private queryOrderStatus(cloid: string, attemptsLeft: number) {
-    clearTimeout(this.reconciliationTimer);
-    this.reconciliationTimer = setTimeout(() => {
-      this.writes.getOrderStatus(this.address, cloid).subscribe({
-        next: (result) => {
-          if (result?.status === 'order') {
-            this.resolveOrderStatus();
-            return;
-          }
-          // 其他任何答复都意味着交易场所暂时还没有可上报的内容，
-          // 而这与「什么都没发生」不是一回事。
-          this.retryOrGiveUp(cloid, attemptsLeft);
-        },
-        error: () => this.retryOrGiveUp(cloid, attemptsLeft),
-      });
-    }, ORDER_RESOLUTION_INTERVAL_MS);
-  }
-
-  private retryOrGiveUp(cloid: string, attemptsLeft: number) {
-    if (attemptsLeft > 1) {
-      this.queryOrderStatus(cloid, attemptsLeft - 1);
-      return;
-    }
-    // 尝试次数用尽。提交仍然被挡住 —— 第二笔订单正是一个仓位变成两个的方式 —— 但页面现在
-    // 会把这件事说出来，并给出一条出路，而不是干坐在一个永久禁用的按钮上。
-    this.resolvingOrderStatus = false;
-    this.executionStatusUnknown = true;
-    this.refreshAccount();
-  }
-
-  private resolveOrderStatus() {
-    this.orderResolutionPending = false;
-    this.executionStatusUnknown = false;
-    this.resolvingOrderStatus = false;
-    this.pendingCloid = null;
-    this.reviewing = false;
-    this.reviewBaseline = null;
-    this.refreshAccount();
-    this.global.snackBarTip('perpsOrderStatusResolved');
   }
 
   back() {

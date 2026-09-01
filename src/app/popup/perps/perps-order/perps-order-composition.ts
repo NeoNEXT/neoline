@@ -16,6 +16,7 @@ import {
   PERPS_MIN_ORDER_NOTIONAL,
   PERPS_MIN_SLIPPAGE_PERCENT,
   perpsPriceDecimals,
+  perpsSizeAtLot,
 } from '@popup/_lib/perps';
 import { PerpsExactValue } from '../perps.util';
 
@@ -476,7 +477,7 @@ function submittedSize(params: {
   if (closeMode && position && fullClose) {
     return new BigNumber(position.sziExact).absoluteValue().toFixed();
   }
-  return sizeAtLot(
+  return perpsSizeAtLot(
     amountExact.dividedBy(orderPriceExact),
     market.szDecimals
   );
@@ -669,7 +670,7 @@ function orderUnavailable(params: {
     if (!market || !hasExecutionPrice) {
       return reason('insufficient-margin');
     }
-    const maxSize = sizeAtLot(
+    const maxSize = perpsSizeAtLot(
       maxOrderNotional.dividedBy(orderPriceExact),
       market.szDecimals
     );
@@ -730,7 +731,7 @@ function bufferedMaxNotional(params: {
   const buffered = maxOrderNotional.times(
     new BigNumber(1).minus(PERPS_MAX_ORDER_BUFFER_FRACTION)
   );
-  const size = sizeAtLot(
+  const size = perpsSizeAtLot(
     buffered.dividedBy(orderPriceExact),
     market.szDecimals
   );
@@ -762,9 +763,12 @@ export function amountForPercent(
 }
 
 //#region 订单算术
-// 从 perps.util.ts 挪过来的：它们每一个都只有本页面这一个调用方，而围绕它们的那些决定 ——
-// 跑哪一种预览、给输入的名义价值定价还是给按手取整后的定价、仓位是否加入强平价估算 ——
-// 现在就放在它们旁边，而不是隔着一个文件。
+// 全部是 composeOrder 的实现，没有一个对外。围绕它们的那些决定 —— 跑哪一种预览、给输入的
+// 名义价值定价还是给按手取整后的定价、仓位是否加入强平价估算 —— 就在它们旁边。
+//
+// 它们的行为在 spec 里从 composeOrder 的返回值上观察，而不是各自被直接调用：那样这个模块
+// 的 interface 会是它实现的 2.6 倍宽，而每次内部重构都要撞碎一批不属于任何调用方的用例。
+// 协议本身的舍入规则不在这里，在 `_lib/perps.ts`（`perpsSizeAtLot` / `perpsPriceDecimals`）。
 
 /**
  * 行情是否已经离开用户同意的窗口。
@@ -774,7 +778,7 @@ export function amountForPercent(
  *
  * 任意一侧的价格缺失或非正数都答 `true` —— 没有约定的价格可供度量，就不能据此签任何名。
  */
-export function exceedsMaxSlippage(
+function exceedsMaxSlippage(
   reviewedPriceExact: PerpsExactValue,
   currentPriceExact: PerpsExactValue,
   maxSlippagePercent: number
@@ -836,13 +840,10 @@ export function normalizeLimitPrice(
  * 倍杠杆，`availableToTrade` 都与 `withdrawable` 完全相等。因此当表单预览另一个杠杆时，
  * 它绝不能被重新缩放 —— 杠杆是把它乘成购买力（见 `collateralToNotional`）。
  */
-export function availableToTradeForSide(
+function availableToTradeForSide(
   data: PerpsActiveAssetData,
   side: PerpsOrderSide
 ): string {
-  if (!data) {
-    return '0';
-  }
   return data.availableToTrade[side === 'long' ? 0 : 1];
 }
 
@@ -852,7 +853,7 @@ export function availableToTradeForSide(
  * 这里不预留 taker 手续费。Hyperliquid 自家表单的 100% 正好就是抵押品 × 杠杆 —— 交易场所
  * 已经在 `availableToTrade` 内部留了缓冲，在这里再扣一笔手续费只会低于它给的数字。
  */
-export function collateralToNotional(
+function collateralToNotional(
   collateral: BigNumber.Value,
   leverage: number
 ): number {
@@ -863,19 +864,16 @@ export function collateralToNotional(
 }
 
 /** 同时施加账户购买力和交易场所的单资产数量上限。 */
-export function maxOrderNotionalForSide(
+function maxOrderNotionalForSide(
   data: PerpsActiveAssetData,
   side: PerpsOrderSide,
   leverage: number,
-  executionPrice: BigNumber.Value = data?.markPx ?? 0
+  executionPrice: BigNumber.Value
 ): BigNumber {
   const collateral = new BigNumber(availableToTradeForSide(data, side));
   const notional = collateral.isFinite() && collateral.isGreaterThan(0)
     ? collateral.times(Math.max(1, leverage || 1))
     : new BigNumber(0);
-  if (!data) {
-    return notional;
-  }
   const price = new BigNumber(executionPrice || 0);
   if (!price.isFinite() || !price.isGreaterThan(0)) {
     return notional;
@@ -889,26 +887,12 @@ export function maxOrderNotionalForSide(
     : notional;
 }
 
-/** 把十进制的基础数量按市场最小变动单位向下取整，且不经过 Number。 */
-export function sizeAtLot(
-  size: BigNumber.Value,
-  szDecimals: number
-): string {
-  const value = new BigNumber(size || 0);
-  if (!value.isFinite() || !value.isGreaterThan(0)) {
-    return '0';
-  }
-  return value
-    .decimalPlaces(Math.max(0, szDecimals), BigNumber.ROUND_FLOOR)
-    .toFixed();
-}
-
 /**
  * 修剪到市场最小变动单位真正能表达的名义价值：数量按 `szDecimals` 向下取整，因此可下单的
  * 名义价值就是取整后的数量再乘回价格。Hyperliquid 的百分比按钮落在这个值上，而不是原始
  * 购买力上 —— 4.80 USDC 在 10 倍杠杆下是 47.95，而不是 48.00。
  */
-export function notionalAtLotSize(
+function notionalAtLotSize(
   notional: BigNumber.Value,
   price: BigNumber.Value,
   szDecimals: number
@@ -919,7 +903,7 @@ export function notionalAtLotSize(
     return notionalValue.toNumber();
   }
   return new BigNumber(
-    sizeAtLot(notionalValue.dividedBy(priceValue), szDecimals)
+    perpsSizeAtLot(notionalValue.dividedBy(priceValue), szDecimals)
   )
     .times(priceValue)
     .toNumber();
@@ -931,7 +915,7 @@ export function notionalAtLotSize(
  * 全平必须原封不动地保住交易场所上报的 `szi`。把两位小数的美元显示值再通过实时标记价格
  * 换算回去，可能会向下少算一个最小变动单位，留下一个并非本意的零头仓位。
  */
-export function previewClosePosition(params: {
+function previewClosePosition(params: {
   position: PerpsPosition;
   /** 请求平掉的名义价值，以美元计；设置了 `fullClose` 时忽略。 */
   notionalExact: BigNumber.Value;
@@ -980,7 +964,7 @@ export function previewClosePosition(params: {
       );
   const sizeExact = fullClose
     ? positionSize.toFixed()
-    : sizeAtLot(positionSize.times(requestedFraction), szDecimals);
+    : perpsSizeAtLot(positionSize.times(requestedFraction), szDecimals);
   // 上面按最小变动单位取整只会让请求变小，所以手续费和释放的保证金要跟随真正实现的那个
   // 比例 —— 而不是当初请求的那个。
   const actualFraction = BigNumber.minimum(
@@ -1059,7 +1043,7 @@ function mergedPositionForLiquidation(params: {
  * 而不是这笔订单本身，所以一个忽略已有数量和保证金的估算，报出的会是一个账户永远不会在
  * 那里被强平的价格。
  */
-export function previewOrder(params: {
+function previewOrder(params: {
   market: PerpsMarket;
   /** 预期入场价；限价单绝不能使用当前的中间价。 */
   executionPriceExact?: BigNumber.Value | null;
@@ -1090,7 +1074,7 @@ export function previewOrder(params: {
   const lev = new BigNumber(Math.max(1, leverage));
   const hasPrice = price.isFinite() && price.isGreaterThan(0);
   const sizeExact = hasPrice
-    ? sizeAtLot(notional.dividedBy(price), market.szDecimals)
+    ? perpsSizeAtLot(notional.dividedBy(price), market.szDecimals)
     : '0';
 
   // 维持保证金率是「最大杠杆下起始保证金」的一半，

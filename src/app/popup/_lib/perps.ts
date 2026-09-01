@@ -202,6 +202,29 @@ export function perpsPriceDecimals(
   return Math.min(maxDecimals, significantDecimals);
 }
 /**
+ * Hyperliquid 对某个市场接受多少位数量小数。
+ *
+ * 与 {@link perpsPriceDecimals} 是同一句话的两半：那个回答「接受什么价格」，这个回答
+ * 「接受什么数量」。数量只按最小变动单位向下取整 —— 向上取整会下出一笔比用户所选更大的
+ * 订单，所以在两端都只能截断。
+ *
+ * 全程不经过 `Number`：ADR-0001 要求会回流进签名的数值不经过 JavaScript 浮点，而这个
+ * 结果正是订单里的数量。
+ */
+export function perpsSizeAtLot(
+  size: BigNumber.Value,
+  szDecimals: number
+): string {
+  const value = new BigNumber(size || 0);
+  if (!value.isFinite() || !value.isGreaterThan(0)) {
+    return '0';
+  }
+  return value
+    .decimalPlaces(Math.max(0, szDecimals), BigNumber.ROUND_FLOOR)
+    .toFixed();
+}
+
+/**
  * HyperEVM，只读：为提现定价的那条链。
  *
  * 提现在这里永远不会变成一笔用户要签名的交易 —— 它是一次已签名的交易场所操作，HyperEVM

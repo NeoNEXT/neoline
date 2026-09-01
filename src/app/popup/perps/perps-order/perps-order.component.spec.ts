@@ -297,3 +297,111 @@ describe('PerpsOrderComponent submission seam', () => {
     expect(router.navigateByUrl).toHaveBeenCalled();
   });
 });
+
+
+/**
+ * 审核态，架在一条持续推送的行情订阅之上。
+ *
+ * `watchActiveAssetData` 是 REST 播种 + `activeAssetData` 频道的实时订阅，所以「帧到达」
+ * 在这张页面上是常态而不是边界情况。这里断言的是那条帧触发的路径不碰审核态 —— 它归
+ * 提交生命周期管，等那个模块落地后这些用例跟着搬过去。
+ */
+describe('PerpsOrderComponent review under live frames', () => {
+  /** 同一个市场，容量换成交易场所此刻上报的那个。 */
+  const capacity = (availableToTrade: string) =>
+    facts({
+      activeAssetData: {
+        user: '0xabc',
+        coin: 'ETH',
+        leverage: { type: 'isolated', value: 10 },
+        maxTradeSzs: ['10', '10'],
+        availableToTrade: [availableToTrade, availableToTrade],
+        markPxExact: '2000',
+        markPx: 2000,
+      },
+    });
+
+  /** 一张已经按 50% 定好金额、并且通过了审核的表单。 */
+  const reviewed = (): PerpsOrderComponent => {
+    const value = component();
+    value.facts = capacity('1000');
+    value.leverage = 10;
+    value.setPercent(50);
+    value.review();
+    return value;
+  };
+
+  it('holds the review when a frame repricing the percentage arrives', () => {
+    const value = reviewed();
+    expect(value.reviewing).toBeTrue();
+    expect(value.amount).toBe('5000');
+
+    // 购买力掉了一半，随后一帧到达。
+    value.facts = capacity('500');
+    (value as any).repricePercent();
+
+    // 用户批准的是屏幕上那个美元数，所以它必须原样留着 —— 而审核态必须活下来：
+    // CTA 绑的是 `reviewing ? submit() : review()`，掉回编辑态会让下一次点击变成重新审核。
+    expect(value.reviewing).toBeTrue();
+    expect(value.amount).toBe('5000');
+  });
+
+  it('reprices the percentage while the user is still composing', () => {
+    const value = component();
+    value.facts = capacity('1000');
+    value.leverage = 10;
+    value.setPercent(50);
+    expect(value.amount).toBe('5000');
+
+    value.facts = capacity('500');
+    (value as any).repricePercent();
+
+    // 还没进入审核态，50% 就该跟着当前购买力走。
+    expect(value.amount).toBe('2500');
+  });
+
+  /**
+   * 上面三条断言的是那两条路各自的行为。这一条断言的是**接线** —— 也就是缺陷本身：
+   * 订阅回调过去调的是 `setPercent`，而它会作废审核。行为对了但接线还连在旧方法上，
+   * 用户照样会被行情帧退回编辑态，所以这条必须从订阅那一端进去。
+   */
+  it('holds the review across a user-fee response', () => {
+    const hyperliquid = {
+      getUserFeeRates: () => of({ takerRate: 0.0003, makerRate: 0.0001 }),
+    } as any;
+    const value = new PerpsOrderComponent(
+      null,
+      null,
+      null,
+      null,
+      hyperliquid,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      { builderAddress: '' } as any
+    );
+    value.facts = capacity('1000');
+    value.leverage = 10;
+    value.setPercent(50);
+    value.review();
+    (value as any).address = '0xabc';
+
+    (value as any).loadUserFeeRates();
+
+    expect(value.reviewing).toBeTrue();
+    expect(value.amount).toBe('5000');
+  });
+
+  it('still discards the review when the user moves the percentage', () => {
+    const value = reviewed();
+
+    value.setPercent(25);
+
+    // 冻结只针对帧。用户自己改了金额，就该重新审核他改出来的东西。
+    expect(value.reviewing).toBeFalse();
+    expect(value.amount).toBe('2500');
+  });
+});
