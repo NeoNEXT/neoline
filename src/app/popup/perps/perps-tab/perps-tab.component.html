@@ -29,18 +29,18 @@
       这样一笔无法划转的余额就不会把保证金率算低。
     -->
     <div class="card-value" *ngIf="!unsupportedAccountMode && !accountLoadError">
-      <span class="value">{{ formatUsd(accountEquityExact) }}</span>
+      <span class="value">{{ accountEquityExact | perpsUsd }}</span>
     </div>
     <div class="card-margin" *ngIf="!unsupportedAccountMode && !accountLoadError">
       {{ "perpsAvailableMargin" | translate | async }}
-      {{ formatUsd(availableMarginExact) }}
+      {{ availableMarginExact | perpsUsd }}
       ·
       {{ "perpsUsedMargin" | translate | async }}
-      {{ formatUsd(usedMarginExact) }}
+      {{ usedMarginExact | perpsUsd }}
     </div>
     <div class="card-spot" *ngIf="hasSeparateSpotUsdc">
       {{ "perpsSpotSeparate" | translate | async }}
-      {{ formatUsd(separateSpotUsdcExact) }}
+      {{ separateSpotUsdcExact | perpsUsd }}
     </div>
     <div class="card-actions">
       <button class="primary" [disabled]="globalActionsDisabled" (click)="toFunding('deposit')">
@@ -64,11 +64,7 @@
       >
     </div>
     <div class="positions">
-      <div
-        class="position-card"
-        *ngFor="let position of account.positions"
-        (click)="toMarket(position.coin)"
-      >
+      <div class="position-card" *ngFor="let position of account.positions">
         <div class="position-head">
           <perps-coin-logo
             [symbol]="position.symbol"
@@ -84,31 +80,35 @@
           </span>
         </div>
         <div class="position-pnl" [class.negative]="position.unrealizedPnlExact | perpsNegative">
-          {{ formatSignedUsd(position.unrealizedPnlExact) }}
+          {{ position.unrealizedPnlExact | perpsSignedUsd }}
           <span class="percent">{{
-            formatSignedPercent(returnOnEquityPercent(position), 1)
+            position.returnOnEquityExact | perpsReturnOnEquity: 1
           }}</span>
         </div>
         <div class="position-meta">
-          {{ positionSize(position) }}
+          {{
+            position.sziExact
+              | perpsPositionSize: (markets | perpsSzDecimals: position.key)
+          }}
           {{ position.symbol }} · {{ "perpsEntry" | translate | async }}
-          {{ formatPrice(position.entryPxExact, marketFor(position)?.szDecimals) }}
+          {{
+            position.entryPxExact
+              | perpsPrice: (markets | perpsSzDecimals: position.key)
+          }}
           · {{ "perpsLiq" | translate | async }}
           <ng-container *ngIf="position.liquidationPxExact">{{
-            formatPrice(
-              position.liquidationPxExact,
-              marketFor(position)?.szDecimals
-            )
+            position.liquidationPxExact
+              | perpsPrice: (markets | perpsSzDecimals: position.key)
           }}</ng-container>
           <ng-container *ngIf="!position.liquidationPxExact">{{
             "perpsNoLiquidationPrice" | translate | async
           }}</ng-container>
         </div>
         <div class="position-actions">
-          <button class="plain" (click)="addToPosition(position); $event.stopPropagation()">
+          <button class="plain" (click)="addToPosition(position)">
             {{ "perpsAddPosition" | translate | async }}
           </button>
-          <button class="danger" (click)="closePosition(position); $event.stopPropagation()">
+          <button class="danger" (click)="closePosition(position)">
             {{ "perpsClose" | translate | async }}
           </button>
         </div>
@@ -138,7 +138,5 @@
     行情列表本身由 perps-market-list 提供，首页和市场页共用同一份行序逻辑；
     首页不带排序控件，跟随用户在市场页上选定的排序。
   -->
-  <perps-market-list
-    (marketsLoaded)="markets = $event"
-  ></perps-market-list>
+  <perps-market-list></perps-market-list>
 </div>

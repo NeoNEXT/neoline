@@ -48,6 +48,8 @@ describe('PerpsTabComponent', () => {
 
     expect(value.accountEquityExact).toBeNull();
     expect(value.availableMarginExact).toBeNull();
+    // 已用保证金和它同一行，未知时也得说未知，而不是报一个权威的零。
+    expect(value.usedMarginExact).toBeNull();
     expect(value.hasEquity).toBeFalse();
   });
 

@@ -59,12 +59,6 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
    * 反而保持打开。
    */
   @Output() marketSelected = new EventEmitter<string>();
-  /**
-   * 这个列表正在展示的市场。之所以发出去，是让另有用途的宿主 —— 首页 tab 要按各市场的
-   * `szDecimals` 格式化仓位数量 —— 可以从这个订阅里读到它们，而不必另开一个：
-   * `watchMarkets` 每来一个订阅者就重新取一次，而 `/info` 是按 IP 共享的权重预算计费的。
-   */
-  @Output() marketsLoaded = new EventEmitter<PerpsMarket[]>();
 
   loading = true;
   marketLoadError = false;
@@ -178,7 +172,6 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
       }
       this.loading = false;
       this.marketLoadError = false;
-      this.marketsLoaded.emit(markets);
     });
   }
 

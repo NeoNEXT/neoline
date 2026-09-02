@@ -1,5 +1,6 @@
 import {
   PERPS_PRICE_MAX_DECIMALS,
+  PerpsMarket,
 } from '@popup/_lib/perps';
 import BigNumber from 'bignumber.js';
 
@@ -11,6 +12,17 @@ export type PerpsExactValue = BigNumber.Value | null | undefined;
 
 /** 在数值确实缺失的地方显示它，这样它永远不会被读成零。 */
 export const MISSING_DISPLAY = '--';
+
+/**
+ * 按市场主键定位，而不是按符号：同一个符号可能同时存在于标准永续 DEX 和某个 HIP-3 DEX
+ * 上，且精度不同。
+ */
+export function findMarketByKey(
+  markets: PerpsMarket[],
+  key: string
+): PerpsMarket {
+  return (markets || []).find((market) => market.key === key);
+}
 
 /**
  * 协议小数的正负判断 —— 模板里用 `< 0` 做不到这件事。
@@ -370,6 +382,27 @@ export function formatFeeRatePercent(value: PerpsExactValue): string {
   }
   const percent = new BigNumber(value).times(100).toNumber();
   return `${percent.toFixed(6).replace(/\.?0+$/, '')}%`;
+}
+
+/**
+ * 仓位数量在屏幕上不带方向 —— 多空由它旁边的标签表达，一个负号只会把同一件事说两遍。
+ */
+export function formatPositionSize(
+  size: PerpsExactValue,
+  szDecimals?: number
+): string {
+  return formatSize(new BigNumber(size || 0).absoluteValue(), szDecimals);
+}
+
+/** 权益回报率以小数形式到达；标签上显示成百分比。 */
+export function formatReturnOnEquity(
+  value: PerpsExactValue,
+  decimals = 2
+): string {
+  if (isMissing(value)) {
+    return MISSING_DISPLAY;
+  }
+  return formatSignedPercent(new BigNumber(value).times(100), decimals);
 }
 
 export function pad2(value: number): string {

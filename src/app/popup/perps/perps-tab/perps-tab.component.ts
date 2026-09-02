@@ -15,13 +15,7 @@ import {
   PerpsMarket,
   PerpsPosition,
 } from '@popup/_lib/perps';
-import {
-  formatPrice,
-  formatSignedPercent,
-  formatSignedUsd,
-  formatSize,
-  formatUsd,
-} from '../perps.util';
+import { findMarketByKey, formatPositionSize } from '../perps.util';
 
 /**
  * 首页上的永续合约 tab：账户摘要、持仓和市场列表。
@@ -38,10 +32,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   accountAvailability: PerpsAccountAvailability = 'loading';
 
   account: PerpsAggregatedAccount;
-  /**
-   * 由内嵌的市场列表上报，只用来按各仓位自己市场的精度格式化数量 ——
-   * 这个 tab 并不持有行情数据源。
-   */
+  /** 只用来按各仓位自己市场的精度格式化数量，与「过期」横幅共用同一条订阅。 */
   markets: PerpsMarket[] = [];
 
   /** 数据源健康度，以横幅呈现，并把所有报价值调暗。 */
@@ -52,13 +43,6 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   private accountStateSub: Unsubscribable;
   private connectionSub: Unsubscribable;
   private feedAtSub: Unsubscribable;
-
-  //#region 模板辅助方法
-  formatPrice = formatPrice;
-  formatUsd = formatUsd;
-  formatSignedUsd = formatSignedUsd;
-  formatSignedPercent = formatSignedPercent;
-  //#endregion
 
   constructor(
     private router: Router,
@@ -89,11 +73,17 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     this.feedAtSub?.unsubscribe();
   }
 
-  /** 跟踪共享数据源的健康度，供已有的「过期」横幅使用。 */
+  /**
+   * 跟踪共享数据源的健康度，供已有的「过期」横幅使用，顺带取到市场数组。
+   *
+   * 市场是从这条订阅里读的，而不是让内嵌的列表转发一次：ADR-0008 之后 `PerpsDataset`
+   * 会共享在飞的请求，并且带 15s 的快照 TTL，多一个订阅者不再多一次 `/info`。
+   */
   private watchFeedHealth() {
-    this.feedAtSub = this.markets$
-      .watchMarkets()
-      .subscribe((state) => (this.marketFeedAt = state.updatedAt));
+    this.feedAtSub = this.markets$.watchMarkets().subscribe((state) => {
+      this.marketFeedAt = state.updatedAt;
+      this.markets = state.markets;
+    });
     this.connectionSub = this.channel
       .watchConnectionState()
       .subscribe((state) => {
@@ -144,9 +134,14 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     return this.account?.availableBalanceExact ?? null;
   }
 
-  /** 已占用的起始保证金，由永续清算所上报。 */
-  get usedMarginExact(): string {
-    return this.account?.totalMarginUsedExact ?? '0';
+  /**
+   * 已占用的起始保证金，由永续清算所上报。
+   *
+   * 账户还没到之前它是未知的，于是和同一行里的可用保证金一样返回 `null` —— 否则那行会
+   * 读作「可用 -- · 已用 $0」，一半承认不知道，另一半却装作权威。
+   */
+  get usedMarginExact(): string | null {
+    return this.account?.totalMarginUsedExact ?? null;
   }
 
   get marginRatioExact(): string | null {
@@ -215,12 +210,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
 
   /** 仓位对应的市场，按市场主键定位，好让 HIP-3 上的同名资产保持区分。 */
   marketFor(position: PerpsPosition): PerpsMarket {
-    return this.markets.find((item) => item.key === position.key);
-  }
-
-  /** 权益回报率以小数形式到达；标签上显示成百分比。 */
-  returnOnEquityPercent(position: PerpsPosition): string {
-    return new BigNumber(position.returnOnEquityExact).times(100).toFixed();
+    return findMarketByKey(this.markets, position.key);
   }
 
   /**
@@ -242,10 +232,9 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
    * 是分开到达的，所以遇到未知市场时退回按数量级取精度，而不是什么都不显示。
    */
   positionSize(position: PerpsPosition): string {
-    const market = this.marketFor(position);
-    return formatSize(
-      new BigNumber(position.sziExact).absoluteValue(),
-      market?.szDecimals
+    return formatPositionSize(
+      position.sziExact,
+      this.marketFor(position)?.szDecimals
     );
   }
 

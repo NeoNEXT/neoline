@@ -1,9 +1,15 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
+import { PerpsMarket } from '@popup/_lib/perps';
 import {
+  findMarketByKey,
   formatCompactUsd,
+  formatPositionSize,
   formatPrice,
+  formatReturnOnEquity,
   formatSignedPercent,
+  formatSignedUsd,
+  formatUsd,
   isNegativeExact,
   PerpsExactValue,
 } from './perps.util';
@@ -44,6 +50,47 @@ export class PerpsCompactUsdPipe implements PipeTransform {
   }
 }
 
+@Pipe({ name: 'perpsUsd' })
+export class PerpsUsdPipe implements PipeTransform {
+  transform(value: PerpsExactValue, decimals = 2): string {
+    return formatUsd(value, decimals);
+  }
+}
+
+@Pipe({ name: 'perpsSignedUsd' })
+export class PerpsSignedUsdPipe implements PipeTransform {
+  transform(value: PerpsExactValue, decimals = 2): string {
+    return formatSignedUsd(value, decimals);
+  }
+}
+
+@Pipe({ name: 'perpsPositionSize' })
+export class PerpsPositionSizePipe implements PipeTransform {
+  transform(value: PerpsExactValue, szDecimals?: number): string {
+    return formatPositionSize(value, szDecimals);
+  }
+}
+
+@Pipe({ name: 'perpsReturnOnEquity' })
+export class PerpsReturnOnEquityPipe implements PipeTransform {
+  transform(value: PerpsExactValue, decimals = 2): string {
+    return formatReturnOnEquity(value, decimals);
+  }
+}
+
+/**
+ * 一个仓位所属市场的精度，供它旁边的价格和数量管道当参数用。
+ *
+ * 它同样不是格式化函数，但放在这里的理由相同：模板直接调用它，会在每一轮变更检测中把
+ * 市场数组重新扫一遍 —— 而市场数组只在快照到达时才换。
+ */
+@Pipe({ name: 'perpsSzDecimals' })
+export class PerpsSzDecimalsPipe implements PipeTransform {
+  transform(markets: PerpsMarket[], key: string): number {
+    return findMarketByKey(markets, key)?.szDecimals;
+  }
+}
+
 /**
  * 它不是格式化函数，但放在这里的理由相同：它会构造 BigNumber，而模板直接调用它，
  * 会在每一轮变更检测中重新构造一个。
@@ -59,5 +106,10 @@ export const PERPS_FORMAT_PIPES = [
   PerpsPricePipe,
   PerpsSignedPercentPipe,
   PerpsCompactUsdPipe,
+  PerpsUsdPipe,
+  PerpsSignedUsdPipe,
+  PerpsPositionSizePipe,
+  PerpsReturnOnEquityPipe,
+  PerpsSzDecimalsPipe,
   PerpsNegativePipe,
 ];
