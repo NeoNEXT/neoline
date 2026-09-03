@@ -21,6 +21,15 @@ const ctx = (midPx: string | null, markPx = '1875.7') => ({
   oraclePx: '1876',
 });
 
+/** 市场上下文所走的那条订阅。它的 `type` 是本模块与交易场所之间的契约。 */
+const ALL_DEXS = { type: 'allDexsAssetCtxs' };
+
+/**
+ * 一帧聚合上下文：`[dex, ctxs]` 二元组的数组，标准永续的 dex 名是 `''`。
+ * 交易场所按 dex 名字母序排列，所以测试也不按 `enabledDexes` 的顺序写。
+ */
+const ctxFrame = (...pairs: [string, any[]][]) => ({ ctxs: pairs });
+
 const universe = [
   { name: 'BTC', szDecimals: 5, maxLeverage: 40 },
   { name: 'ETH', szDecimals: 4, maxLeverage: 25 },
@@ -237,7 +246,7 @@ describe('PerpsMarketDatasetService live list', () => {
     expect(view.last().availability).toBe('live');
     expect(view.last().markets[0].midPxExact).toBe('1875.75');
 
-    channel.push({ type: 'assetCtxs', dex: '' }, { ctxs: [ctx('1880.5')] });
+    channel.push(ALL_DEXS, ctxFrame(['', [ctx('1880.5')]]));
 
     expect(view.last().markets[0].midPxExact).toBe('1880.5');
     expect(view.last().updatedAt).not.toBeNull();
@@ -255,7 +264,7 @@ describe('PerpsMarketDatasetService live list', () => {
       [ctx('1875.75')],
     ]);
     const view = watching(service);
-    channel.push({ type: 'assetCtxs', dex: '' }, { ctxs: [ctx('1880.5')] });
+    channel.push(ALL_DEXS, ctxFrame(['', [ctx('1880.5')]]));
 
     // 帧凭空造不出市场，所以它会等 —— 但一个慢吞吞的 REST 响应，
     // 也不该让列表落后整整一代。
@@ -371,7 +380,7 @@ describe('PerpsMarketDatasetService live list', () => {
     const second = watching(service);
 
     // 这一帧在那次快照还没回来时到达。
-    channel.push({ type: 'assetCtxs', dex: '' }, { ctxs: [ctx('1899')] });
+    channel.push(ALL_DEXS, ctxFrame(['', [ctx('1899')]]));
     expect(view.last().markets[0].midPxExact).toBe('1899');
 
     // 快照带着更旧的价格回来。它定义市场集合，但不能把这段时间里
@@ -385,23 +394,103 @@ describe('PerpsMarketDatasetService live list', () => {
     discardPeriodicTasks();
   }));
 
-  it('closes the per-DEX subscriptions when the last observer leaves', () => {
+  it('closes the context subscription when the last observer leaves', () => {
     const { service, channel } = build({ getMetaAndAssetCtxs: oneMarket });
     const first = watching(service);
     const second = watching(service);
 
     first.stop();
-    channel.push({ type: 'assetCtxs', dex: '' }, { ctxs: [ctx('1880.5')] });
+    channel.push(ALL_DEXS, ctxFrame(['', [ctx('1880.5')]]));
     expect(second.last().markets[0].midPxExact).toBe('1880.5');
 
     second.stop();
-    channel.push({ type: 'assetCtxs', dex: '' }, { ctxs: [ctx('1899')] });
+    channel.push(ALL_DEXS, ctxFrame(['', [ctx('1899')]]));
 
     // 当时没人在看，所以那一帧谁也没送到 —— 下一个到来的人，
     // 看到的是最后一个观察者离开时列表的样子。
     const third = watching(service);
     expect(third.seen[0].markets[0].midPxExact).toBe('1880.5');
     third.stop();
+  });
+
+  // 频道名是本模块与交易场所之间的契约，而错的频道名不会报错：订阅登记成功，
+  // 帧永远不来，列表停在快照上看起来一切正常。所以这里断言的是名字本身。
+  it('subscribes to the documented aggregate context channel, once', () => {
+    const { service, channel } = build({ getMetaAndAssetCtxs: oneMarket });
+    const subscribe = spyOn(channel, 'subscribe').and.callThrough();
+
+    const view = watching(service);
+
+    const types = subscribe.calls.allArgs().map(([s]: any) => s.type);
+    expect(types).toEqual(['allDexsAssetCtxs']);
+    // 它不按 DEX 分频道，所以订阅里不该出现 dex。
+    const [subscription] = subscribe.calls.mostRecent().args as any[];
+    expect(subscription.dex).toBeUndefined();
+    view.stop();
+  });
+
+  it('routes each dex in a frame by name, not by its position', () => {
+    // 两个 HIP-3 DEX 是这条断言成立的最低要求：只启用一个时，字母序和 `enabledDexes`
+    // 的顺序恰好重合，按位置取也能蒙对。这里 `enabledDexes` 是 `'', xyz, flx`
+    // （注册表序），而交易场所按字母序发 `'', flx, xyz` —— 两者真正错开。
+    const perDex: Record<string, any> = {
+      '': [{ universe: [{ name: 'ETH', szDecimals: 4, maxLeverage: 25 }] }, [ctx('1875.75')]],
+      xyz: [{ universe: [{ name: 'NEO', szDecimals: 2, maxLeverage: 5 }] }, [ctx('10', '10')]],
+      flx: [{ universe: [{ name: 'GOLD', szDecimals: 2, maxLeverage: 5 }] }, [ctx('20', '20')]],
+    };
+    const { service, channel } = build({
+      enabledDexes: ['', 'xyz', 'flx'],
+      getDexRegistry: () => of([null, { name: 'xyz' }, { name: 'flx' }]),
+      getMetaAndAssetCtxs: (dex = '') => of(perDex[dex]),
+    });
+    const view = watching(service);
+    const priceOf = (key: string) =>
+      view.last().markets.find((market) => market.key === key)?.midPxExact;
+
+    expect(priceOf('hl:ETH')).toBe('1875.75');
+    expect(priceOf('xyz:NEO')).toBe('10');
+    expect(priceOf('flx:GOLD')).toBe('20');
+
+    // 字母序：'' < 'flx' < 'xyz'。按位置取会把 flx 的价格安到 xyz 的市场上，
+    // 反之亦然 —— 两边都是有效价格，所以除了这条断言，没有任何东西会报错。
+    channel.push(
+      ALL_DEXS,
+      ctxFrame(['', [ctx('1900')]], ['flx', [ctx('21')]], ['xyz', [ctx('11')]])
+    );
+
+    expect(priceOf('hl:ETH')).toBe('1900');
+    expect(priceOf('xyz:NEO')).toBe('11');
+    expect(priceOf('flx:GOLD')).toBe('21');
+    view.stop();
+  });
+
+  it('ignores dexes this build does not enable', () => {
+    const { service, channel } = build({ getMetaAndAssetCtxs: oneMarket });
+    const view = watching(service);
+    const published = view.seen.length;
+
+    // 一帧带回全部已部署的 DEX，其中绝大多数本产品并不列出。
+    channel.push(
+      ALL_DEXS,
+      ctxFrame(['flx', [ctx('999')]], ['para', [ctx('888')]])
+    );
+
+    expect(view.last().markets[0].midPxExact).toBe('1875.75');
+    // 一份没有任何本产品市场的帧不该产生一次状态发布。
+    expect(view.seen.length).toBe(published);
+    view.stop();
+  });
+
+  it('survives a malformed context frame', () => {
+    const { service, channel } = build({ getMetaAndAssetCtxs: oneMarket });
+    const view = watching(service);
+
+    expect(() => channel.push(ALL_DEXS, {})).not.toThrow();
+    expect(() => channel.push(ALL_DEXS, { ctxs: null })).not.toThrow();
+    expect(() => channel.push(ALL_DEXS, { ctxs: ['nope'] })).not.toThrow();
+
+    expect(view.last().markets[0].midPxExact).toBe('1875.75');
+    view.stop();
   });
 });
 

@@ -50,8 +50,13 @@ const CHANNELS: Record<string, ChannelSpec> = {
     identify: (data) =>
       typeof data?.coin === 'string' ? { coin: data.coin } : null,
   },
-  // 每个 DEX 一帧，各自携带该 DEX 完整的上下文数组。
-  assetCtxs: { dexScoped: true, identify: () => ({}) },
+  // 一帧带回**全部** DEX 的上下文，所以它不按 DEX 分频道：键就是频道名本身，
+  // 由订阅方自己从帧里把属于自己的那几个 DEX 挑出来。
+  //
+  // 前身是按 DEX 各订一条的 `assetCtxs`，它能用，但从来没进过官方 Subscriptions 文档；
+  // `webData2` 在 2026-08-21 到 09-01 之间被协议层删掉，说明未文档化的频道消失时不会有
+  // 任何预告，而一条收不到帧的订阅是静默失效的。
+  allDexsAssetCtxs: { identify: () => ({}) },
   activeAssetData: {
     identify: (data) =>
       typeof data?.user === 'string' && typeof data?.coin === 'string'

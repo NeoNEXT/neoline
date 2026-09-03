@@ -1,7 +1,14 @@
 import { Injectable } from '@angular/core';
 import BigNumber from 'bignumber.js';
-import { Observable, concat, forkJoin, merge, of } from 'rxjs';
-import { catchError, filter, map, switchMap, tap } from 'rxjs/operators';
+import { Observable, concat, forkJoin, of } from 'rxjs';
+import {
+  catchError,
+  filter,
+  map,
+  mergeMap,
+  switchMap,
+  tap,
+} from 'rxjs/operators';
 
 import {
   PerpsAssetCtx,
@@ -242,20 +249,48 @@ export class PerpsMarketDatasetService {
   //#region 列表
 
   /**
-   * 产品真正展示的每个 DEX 各订一条市场上下文，外加本会话已经画出来的那份列表。
+   * 一条订阅带回所有 DEX 的市场上下文，本产品展示的那几个从中挑出来。
    *
-   * 另一个选择 `allDexsAssetCtxs` 会把所有已部署的 HIP-3 DEX 塞进一帧广播出来 ——
-   * 测试网上大约 170KB，其中四分之三是 NeoLine 根本不列出的 DEX —— 而它到达的频率
-   * 并不比按 DEX 的帧更高。
+   * 这里曾经是按 DEX 各订一条 `assetCtxs`，理由是 `allDexsAssetCtxs` 的单帧要大得多、
+   * 其中大部分是本产品根本不列出的 DEX。单帧确实更大，但那个理由只算了帧的大小、
+   * 没算它到达的频率 —— 2026-09-01 对主网 30 秒实测：
+   *
+   * ```
+   * assetCtxs(dex="")     7 帧 · 单帧  53.0 KB · 12.4 KB/s
+   * assetCtxs(dex="xyz")  7 帧 · 单帧  27.3 KB ·  6.4 KB/s   合计 18.8 KB/s
+   * allDexsAssetCtxs      3 帧 · 单帧 110.6 KB · 11.1 KB/s   合计 11.1 KB/s
+   * ```
+   *
+   * 聚合频道推得稀疏得多，所以总流量反而只有 0.59 倍；解析同理更省 —— 而这里的解析不是
+   * 原生 `JSON.parse`，是为保住 uint64 精度而手写的 `lossless-json`，省下的是真 CPU。
+   * 它还是那个**进了官方文档**的频道：`assetCtxs` 至今没有出现在 Subscriptions 页上。
+   *
+   * 代价是行情更新从每 DEX 约 4.3 秒一次变成约 10 秒一次。列表能接受；下单页和详情页
+   * 不受影响，它们走的是各自市场的 `activeAssetCtx`。
    */
   private openUpdates(): Observable<PerpsMarketUpdate> {
-    return merge(
-      ...this.source.enabledDexes.map((dex) =>
-        this.channel
-          .subscribe({ type: 'assetCtxs', dex })
-          .pipe(map((update) => ({ dex, ctxs: update?.ctxs })))
+    return this.channel
+      .subscribe({ type: 'allDexsAssetCtxs' })
+      .pipe(mergeMap((frame) => this.enabledUpdates(frame?.ctxs)));
+  }
+
+  /**
+   * 一帧里属于本产品的那几个 DEX。
+   *
+   * 二元组按 DEX 名的**字母序**到达，不是 `perpDexs` 的下标序（实测注册表是
+   * `null,xyz,flx,vntl,…`，而这一帧是 `"",abcd,cash,flx,…`），所以只能按名字取。
+   * 按位置取不会报错，只会把一个 DEX 的行情安到另一个 DEX 的市场上。
+   */
+  private enabledUpdates(pairs: any): PerpsMarketUpdate[] {
+    if (!Array.isArray(pairs)) {
+      return [];
+    }
+    return pairs
+      .filter(
+        (pair) =>
+          Array.isArray(pair) && this.source.enabledDexes.includes(pair[0])
       )
-    );
+      .map(([dex, ctxs]) => ({ dex, ctxs }));
   }
 
   private foldUpdate(
