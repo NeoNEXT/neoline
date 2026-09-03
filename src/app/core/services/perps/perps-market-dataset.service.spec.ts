@@ -4,7 +4,10 @@ import { Subject, of, throwError } from 'rxjs';
 
 import { PerpsMarket } from '@popup/_lib/perps';
 import { fakePerpsDataChannel } from './perps-data-channel.fake';
-import { PerpsMarketDatasetService } from './perps-market-dataset.service';
+import {
+  PerpsMarketDatasetService,
+  SNAPSHOT_TTL_MS,
+} from './perps-market-dataset.service';
 import {
   PerpsMarketDatasetState,
   mergeDexAssetContexts,
@@ -205,7 +208,7 @@ describe('PerpsMarketDatasetService snapshots', () => {
     });
 
     service.getMarkets().subscribe();
-    tick(15001);
+    tick(SNAPSHOT_TTL_MS + 1);
     service.getMarkets().subscribe();
 
     expect(calls).toBe(2);
@@ -304,7 +307,7 @@ describe('PerpsMarketDatasetService live list', () => {
 
     // 交易场所开始拒绝，而此时屏幕上已经有市场了。
     refuse = true;
-    tick(15001);
+    tick(SNAPSHOT_TTL_MS + 1);
     const second = watching(service);
     expect(calls).toBe(2);
 
@@ -376,7 +379,7 @@ describe('PerpsMarketDatasetService live list', () => {
     expect(view.last().markets[0].midPxExact).toBe('1875.75');
 
     // TTL 过期后再来一个观察者，于是又发出一次快照。
-    tick(15001);
+    tick(SNAPSHOT_TTL_MS + 1);
     const second = watching(service);
 
     // 这一帧在那次快照还没回来时到达。

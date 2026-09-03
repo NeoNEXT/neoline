@@ -5,6 +5,7 @@ import { of, Subject, throwError } from 'rxjs';
 import { PerpsUserFeeRates } from '@popup/_lib/perps';
 import { HyperliquidService } from './hyperliquid.service';
 import { fakePerpsDataChannel } from './perps-data-channel.fake';
+import { SNAPSHOT_TTL_MS } from './perps-market-dataset.service';
 
 /** 本服务所用的写入路径：只做一次声明，不发起调用。 */
 const writes = () => ({ wrote: () => new Subject<void>() } as any);
@@ -381,7 +382,7 @@ describe('HyperliquidService accounts and fees', () => {
     http.post.and.returnValue(of([null, { name: 'xyz' }]) as any);
 
     service.getDexRegistry().subscribe();
-    tick(15001);
+    tick(SNAPSHOT_TTL_MS + 1);
     service.getDexRegistry().subscribe();
 
     // 注册表不携带价格，因此它比任何一份市场快照都活得久。

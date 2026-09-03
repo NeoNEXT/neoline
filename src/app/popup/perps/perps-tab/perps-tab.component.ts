@@ -77,7 +77,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
    * 跟踪共享数据源的健康度，供已有的「过期」横幅使用，顺带取到市场数组。
    *
    * 市场是从这条订阅里读的，而不是让内嵌的列表转发一次：ADR-0008 之后 `PerpsDataset`
-   * 会共享在飞的请求，并且带 15s 的快照 TTL，多一个订阅者不再多一次 `/info`。
+   * 会共享在飞的请求，并且给快照留了 TTL，多一个订阅者不再多一次 `/info`。
    */
   private watchFeedHealth() {
     this.feedAtSub = this.markets$.watchMarkets().subscribe((state) => {
