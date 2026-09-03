@@ -44,6 +44,10 @@
     flex: 1;
     overflow-y: scroll;
     position: relative;
+    // Custom network rpcUrls can be long and never wrap. Letting them count
+    // towards the document's max-content width stretches the popup, which has
+    // no width cap of its own, to Chrome's 800px maximum.
+    contain: inline-size;
     &::-webkit-scrollbar {
       display: block;
     }
