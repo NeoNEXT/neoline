@@ -1826,6 +1826,9 @@
   "perpsNoMarkets": {
     "message": "該当する銘柄がありません"
   },
+  "perpsMarketsIncomplete": {
+    "message": "一部の市場を取得できません。このリストは不完全です。"
+  },
   "perpsDayVolume": {
     "message": "24h出来高"
   },

@@ -160,6 +160,15 @@
   cursor: pointer;
 }
 
+// 不完整:限定它下面的每一行,所以排在最上面,与列表同宽
+.market-notice {
+  margin: 0;
+  padding: 12px 24px 0;
+  color: var(--error-color);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .market-empty {
   padding: 24px;
   text-align: center;

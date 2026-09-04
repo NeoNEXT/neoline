@@ -1826,6 +1826,9 @@
   "perpsNoMarkets": {
     "message": "没有找到市场"
   },
+  "perpsMarketsIncomplete": {
+    "message": "部分市场暂时无法加载，列表并不完整。"
+  },
   "perpsDayVolume": {
     "message": "24h量"
   },

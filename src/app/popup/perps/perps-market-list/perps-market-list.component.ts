@@ -62,6 +62,14 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
 
   loading = true;
   marketLoadError = false;
+  /**
+   * 列表少了至少一个 DEX 的市场。
+   *
+   * 和 `marketLoadError` 是两件事：那是一个市场都没拿到，这是「拿到了，但不是全部」。
+   * 必须说出来，因为一个安静的短列表和一个完整列表长得一模一样 —— 用户搜一个恰好落在
+   * 缺失 DEX 上的市场，会读到「没有找到市场」这个确定的否定答案，而事实是我们没问到。
+   */
+  marketsIncomplete = false;
 
   markets: PerpsMarket[] = [];
   /** 置顶的市场：收藏与 Neo 生态。 */
@@ -157,15 +165,15 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
         this.marketLoadError = true;
         return;
       }
-      const markets = state.markets;
-      const known = new Set(this.orderedKeys.concat(this.pinnedKeys));
-      const changed =
-        known.size !== markets.length ||
-        markets.some((market) => !known.has(market.key));
-      this.markets = markets;
+      this.markets = state.markets;
+      // `stale` 说的是数据源不健康，它对「列表全不全」一无所知 —— 所以断线既不置起也不
+      // 清掉这面旗；恢复之后数据集会重新取一次快照，那一次才有资格改它。
+      if (state.availability !== 'stale') {
+        this.marketsIncomplete = state.availability === 'incomplete';
+      }
       // 新上架或已下架的市场必须进入顺序；价格波动则不能。其余情况做合并，
       // 让多个 DEX 的帧只触发一次重绘。
-      if (changed) {
+      if (this.shownSetChanged()) {
         this.resnapshot();
       } else {
         this.scheduleRender();
@@ -212,19 +220,42 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
    * 点击也就落在瞄准的地方。
    */
   private resnapshot() {
-    const keyword = (this.keyword || '').trim().toUpperCase();
-    const matches = (market: PerpsMarket) =>
-      !keyword || market.symbol.toUpperCase().includes(keyword);
-    const pinned = this.markets.filter(
-      (market) => this.isPinned(market) && matches(market)
-    );
-    const rest = this.markets.filter(
-      (market) => !this.isPinned(market) && matches(market)
-    );
-    this.pinnedKeys = pinned.map((market) => market.key);
-    this.orderedKeys = [...rest].sort(this.comparator()).map((m) => m.key);
+    const shown = this.shownMarkets();
+    this.pinnedKeys = shown
+      .filter((market) => this.isPinned(market))
+      .map((market) => market.key);
+    this.orderedKeys = shown
+      .filter((market) => !this.isPinned(market))
+      .sort(this.comparator())
+      .map((market) => market.key);
     this.visibleCount = PERPS_MARKET_PAGE_SIZE;
     this.renderRows();
+  }
+
+  /** 当前关键词下应当出现在列表里的那些市场，未排序。 */
+  private shownMarkets(): PerpsMarket[] {
+    const keyword = (this.keyword || '').trim().toUpperCase();
+    return keyword
+      ? this.markets.filter((market) =>
+          market.symbol.toUpperCase().includes(keyword)
+        )
+      : this.markets;
+  }
+
+  /**
+   * 冻结下来的那批键，是否已经不再是关键词此刻应当选出的那批。
+   *
+   * 比较的两边必须是同一个筛选的结果，所以两边都走 `shownMarkets()`。拿冻结的键去和
+   * **未筛选**的市场全集比长度，只要搜索框里有字就恒不相等 —— 于是每一帧都重新取快照，
+   * §3 那条「行序只由用户动作重算」的不变量在搜索态下整个失效，翻页也被打回第一页。
+   */
+  private shownSetChanged(): boolean {
+    const known = new Set(this.orderedKeys.concat(this.pinnedKeys));
+    const shown = this.shownMarkets();
+    return (
+      known.size !== shown.length ||
+      shown.some((market) => !known.has(market.key))
+    );
   }
 
   /**

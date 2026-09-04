@@ -1,4 +1,5 @@
 import { SimpleChange } from '@angular/core';
+import { EMPTY, Subject } from 'rxjs';
 
 import { PerpsMarket } from '@popup/_lib/perps';
 
@@ -17,6 +18,34 @@ describe('PerpsMarketListComponent', () => {
     value.keyword = keyword;
     value.ngOnChanges({ keyword: new SimpleChange('', keyword, false) });
   };
+
+  /**
+   * 接在一条真实的数据集订阅上。
+   *
+   * 直接调 `renderRows()` 的用例摸不到 `watchMarkets()` 里那段「集合变了没有」的判据，
+   * 而行序冻结正是在那里被打破的 —— 所以这些用例必须从帧推进去。
+   */
+  const listWithFeed = () => {
+    const states = new Subject<any>();
+    const value = new PerpsMarketListComponent(
+      null,
+      { watchMarkets: () => states.asObservable() } as any,
+      { watchConnectionState: () => EMPTY } as any
+    );
+    value.ngOnInit();
+    const frame = (markets: PerpsMarket[]) =>
+      states.next({ availability: 'live', markets, updatedAt: 1 });
+    return { value, frame, states };
+  };
+
+  const named = (symbol: string, dayVolumeExact: string) =>
+    market({ key: `hl:${symbol}`, coin: symbol, symbol, dayVolumeExact });
+
+  /** 40 个命中 `TA` 的市场，外加 20 个不命中的。 */
+  const mixedMarkets = () => [
+    ...Array.from({ length: 40 }, (_, i) => named(`TA${i}`, String(1000 - i))),
+    ...Array.from({ length: 20 }, (_, i) => named(`B${i}`, String(500 - i))),
+  ];
 
   it('quotes the mid, and says so when it has to quote the mark instead', () => {
     const value = component();
@@ -150,6 +179,94 @@ describe('PerpsMarketListComponent', () => {
     // 这个选择只在页面打开期间有效，并且从不写下来：下一次访问会自己问一遍，而不是继承
     // 一个用户看不出缘由的旧选择。现在这个列表完全不持有任何存储，所以这个选择也无处可漏。
     expect(value.sortKey).toBe('change');
+  });
+
+  it('keeps the frozen order and the paging while a keyword is active', () => {
+    const { value, frame } = listWithFeed();
+    const markets = mixedMarkets();
+    frame(markets);
+    search(value, 'TA');
+    value.loadMore();
+
+    // 一帧里只有价格动了，市场集合一个没变。
+    frame(
+      markets.map((item) =>
+        item.symbol === 'TA39' ? { ...item, dayVolumeExact: '99999' } : item
+      )
+    );
+
+    // 判据若拿冻结的键去比**未筛选**的全集，长度就恒不相等：这里会读到 30 行、
+    // 首行变成 TA39 —— 用户点过的「加载更多」作废，而一个市场爬到了他正要点的那一行前面。
+    expect(value.visibleMarkets.length).toBe(40);
+    expect(value.visibleMarkets[0].symbol).toBe('TA0');
+    expect(value.hasMore).toBeFalse();
+  });
+
+  it('still reorders when a newly listed market matches the keyword', () => {
+    const { value, frame } = listWithFeed();
+    const markets = mixedMarkets();
+    frame(markets);
+    search(value, 'TA');
+
+    frame([...markets, named('TA99', '99999')]);
+
+    // 新上架必须进入顺序 —— 这条判据收紧之后不能变成「永远不重排」。
+    expect(value.visibleMarkets[0].symbol).toBe('TA99');
+  });
+
+  it('leaves the rows alone when the change is outside the keyword', () => {
+    const { value, frame } = listWithFeed();
+    const markets = mixedMarkets();
+    frame(markets);
+    search(value, 'TA');
+    value.loadMore();
+
+    // B19 下架了。屏幕上这 40 行一个都没受影响，所以没有理由重排它们。
+    frame(markets.filter((item) => item.symbol !== 'B19'));
+
+    expect(value.visibleMarkets.length).toBe(40);
+    expect(value.visibleMarkets[0].symbol).toBe('TA0');
+
+    // 清掉关键词才把新的集合读进来。
+    search(value, '');
+    expect(value.totalMarketCount).toBe(59);
+  });
+
+  it('says so when the list is missing an entire DEX', () => {
+    const { value, states } = listWithFeed();
+    const markets = mixedMarkets();
+
+    // 某个 HIP-3 DEX 的快照失败了：标准永续的市场照常发布，但列表少了一整个 DEX。
+    states.next({ availability: 'incomplete', markets, updatedAt: 1 });
+
+    expect(value.marketsIncomplete).toBeTrue();
+    // 行照画 —— 拿到的那部分是真的，藏起来只会让用户什么都做不了。
+    expect(value.visibleMarkets.length).toBe(30);
+    expect(value.marketLoadError).toBeFalse();
+  });
+
+  it('does not call a market missing when it never asked for that DEX', () => {
+    const { value, states } = listWithFeed();
+    states.next({ availability: 'incomplete', markets: mixedMarkets(), updatedAt: 1 });
+    search(value, 'NOTHINGMATCHES');
+
+    // 「没有找到市场」是一个确定的否定答案，而我们并没有问全。
+    expect(value.totalMarketCount).toBe(0);
+    expect(value.marketsIncomplete).toBeTrue();
+  });
+
+  it('clears the incomplete notice once a full snapshot lands', () => {
+    const { value, states } = listWithFeed();
+    const markets = mixedMarkets();
+    states.next({ availability: 'incomplete', markets, updatedAt: 1 });
+
+    // 断线对「列表全不全」一无所知，所以它不能把这条提示抹掉。
+    states.next({ availability: 'stale', markets, updatedAt: 1 });
+    expect(value.marketsIncomplete).toBeTrue();
+
+    // 重连之后的那次快照才有资格改它。
+    states.next({ availability: 'live', markets, updatedAt: 2 });
+    expect(value.marketsIncomplete).toBeFalse();
   });
 
   it('reports the pick as well as routing to it', () => {

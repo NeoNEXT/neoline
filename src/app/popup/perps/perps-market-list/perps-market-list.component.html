@@ -1,4 +1,10 @@
 <div class="market-list" [class.feed-stale]="feedStale">
+  <!-- 少了一整个 DEX 的列表和完整列表长得一模一样。它也限定着排序：名次是在一个不完整的
+       集合上排出来的 -->
+  <p class="market-notice" *ngIf="marketsIncomplete">
+    {{ "perpsMarketsIncomplete" | translate | async }}
+  </p>
+
   <!-- 排序基准。这里没有预设筛选：筛选和排序是两个维度，
        把它们塞进同一个下拉会让「只看 Neo 且按涨幅排」无法表达。 -->
   <div class="market-controls" *ngIf="showSort">
@@ -54,7 +60,12 @@
     {{ "perpsLoadMore" | translate | async }}
   </button>
 
-  <p class="market-empty" *ngIf="!loading && totalMarketCount === 0">
+  <!-- 列表不完整时不说「没有找到市场」：那是一个确定的否定答案，而我们并没有问全。
+       上面那条提示已经把知道的部分说清楚了 -->
+  <p
+    class="market-empty"
+    *ngIf="!loading && totalMarketCount === 0 && !marketsIncomplete"
+  >
     {{ (marketLoadError ? "perpsLoadFailed" : "perpsNoMarkets") | translate | async }}
   </p>
 

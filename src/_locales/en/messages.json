@@ -1826,6 +1826,9 @@
   "perpsNoMarkets": {
     "message": "No markets found"
   },
+  "perpsMarketsIncomplete": {
+    "message": "Some markets are unavailable — this list is incomplete."
+  },
   "perpsDayVolume": {
     "message": "24h vol"
   },
