@@ -94,6 +94,27 @@ describe('PerpsMarketComponent live price', () => {
     expect(component.usingMid).toBeFalse();
   });
 
+  it('reports no price rather than a zero the market never printed', () => {
+    const component = build();
+    // `perpsFiniteDecimal` 在 `markPx` 缺失或解析不出时返回 `'0'`，而 `'0'` 是真值。
+    component.market = { ...market, midPxExact: null, markPxExact: '0' };
+
+    expect(component.displayPrice).toBeNull();
+    expect(component.hasPrice).toBeFalse();
+    // 没有价格的地方也没有价格种类可标 —— `$0 标记价` 会读成一个真实的报价。
+    expect(component.usingMid).toBeFalse();
+  });
+
+  it('does not let a zero mid stand in for the mark price', () => {
+    const component = build();
+    // 上游 `marketContextFields` 已经把非正的 mid 归成 null，但这里不依赖它的好意 ——
+    // `usingMid` 还喂着 `canOrder`。
+    component.market = { ...market, midPxExact: '0' };
+
+    expect(component.displayPrice).toBe('1875.7');
+    expect(component.usingMid).toBeFalse();
+  });
+
   it('quotes the 24h move as a percentage', () => {
     const component = build();
     component.market = market;
@@ -179,6 +200,15 @@ describe('PerpsMarketComponent trade entry', () => {
 
   it('closes the entry on a market with no tradable mid', () => {
     const component = ready({ midPxExact: null });
+
+    expect(component.canOrder).toBeFalse();
+    expect(component.orderBlockedKey).toBe('perpsNoTwoSidedBook');
+  });
+
+  it('closes the entry when the mid is a placeholder zero', () => {
+    // `'0'` 是真值，所以真值判断会把这个市场读成「有双边盘口」，放用户进下单表单，
+    // 而那里唯一能报出的价格是 $0。
+    const component = ready({ midPxExact: '0' });
 
     expect(component.canOrder).toBeFalse();
     expect(component.orderBlockedKey).toBe('perpsNoTwoSidedBook');

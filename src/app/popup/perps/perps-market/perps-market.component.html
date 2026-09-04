@@ -82,9 +82,16 @@
 
     <!-- 大字价格 -->
     <div class="price-block" *ngIf="market; else priceSkeleton">
-      <span class="price">${{ displayPrice | perpsPrice: market.szDecimals:usingMid }}</span>
-      <!-- 没有双边盘口时头部退到标记价：不标出来就会被读成可成交价 -->
-      <span class="price-kind" *ngIf="!usingMid">
+      <!-- 报不出价格时连货币符号一起去掉：`$--` 里的那个 $ 仍在断言我们有一个金额 -->
+      <span class="price" *ngIf="hasPrice; else priceMissing"
+        >${{ displayPrice | perpsPrice: market.szDecimals:usingMid }}</span
+      >
+      <ng-template #priceMissing
+        ><span class="price">{{ missingDisplay }}</span></ng-template
+      >
+      <!-- 没有双边盘口时头部退到标记价：不标出来就会被读成可成交价。
+           没有价格的地方也没有价格种类可标 -->
+      <span class="price-kind" *ngIf="hasPrice && !usingMid">
         {{ "perpsMarkPriceTag" | translate | async }}
       </span>
       <!-- 涨跌幅只由中间价与 prevDayPx 计算，价格类型不一致时不展示 -->

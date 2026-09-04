@@ -32,6 +32,8 @@ import {
 import {
   chartPriceDecimals,
   formatFundingPercent,
+  isQuotablePrice,
+  MISSING_DISPLAY,
   pad2,
 } from '../perps.util';
 
@@ -73,6 +75,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   chartRecoveryError = false;
   interval: PerpsCandleInterval = '15m';
   /** 日内粒度，始终显示在屏幕上。 */
+  readonly missingDisplay = MISSING_DISPLAY;
   readonly quickIntervals: PerpsCandleInterval[] = ['1m', '5m', '15m', '1h'];
   /** 较长的那些放在菜单里，因为它们被选中的次数少得多。 */
   readonly longIntervals: PerpsCandleInterval[] = ['12h', '1d', '1w', '1M'];
@@ -189,9 +192,15 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     return this.market?.symbol ?? this.coin;
   }
 
-  /** 标题栏的价格是盘口中间价，还是退回到标记价格的兜底值。 */
+  /**
+   * 标题栏的价格是盘口中间价，还是退回到标记价格的兜底值。
+   *
+   * 判据是数值而不是真值。`marketContextFields` 上游已经把非正的中间价归成 `null`，
+   * 但这个 getter 还喂着 `canOrder` —— 一个决定要不要放行下单的判断，不该建立在
+   * 「上游会记得替我挡住」上面。
+   */
   get usingMid(): boolean {
-    return !!this.market?.midPxExact;
+    return isQuotablePrice(this.market?.midPxExact);
   }
 
   /**
@@ -250,7 +259,23 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
    * 卡片里各有自己的一行，那里会点明它们的用途 —— 保证金与强平、资金费。
    */
   get displayPrice(): string | null {
-    return this.market?.midPxExact ?? this.market?.markPxExact ?? null;
+    const market = this.market;
+    if (isQuotablePrice(market?.midPxExact)) {
+      return market.midPxExact;
+    }
+    return isQuotablePrice(market?.markPxExact) ? market.markPxExact : null;
+  }
+
+  /**
+   * 标题栏究竟有没有价格可报。
+   *
+   * `markPxExact` 走的是 `perpsFiniteDecimal`，字段缺失或解析不出时它给的是 `'0'`，
+   * 而 `'0'` 在 JS 里是真值 —— 放过去这一屏最大的那几个字就写着 `$0`，一个这个市场
+   * 从未印过的价格。两个价格都报不出来时，标题栏读作 `--`，且不再挂「标记价」角标：
+   * 没有价格的地方也没有价格种类可标。
+   */
+  get hasPrice(): boolean {
+    return this.displayPrice !== null;
   }
 
   /** 以旁边显示的同一个价格为基准，对昨日收盘价报出。 */

@@ -22,7 +22,13 @@ import {
   PERPS_MARKET_PAGE_SIZE,
   PERPS_NEO_COINS,
 } from '@popup/_lib/perps';
-import { formatCompactUsd, formatPrice, formatSignedPercent } from '../perps.util';
+import {
+  formatCompactUsd,
+  formatPrice,
+  formatSignedPercent,
+  isQuotablePrice,
+  MISSING_DISPLAY,
+} from '../perps.util';
 
 /**
  * 市场列表本身：排序、置顶、翻页以及各行的渲染。
@@ -107,6 +113,7 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
   formatCompactUsd = formatCompactUsd;
   formatPrice = formatPrice;
   formatSignedPercent = formatSignedPercent;
+  readonly missingDisplay = MISSING_DISPLAY;
   //#endregion
 
   constructor(
@@ -306,14 +313,23 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
    * 市场行显示的价格：盘口中间价；没有双边盘口时用标记价格。这一行会标明它是哪一种 ——
    * 标记价格不是任何人能成交的价格，让它冒充成交价，正是用户把一个不可交易的市场读成
    * 可交易市场的原因。
+   *
+   * 两个价格都报不出来时为 `null`，这一行就不报价。判据是 `isQuotablePrice` 而不是真值：
+   * `markPxExact` 走的是 `perpsFiniteDecimal`，字段缺失时它给的是 `'0'`，而那在 JS 里
+   * 是真值 —— 放过去这一行就写着 `$0`，一个这个市场从未印过的价格。
    */
   listPrice(market: PerpsMarket): string | null {
-    return market.midPxExact ?? market.markPxExact ?? null;
+    if (isQuotablePrice(market.midPxExact)) {
+      return market.midPxExact;
+    }
+    return isQuotablePrice(market.markPxExact) ? market.markPxExact : null;
   }
 
   /** 盘口没有中间价、因而这一行报的是标记价格时为 true。 */
   usingMarkPrice(market: PerpsMarket): boolean {
-    return !market.midPxExact && !!market.markPxExact;
+    return (
+      !isQuotablePrice(market.midPxExact) && isQuotablePrice(market.markPxExact)
+    );
   }
 
   /**

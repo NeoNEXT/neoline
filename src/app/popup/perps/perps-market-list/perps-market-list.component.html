@@ -87,11 +87,15 @@
         <div class="volume">{{ formatCompactUsd(market.dayVolumeExact) }}</div>
       </div>
       <div class="market-price">
+        <!-- 报不出价格时连货币符号一起去掉：`$--` 里的那个 $ 仍在断言我们有一个金额 -->
         <div class="price">
-          ${{ formatPrice(listPrice(market), market.szDecimals, !usingMarkPrice(market)) }}
-          <span class="mark-tag" *ngIf="usingMarkPrice(market)">{{
-            "perpsMarkPriceTag" | translate | async
-          }}</span>
+          <ng-container *ngIf="listPrice(market) as price; else priceMissing">
+            ${{ formatPrice(price, market.szDecimals, !usingMarkPrice(market)) }}
+            <span class="mark-tag" *ngIf="usingMarkPrice(market)">{{
+              "perpsMarkPriceTag" | translate | async
+            }}</span>
+          </ng-container>
+          <ng-template #priceMissing>{{ missingDisplay }}</ng-template>
         </div>
         <div class="change" [class.negative]="market.changePercentExact | perpsNegative">
           {{ formatSignedPercent(market.changePercentExact) }}

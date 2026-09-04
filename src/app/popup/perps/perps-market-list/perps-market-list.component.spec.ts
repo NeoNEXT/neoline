@@ -70,6 +70,37 @@ describe('PerpsMarketListComponent', () => {
     expect(noBook.changePercentExact).toBeNull();
   });
 
+  it('reports no price rather than a zero the market never printed', () => {
+    const value = component();
+    // `perpsFiniteDecimal` 在 `markPx` 缺失或解析不出时返回 `'0'`，而 `'0'` 是真值。
+    const broken = market({
+      key: 'hl:BROKEN',
+      coin: 'BROKEN',
+      symbol: 'BROKEN',
+      midPxExact: null,
+      markPxExact: '0',
+    });
+
+    expect(value.listPrice(broken)).toBeNull();
+    // 这一行报不出价格，所以它也没有「标记价」可标 —— `$0 标记价` 会读成一个真实的报价。
+    expect(value.usingMarkPrice(broken)).toBeFalse();
+  });
+
+  it('does not let a zero mid stand in for the mark price', () => {
+    const value = component();
+    // `marketContextFields` 已经把非正的 mid 归成 null，但这一行不依赖上游的好意。
+    const zeroMid = market({
+      key: 'hl:ZEROMID',
+      coin: 'ZEROMID',
+      symbol: 'ZEROMID',
+      midPxExact: '0',
+      markPxExact: '1885.8',
+    });
+
+    expect(value.listPrice(zeroMid)).toBe('1885.8');
+    expect(value.usingMarkPrice(zeroMid)).toBeTrue();
+  });
+
   it('searches the display symbol, not the prefixed protocol coin', () => {
     const value = component();
     value.markets = [

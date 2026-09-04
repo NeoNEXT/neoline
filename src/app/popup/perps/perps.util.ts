@@ -33,6 +33,17 @@ export function isNegativeExact(value: PerpsExactValue): boolean {
   return !isMissing(value) && new BigNumber(value).isLessThan(0);
 }
 
+/**
+ * 这个值能不能当成一个价格报出去：既没有缺失，也不是零或负数。
+ *
+ * 必须按数值判断，而不是真值判断。`perpsFiniteDecimal` 在字段缺失或解析不出时返回 `'0'`，
+ * 而 `'0'` 在 JS 里是真值 —— 让它当价格用出去，界面就会报出一个这个市场从未印过的 `$0`，
+ * 那是在替市场做一个它从未做过的价格陈述。零不是「便宜」，它是「我们不知道」。
+ */
+export function isQuotablePrice(value: PerpsExactValue): boolean {
+  return !isMissing(value) && new BigNumber(value).isGreaterThan(0);
+}
+
 function isMissing(value: PerpsExactValue): boolean {
   if (value === null || value === undefined || value === '') {
     return true;
