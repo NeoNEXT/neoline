@@ -1,5 +1,5 @@
 import { fakeAsync, tick } from '@angular/core/testing';
-import { of, Subject, throwError } from 'rxjs';
+import { concat, of, Subject, throwError } from 'rxjs';
 
 import { STORAGE_NAME } from '@popup/_lib';
 import { PerpsMarket } from '@popup/_lib/perps';
@@ -107,8 +107,8 @@ describe('PerpsMarketComponent live price', () => {
 
   it('does not let a zero mid stand in for the mark price', () => {
     const component = build();
-    // 上游 `marketContextFields` 已经把非正的 mid 归成 null，但这里不依赖它的好意 ——
-    // `usingMid` 还喂着 `canOrder`。
+    // 上游 `marketContextFields` 已经把非正的 mid 归成 null，但这里不依赖它的好意：
+    // `'0'` 是真值，真值判断会把它读成一个正常的中间价并照原样报出去。
     component.market = { ...market, midPxExact: '0' };
 
     expect(component.displayPrice).toBe('1875.7');
@@ -198,20 +198,14 @@ describe('PerpsMarketComponent trade entry', () => {
     expect(component.orderBlockedKey).toBe('perpsEntryConnecting');
   });
 
-  it('closes the entry on a market with no tradable mid', () => {
+  it('keeps the entry open on a market with no tradable mid', () => {
     const component = ready({ midPxExact: null });
 
-    expect(component.canOrder).toBeFalse();
-    expect(component.orderBlockedKey).toBe('perpsNoTwoSidedBook');
-  });
-
-  it('closes the entry when the mid is a placeholder zero', () => {
-    // `'0'` 是真值，所以真值判断会把这个市场读成「有双边盘口」，放用户进下单表单，
-    // 而那里唯一能报出的价格是 $0。
-    const component = ready({ midPxExact: '0' });
-
-    expect(component.canOrder).toBeFalse();
-    expect(component.orderBlockedKey).toBe('perpsNoTwoSidedBook');
+    // 缺中间价只挡得住市价单，而限价单的价格是用户自己输的。这件事整个交给下单页说：
+    // 它那句话只在用户真的选了市价时才出现，而本页在这里提前关门，等于替一个能下的单
+    // 做了拒绝，且什么都没多说。
+    expect(component.canOrder).toBeTrue();
+    expect(component.orderBlockedKey).toBe('');
   });
 
   it('explains nothing while the market itself is still unknown', () => {
@@ -224,11 +218,23 @@ describe('PerpsMarketComponent trade entry', () => {
 
   it('does not navigate out of a closed entry', () => {
     const router = jasmine.createSpyObj('Router', ['navigateByUrl']);
-    const component = ready({ midPxExact: null }, router);
+    const component = ready({}, router);
+    component.connectionState = 'stale';
 
     component.toOrder('long');
 
     expect(router.navigateByUrl).not.toHaveBeenCalled();
+  });
+
+  it('still routes a market that has no mid', () => {
+    const router = jasmine.createSpyObj('Router', ['navigateByUrl']);
+    const component = ready({ midPxExact: null }, router);
+
+    component.toOrder('long');
+
+    expect(router.navigateByUrl).toHaveBeenCalledWith(
+      '/popup/perps/order/ETH?side=long'
+    );
   });
 
   it('navigates with the protocol coin once the entry is open', () => {
@@ -585,12 +591,13 @@ describe('PerpsMarketComponent change detection', () => {
     expect(cdr.markForCheck).toHaveBeenCalled();
   });
 
-  it('marks the view on every countdown tick', () => {
+  it('marks the view on every countdown tick a market is on screen for', () => {
     const cdr = detector();
     const component = new PerpsMarketComponent(null, null, null, datasets(), cdr,
       channel(),
       markets()
     );
+    component.market = market;
 
     (component as any).tickCountdown();
 
@@ -720,6 +727,279 @@ describe('PerpsMarketComponent route changes', () => {
     params.next({ coin: 'NOSUCHCOIN' });
     feed.next(null);
 
+    expect(component.marketStatus).toBe('missing');
+    expect(component.canOrder).toBeFalse();
+    component.ngOnDestroy();
+  });
+});
+
+describe('PerpsMarketComponent teardown', () => {
+  it('cancels the interval read rather than letting it outlive the page', () => {
+    const saved = new Subject<string>();
+    const watchDataset = jasmine
+      .createSpy('watchDataset')
+      .and.returnValue(new Subject<PerpsCandleDatasetState>());
+    const component = new PerpsMarketComponent(
+      null,
+      null,
+      { getStorage: () => saved, setStorage: () => undefined } as any,
+      datasets({ watchDataset }),
+      detector(),
+      channel(),
+      markets()
+    );
+    (component as any).openMarket('ETH');
+
+    component.ngOnDestroy();
+    saved.next('1h');
+
+    // 销毁之后建立的订阅，没有任何人还会去退订它：那个数据集条目——连同它底下的
+    // websocket 订阅——会被永久钉住，整个会话都释放不掉。
+    expect(watchDataset).not.toHaveBeenCalled();
+  });
+});
+
+describe('PerpsMarketComponent 资金费倒计时', () => {
+  const at = (iso: string) => {
+    jasmine.clock().install();
+    jasmine.clock().mockDate(new Date(iso));
+  };
+
+  afterEach(() => {
+    if ((jasmine.clock() as any).installed) {
+      jasmine.clock().uninstall();
+    }
+  });
+
+  it('counts down to the top of the hour', () => {
+    at('2026-09-04T08:40:00.000Z');
+    const component = build();
+
+    (component as any).tickCountdown();
+
+    expect(component.fundingCountdown).toBe('00:20:00');
+    jasmine.clock().uninstall();
+  });
+
+  it('does not check the whole popup for a countdown nobody can see', () => {
+    const cdr = detector();
+    const component = new PerpsMarketComponent(
+      null,
+      null,
+      null,
+      datasets(),
+      cdr,
+      channel(),
+      markets()
+    );
+
+    // 倒计时住在统计卡片里，而那张卡片只在市场取到之后才渲染。
+    (component as any).tickCountdown();
+    expect(cdr.markForCheck).not.toHaveBeenCalled();
+    expect(component.fundingCountdown).not.toBe('');
+
+    component.market = market;
+    (component as any).tickCountdown();
+    expect(cdr.markForCheck).toHaveBeenCalled();
+  });
+});
+
+describe('PerpsMarketComponent 周期菜单', () => {
+  const opened = () => {
+    const component = build();
+    component.showIntervalMenu = true;
+    return component;
+  };
+
+  it('closes when the click lands anywhere else', () => {
+    const component = opened();
+
+    component.onDocumentClick({ closest: () => null } as any);
+
+    expect(component.showIntervalMenu).toBeFalse();
+  });
+
+  it('stays open for a click inside itself', () => {
+    const component = opened();
+
+    component.onDocumentClick({ closest: () => ({}) } as any);
+
+    expect(component.showIntervalMenu).toBeTrue();
+  });
+
+  it('closes when the route lands on another market', () => {
+    const component = new PerpsMarketComponent(
+      null,
+      null,
+      { getStorage: () => of(undefined), setStorage: () => undefined } as any,
+      datasets(),
+      detector(),
+      channel(),
+      markets()
+    );
+    component.showIntervalMenu = true;
+
+    (component as any).openMarket('BTC');
+
+    expect(component.showIntervalMenu).toBeFalse();
+  });
+});
+
+describe('PerpsMarketComponent 断流恢复', () => {
+  /** 一个已经在屏幕上的市场，加上一条可以推送连接状态的通道。 */
+  function onScreen(answers: any[]) {
+    const connection = new Subject<any>();
+    const watchMarketDetail = jasmine
+      .createSpy('watchMarketDetail')
+      .and.callFake(() => answers.shift() ?? new Subject());
+    const component = new PerpsMarketComponent(
+      // 路由参数在这一组里不参与：市场是直接装上去的，被测的是连接状态那条路。
+      { params: new Subject() } as any,
+      null,
+      null,
+      datasets(),
+      detector(),
+      channel({ watchConnectionState: () => connection }),
+      markets({ watchMarketDetail })
+    );
+    component.ngOnInit();
+    component.coin = 'ETH';
+    (component as any).loadMarket();
+    return { component, connection, watchMarketDetail };
+  }
+
+  it('asks for the market facts again once the feed comes back', () => {
+    const { component, connection, watchMarketDetail } = onScreen([of(market)]);
+    connection.next('stale');
+
+    connection.next('live');
+
+    // `activeAssetCtx` 只带价格，所以断流期间的下市或杠杆调整，
+    // 除了这一次重取没有别的东西会发现。
+    expect(watchMarketDetail).toHaveBeenCalledTimes(2);
+    component.ngOnDestroy();
+  });
+
+  it('does not re-ask on the first connection', () => {
+    const { component, connection, watchMarketDetail } = onScreen([of(market)]);
+
+    connection.next('live');
+
+    expect(watchMarketDetail).toHaveBeenCalledTimes(1);
+    component.ngOnDestroy();
+  });
+
+  it('keeps the market on screen when the refresh fails', () => {
+    const { component, connection } = onScreen([
+      of(market),
+      throwError(() => new Error('429')),
+    ]);
+    connection.next('stale');
+
+    connection.next('live');
+
+    // 一次失败的重取不构成用户的问题：屏幕上那个市场仍然是交易场所最后说过的话。
+    expect(component.marketStatus).toBe('ready');
+    expect(component.market).toEqual(market);
+    component.ngOnDestroy();
+  });
+
+  it('continues receiving prices during and after a failed refresh', () => {
+    const updates = new Subject<PerpsMarket>();
+    const refresh = new Subject<PerpsMarket>();
+    const { component, connection } = onScreen([
+      concat(of(market), updates),
+      refresh,
+    ]);
+    try {
+      connection.next('stale');
+      connection.next('live');
+      updates.next({ ...market, midPxExact: '1880' });
+      expect(component.displayPrice).toBe('1880');
+
+      refresh.error(new Error('429'));
+      updates.next({ ...market, midPxExact: '1890' });
+      expect(component.displayPrice).toBe('1890');
+      expect(component.canOrder).toBeTrue();
+    } finally {
+      component.ngOnDestroy();
+    }
+    expect(updates.observers.length).toBe(0);
+  });
+
+  it('replaces the old stream only when the refreshed market arrives', () => {
+    const updates = new Subject<PerpsMarket>();
+    const refresh = new Subject<PerpsMarket>();
+    const { component, connection } = onScreen([
+      concat(of(market), updates),
+      refresh,
+    ]);
+    try {
+      connection.next('stale');
+      connection.next('live');
+      refresh.next({ ...market, maxLeverage: 10, midPxExact: '1900' });
+      expect(updates.observers.length).toBe(0);
+      updates.next(market);
+      expect(component.market.maxLeverage).toBe(10);
+      expect(component.displayPrice).toBe('1900');
+      refresh.next({ ...market, maxLeverage: 10, midPxExact: '1910' });
+      expect(component.displayPrice).toBe('1910');
+    } finally {
+      component.ngOnDestroy();
+    }
+    expect(refresh.observers.length).toBe(0);
+  });
+
+  it('cancels both the live stream and pending refresh on teardown', () => {
+    const updates = new Subject<PerpsMarket>();
+    const refresh = new Subject<PerpsMarket>();
+    const { component, connection } = onScreen([
+      concat(of(market), updates),
+      refresh,
+    ]);
+    connection.next('stale');
+    connection.next('live');
+    component.ngOnDestroy();
+    expect(updates.observers.length).toBe(0);
+    expect(refresh.observers.length).toBe(0);
+  });
+
+  it('does not let an old stream or refresh overwrite the next route', () => {
+    const updates = new Subject<PerpsMarket>();
+    const refresh = new Subject<PerpsMarket>();
+    const { component, connection } = onScreen([
+      concat(of(market), updates),
+      refresh,
+      of({ ...market, coin: 'BTC', midPxExact: '60000' }),
+    ]);
+    (component as any).chrome = { getStorage: () => of('15m') };
+    try {
+      connection.next('stale');
+      connection.next('live');
+      (component as any).openMarket('BTC');
+      expect(updates.observers.length).toBe(0);
+      expect(refresh.observers.length).toBe(0);
+      updates.next(market);
+      refresh.next(market);
+      expect(component.market.coin).toBe('BTC');
+      expect(component.displayPrice).toBe('60000');
+    } finally {
+      component.ngOnDestroy();
+    }
+  });
+
+  it('reports a market that was delisted while the feed was down', () => {
+    const updates = new Subject<PerpsMarket>();
+    const { component, connection } = onScreen([
+      concat(of(market), updates),
+      of(null),
+    ]);
+    connection.next('stale');
+
+    connection.next('live');
+
+    updates.next(market);
+    expect(updates.observers.length).toBe(0);
     expect(component.marketStatus).toBe('missing');
     expect(component.canOrder).toBeFalse();
     component.ngOnDestroy();

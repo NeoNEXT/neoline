@@ -3,12 +3,13 @@ import {
   ChangeDetectorRef,
   Component,
   ElementRef,
+  HostListener,
   OnDestroy,
   OnInit,
   ViewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { asyncScheduler, Unsubscribable } from 'rxjs';
+import { asyncScheduler, Subscription, Unsubscribable } from 'rxjs';
 import { tap, throttleTime } from 'rxjs/operators';
 
 import { ChromeService } from '@/app/core';
@@ -109,8 +110,17 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
 
   private routeSub: Unsubscribable;
   private marketsSub: Unsubscribable;
+  private marketRefreshSub: Subscription;
   private connectionSub: Unsubscribable;
   private datasetSub: Unsubscribable;
+  /**
+   * 待回答的那次周期读取。
+   *
+   * 它是本页唯一一次「回调会去建立另一条订阅」的异步读取，所以它必须能被取消：落在
+   * `ngOnDestroy` 之后的那次回调，建的是一条再也没有人会退订的 K 线订阅，而那条订阅
+   * 会把它的数据集条目连同条目底下的 websocket 订阅一起永久钉住。
+   */
+  private intervalSub: Unsubscribable;
   /** 数据集上一次说的是什么，好让「种类的变化」永远不被压住。 */
   private datasetAvailability: PerpsCandleAvailability = 'loading';
   private countdownTimer: any;
@@ -129,9 +139,14 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     this.connectionSub = this.channel
       .watchConnectionState()
       .subscribe((state) => {
-        // 恢复现在是数据集自己的事；页面读取连接状态，只是为了说明屏幕上的东西
-        // 是否仍然实时。
+        // K 线的恢复是数据集自己的事；页面读取连接状态，一是为了说明屏幕上的东西是否
+        // 仍然实时，二是因为市场**事实**只有这一处会被重新问起：`activeAssetCtx` 只带
+        // 价格，所以断流期间的下市或杠杆调整，除了这一次重取没有别的东西会发现。
+        const recovered = this.connectionState === 'stale' && state === 'live';
         this.connectionState = state;
+        if (recovered && this.coin) {
+          this.loadMarket();
+        }
         this.cdr.markForCheck();
       });
     this.routeSub = this.route.params.subscribe((params) =>
@@ -151,12 +166,15 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     // 在改动序列键之前先作废。否则在存储回答「该加载哪个周期」的这段时间里，
     // Angular 可能会把上一个币种的柱子渲染在新币种底下。
     this.invalidateCandleDataset();
+    this.marketRefreshSub?.unsubscribe();
+    this.marketsSub?.unsubscribe();
     this.coin = coin;
     this.market = undefined;
     this.marketStatus = 'loading';
     // 无论这次导航是怎么发起的，到达另一个市场就说明切换器的活已经干完了 —— 这个菜单属于
     // 它被打开时所覆盖的那个市场，留着不关，它就会挡住自己刚给出的答案。
     this.closeCoinMenu();
+    this.showIntervalMenu = false;
     this.loadMarket();
     this.loadChartInterval();
     this.cdr.markForCheck();
@@ -164,8 +182,10 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.routeSub?.unsubscribe();
+    this.marketRefreshSub?.unsubscribe();
     this.marketsSub?.unsubscribe();
     this.connectionSub?.unsubscribe();
+    this.intervalSub?.unsubscribe();
     this.unwatchDataset();
     clearInterval(this.countdownTimer);
   }
@@ -196,8 +216,8 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
    * 标题栏的价格是盘口中间价，还是退回到标记价格的兜底值。
    *
    * 判据是数值而不是真值。`marketContextFields` 上游已经把非正的中间价归成 `null`，
-   * 但这个 getter 还喂着 `canOrder` —— 一个决定要不要放行下单的判断，不该建立在
-   * 「上游会记得替我挡住」上面。
+   * 但一个决定「这个数字要不要标成标记价」的判断，不该建立在「上游会记得替我挡住」上面
+   * —— `'0'` 在 JS 里是真值，真值判断会把它读成一个正常的中间价并照原样报出去。
    */
   get usingMid(): boolean {
     return isQuotablePrice(this.market?.midPxExact);
@@ -221,15 +241,14 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   /**
    * 做多和做空是否可以通往下单表单。
    *
-   * 「数据源不再实时」和「市场没有双边盘口」是两种不同的故障，后果却相同：从这里出发，
-   * 下单表单没有任何可以诚实报出的价格，所以这个入口直接关闭，而不是把问题甩给下游。
+   * 关的只有一件事：行情不实时。缺中间价**不**关门 —— 那只挡得住市价单，而限价单的价格
+   * 是用户自己输的。这件事整个交给下单页说：它本来就有一句只针对市价那一侧的准确说法
+   * （`no-execution-price`），且只在用户真的选了市价时才出现。在这里提前把门关死，
+   * 等于替一个能下的单做了拒绝；何况首页 tab 的持仓卡片通往的是同一个表单，
+   * 这道门也从来没拦住过它。
    */
   get canOrder(): boolean {
-    return (
-      this.marketStatus === 'ready' &&
-      this.connectionState === 'live' &&
-      this.usingMid
-    );
+    return this.marketStatus === 'ready' && this.connectionState === 'live';
   }
 
   /**
@@ -245,10 +264,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     }
     // 不用横幅的措辞：横幅说的是数据发生了什么，这里说的是它让用户付出什么代价。
     // 同一句话在同一屏上重复两遍，读起来像是渲染出了故障，而不像两个事实。
-    if (this.connectionState !== 'live') {
-      return this.isStale ? 'perpsEntryStale' : 'perpsEntryConnecting';
-    }
-    return 'perpsNoTwoSidedBook';
+    return this.isStale ? 'perpsEntryStale' : 'perpsEntryConnecting';
   }
 
   /**
@@ -323,30 +339,65 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     return this.longIntervals.includes(this.interval);
   }
 
+  /**
+   * 点击别处会关掉周期菜单，且不做选择。
+   *
+   * 与币种切换器的遮罩、市场列表排序菜单的同名监听是同一条规矩：一屏上三个下拉，
+   * 关掉它们的方式必须只有一种。
+   */
+  @HostListener('document:click', ['$event.target'])
+  onDocumentClick(target: HTMLElement) {
+    if (this.showIntervalMenu && !target?.closest?.('.interval-menu-wrap')) {
+      this.showIntervalMenu = false;
+      this.cdr.markForCheck();
+    }
+  }
+
   /** 资金费在整点结算；倒计时到下一个整点。 */
   private tickCountdown() {
     const hourMs = 3600 * 1000;
+    // epoch 毫秒本身按 UTC 对齐，所以这个取余算的就是到下一个 UTC 整点。读的是本机时钟：
+    // 结算的整点由交易场所定义，因此一台走偏了的机器会把倒计时一起带偏（见本页 docs 的 P3-2）。
     const remaining = hourMs - (Date.now() % hourMs);
     const total = Math.floor(remaining / 1000);
     this.fundingCountdown = `${pad2(Math.floor(total / 3600))}:${pad2(
       Math.floor((total % 3600) / 60)
     )}:${pad2(total % 60)}`;
-    this.cdr.markForCheck();
+    // 只有它真在屏幕上时才值得为它检查一遍整个弹窗。倒计时住在统计卡片里，而那张卡片
+    // 只在市场取到之后才渲染 —— 加载中、失败、以及交易场所不承载这个币种时，这个定时器
+    // 每秒钟都在为一段没人看得见的文本触发一轮变更检测。
+    if (this.market) {
+      this.cdr.markForCheck();
+    }
   }
 
   private loadMarket() {
-    this.marketsSub?.unsubscribe();
-    this.marketsSub = this.markets$.watchMarketDetail(this.coin).subscribe({
-      next: (market) => {
-        this.market = market ?? undefined;
-        this.marketStatus = market ? 'ready' : 'missing';
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.marketStatus = 'error';
-        this.cdr.markForCheck();
-      },
-    });
+    this.marketRefreshSub?.unsubscribe();
+    // 重取快照期间保留实时流；新市场到达后才替换，避免 REST 失败切断价格更新。
+    // 先建立容器，以便同步返回的快照也能正确交接和释放订阅。
+    const refresh = new Subscription();
+    this.marketRefreshSub = refresh;
+    refresh.add(
+      this.markets$.watchMarketDetail(this.coin).subscribe({
+        next: (market) => {
+          if (this.marketsSub !== refresh) {
+            this.marketsSub?.unsubscribe();
+            this.marketsSub = refresh;
+            this.marketRefreshSub = undefined;
+          }
+          this.market = market ?? undefined;
+          this.marketStatus = market ? 'ready' : 'missing';
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          // 刷新失败时旧订阅仍在接收实时价格；首次加载失败才进入错误状态。
+          if (!this.market) {
+            this.marketStatus = 'error';
+          }
+          this.cdr.markForCheck();
+        },
+      })
+    );
   }
 
   //#region 币种切换器
@@ -441,7 +492,9 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
    * 而不是每个市场各记一份。
    */
   private loadChartInterval() {
-    this.chrome
+    // 上一次读取的答案属于上一个市场，而它会去建立一条 K 线订阅 —— 所以它跟着那个市场一起走。
+    this.intervalSub?.unsubscribe();
+    this.intervalSub = this.chrome
       .getStorage(STORAGE_NAME.perpsChartInterval)
       .subscribe((saved) => {
         // 存储返回的是旧版本写进去的任意值。本版本不再提供的周期绝不能到达数据集：数据集

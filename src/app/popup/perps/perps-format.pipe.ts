@@ -4,6 +4,7 @@ import { PerpsMarket } from '@popup/_lib/perps';
 import {
   findMarketByKey,
   formatCompactUsd,
+  formatFundingPercent,
   formatPositionSize,
   formatPrice,
   formatReturnOnEquity,
@@ -40,6 +41,19 @@ export class PerpsPricePipe implements PipeTransform {
 export class PerpsSignedPercentPipe implements PipeTransform {
   transform(value: PerpsExactValue, decimals = 2): string {
     return formatSignedPercent(value, decimals);
+  }
+}
+
+/**
+ * 资金费率。
+ *
+ * 这一页每秒都会被检查一遍（倒计时就住在它旁边），而这条规则要构造 BigNumber ——
+ * 模板直接调用它，等于每秒重算一次一个每几小时才变一次的数字。
+ */
+@Pipe({ name: 'perpsFundingPercent' })
+export class PerpsFundingPercentPipe implements PipeTransform {
+  transform(value: PerpsExactValue): string {
+    return formatFundingPercent(value);
   }
 }
 
@@ -105,6 +119,7 @@ export class PerpsNegativePipe implements PipeTransform {
 export const PERPS_FORMAT_PIPES = [
   PerpsPricePipe,
   PerpsSignedPercentPipe,
+  PerpsFundingPercentPipe,
   PerpsCompactUsdPipe,
   PerpsUsdPipe,
   PerpsSignedUsdPipe,

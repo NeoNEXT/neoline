@@ -78,7 +78,7 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
   marketsIncomplete = false;
 
   markets: PerpsMarket[] = [];
-  /** 置顶的市场：收藏与 Neo 生态。 */
+  /** 置顶的市场：产品指定的 Neo 生态资产。没有收藏功能。 */
   pinnedMarkets: PerpsMarket[] = [];
   /** 置顶区下方的各行，按排序快照的顺序排列。 */
   visibleMarkets: PerpsMarket[] = [];
@@ -222,7 +222,7 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
   /**
    * 重新计算排序快照。
    *
-   * 只由用户的动作触发 —— 进入页面、搜索、切换排序、下拉刷新 —— 绝不由价格更新触发。
+   * 只由用户的动作触发 —— 进入页面、搜索、切换排序 —— 绝不由价格更新触发。
    * 在这些调用之间行顺序是冻结的，因此一个市场不可能爬到用户正伸手要点的那一行前面，
    * 点击也就落在瞄准的地方。
    */

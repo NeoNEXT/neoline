@@ -2138,9 +2138,6 @@
   "perpsMarketNotFound": {
     "message": "이 마켓은 현재 Hyperliquid에서 사용할 수 없습니다."
   },
-  "perpsNoTwoSidedBook": {
-    "message": "호가창이 불완전해 체결 가능한 중간가가 없어 주문할 수 없습니다."
-  },
   "perpsEntryStale": {
     "message": "시세 연결이 끊겨 지금은 주문할 수 없습니다."
   },

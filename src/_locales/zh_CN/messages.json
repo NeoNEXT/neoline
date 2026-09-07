@@ -2138,9 +2138,6 @@
   "perpsMarketNotFound": {
     "message": "该市场当前在 Hyperliquid 上不可用。"
   },
-  "perpsNoTwoSidedBook": {
-    "message": "盘口不完整，暂无可成交中间价，无法下单。"
-  },
   "perpsEntryStale": {
     "message": "行情已断开，暂时无法下单。"
   },

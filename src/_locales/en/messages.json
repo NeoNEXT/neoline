@@ -2138,9 +2138,6 @@
   "perpsMarketNotFound": {
     "message": "This market is not available on Hyperliquid right now."
   },
-  "perpsNoTwoSidedBook": {
-    "message": "Incomplete order book — no tradable mid price, so orders are unavailable."
-  },
   "perpsEntryStale": {
     "message": "Trading is unavailable while the price feed is disconnected."
   },

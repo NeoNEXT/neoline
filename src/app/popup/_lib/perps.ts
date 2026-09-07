@@ -60,7 +60,7 @@ export const PERPS_HIP3_DEXES: {
   testnet: ['xyz'],
 };
 
-/** 与收藏一起置顶在已排序市场列表上方的市场。 */
+/** 置顶在已排序市场列表上方的市场。这份名单是产品指定的，不是用户收藏的。 */
 export const PERPS_NEO_COINS = ['NEO', 'GAS'];
 
 /**

@@ -2138,9 +2138,6 @@
   "perpsMarketNotFound": {
     "message": "このマーケットは現在 Hyperliquid で利用できません。"
   },
-  "perpsNoTwoSidedBook": {
-    "message": "板が片側のみのため、約定可能な仲値がなく発注できません。"
-  },
   "perpsEntryStale": {
     "message": "価格配信が切断されているため、現在は発注できません。"
   },

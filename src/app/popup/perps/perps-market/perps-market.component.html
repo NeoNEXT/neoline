@@ -75,13 +75,14 @@
   </p>
 
   <ng-container *ngIf="marketStatus !== 'missing'">
-    <!-- 取数失败：后台按退避重试中，所以这里只说明状态，不放按钮 -->
+    <!-- 取数失败。这一页不会自己再问一次，屏幕上也没有重试入口：唯一的出路是用切换器
+         换个币再换回来 —— 见本页 docs 的 P1-2 -->
     <p class="page-notice" *ngIf="marketStatus === 'error'">
       {{ "perpsLoadFailed" | translate | async }}
     </p>
 
     <!-- 大字价格 -->
-    <div class="price-block" *ngIf="market; else priceSkeleton">
+    <div class="price-block" *ngIf="market">
       <!-- 报不出价格时连货币符号一起去掉：`$--` 里的那个 $ 仍在断言我们有一个金额 -->
       <span class="price" *ngIf="hasPrice; else priceMissing"
         >${{ displayPrice | perpsPrice: market.szDecimals:usingMid }}</span
@@ -106,11 +107,11 @@
         {{ "perpsStatsUnavailable" | translate | async }}
       </span>
     </div>
-    <ng-template #priceSkeleton>
-      <div class="price-block">
-        <i class="skeleton-bar price"></i>
-      </div>
-    </ng-template>
+    <!-- 骨架只属于加载中。在一条「无法加载」下面继续呼吸的骨架，说的是「马上就来」，
+         而它永远不会来 -->
+    <div class="price-block" *ngIf="!market && isLoading">
+      <i class="skeleton-bar price"></i>
+    </div>
 
     <div class="chart-wrap">
       <perps-chart
@@ -157,56 +158,57 @@
       </div>
     </div>
 
-    <!-- 统计数据 -->
-    <div class="section-title">{{ "perpsStats" | translate | async }}</div>
-    <div class="stats-card" *ngIf="market; else statsSkeleton">
-      <div class="row">
-        <span class="label">{{ "perpsDayVolumeFull" | translate | async }}</span>
-        <span class="value">{{ market.dayVolumeExact | perpsCompactUsd }}</span>
+    <!-- 统计数据。取数失败时整块连同标题一起收掉：一个底下什么都没有的小标题，
+         是在承诺一些这一页此刻并不掌握的数字 -->
+    <ng-container *ngIf="market || isLoading">
+      <div class="section-title">{{ "perpsStats" | translate | async }}</div>
+      <div class="stats-card" *ngIf="market">
+        <div class="row">
+          <span class="label">{{ "perpsDayVolumeFull" | translate | async }}</span>
+          <span class="value">{{ market.dayVolumeExact | perpsCompactUsd }}</span>
+        </div>
+        <div class="row">
+          <span class="label">
+            {{ "perpsOpenInterestFull" | translate | async }}
+            <tooltip placement="top" [tip]="'perpsOpenInterestTip' | translate | async">
+              <img src="assets/images/common/tooltip.svg" alt="" />
+            </tooltip>
+          </span>
+          <span class="value">{{ market.openInterestExact | perpsCompactUsd }}</span>
+        </div>
+        <div class="row">
+          <span class="label">
+            {{ "perpsFundingRateFull" | translate | async }}
+            <tooltip placement="top" [tip]="'perpsFundingRateTip' | translate | async">
+              <img src="assets/images/common/tooltip.svg" alt="" />
+            </tooltip>
+          </span>
+          <span class="value">
+            <span class="funding" [class.negative]="market.fundingExact | perpsNegative">{{
+              market.fundingExact | perpsFundingPercent
+            }}</span>
+            <span class="countdown">({{ fundingCountdown }})</span>
+          </span>
+        </div>
+        <div class="row">
+          <span class="label">
+            {{ "perpsOraclePrice" | translate | async }}
+            <tooltip placement="top" [tip]="'perpsOracleTip' | translate | async">
+              <img src="assets/images/common/tooltip.svg" alt="" />
+            </tooltip>
+          </span>
+          <span class="value"
+            >${{ market.oraclePxExact | perpsPrice: market.szDecimals }}</span
+          >
+        </div>
       </div>
-      <div class="row">
-        <span class="label">
-          {{ "perpsOpenInterestFull" | translate | async }}
-          <tooltip placement="top" [tip]="'perpsOpenInterestTip' | translate | async">
-            <img src="assets/images/common/tooltip.svg" alt="" />
-          </tooltip>
-        </span>
-        <span class="value">{{ market.openInterestExact | perpsCompactUsd }}</span>
-      </div>
-      <div class="row">
-        <span class="label">
-          {{ "perpsFundingRateFull" | translate | async }}
-          <tooltip placement="top" [tip]="'perpsFundingRateTip' | translate | async">
-            <img src="assets/images/common/tooltip.svg" alt="" />
-          </tooltip>
-        </span>
-        <span class="value">
-          <span class="funding" [class.negative]="market.fundingExact | perpsNegative">{{
-            fundingPercent
-          }}</span>
-          <span class="countdown">({{ fundingCountdown }})</span>
-        </span>
-      </div>
-      <div class="row">
-        <span class="label">
-          {{ "perpsOraclePrice" | translate | async }}
-          <tooltip placement="top" [tip]="'perpsOracleTip' | translate | async">
-            <img src="assets/images/common/tooltip.svg" alt="" />
-          </tooltip>
-        </span>
-        <span class="value"
-          >${{ market.oraclePxExact | perpsPrice: market.szDecimals }}</span
-        >
-      </div>
-    </div>
-    <ng-template #statsSkeleton>
-      <div class="stats-card">
+      <div class="stats-card" *ngIf="!market && isLoading">
         <div class="row" *ngFor="let row of statsSkeletonRows">
           <i class="skeleton-bar label"></i>
           <i class="skeleton-bar value"></i>
         </div>
       </div>
-    </ng-template>
+    </ng-container>
   </ng-container>
 
   <!-- 了解基础知识 -->
@@ -227,8 +229,7 @@
   <ng-container *ngIf="marketStatus === 'ready'">
     <p class="risk-tip">{{ "perpsRiskTip" | translate | async }}</p>
 
-    <!-- 行情尚未可用或没有双边盘口时，下单入口关闭并说明原因：
-         把问题传给下单页等于让用户在一个没人能报的价上建立交易意图 -->
+    <!-- 行情尚未可用时下单入口关闭，并说明原因 -->
     <p class="entry-blocked" *ngIf="orderBlockedKey">
       {{ orderBlockedKey | translate | async }}
     </p>
