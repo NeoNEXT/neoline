@@ -2171,6 +2171,9 @@
   "perpsOrderCanceled": {
     "message": "주문이 취소되었습니다."
   },
+  "perpsTriggerPrice": {
+    "message": "트리거"
+  },
   "perpsAutoClose": {
     "message": "자동 청산"
   },

@@ -1,6 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
-import BigNumber from 'bignumber.js';
 import { forkJoin, Observable, of, Subscription, Unsubscribable } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -22,50 +21,18 @@ import {
   PerpsMarket,
   PerpsOpenOrder,
 } from '@popup/_lib/perps';
+import { findMarketByCoin } from '../perps.util';
 import {
-  formatFillTime,
-  formatPrice,
-  formatSignedUsd,
-  formatSize,
-} from '../perps.util';
+  ledgerFee,
+  ledgerTypeKey,
+  orderDirectionKey,
+} from './perps-history.pipe';
 
 type PerpsActivityTab =
   | 'orders'
   | 'fills'
   | 'orderHistory'
   | 'transfers';
-
-/**
- * 有友好文案的订单状态。Hyperliquid 还有一长串 `xxxCanceled` / `xxxRejected` 变体，
- * 在 orderStatusKey 里按后缀统一处理。
- */
-const ORDER_STATUS_LABELS = {
-  filled: 'perpsStatusFilled',
-  open: 'perpsStatusOpen',
-  canceled: 'perpsStatusCanceled',
-  scheduledCancel: 'perpsStatusCanceled',
-  rejected: 'perpsStatusRejected',
-  triggered: 'perpsStatusTriggered',
-};
-
-/**
- * Hyperliquid 自己的活动表格命名的是「动作」而不是账本原语，这份列表跟着它来：Arbitrum
- * 跨桥读作入金或出金，它的点对点 USDC 操作按本钱包处在哪一端读作转出或转入，而在现货与
- * 永续余额之间挪动抵押品读作划转。
- */
-const LEDGER_TYPE_LABELS = {
-  deposit: 'perpsLedgerDeposit',
-  withdraw: 'perpsLedgerWithdraw',
-  internalTransfer: 'perpsLedgerSend',
-  accountClassTransfer: 'perpsLedgerTransfer',
-  subAccountTransfer: 'perpsLedgerTransfer',
-};
-
-/**
- * 现货转账没有固定文案。HyperEVM 或跨桥转账正是以它的形式落地的，所以 Hyperliquid 按钱
- * 的流向来命名：转入读作入金，转出读作出金。
- */
-const DIRECTIONAL_LEDGER_TYPES = ['send', 'spotTransfer'];
 
 /** 弹窗最多也就能滚这么长；更早的行留给网页端去看。 */
 const MAX_ARCHIVE_ROWS = 200;
@@ -81,20 +48,29 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
   transfers: PerpsLedgerUpdate[] = [];
   tab: PerpsActivityTab = 'orders';
   loading = true;
-  /** 两个按需拉取的 tab 各自的加载指示。 */
+  /** 按需拉取的那几个 tab 共用的加载指示。 */
   tabLoading = false;
   loadError = false;
   pendingCancelOrderId: string;
   cancelingOrderId: string;
 
-  formatPrice = formatPrice;
-  formatSignedUsd = formatSignedUsd;
+  /** 账本行的方向要看钱有没有落到本地址上，所以模板里的管道也要拿到它。 */
+  address: string;
+  /** 各行的精度来源；模板经由 `perpsCoinSzDecimals` 读它。 */
+  markets: PerpsMarket[] = [];
 
-  private address: string;
   private wallet: EvmWalletJSON;
-  private markets: PerpsMarket[] = [];
   private accountSub: Unsubscribable;
   private liveSubs = new Subscription();
+  /**
+   * 请求订阅。它们必须和实时订阅一样受 `ngOnDestroy` 管辖。
+   *
+   * 不然会漏掉这条路径：用户在 `load()` 的响应回来之前离开页面，`ngOnDestroy` 退掉了
+   * 当时那个 `liveSubs`，随后迟到的回调却会调用 `watchLiveActivity()` —— 它新建一个
+   * `liveSubs` 再往里加订阅，而那批订阅此后没有任何人会去退。数据通道对频道做引用计数，
+   * 于是计数永远回不到零：频道不拆、套接字不闲置，帧继续被解析进一个没人看的数组。
+   */
+  private requestSubs = new Subscription();
   /** 当前地址下已经拉取过的 tab。 */
   private loadedTabs = new Set<PerpsActivityTab>();
   /** 有请求在途的 tab，这样来回切换也只会发一次。 */
@@ -125,6 +101,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.accountSub?.unsubscribe();
     this.liveSubs.unsubscribe();
+    this.requestSubs.unsubscribe();
   }
 
   private load() {
@@ -134,33 +111,45 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     this.pendingTabs.clear();
     this.historicalOrders = [];
     this.transfers = [];
-    forkJoin([
-      this.hyperliquid.getOpenOrders(this.address),
-      // 市场数据只用于解析取消操作所需的资产 id。一次被限流或失败的市场快照，
-      // 不该把那些加载正常的订单藏起来。
-      this.markets$.getMarkets().pipe(catchError(() => of([]))),
-    ]).subscribe(
-      ([openOrders, markets]) => {
-        this.openOrders = openOrders;
-        // `userFills` 会立刻推送一条 `isSnapshot` 的 websocket 消息。
-        // 不要再先花一次带权重的 REST 请求去取同样的历史。
-        this.fills = [];
-        this.markets = markets;
-        this.loadedTabs.add('orders');
-        this.loading = false;
-        this.watchLiveActivity();
-        this.loadTab(this.tab);
-      },
-      () => {
-        this.loading = false;
-        this.loadError = true;
-      }
+    this.requestSubs.add(
+      forkJoin([
+        this.hyperliquid.getOpenOrders(this.address),
+        // 市场数据只用于解析取消操作所需的资产 id 与各行的精度。一次被限流或失败的
+        // 市场快照，不该把那些加载正常的订单藏起来。
+        this.markets$.getMarkets().pipe(catchError(() => of([]))),
+      ]).subscribe(
+        ([openOrders, markets]) => {
+          this.openOrders = this.newestFirst(
+            openOrders,
+            (order) => order.timestamp
+          );
+          this.fills = [];
+          this.markets = markets;
+          this.loadedTabs.add('orders');
+          this.loading = false;
+          this.watchLiveActivity();
+          this.loadTab(this.tab);
+        },
+        () => {
+          this.loading = false;
+          this.loadError = true;
+        }
+      )
     );
   }
 
-  /** 两个归档 tab 只有在用户真正打开时才值得发一次请求。 */
+  /**
+   * 按需拉取的 tab 只有在用户真正打开时才值得发一次请求。
+   *
+   * 「历史成交」也在其中，但它多一层：`userFills` 订阅一建立，交易场所就会推一条
+   * `isSnapshot` 的全量历史，所以常见路径上这次 REST 根本不会发生 —— 用户点到这个 tab
+   * 时快照早就到了，`loadedTabs` 会把请求挡掉。只有快照迟迟不来（离线、套接字拨不通）
+   * 时才真的花掉这一次带权重的请求，而那正是这条兜底存在的全部理由：数据通道的
+   * observable 既不 error 也不 complete，没有它，这个 tab 只会一直转圈，连「失败了」
+   * 都说不出口。
+   */
   private loadTab(tab: PerpsActivityTab) {
-    if (tab === 'orders' || tab === 'fills') {
+    if (tab === 'orders') {
       return;
     }
     if (
@@ -172,35 +161,54 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
       return;
     }
     this.pendingTabs.add(tab);
-    const request: Observable<any[]> = tab === 'orderHistory'
-      ? this.hyperliquid.getHistoricalOrders(this.address)
-      : this.hyperliquid.getLedgerUpdates(this.address);
     this.tabLoading = true;
-    request.subscribe((res: any[]) => {
-      if (tab === 'orderHistory') {
-        // 每次状态变化一行，与 Hyperliquid 自己的订单历史渲染方式完全一致：一笔先挂单
-        // 后成交的订单会出现两次。排序是稳定的，因此时间戳相同的行保持 API 那种
-        // 「最新状态在前」的顺序。
-        this.historicalOrders = (res as PerpsHistoricalOrder[])
-          .slice()
-          .sort((a, b) => b.statusTimestamp - a.statusTimestamp)
-          .slice(0, MAX_ARCHIVE_ROWS);
-      } else {
-        this.transfers = (res as PerpsLedgerUpdate[])
-          .slice()
-          .sort((a, b) => b.time - a.time)
-          .slice(0, MAX_ARCHIVE_ROWS);
-      }
-      this.pendingTabs.delete(tab);
-      this.loadedTabs.add(tab);
-      if (this.tab === tab) {
+    this.requestSubs.add(
+      this.requestFor(tab).subscribe((res: any[]) => {
+        this.acceptTab(tab, res);
+        this.pendingTabs.delete(tab);
+        this.loadedTabs.add(tab);
+        if (this.tab === tab) {
+          this.tabLoading = false;
+        }
+      }, () => {
+        this.pendingTabs.delete(tab);
         this.tabLoading = false;
-      }
-    }, () => {
-      this.pendingTabs.delete(tab);
-      this.tabLoading = false;
-      this.loadError = true;
-    });
+        this.loadError = true;
+      })
+    );
+  }
+
+  private requestFor(tab: PerpsActivityTab): Observable<any[]> {
+    if (tab === 'fills') {
+      return this.hyperliquid.getUserFills(this.address);
+    }
+    if (tab === 'orderHistory') {
+      return this.hyperliquid.getHistoricalOrders(this.address);
+    }
+    return this.hyperliquid.getLedgerUpdates(this.address);
+  }
+
+  private acceptTab(tab: PerpsActivityTab, res: any[]) {
+    if (tab === 'fills') {
+      // 快照可能已经先到了，也可能随后才到。两边都走 `mergeFills`，于是谁先到都收敛到
+      // 同一份 —— 成交是只增不减的，两份历史的并集就是历史本身。
+      this.fills = this.mergeFills(res as PerpsFill[], this.fills);
+      return;
+    }
+    if (tab === 'orderHistory') {
+      // 每次状态变化一行，与 Hyperliquid 自己的订单历史渲染方式完全一致：一笔先挂单
+      // 后成交的订单会出现两次。排序是稳定的，因此时间戳相同的行保持 API 那种
+      // 「最新状态在前」的顺序。
+      this.historicalOrders = this.newestFirst(
+        res as PerpsHistoricalOrder[],
+        (row) => row.statusTimestamp
+      ).slice(0, MAX_ARCHIVE_ROWS);
+      return;
+    }
+    this.transfers = this.newestFirst(
+      res as PerpsLedgerUpdate[],
+      (row) => row.time
+    ).slice(0, MAX_ARCHIVE_ROWS);
   }
 
   private watchLiveActivity() {
@@ -208,43 +216,58 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     this.liveSubs = new Subscription();
     this.liveSubs.add(
       this.hyperliquid.watchOpenOrders(this.address).subscribe({
-        next: (orders) => (this.openOrders = orders),
-        error: () => (this.loadError = true),
+        next: (orders) =>
+          (this.openOrders = this.newestFirst(
+            orders,
+            (order) => order.timestamp
+          )),
       })
     );
+    // 数据通道的 observable 既不 error 也不 complete（它靠重连和重发订阅自愈），
+    // 所以这里没有 error 分支可写 —— 这个 tab 的失败路径是 `loadTab` 里那次 REST。
     this.liveSubs.add(
       this.channel
         .subscribe({ type: 'userFills', user: this.address.toLowerCase() })
-        .subscribe({
-          next: (update) => {
-            const incoming: PerpsFill[] = update?.fills || [];
-            this.fills = update?.isSnapshot
-              ? incoming
-              : this.mergeFills(incoming, this.fills);
-            if (update?.isSnapshot) {
-              this.loadedTabs.add('fills');
-              if (this.tab === 'fills') {
-                this.tabLoading = false;
-              }
+        .subscribe((update) => {
+          const incoming: PerpsFill[] = update?.fills || [];
+          // 快照是全部真相，增量并进屏幕上已有的那份 —— 但两条路都要重排：交易场所
+          // 按时间**升序**下发 `userFills`，而这一页最新的排最上面。
+          this.fills = this.mergeFills(
+            incoming,
+            update?.isSnapshot ? [] : this.fills
+          );
+          if (update?.isSnapshot) {
+            this.loadedTabs.add('fills');
+            if (this.tab === 'fills') {
+              this.tabLoading = false;
             }
-          },
-          error: () => (this.loadError = true),
+          }
         })
     );
   }
 
   private mergeFills(incoming: PerpsFill[], current: PerpsFill[]): PerpsFill[] {
     const seen = new Set<string>();
-    return [...incoming, ...current]
-      .filter((fill) => {
-        const key = `${fill.tid ?? ''}:${fill.oid ?? ''}:${fill.time}:${fill.px}:${fill.sz}`;
-        if (seen.has(key)) {
-          return false;
-        }
-        seen.add(key);
-        return true;
-      })
-      .sort((a, b) => b.time - a.time);
+    const deduped = [...(incoming || []), ...current].filter((fill) => {
+      const key = `${fill.tid ?? ''}:${fill.oid ?? ''}:${fill.time}:${fill.px}:${fill.sz}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+    return this.newestFirst(deduped, (fill) => fill.time);
+  }
+
+  /**
+   * 最新的排最上面。
+   *
+   * 这一页的四个列表都归它管，因为交易场所的顺序不是屏幕的顺序：`userFills` 的快照按时间
+   * **升序**下发，挂单则是按 DEX 逐个请求再拼起来的。排序稳定，所以时间戳相同的行保持
+   * 交易场所给的先后。
+   */
+  private newestFirst<T>(rows: T[], time: (row: T) => number): T[] {
+    return (rows || []).slice().sort((a, b) => time(b) - time(a));
   }
 
   setTab(tab: PerpsActivityTab) {
@@ -273,7 +296,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
       this.global.snackBarTip('perpsSigningUnavailable');
       return;
     }
-    const market = this.markets.find((item) => item.coin === order.coin);
+    const market = findMarketByCoin(this.markets, order.coin);
     if (!market) {
       this.global.snackBarTip('txFailed', 'Unknown perpetual market');
       return;
@@ -309,108 +332,22 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     }
   }
 
-  isBuy(fill: PerpsFill): boolean {
-    return fill.side === 'B';
+  //#region 规则的转发口
+  //
+  // 规则本体在 `perps-history.pipe.ts` 上，模板走那里的管道。留在这里的这几个只服务于
+  // 代码和测试，模板一个都不调 —— 与 perps-tab 的做法一致。
+
+  orderDirectionKey(order: PerpsOpenOrder): string {
+    return orderDirectionKey(order);
   }
 
-  orderIsBuy(order: PerpsOpenOrder): boolean {
-    return order.side === 'B';
-  }
-
-  /** 把 Hyperliquid 的方向和 reduce-only 标记翻译成交易意图。 */
-  orderDirectionKey(
-    order: PerpsOpenOrder
-  ): 'perpsOpenLong' | 'perpsOpenShort' | 'perpsCloseLong' | 'perpsCloseShort' {
-    if (order.reduceOnly) {
-      return this.orderIsBuy(order) ? 'perpsCloseShort' : 'perpsCloseLong';
-    }
-    return this.orderIsBuy(order) ? 'perpsOpenLong' : 'perpsOpenShort';
-  }
-
-  orderIsPositionTpsl(order: PerpsOpenOrder): boolean {
-    return !!order.isPositionTpsl;
-  }
-
-  fillTime(fill: PerpsFill): string {
-    return formatFillTime(fill.time);
-  }
-
-  time(timestamp: number): string {
-    return formatFillTime(timestamp);
-  }
-
-  /**
-   * 按所属市场的最小变动单位精度格式化的订单或成交数量。历史会跨越本钱包可能已经不再
-   * 持有的市场，所以未知币种按数量级取精度。
-   */
-  size(value: string | number, coin: string): string {
-    const market = this.markets.find((item) => item.coin === coin);
-    return formatSize(value, market?.szDecimals);
-  }
-
-  /** 订单状态的 i18n key；需要显示原始值时返回 ''。 */
-  orderStatusKey(status: string): string {
-    if (ORDER_STATUS_LABELS[status]) {
-      return ORDER_STATUS_LABELS[status];
-    }
-    if (status?.endsWith('Canceled')) {
-      return 'perpsStatusCanceled';
-    }
-    if (status?.endsWith('Rejected')) {
-      return 'perpsStatusRejected';
-    }
-    return '';
-  }
-
-  /** 账本行的 i18n key；遇到冷门类型（vault、staking 等）时返回 ''。 */
   ledgerTypeKey(update: PerpsLedgerUpdate): string {
-    const type = update.delta?.type;
-    if (DIRECTIONAL_LEDGER_TYPES.indexOf(type) > -1) {
-      return this.ledgerIsOut(update)
-        ? 'perpsLedgerWithdraw'
-        : 'perpsLedgerDeposit';
-    }
-    return LEDGER_TYPE_LABELS[type] || '';
+    return ledgerTypeKey(update, this.address);
   }
 
-  ledgerIsOut(update: PerpsLedgerUpdate): boolean {
-    const delta = update.delta || ({} as any);
-    if (delta.type === 'withdraw') {
-      return true;
-    }
-    // class transfer 落到现货那一侧时，意味着抵押品被移出了永续账户。
-    if (delta.type === 'accountClassTransfer') {
-      return delta.toPerp === false;
-    }
-    // 点对点的行同时带着双方：除非钱落到了本地址上，否则我们就是发送方。
-    if (delta.destination) {
-      return delta.destination.toLowerCase() !== this.address?.toLowerCase();
-    }
-    return false;
-  }
-
-  /** 账本金额在跨桥/class 行里是 USDC，其余情况以对应代币计价。 */
-  ledgerAmount(update: PerpsLedgerUpdate): string {
-    const delta = update.delta || ({} as any);
-    const value = delta.usdc ?? delta.amount;
-    if (value === undefined) {
-      return '';
-    }
-    const token = delta.usdc !== undefined ? 'USDC' : delta.token || '';
-    return `${this.ledgerIsOut(update) ? '-' : '+'}${value} ${token}`.trim();
-  }
-
-  /**
-   * 一条账本行额外收取的手续费；不收时返回 ''。协议报告为零的手续费就是「没有手续费」：
-   * 它不出现在这一行上，而不是显示成一笔金额为零的收费。
-   */
   ledgerFee(update: PerpsLedgerUpdate): string {
-    const delta = update.delta || ({} as any);
-    const fee = new BigNumber(delta.fee ?? NaN);
-    if (!fee.isFinite() || fee.isZero()) {
-      return '';
-    }
-    return `${delta.fee} ${delta.feeToken || 'USDC'}`.trim();
+    return ledgerFee(update);
   }
 
+  //#endregion
 }

@@ -2171,6 +2171,9 @@
   "perpsOrderCanceled": {
     "message": "Order canceled."
   },
+  "perpsTriggerPrice": {
+    "message": "Trigger"
+  },
   "perpsAutoClose": {
     "message": "Auto-close"
   },

@@ -28,22 +28,38 @@
     <!-- 当前委托 -->
     <ng-container *ngIf="tab === 'orders'">
       <div class="fill-row" *ngFor="let order of openOrders">
-        <div class="fill-icon" [class.sell]="!orderIsBuy(order)">
-          {{ orderIsBuy(order) ? "↗" : "↘" }}
+        <div class="fill-icon" [class.sell]="order.side !== 'B'">
+          {{ order.side === "B" ? "↗" : "↘" }}
         </div>
         <div class="fill-info">
           <div class="dir">
-            {{ orderDirectionKey(order) | translate | async }}
+            {{ order | perpsOrderDirection | translate | async }}
             {{ order.coin }}
-            <span class="status" *ngIf="orderIsPositionTpsl(order)">
+            <span class="status" *ngIf="order.isPositionTpsl">
               {{ "perpsAutoClose" | translate | async }}
             </span>
           </div>
-          <div class="time">{{ time(order.timestamp) }}</div>
+          <div class="time">{{ order.timestamp | perpsFillTime }}</div>
         </div>
         <div class="fill-amount">
-          <div class="size">{{ size(order.sz, order.coin) }} {{ order.coin }}</div>
-          <div class="price">${{ formatPrice(+order.limitPx) }}</div>
+          <div class="size">
+            {{ order.sz | perpsSize: (markets | perpsCoinSzDecimals: order.coin) }}
+            {{ order.coin }}
+          </div>
+          <!--
+            触发单显示的是用户设的触发价，不是 `limitPx` —— 后者是触发之后那张订单的
+            限价，市价触发单的它只是一个带滑点保护的激进价格。见 perpsOrderPrice。
+          -->
+          <div class="price">
+            <span class="trigger" *ngIf="order | perpsOrderIsTrigger">{{
+              "perpsTriggerPrice" | translate | async
+            }}</span>
+            ${{
+              order
+                | perpsOrderPrice
+                | perpsPrice: (markets | perpsCoinSzDecimals: order.coin)
+            }}
+          </div>
         </div>
         <button
           class="cancel"
@@ -66,21 +82,35 @@
     <!-- 历史成交 -->
     <ng-container *ngIf="tab === 'fills'">
       <div class="fill-row" *ngFor="let fill of fills">
-        <div class="fill-icon" [class.sell]="!isBuy(fill)">
-          {{ isBuy(fill) ? "↗" : "↘" }}
-        </div>
         <div class="fill-info">
-          <div class="dir">{{ fill.dir }} {{ fill.coin }}</div>
-          <div class="time">{{ fillTime(fill) }}</div>
+          <div
+            class="dir"
+            [class.buy]="fill.side === 'B'"
+            [class.sell]="fill.side !== 'B'"
+          >
+            <ng-container
+              *ngIf="fill | perpsFillDirection as dirKey; else rawDir"
+              >{{ dirKey | translate | async }}</ng-container
+            >
+            <ng-template #rawDir>{{ fill.dir }}</ng-template>
+            <!-- Angular 默认删掉纯空白文本节点，方向和币种之间的空格得写成 &ngsp; -->
+            &ngsp;<span class="coin">{{ fill.coin }}</span>
+          </div>
+          <div class="time">{{ fill.time | perpsFillTime }}</div>
         </div>
         <div class="fill-amount">
-          <div class="size">{{ size(fill.sz, fill.coin) }} {{ fill.coin }}</div>
-          <div class="price">${{ formatPrice(+fill.px) }}</div>
-          <div class="price" *ngIf="fill.fee">
-            {{ "perpsFee" | translate | async }}: {{ fill.fee }} {{ fill.feeToken || "USDC" }}
+          <div class="size">
+            {{ fill.sz | perpsSize: (markets | perpsCoinSzDecimals: fill.coin) }}
+            {{ fill.coin }}
           </div>
-          <div class="price" *ngIf="+fill.closedPnl">
-            PnL: {{ formatSignedUsd(+fill.closedPnl) }}
+          <div class="price">
+            ${{ fill.px | perpsPrice: (markets | perpsCoinSzDecimals: fill.coin) }}
+          </div>
+          <div class="price" *ngIf="fill | perpsFillFee as fee">
+            {{ "perpsFee" | translate | async }}: {{ fee }}
+          </div>
+          <div class="price" *ngIf="fill | perpsFillNetPnl as pnl">
+            PnL: {{ pnl | perpsSignedUsd }}
           </div>
         </div>
       </div>
@@ -92,29 +122,46 @@
     <!-- 历史委托 -->
     <ng-container *ngIf="tab === 'orderHistory'">
       <div class="fill-row" *ngFor="let item of historicalOrders">
-        <div class="fill-icon" [class.sell]="!orderIsBuy(item.order)">
-          {{ orderIsBuy(item.order) ? "↗" : "↘" }}
-        </div>
         <div class="fill-info">
-          <div class="dir">
-            {{ orderDirectionKey(item.order) | translate | async }}
-            {{ item.order.coin }}
-            <span class="status" *ngIf="orderIsPositionTpsl(item.order)">
+          <div
+            class="dir"
+            [class.buy]="item.order.side === 'B'"
+            [class.sell]="item.order.side !== 'B'"
+          >
+            {{ item.order | perpsOrderDirection | translate | async }}
+            <span class="coin">{{ item.order.coin }}</span>
+            <span class="status" *ngIf="item.order.isPositionTpsl">
               {{ "perpsAutoClose" | translate | async }}
             </span>
-            <span class="status">{{
-              orderStatusKey(item.status)
-                ? ((orderStatusKey(item.status) | translate | async))
-                : item.status
-            }}</span>
+            <span
+              class="status"
+              *ngIf="item.status | perpsOrderStatus as statusKey; else rawStatus"
+              >{{ statusKey | translate | async }}</span
+            >
+            <ng-template #rawStatus>
+              <span class="status">{{ item.status }}</span>
+            </ng-template>
           </div>
-          <div class="time">{{ time(item.statusTimestamp) }}</div>
+          <div class="time">{{ item.statusTimestamp | perpsFillTime }}</div>
         </div>
         <div class="fill-amount">
           <div class="size">
-            {{ size(item.order.origSz, item.order.coin) }} {{ item.order.coin }}
+            {{
+              item.order.origSz
+                | perpsSize: (markets | perpsCoinSzDecimals: item.order.coin)
+            }}
+            {{ item.order.coin }}
           </div>
-          <div class="price">${{ formatPrice(+item.order.limitPx) }}</div>
+          <div class="price">
+            <span class="trigger" *ngIf="item.order | perpsOrderIsTrigger">{{
+              "perpsTriggerPrice" | translate | async
+            }}</span>
+            ${{
+              item.order
+                | perpsOrderPrice
+                | perpsPrice: (markets | perpsCoinSzDecimals: item.order.coin)
+            }}
+          </div>
         </div>
       </div>
       <p class="empty" *ngIf="historicalOrders.length === 0">
@@ -125,24 +172,27 @@
     <!-- 存款和提款 -->
     <ng-container *ngIf="tab === 'transfers'">
       <div class="fill-row" *ngFor="let item of transfers">
-        <div class="fill-icon" [class.sell]="ledgerIsOut(item)">
-          {{ ledgerIsOut(item) ? "↑" : "↓" }}
+        <div class="fill-icon" [class.sell]="item | perpsLedgerIsOut: address">
+          {{ (item | perpsLedgerIsOut: address) ? "↑" : "↓" }}
         </div>
         <div class="fill-info">
           <div class="dir">
-            {{
-              ledgerTypeKey(item)
-                ? ((ledgerTypeKey(item) | translate | async))
-                : item.delta.type
-            }}
+            <ng-container
+              *ngIf="item | perpsLedgerType: address as typeKey; else rawType"
+              >{{ typeKey | translate | async }}</ng-container
+            >
+            <ng-template #rawType>{{ item.delta.type }}</ng-template>
           </div>
-          <div class="time">{{ time(item.time) }}</div>
+          <div class="time">{{ item.time | perpsFillTime }}</div>
         </div>
         <div class="fill-amount">
-          <div class="size" [class.negative]="ledgerIsOut(item)">
-            {{ ledgerAmount(item) }}
+          <div
+            class="size"
+            [class.negative]="item | perpsLedgerIsOut: address"
+          >
+            {{ item | perpsLedgerAmount: address }}
           </div>
-          <div class="price" *ngIf="ledgerFee(item) as fee">
+          <div class="price" *ngIf="item | perpsLedgerFee as fee">
             {{ "perpsFee" | translate | async }}: {{ fee }}
           </div>
         </div>

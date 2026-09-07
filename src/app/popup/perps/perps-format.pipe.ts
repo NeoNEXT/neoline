@@ -2,14 +2,17 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 import { PerpsMarket } from '@popup/_lib/perps';
 import {
+  findMarketByCoin,
   findMarketByKey,
   formatCompactUsd,
+  formatFillTime,
   formatFundingPercent,
   formatPositionSize,
   formatPrice,
   formatReturnOnEquity,
   formatSignedPercent,
   formatSignedUsd,
+  formatSize,
   formatUsd,
   isNegativeExact,
   PerpsExactValue,
@@ -93,6 +96,25 @@ export class PerpsReturnOnEquityPipe implements PipeTransform {
 }
 
 /**
+ * 订单或成交的数量。与 `perpsPositionSize` 的区别只有一处：这里不取绝对值 ——
+ * 订单和成交的数量本来就不带方向，方向由它旁边的标签表达。
+ */
+@Pipe({ name: 'perpsSize' })
+export class PerpsSizePipe implements PipeTransform {
+  transform(value: PerpsExactValue, szDecimals?: number): string {
+    return formatSize(value, szDecimals);
+  }
+}
+
+/** 活动流里的时间戳。 */
+@Pipe({ name: 'perpsFillTime' })
+export class PerpsFillTimePipe implements PipeTransform {
+  transform(time: number): string {
+    return formatFillTime(time);
+  }
+}
+
+/**
  * 一个仓位所属市场的精度，供它旁边的价格和数量管道当参数用。
  *
  * 它同样不是格式化函数，但放在这里的理由相同：模板直接调用它，会在每一轮变更检测中把
@@ -102,6 +124,19 @@ export class PerpsReturnOnEquityPipe implements PipeTransform {
 export class PerpsSzDecimalsPipe implements PipeTransform {
   transform(markets: PerpsMarket[], key: string): number {
     return findMarketByKey(markets, key)?.szDecimals;
+  }
+}
+
+/**
+ * 同一件事，但按协议币种查 —— 订单和成交带回来的是币种，不是主键。
+ *
+ * 活动页最多能列 200 行，每行都要问一次精度；直接在模板里查，等于每一轮变更检测把整个
+ * 市场数组扫两百遍，而市场数组只在快照到达时才换。
+ */
+@Pipe({ name: 'perpsCoinSzDecimals' })
+export class PerpsCoinSzDecimalsPipe implements PipeTransform {
+  transform(markets: PerpsMarket[], coin: string): number {
+    return findMarketByCoin(markets, coin)?.szDecimals;
   }
 }
 
@@ -124,7 +159,10 @@ export const PERPS_FORMAT_PIPES = [
   PerpsUsdPipe,
   PerpsSignedUsdPipe,
   PerpsPositionSizePipe,
+  PerpsSizePipe,
+  PerpsFillTimePipe,
   PerpsReturnOnEquityPipe,
   PerpsSzDecimalsPipe,
+  PerpsCoinSzDecimalsPipe,
   PerpsNegativePipe,
 ];

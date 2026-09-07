@@ -6,11 +6,19 @@ import {
   combineLatest,
   of,
   forkJoin,
+  switchMap,
+  from,
+  mergeMap,
+  toArray,
+  timeout,
 } from 'rxjs';
 import { map, catchError, shareReplay, filter } from 'rxjs/operators';
 
 import {
   HYPERLIQUID_API,
+  PERPS_CCTP_HISTORY_API,
+  PERPS_USDC_SYSTEM_ADDRESS,
+  PerpsCctpHistoryTransfer,
   PerpsAccount,
   PerpsActiveAssetData,
   PerpsAccountMode,
@@ -30,6 +38,7 @@ import {
   resolvePerpsTestnet,
 } from '@popup/_lib/perps';
 import { environment } from '@/environments/environment';
+import { cctpCollectedFee } from './perps-cctp-history';
 import { parsePerpsAccount } from './perps-account-state';
 import { normalizeIds, parseProtocolJson } from './perps-protocol-json';
 import { PerpsDataChannel } from './perps-data-channel.service';
@@ -473,7 +482,72 @@ export class HyperliquidService {
       type: 'userNonFundingLedgerUpdates',
       user: address.toLowerCase(),
       startTime: 0,
-    }).pipe(map((res) => (Array.isArray(res) ? res : [])));
+    }).pipe(
+      map((res) => (Array.isArray(res) ? res : [])),
+      switchMap((updates) => {
+        const isWithdrawal = ({ delta }: PerpsLedgerUpdate) =>
+          delta.type === 'send' &&
+          delta.user?.toLowerCase() === address.toLowerCase() &&
+          delta.destination?.toLowerCase() === PERPS_USDC_SYSTEM_ADDRESS &&
+          delta.destinationDex === 'spot' &&
+          delta.token === 'USDC' && delta.nonce != null;
+        if (!updates.some(isWithdrawal)) {
+          return of(updates);
+        }
+        const url = PERPS_CCTP_HISTORY_API[this.isTestnet ? 'testnet' : 'mainnet'];
+        return this.http.get<PerpsCctpHistoryTransfer[]>(url, {
+          params: { direction: 'out', user: address.toLowerCase() },
+        }).pipe(
+          timeout(5000),
+          switchMap((history) => {
+            const byNonce = new Map(
+              (Array.isArray(history) ? history : []).map((item) =>
+                [String(item.nonce), item] as const
+              )
+            );
+            return from(updates).pipe(
+              mergeMap((update, index) => {
+                const transfer = byNonce.get(String(update.delta.nonce));
+                const enriched = isWithdrawal(update) && transfer
+                  ? this.readCctpHistoryFee(update, transfer)
+                  : of(update);
+                return enriched.pipe(map((value) => ({ index, value })));
+              }, 4),
+              toArray(),
+              map((rows) => rows.sort((a, b) => a.index - b.index).map((row) => row.value))
+            );
+          }),
+          // 索引失败仍展示原始账本，不以当前报价猜测历史通道费用。
+          catchError(() => of(updates))
+        );
+      })
+    );
+  }
+
+  private readCctpHistoryFee(
+    update: PerpsLedgerUpdate,
+    transfer: PerpsCctpHistoryTransfer
+  ): Observable<PerpsLedgerUpdate> {
+    const config = PERPS_DEPOSIT_CONFIG[this.isTestnet ? 'testnet' : 'mainnet'];
+    const hash = transfer.fillTxnRef;
+    if (transfer.destinationChainId !== config.chainId ||
+        !/^0x[0-9a-f]{64}$/i.test(hash || '')) {
+      return of(update);
+    }
+    return this.http.post<any>(config.rpcUrls[0], {
+      jsonrpc: '2.0', id: 1, method: 'eth_getTransactionReceipt', params: [hash],
+    }).pipe(
+      timeout(5000),
+      map((response) => {
+        const fee = cctpCollectedFee(response?.result, hash, update, config);
+        return fee === undefined ? update : {
+          ...update,
+          cctpDestinationChainId: config.chainId,
+          cctpFeeExact: fee,
+        };
+      }),
+      catchError(() => of(update))
+    );
   }
 
   //#endregion

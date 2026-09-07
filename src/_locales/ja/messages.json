@@ -2171,6 +2171,9 @@
   "perpsOrderCanceled": {
     "message": "注文を取り消しました。"
   },
+  "perpsTriggerPrice": {
+    "message": "トリガー"
+  },
   "perpsAutoClose": {
     "message": "自動決済"
   },

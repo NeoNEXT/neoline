@@ -12,6 +12,7 @@ import {
   formatUsd,
   formatBalance,
   isNegativeExact,
+  isNonZeroExact,
   MISSING_DISPLAY,
   priceDecimals,
 } from './perps.util';
@@ -34,6 +35,32 @@ describe('perps sign test', () => {
     expect(isNegativeExact(undefined)).toBeFalse();
     expect(isNegativeExact('')).toBeFalse();
     expect(isNegativeExact('not a number')).toBeFalse();
+  });
+});
+
+describe('perps 非零判断', () => {
+  it('在十进制串上回答，而不是在它的浮点数上', () => {
+    expect(isNonZeroExact('0.00000000000000000001')).toBeTrue();
+    expect(isNonZeroExact('1.2789473684')).toBeTrue();
+  });
+
+  it('协议报告的零就是零 —— 真值判断在这里会答错', () => {
+    // 这三个在 JS 里全是真值，`*ngIf="value"` 会让它们各自占一行。
+    expect(isNonZeroExact('0')).toBeFalse();
+    expect(isNonZeroExact('0.0')).toBeFalse();
+    expect(isNonZeroExact('-0')).toBeFalse();
+    expect(isNonZeroExact(0)).toBeFalse();
+  });
+
+  it('负数是非零 —— 返佣和亏损都是真实存在的事实', () => {
+    expect(isNonZeroExact('-0.001')).toBeTrue();
+  });
+
+  it('缺失读作零：没有值和值为零，在「要不要显示」上是同一个答案', () => {
+    expect(isNonZeroExact(null)).toBeFalse();
+    expect(isNonZeroExact(undefined)).toBeFalse();
+    expect(isNonZeroExact('')).toBeFalse();
+    expect(isNonZeroExact('not a number')).toBeFalse();
   });
 });
 

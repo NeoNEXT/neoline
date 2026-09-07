@@ -204,6 +204,18 @@ describe('PerpsHistoryComponent live fills', () => {
     expect(component.fills.map((f) => f.tid)).toEqual(['b']);
   });
 
+  it('把交易场所升序下发的快照倒过来 —— 最新的排最上面', () => {
+    const { component, frames } = watching();
+
+    // `userFills` 的快照按时间**升序**到达。照单全收就会把最老的一笔顶在最上面。
+    frames.next({
+      fills: [fill('old', 1), fill('mid', 2), fill('new', 3)],
+      isSnapshot: true,
+    });
+
+    expect(component.fills.map((f) => f.tid)).toEqual(['new', 'mid', 'old']);
+  });
+
   it('merges later pushes into what is already on screen, newest first', () => {
     const { component, frames } = watching();
 
@@ -220,5 +232,154 @@ describe('PerpsHistoryComponent live fills', () => {
     frames.next({ fills: [fill('a', 1), fill('b', 2)] });
 
     expect(component.fills.map((f) => f.tid)).toEqual(['b', 'a']);
+  });
+});
+
+describe('PerpsHistoryComponent 成交 tab 的兜底', () => {
+  const fill = (tid: string, time: number): PerpsFill =>
+    ({ tid, oid: '1', time, px: '100', sz: '1' } as PerpsFill);
+
+  /**
+   * 页面加载完成、实时订阅已建立的那一刻。
+   *
+   * 成交只从数据通道来，而那条 observable 既不 error 也不 complete —— 所以「快照没来」
+   * 和「快照来了但是空的」在页面看来一模一样。REST 兜底就是用来把这两件事分开的。
+   */
+  function loaded(overrides: any = {}) {
+    const frames = new Subject<any>();
+    const hyperliquid: any = {
+      getOpenOrders: () => of([]),
+      watchOpenOrders: () => EMPTY,
+      getUserFills: jasmine
+        .createSpy('getUserFills')
+        .and.returnValue(of([fill('rest', 1)])),
+      ...overrides,
+    };
+    const channel: any = { subscribe: () => frames };
+    const component = new PerpsHistoryComponent(
+      null,
+      hyperliquid,
+      null,
+      null,
+      null,
+      channel,
+      markets({ getMarkets: () => of([]) }),
+      null
+    );
+    (component as any).address = '0xabc';
+    (component as any).load();
+    return { component, frames, hyperliquid };
+  }
+
+  it('快照还没到就打开这个 tab 时，花一次 REST 把历史取回来', () => {
+    const { component, hyperliquid } = loaded();
+
+    component.setTab('fills');
+
+    expect(hyperliquid.getUserFills).toHaveBeenCalled();
+    expect(component.fills.map((f) => f.tid)).toEqual(['rest']);
+    expect(component.tabLoading).toBeFalse();
+  });
+
+  it('快照已经到了就不再花那次请求', () => {
+    const { component, frames, hyperliquid } = loaded();
+
+    frames.next({ fills: [fill('ws', 2)], isSnapshot: true });
+    component.setTab('fills');
+
+    expect(hyperliquid.getUserFills).not.toHaveBeenCalled();
+    expect(component.fills.map((f) => f.tid)).toEqual(['ws']);
+  });
+
+  it('两边都到了也不会把同一段历史印两遍', () => {
+    const { component, frames } = loaded();
+
+    component.setTab('fills');
+    frames.next({ fills: [fill('rest', 1)], isSnapshot: true });
+
+    expect(component.fills.map((f) => f.tid)).toEqual(['rest']);
+  });
+
+  it('兜底失败时说得出「失败了」，而不是一直转圈', () => {
+    const { component } = loaded({
+      getUserFills: () => throwError(() => ({ status: 500 })),
+    });
+
+    component.setTab('fills');
+
+    expect(component.loadError).toBeTrue();
+    expect(component.tabLoading).toBeFalse();
+  });
+});
+
+describe('PerpsHistoryComponent 销毁', () => {
+  it('离开页面后，迟到的挂单响应不会再建立实时订阅', () => {
+    // 这三条订阅一旦在 `ngOnDestroy` 之后建立，就再也没有人会去退：数据通道对频道做
+    // 引用计数，计数回不到零意味着频道不拆、套接字不闲置。
+    const openOrders = new Subject<PerpsOpenOrder[]>();
+    const watchOpenOrders = jasmine
+      .createSpy('watchOpenOrders')
+      .and.returnValue(EMPTY);
+    const subscribe = jasmine.createSpy('subscribe').and.returnValue(EMPTY);
+    const component = new PerpsHistoryComponent(
+      null,
+      { getOpenOrders: () => openOrders, watchOpenOrders } as any,
+      null,
+      null,
+      null,
+      { subscribe } as any,
+      markets({ getMarkets: () => of([]) }),
+      null
+    );
+    (component as any).address = '0xabc';
+    (component as any).load();
+
+    component.ngOnDestroy();
+    openOrders.next([]);
+    openOrders.complete();
+
+    expect(watchOpenOrders).not.toHaveBeenCalled();
+    expect(subscribe).not.toHaveBeenCalled();
+  });
+});
+
+describe('PerpsHistoryComponent 当前委托的顺序', () => {
+  const order = (oid: string, timestamp: number): PerpsOpenOrder =>
+    ({
+      coin: 'ETH',
+      oid,
+      side: 'B',
+      limitPx: '2000',
+      sz: '1',
+      origSz: '1',
+      timestamp,
+      orderType: 'Limit',
+      reduceOnly: false,
+    } as PerpsOpenOrder);
+
+  it('首屏与实时推送都把最新的排最上面', () => {
+    // 首屏是按 DEX 逐个请求再拼起来的，所以它本来就没有跨 DEX 的时间顺序可言。
+    const live = new Subject<PerpsOpenOrder[]>();
+    const component = new PerpsHistoryComponent(
+      null,
+      {
+        getOpenOrders: () => of([order('1', 1), order('3', 3), order('2', 2)]),
+        watchOpenOrders: () => live,
+      } as any,
+      null,
+      null,
+      null,
+      { subscribe: () => EMPTY } as any,
+      markets({ getMarkets: () => of([]) }),
+      null
+    );
+    (component as any).address = '0xabc';
+    (component as any).load();
+
+    expect(component.openOrders.map((o) => o.oid)).toEqual(['3', '2', '1']);
+
+    live.next([order('4', 4), order('6', 6), order('5', 5)]);
+
+    expect(component.openOrders.map((o) => o.oid)).toEqual(['6', '5', '4']);
   });
 });

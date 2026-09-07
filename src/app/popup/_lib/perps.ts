@@ -796,10 +796,29 @@ export interface PerpsHistoricalOrder {
   statusTimestamp: number;
 }
 
+/** Hyperliquid 前端用于按 nonce 关联 CCTP 历史的公开索引。 */
+export const PERPS_CCTP_HISTORY_API = {
+  mainnet: 'https://indexer.api.across.to/hyperliquid-transfers',
+  testnet: 'https://dev.indexer.api.across.to/hyperliquid-transfers',
+};
+
+export const PERPS_USDC_SYSTEM_ADDRESS =
+  '0x2000000000000000000000000000000000000000';
+
+export interface PerpsCctpHistoryTransfer {
+  fillTxnRef?: string;
+  nonce: string;
+  destinationChainId: number;
+}
+
 /**
  * 账户账本中不含资金费支付的一行：跨桥出入金、现货/永续之间的 class 划转，以及账户间转账。
  */
 export interface PerpsLedgerUpdate {
+  /** 按 nonce 匹配的跨链历史；用于展示，不能覆盖协议 delta.fee。 */
+  cctpDestinationChainId?: number;
+  /** 对应成功交易事件中的实际 CCTP 收费，USDC 协议精度。 */
+  cctpFeeExact?: string;
   time: number;
   hash: string;
   delta: {
@@ -809,6 +828,10 @@ export interface PerpsLedgerUpdate {
     amount?: string;
     token?: string;
     fee?: string;
+    nativeTokenFee?: string;
+    nonce?: string | number;
+    sourceDex?: string;
+    destinationDex?: string;
     /** 手续费以哪种代币计价；没有这个字段的行按 USDC 收取。 */
     feeToken?: string;
     /** 仅 accountClassTransfer 使用：为 true 表示现货 → 永续。 */

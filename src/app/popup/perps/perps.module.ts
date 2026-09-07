@@ -16,6 +16,7 @@ import { PerpsMarketListComponent } from './perps-market-list/perps-market-list.
 import { PerpsMarketsComponent } from './perps-markets/perps-markets.component';
 import { PopupPerpsSlippageDialogComponent } from '@popup/_dialogs/perps-slippage/perps-slippage.dialog';
 import { PERPS_FORMAT_PIPES } from './perps-format.pipe';
+import { PERPS_HISTORY_PIPES } from './perps-history/perps-history.pipe';
 
 @NgModule({
   declarations: [
@@ -30,6 +31,7 @@ import { PERPS_FORMAT_PIPES } from './perps-format.pipe';
     PerpsMarketsComponent,
     PopupPerpsSlippageDialogComponent,
     ...PERPS_FORMAT_PIPES,
+    ...PERPS_HISTORY_PIPES,
   ],
   imports: [CommonModule, FormsModule, ShareModule, PerpsRoutingModule],
   // 这个 tab 由首页内嵌，其余的走路由。

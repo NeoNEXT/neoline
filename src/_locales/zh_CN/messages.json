@@ -2171,6 +2171,9 @@
   "perpsOrderCanceled": {
     "message": "订单已撤销。"
   },
+  "perpsTriggerPrice": {
+    "message": "触发价"
+  },
   "perpsAutoClose": {
     "message": "自动止盈止损"
   },

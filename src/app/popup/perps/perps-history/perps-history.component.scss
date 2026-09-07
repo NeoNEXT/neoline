@@ -96,6 +96,27 @@
       font-size: 14px;
       color: var(--title-color);
 
+      // 历史成交和历史委托不画方向图标，方向由这一行自己的颜色表达。
+      // 另外两个 tab 从不设这两个类：当前委托的图标还在，账本行的方向是资金进出。
+      &.buy {
+        color: var(--theme-color);
+      }
+      &.sell {
+        color: var(--error-color);
+      }
+
+      // 币种跟着方向的颜色，但淡一档 —— 一行里真正要读的是方向，币种是它的宾语。
+      //
+      // 往**正文色**混，不是往背景混，也不是写死一个浅色：深色主题的正文色接近白，
+      // 于是币种变成方向色的浅色调（Hyperliquid 自己也是这个样子）；浅色主题的正文色
+      // 接近黑，币种转向中性文字色而不是往白底里洇开 —— 后者在白底上几乎读不出来。
+      // 一条规则同时管住两个主题，而且不引入新的颜色常量。
+      //
+      // 不支持 color-mix 的浏览器会丢掉这行，币种退回与方向同色 —— 只是不淡，不会出错。
+      .coin {
+        color: color-mix(in srgb, currentColor 60%, var(--title-color));
+      }
+
       .status {
         margin-left: 6px;
         font-family: NeverMind-Regular;
@@ -126,6 +147,11 @@
       font-size: 12px;
       color: var(--sub-title-color);
       margin-top: 4px;
+
+      // 触发单显示的是触发价而不是限价，所以那个数字前面必须说清楚它是什么。
+      .trigger {
+        margin-right: 2px;
+      }
     }
   }
 

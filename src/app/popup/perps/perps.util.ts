@@ -25,6 +25,20 @@ export function findMarketByKey(
 }
 
 /**
+ * 按协议币种定位市场。
+ *
+ * 币种已经带着 `dex:` 前缀（HIP-3 为 `xyz:SNDK`，标准永续为 `ETH`），所以它跨 DEX 唯一，
+ * 不需要像 `findMarketByKey` 那样另造一个主键。订单和成交带回来的是币种而不是主键，
+ * 活动页正是按它去查精度和资产 id 的。
+ */
+export function findMarketByCoin(
+  markets: PerpsMarket[],
+  coin: string
+): PerpsMarket {
+  return (markets || []).find((market) => market.coin === coin);
+}
+
+/**
  * 协议小数的正负判断 —— 模板里用 `< 0` 做不到这件事。
  *
  * 缺失的值没有正负：`--` 不会被涂成红色。
@@ -42,6 +56,20 @@ export function isNegativeExact(value: PerpsExactValue): boolean {
  */
 export function isQuotablePrice(value: PerpsExactValue): boolean {
   return !isMissing(value) && new BigNumber(value).isGreaterThan(0);
+}
+
+/**
+ * 这个值是不是一个非零的数 —— 也就是「这一行值不值得出现」。
+ *
+ * 模板里的 `*ngIf="+value"` 做的是同一件事，但它先把协议小数强转成 JavaScript 数字，
+ * 而那正是 ADR-0001 要避开的形状；真值判断（`*ngIf="value"`）更糟，`'0.0'` 在 JS 里是
+ * **真值**，成交行的手续费就是这样被印成一笔金额为零的收费的。
+ *
+ * 缺失读作零：没有值和值为零，在「要不要显示」这个问题上是同一个答案。
+ * 负数是非零 —— maker 返佣、亏损的平仓都是真实存在的事实。
+ */
+export function isNonZeroExact(value: PerpsExactValue): boolean {
+  return !isMissing(value) && !new BigNumber(value).isZero();
 }
 
 function isMissing(value: PerpsExactValue): boolean {
@@ -323,7 +351,7 @@ export function formatSignedPercent(
  * 补上一堆零。
  */
 export function formatSize(
-  size: BigNumber.Value,
+  size: PerpsExactValue,
   szDecimals?: number
 ): string {
   const value = new BigNumber(size || 0);

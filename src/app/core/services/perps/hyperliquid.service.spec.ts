@@ -2,7 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { fakeAsync, tick } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 
-import { PerpsUserFeeRates } from '@popup/_lib/perps';
+import { ethers } from 'ethers';
+import { PERPS_DEPOSIT_CONFIG, PerpsUserFeeRates } from '@popup/_lib/perps';
 import { HyperliquidService } from './hyperliquid.service';
 import { fakePerpsDataChannel } from './perps-data-channel.fake';
 import { SNAPSHOT_TTL_MS } from './perps-market-dataset.service';
@@ -523,3 +524,80 @@ describe('HyperliquidService candle snapshots', () => {
 
 });
 
+
+describe('HyperliquidService CCTP 历史关联', () => {
+  const user = '0x5be1a4c623a63498d78c08b8890a6e5dad6bf359';
+  const update = {
+    time: 1787124860398,
+    hash: '0xa620',
+    delta: {
+      type: 'send', user,
+      destination: '0x2000000000000000000000000000000000000000',
+      destinationDex: 'spot', token: 'USDC', amount: '1.123456',
+      fee: '0.000505', feeToken: 'USDC', nonce: 1787124859737,
+    },
+  };
+  let http: jasmine.SpyObj<HttpClient>;
+  let service: HyperliquidService;
+  beforeEach(() => {
+    http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post', 'get']);
+    http.post.and.returnValue(of(JSON.stringify([update])) as any);
+    service = new HyperliquidService(http, fakePerpsDataChannel(), writes());
+  });
+
+  it('按 nonce 关联网络历史，保留协议费用与金额', () => {
+    http.get.and.returnValue(of([
+      { nonce: '1787124859737', destinationChainId: 421614, fillTxnRef: '0x' + 'a'.repeat(64) },
+    ]));
+    (service as any).isTestnet = true;
+    const abi = new ethers.Interface([
+      'event MintAndWithdraw(address indexed mintRecipient, uint256 amount, address indexed mintToken, uint256 feeCollected)',
+    ]);
+    http.post.and.callFake((_url, body: any) => {
+      if (body.method === 'eth_getTransactionReceipt') {
+        return of({ result: {
+          status: '0x1', transactionHash: '0x' + 'a'.repeat(64),
+          logs: [{
+            address: '0x8fe6b999dc680ccfdd5bf7eb0974218be2542daa',
+            ...abi.encodeEventLog(abi.getEvent('MintAndWithdraw'), [
+              user, 753456, PERPS_DEPOSIT_CONFIG.testnet.cctp.usdc, 370000,
+            ]),
+          }],
+        } }) as any;
+      }
+      return of(JSON.stringify([update])) as any;
+    });
+    let result: any[];
+    service.getLedgerUpdates(user).subscribe((value) => result = value);
+    expect(result[0].cctpDestinationChainId).toBe(421614);
+    expect(result[0].cctpFeeExact).toBe('0.37');
+    expect(result[0].delta.fee).toBe('0.000505');
+    expect(result[0].delta.amount).toBe('1.123456');
+    expect(http.get).toHaveBeenCalledWith(jasmine.any(String), {
+      params: { direction: 'out', user },
+    });
+  });
+
+  it('不同 nonce 不误关联', () => {
+    http.get.and.returnValue(of([{ nonce: '1', destinationChainId: 421614 }]));
+    service.getLedgerUpdates(user).subscribe((value) => {
+      expect(value[0].cctpDestinationChainId).toBeUndefined();
+    });
+  });
+
+  it('索引失败保留原始账本', () => {
+    http.get.and.returnValue(throwError(() => new Error('offline')));
+    service.getLedgerUpdates(user).subscribe((value) => {
+      expect(value[0].delta.fee).toBe('0.000505');
+      expect(value[0].cctpDestinationChainId).toBeUndefined();
+    });
+  });
+
+  it('普通转账不查询跨链索引', () => {
+    http.post.and.returnValue(of(JSON.stringify([{
+      ...update, delta: { ...update.delta, destination: '0xother' },
+    }])) as any);
+    service.getLedgerUpdates(user).subscribe();
+    expect(http.get).not.toHaveBeenCalled();
+  });
+});
