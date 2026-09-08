@@ -18,6 +18,7 @@ import { PopupBridgeComponent } from './bridge/bridge.component';
 import { PopupAccountListComponent } from './account-list/account-list.component';
 import { PopupNetworkListComponent } from './network-list/network-list.component';
 import { PopupNoticeComponent } from './notice/notice.component';
+import { PerpsFundingGuard } from './perps/perps-funding/perps-funding.guard';
 
 import {
   PopupLoginGuard,
@@ -91,7 +92,8 @@ const routes: Routes = [
       },
       {
         path: 'perps',
-        canActivate: [PopupWalletGuard],
+        // 整个 perps 区都依赖 NeoX 地址，所以守卫放在区段入口，而不是逐页去挡。
+        canActivate: [PopupWalletGuard, PerpsFundingGuard],
         loadChildren: () =>
           import('./perps/perps.module').then((m) => m.PerpsModule),
       },

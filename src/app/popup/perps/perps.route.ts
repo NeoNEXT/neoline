@@ -5,6 +5,7 @@ import { PerpsMarketComponent } from './perps-market/perps-market.component';
 import { PerpsMarketsComponent } from './perps-markets/perps-markets.component';
 import { PerpsOrderComponent } from './perps-order/perps-order.component';
 import { PerpsFundingComponent } from './perps-funding/perps-funding.component';
+import { PerpsFundingGuard } from './perps-funding/perps-funding.guard';
 import { PerpsHistoryComponent } from './perps-history/perps-history.component';
 
 const routes: Routes = [
@@ -23,6 +24,9 @@ const routes: Routes = [
   },
   {
     path: 'funding',
+    // 区段入口（popup.route.ts 的 `perps`）已经挡过一次，但父路由的守卫在
+    // perps 内部换页时不会重跑；出入金要真发 EVM 交易，所以这里再挡一次。
+    canActivate: [PerpsFundingGuard],
     component: PerpsFundingComponent,
   },
   {

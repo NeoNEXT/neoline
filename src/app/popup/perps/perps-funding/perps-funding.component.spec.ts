@@ -1281,6 +1281,35 @@ describe('PerpsFundingComponent deposit authorisation lifetime', () => {
     });
   });
 
+  ['refresh failure', 'balance decrease', 'key failure'].forEach((failure) => {
+    it(`discards the prepared deposit after ${failure}`, async () => {
+      component.requestSubmit();
+      await settle();
+      expect(held()).not.toBeNull();
+
+      if (failure === 'refresh failure') {
+        spyOn((component as any).accountStates, 'refreshAccount').and.returnValue(
+          throwError(() => new Error('unavailable'))
+        );
+      } else if (failure === 'balance decrease') {
+        spyOn((component as any).depositChain, 'tokenBalanceExact')
+          .and.returnValue(Promise.resolve('10'));
+      } else {
+        spyOn((component as any).evmWallet, 'getPrivateKey')
+          .and.callFake(() => Promise.reject(new Error('cannot decrypt')));
+      }
+
+      await component.submit();
+
+      expect(held()).toBeNull();
+      expect(component.depositQuote).toBeNull();
+      expect(component.networkFeeExact).toBeNull();
+      expect(component.confirming).toBeFalse();
+      expect(component.submitting).toBeFalse();
+      expect(sendDeposit).not.toHaveBeenCalled();
+    });
+  });
+
   it('drops the permission once the send has spent it', async () => {
     await confirmDeposit();
 

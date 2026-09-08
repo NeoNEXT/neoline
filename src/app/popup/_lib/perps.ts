@@ -283,9 +283,10 @@ export const PERPS_CORE_USER_EXISTS_PRECOMPILE =
 /**
  * 提现中 HyperCore 到 HyperEVM 那一段所携带的 gas 上限。
  *
- * Hyperliquid 的文档写明这次转移的成本是 200k gas，按下一个 HyperEVM 区块的基础 gas 价格计。
- * 它不是用户自己的交易 —— 提现不需要任何人签一笔 EVM 交易 —— 所以这是协议给的数字，而不是
- * 需要我们去估算的东西。
+ * 此参数采用 Circle 的 sendToEvmWithData 提现示例值，不是用户钱包发送的 EVM 交易估算。
+ * https://developers.circle.com/cctp/howtos/withdraw-usdc-from-hypercore-to-evm
+ * Hyperliquid 的 Core/EVM 转移文档也描述了 200k gas 成本，但那是转移成本口径，
+ * 不应与此处动作中的 gasLimit 字段混为同一项配置约束。
  */
 export const PERPS_CORE_TO_EVM_GAS_LIMIT = 200000;
 
@@ -312,8 +313,9 @@ export const PERPS_CCTP_FINALITY_FAST = 1000;
  * 施加在 CCTP 入金 gas 估算值上的放大系数。
  *
  * Circle 自己的示例用的也是这 20%：「一次授权加一次外部调用」的估算余量很紧，而 gas 耗尽的
- * 入金照样会烧掉已经用掉的部分。确认页展示的网络手续费按这个带缓冲的上限计算，绝不用裸估算
- * 值 —— 展示给用户的数字必须是他们最多会被收取的那个。以十分之一为单位（12/10）施加，这样
+ * 入金照样会烧掉已经用掉的部分。确认页展示的网络手续费按带缓冲的 gas 估算值和当时的费率
+ * 计算；发送时会重新估算 gas 并读取费率，因此展示值不是最终费用或固定的费用上限。
+ * 以十分之一为单位（12/10）施加，这样
  * 乘法全程不经过 Number：`1.15 * 100` 并不等于 115，而对那个残差取 `BigInt` 会抛 RangeError。
  */
 export const PERPS_DEPOSIT_GAS_BUFFER = 1.2;

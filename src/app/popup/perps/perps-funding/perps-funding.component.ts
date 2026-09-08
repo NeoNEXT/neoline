@@ -850,11 +850,13 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     try {
       await this.refreshBeforeSubmit();
     } catch (error) {
+      this.discardDepositPreparation();
       this.submitting = false;
       this.refreshFailed = true;
       return;
     }
     if (this.exceedsBalance) {
+      this.discardDepositPreparation();
       // MAX 请求意味着「全部」，所以它可以跟着余额一起往下走 —— 但用户仍要确认新的数字。
       // 手动输入的金额意味着就是那个数，悄悄少发一点等于替用户杜撰意图。
       this.submitting = false;
@@ -922,6 +924,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
         },
       });
     } catch (error) {
+      this.discardDepositPreparation();
       this.submitting = false;
       this.global.snackBarTip('verifyFailed', error?.message || error);
     }
