@@ -278,6 +278,73 @@ describe('HyperliquidService accounts and fees', () => {
     });
   });
 
+  ['unifiedAccount', 'portfolioMargin'].forEach((mode) => {
+    it(`rejects missing spot collateral for ${mode} and recovers on the next read`, () => {
+      const failure = { status: 503 };
+      let spotAvailable = false;
+      http.post.and.callFake(((_url: string, body: any) => {
+        if (body.type === 'clearinghouseState') {
+          return of({ marginSummary: { accountValue: '5' }, assetPositions: [] });
+        }
+        if (body.type === 'spotClearinghouseState') {
+          return spotAvailable
+            ? of({ balances: [{ coin: 'USDC', total: '1000', hold: '20' }] })
+            : throwError(() => failure);
+        }
+        return of(mode);
+      }) as any);
+      const values = [];
+      const errors = [];
+
+      service.getAccount('0xabc').subscribe({
+        next: (value) => values.push(value),
+        error: (error) => errors.push(error),
+      });
+      expect(values).toEqual([]);
+      expect(errors).toEqual([failure]);
+
+      spotAvailable = true;
+      service.getAccount('0xabc').subscribe((value) => values.push(value));
+      expect(values[0].totalBalanceExact).toBe('1000');
+      expect(values[0].availableBalanceExact).toBe('980');
+    });
+  });
+
+  it('accepts an empty but successfully loaded unified spot wallet', () => {
+    http.post.and.callFake(((_url: string, body: any) => {
+      if (body.type === 'clearinghouseState') {
+        return of({ marginSummary: { accountValue: '5' }, assetPositions: [] });
+      }
+      return of(
+        body.type === 'spotClearinghouseState'
+          ? { balances: [] }
+          : 'unifiedAccount'
+      );
+    }) as any);
+    let result;
+    service.getAccount('0xabc').subscribe((value) => (result = value));
+    expect(result.totalBalanceExact).toBe('0');
+  });
+
+  it('keeps standard perps balances available when only the separate spot wallet fails', () => {
+    http.post.and.callFake(((_url: string, body: any) => {
+      if (body.type === 'clearinghouseState') {
+        return of({
+          marginSummary: { accountValue: '5' },
+          withdrawable: '4',
+          assetPositions: [],
+        });
+      }
+      return body.type === 'spotClearinghouseState'
+        ? throwError(() => ({ status: 503 }))
+        : of('default');
+    }) as any);
+    let result;
+    service.getAccount('0xabc').subscribe((value) => (result = value));
+    expect(result.totalBalanceExact).toBe('5');
+    expect(result.availableBalanceExact).toBe('4');
+  });
+
   it('uses cross-margin equity for a standard account risk ratio', (done) => {
     http.post.and.callFake(((_url: string, body: any) => {
       if (body.type === 'clearinghouseState') {
@@ -434,7 +501,7 @@ describe('HyperliquidService accounts and fees', () => {
       return of('unifiedAccount');
     }) as any);
 
-    service.getAccount('0xABC').subscribe();
+    service.getAccount('0xABC').subscribe({ error: () => undefined });
     tick(3001);
     let account;
     service.getAccount('0xABC').subscribe((value) => (account = value));

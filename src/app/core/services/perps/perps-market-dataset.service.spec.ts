@@ -242,6 +242,105 @@ describe('PerpsMarketDatasetService live list', () => {
       [ctx('1875.75')],
     ]);
 
+  it('retries a missing HIP-3 snapshot despite live prices and respects its rate limit', fakeAsync(() => {
+    let attempts = 0;
+    const { service, channel } = build({
+      getDexRegistry: () => of([null, { name: 'xyz' }]),
+      getMetaAndAssetCtxs: (dex = '') => {
+        if (!dex) {
+          return oneMarket();
+        }
+        attempts += 1;
+        return attempts < 3
+          ? throwError(() => ({ status: 429 }))
+          : of([
+              {
+                universe: [{ name: 'xyz:NEO', szDecimals: 2, maxLeverage: 5 }],
+              },
+              [ctx('10')],
+            ]);
+      },
+    });
+    const view = watching(service);
+    expect(view.last().availability).toBe('incomplete');
+    channel.push(
+      ALL_DEXS,
+      ctxFrame(['', [ctx('1900')]], ['xyz', [ctx('10')]])
+    );
+    const second = watching(service);
+    tick(9999);
+    expect(attempts).toBe(1);
+    tick(1);
+    expect(attempts).toBe(2);
+    channel.push(ALL_DEXS, ctxFrame(['', [ctx('1950')]]));
+    tick(19999);
+    expect(attempts).toBe(2);
+    tick(1);
+    expect(attempts).toBe(3);
+    expect(view.last().availability).toBe('live');
+    expect(view.last().markets.map((market) => market.coin)).toContain('xyz:NEO');
+    tick(60000);
+    expect(attempts).toBe(3);
+    second.stop();
+    view.stop();
+  }));
+
+  it('keeps a missing DEX incomplete after a failed reconnect and retries despite frames', fakeAsync(() => {
+    let canonicalAvailable = true;
+    let hip3Available = false;
+    const { service, channel } = build({
+      getDexRegistry: () => of([null, { name: 'xyz' }]),
+      getMetaAndAssetCtxs: (dex = '') =>
+        (dex ? hip3Available : canonicalAvailable)
+          ? oneMarket()
+          : throwError(() => ({ status: 503 })),
+    });
+    const view = watching(service);
+    channel.setConnectionState('live');
+    channel.setConnectionState('stale');
+    expect(view.last().availability).toBe('stale');
+
+    canonicalAvailable = false;
+    channel.setConnectionState('live');
+    channel.push(ALL_DEXS, ctxFrame(['', [ctx('1900')]]));
+    expect(view.last().availability).toBe('incomplete');
+
+    canonicalAvailable = true;
+    hip3Available = true;
+    tick(2000);
+    expect(view.last().availability).toBe('live');
+    expect(view.last().markets.map((market) => market.coin)).toContain('xyz:ETH');
+    view.stop();
+  }));
+
+  it('cancels missing-market retries when nobody is watching', fakeAsync(() => {
+    const getMetaAndAssetCtxs = jasmine
+      .createSpy()
+      .and.callFake((dex = '') =>
+        dex ? throwError(() => ({ status: 503 })) : oneMarket()
+      );
+    const { service } = build({
+      getDexRegistry: () => of([null, { name: 'xyz' }]),
+      getMetaAndAssetCtxs,
+    });
+    const view = watching(service);
+    view.stop();
+    tick(60000);
+    expect(getMetaAndAssetCtxs).toHaveBeenCalledTimes(2);
+  }));
+
+  it('uses snapshot age rather than frame age when a new observer checks the market set', fakeAsync(() => {
+    const getMetaAndAssetCtxs = jasmine.createSpy().and.callFake(oneMarket);
+    const { service, channel } = build({ getMetaAndAssetCtxs });
+    const first = watching(service);
+    tick(SNAPSHOT_TTL_MS + 1);
+    channel.push(ALL_DEXS, ctxFrame(['', [ctx('1900')]]));
+    const second = watching(service);
+    expect(getMetaAndAssetCtxs).toHaveBeenCalledTimes(2);
+    second.stop();
+    first.stop();
+  }));
+
   it('publishes the snapshot, then follows the per-DEX frames', () => {
     const { service, channel } = build({ getMetaAndAssetCtxs: oneMarket });
     const view = watching(service);

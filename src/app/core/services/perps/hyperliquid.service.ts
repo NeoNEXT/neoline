@@ -267,12 +267,25 @@ export class HyperliquidService {
       this.post<any>({ type: 'clearinghouseState', user, dex }),
       // 现货钱包是账户级的。只有标准永续那次快照会读它，
       // 这样「把它折算成抵押品」就不可能每个 DEX 各做一次。
-      dex ? of(null) : this.getSpotState(user, force),
+      dex
+        ? of({ spot: null, error: null })
+        : this.getSpotState(user, force).pipe(
+            map((spot) => ({ spot, error: null })),
+            catchError((error) => of({ spot: null, error }))
+          ),
       this.getAccountMode(user),
     ]).pipe(
-      map(([perps, spot, mode]) =>
-        parsePerpsAccount(perps, spot, mode, dex)
-      ),
+      map(([perps, { spot, error }, mode]) => {
+        // 统一账户的抵押品来自现货；读取失败不能被解释成零余额。
+        if (
+          !dex &&
+          (mode === 'unifiedAccount' || mode === 'portfolioMargin') &&
+          !Array.isArray(spot?.balances)
+        ) {
+          throw error || new Error('Spot collateral snapshot is unavailable');
+        }
+        return parsePerpsAccount(perps, spot, mode, dex);
+      }),
       catchError((error) => {
         if (this.accountCache.get(cacheKey)?.request === request) {
           this.accountCache.delete(cacheKey);
@@ -367,11 +380,11 @@ export class HyperliquidService {
       type: 'spotClearinghouseState',
       user,
     }).pipe(
-      catchError(() => {
+      catchError((error) => {
         if (this.spotStateCache.get(user) === request) {
           this.spotStateCache.delete(user);
         }
-        return of(null);
+        throw error;
       }),
       shareReplay({ bufferSize: 1, refCount: false })
     );

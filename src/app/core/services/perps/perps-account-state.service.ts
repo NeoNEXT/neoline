@@ -35,6 +35,20 @@ interface PerpsAccountKey {
   dex: string;
 }
 
+interface AccountRetry {
+  observers: number;
+  attempts: number;
+  timer?: ReturnType<typeof setTimeout>;
+}
+
+const RETRY_BASE_MS = 1000;
+const RATE_LIMITED_BASE_MS = 10000;
+const RETRY_CAP_MS = 60000;
+
+function accountKey({ user, dex }: PerpsAccountKey): string {
+  return `${user}:dex=${dex}`;
+}
+
 type AccountFrame =
   | { kind: 'spot'; value: any }
   | { kind: 'clearinghouse'; value: any };
@@ -71,6 +85,7 @@ export class PerpsAccountStateService {
    * 数据源已经断开时一次经由 REST 成功的读取，不是实时数据。
    */
   private connectionState: PerpsConnectionState = 'connecting';
+  private readonly retries = new Map<string, AccountRetry>();
 
   constructor(hyperliquid: HyperliquidService, channel: PerpsDataChannel) {
     this.source = hyperliquid;
@@ -79,7 +94,7 @@ export class PerpsAccountStateService {
       .subscribe((state) => (this.connectionState = state));
     this.dataset = new PerpsDataset(channel, {
       initial: LOADING,
-      keyOf: ({ user, dex }) => `${user}:dex=${dex}`,
+      keyOf: accountKey,
       frames: ({ user, dex }) =>
         merge(
           channel
@@ -114,12 +129,23 @@ export class PerpsAccountStateService {
   ): Observable<PerpsAccountState<PerpsAccount>> {
     const key = { user: address.toLowerCase(), dex };
     return new Observable<PerpsAccountState<PerpsAccount>>((observer) => {
+      const id = accountKey(key);
+      const retry = this.retries.get(id) || { observers: 0, attempts: 0 };
+      retry.observers += 1;
+      this.retries.set(id, retry);
       const subscription = this.dataset.watch(key).subscribe(observer);
       // 这个地址还什么都没读过，所以刚订上来的观察者欠他第一次读取。
       if (this.dataset.peek(key).availability === 'loading') {
         this.dataset.refresh(key).subscribe({ error: () => undefined });
       }
-      return () => subscription.unsubscribe();
+      return () => {
+        subscription.unsubscribe();
+        retry.observers -= 1;
+        if (retry.observers === 0) {
+          clearTimeout(retry.timer);
+          this.retries.delete(id);
+        }
+      };
     });
   }
 
@@ -167,17 +193,29 @@ export class PerpsAccountStateService {
     key: PerpsAccountKey,
     current: PerpsAccountState<PerpsAccount>
   ): Observable<PerpsAccountState<PerpsAccount>> {
+    const retry = this.retries.get(accountKey(key));
+    clearTimeout(retry?.timer);
+    if (retry) {
+      retry.timer = undefined;
+    }
     return this.source.getAccount(key.user, true, key.dex).pipe(
-      map((account) => ({
-        availability:
-          this.connectionState === 'stale'
-            ? ('stale' as const)
-            : ('live' as const),
-        account,
-        missingDexes: [],
-        updatedAt: Date.now(),
-      })),
-      catchError(() => {
+      map((account) => {
+        const activeRetry = this.retries.get(accountKey(key));
+        if (activeRetry) {
+          activeRetry.attempts = 0;
+        }
+        return {
+          availability:
+            this.connectionState === 'stale'
+              ? ('stale' as const)
+              : ('live' as const),
+          account,
+          missingDexes: [],
+          updatedAt: Date.now(),
+        };
+      }),
+      catchError((error) => {
+        this.scheduleRetry(key, error);
         const keepsStale =
           this.connectionState === 'stale' && !!current.account;
         return of({
@@ -190,6 +228,22 @@ export class PerpsAccountStateService {
         });
       })
     );
+  }
+
+  /** 帧无法重建缺失账户；只要还有观察者，就继续尝试取得快照。 */
+  private scheduleRetry(key: PerpsAccountKey, error: any) {
+    const retry = this.retries.get(accountKey(key));
+    if (!retry?.observers) {
+      return;
+    }
+    clearTimeout(retry.timer);
+    const base = error?.status === 429 ? RATE_LIMITED_BASE_MS : RETRY_BASE_MS;
+    const delay = Math.min(base * Math.pow(2, retry.attempts), RETRY_CAP_MS);
+    retry.attempts += 1;
+    retry.timer = setTimeout(() => {
+      retry.timer = undefined;
+      this.dataset.refresh(key).subscribe({ error: () => undefined });
+    }, delay);
   }
 
   /**

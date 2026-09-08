@@ -1,3 +1,4 @@
+import { fakeAsync, tick } from '@angular/core/testing';
 import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 
 import {
@@ -131,13 +132,85 @@ describe('PerpsAccountStateService', () => {
       throwError(() => new Error('down'))
     );
     const seen: PerpsAccountState<PerpsAccount>[] = [];
-    service.watchAccount('0xabc').subscribe((state) => seen.push(state));
+    const subscription = service
+      .watchAccount('0xabc')
+      .subscribe((state) => seen.push(state));
     service.refreshAccount('0xabc').subscribe();
 
     const latest = seen[seen.length - 1];
     expect(latest.availability).toBe('unavailable');
     expect(latest.account).toBeNull();
+    subscription.unsubscribe();
   });
+
+  it('retries a failed reconnect and resumes positions and subsequent frames', fakeAsync(() => {
+    const position = { key: 'hl:ETH', coin: 'ETH' } as any;
+    source.getAccount.and.returnValues(
+      of(account('', { positions: [position] })),
+      throwError(() => ({ status: 503 })),
+      of(account('', { accountValueExact: '12', positions: [position] }))
+    );
+    let latest: PerpsAccountState<PerpsAccount>;
+    const subscription = service
+      .watchAccount('0xabc')
+      .subscribe((state) => (latest = state));
+
+    connection.next('stale');
+    connection.next('live');
+    channels.get('clearinghouseState:0xabc:').next(clearinghouse('11'));
+    tick(1000);
+
+    expect(latest.availability).toBe('live');
+    expect(latest.account.positions).toEqual([position]);
+    expect(latest.account.accountValueExact).toBe('12');
+    channels.get('clearinghouseState:0xabc:').next(clearinghouse('15'));
+    expect(latest.account.accountValueExact).toBe('15');
+    expect(source.getAccount).toHaveBeenCalledTimes(3);
+    subscription.unsubscribe();
+  }));
+
+  it('shares initial-failure retries and cancels them after the last observer leaves', fakeAsync(() => {
+    source.getAccount.and.returnValue(throwError(() => ({ status: 503 })));
+    const first = service.watchAccount('0xABC').subscribe();
+    const second = service.watchAccount('0xabc').subscribe();
+    tick(1000);
+    expect(source.getAccount).toHaveBeenCalledTimes(2);
+    first.unsubscribe();
+    tick(2000);
+    expect(source.getAccount).toHaveBeenCalledTimes(3);
+    second.unsubscribe();
+    tick(60000);
+    expect(source.getAccount).toHaveBeenCalledTimes(3);
+  }));
+
+  it('backs off rate-limited reads and clears pending retries on successful refresh', fakeAsync(() => {
+    source.getAccount.and.returnValue(throwError(() => ({ status: 429 })));
+    const subscription = service.watchAccount('0xabc').subscribe();
+    tick(9999);
+    expect(source.getAccount).toHaveBeenCalledTimes(1);
+    tick(1);
+    expect(source.getAccount).toHaveBeenCalledTimes(2);
+    tick(19999);
+    expect(source.getAccount).toHaveBeenCalledTimes(2);
+    tick(1);
+    expect(source.getAccount).toHaveBeenCalledTimes(3);
+
+    source.getAccount.and.returnValue(of(account()));
+    service.refreshAccount('0xabc').subscribe();
+    tick(60000);
+    expect(source.getAccount).toHaveBeenCalledTimes(4);
+    subscription.unsubscribe();
+  }));
+
+  it('does not start retries for an in-flight read after its observers leave', fakeAsync(() => {
+    const snapshot = new Subject<PerpsAccount>();
+    source.getAccount.and.returnValue(snapshot);
+    const subscription = service.watchAccount('0xabc').subscribe();
+    subscription.unsubscribe();
+    snapshot.error({ status: 503 });
+    tick(60000);
+    expect(source.getAccount).toHaveBeenCalledTimes(1);
+  }));
 
   it('keeps last-known data while stale and repairs it after reconnect', () => {
     source.getAccount.and.returnValues(
@@ -175,7 +248,7 @@ describe('PerpsAccountStateService', () => {
           )
     );
     const seen: PerpsAccountState<PerpsAggregatedAccount>[] = [];
-    service
+    const subscription = service
       .watchAggregatedAccount('0xabc')
       .subscribe((state) => seen.push(state));
 
@@ -187,6 +260,7 @@ describe('PerpsAccountStateService', () => {
     expect(latest.account.positions.map((item) => item.key)).toEqual([
       'xyz:ETH',
     ]);
+    subscription.unsubscribe();
   });
 
   it('aggregates standard DEXes at protocol precision and keeps the riskiest pool', () => {

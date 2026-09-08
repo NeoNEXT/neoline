@@ -29,6 +29,13 @@ import {
 /** 一个 DEX 的静态元数据，与它的实时上下文按同一顺序配对。 */
 type MetaAndAssetCtxs = [{ universe: PerpsUniverseItem[] }, PerpsAssetCtx[]];
 
+interface DexMarketSnapshot {
+  dex: string;
+  dexIndex: number;
+  response: MetaAndAssetCtxs | null;
+  error?: any;
+}
+
 /**
  * 本模块需要交易场所提供的全部东西，不多不少。
  *
@@ -53,11 +60,7 @@ interface PerpsMarketUpdate {
  * 帧会免费把价格保持在最新，所以这跟数值新不新鲜无关 —— 它关心的是**集合**：
  * 上一次快照之后新上市或已下市的市场，在下一次快照之前是看不见的。
  *
- * 所以这个值按「上市与下市」的节奏定，那是天级的事，绝不能贴着帧的间隔走。`updatedAt`
- * 每来一帧就刷新，因此这道门实际拦下的是「帧断流多久要补一次 REST」—— 而
- * `allDexsAssetCtxs` 约十秒才一帧，旧的 15 秒只剩一倍半余量，一次寻常的抖动就要为一次
- * 121.9 KB 的全量快照买单（2026-09-01 主网实测：canonical 69.9 KB + `xyz` 52.0 KB）。
- * 两分钟是十来倍的帧间隔，抖动够不着它。
+ * 集合年龄从最近一次完整快照计时，不能被实时价格帧刷新；缺失 DEX 的快照另走退避重试。
  *
  * 真正的断线不靠这里兜底：心跳三十秒一次 ping、十秒收不到 pong 就从我们这一侧关掉套接字，
  * 数据流随之标记为过期并重连 —— 而一次重连恢复，本身就欠这个数据集一次取数。
@@ -109,6 +112,8 @@ export class PerpsMarketDatasetService {
   private observers = 0;
   private retryTimer: any;
   private retryAttempts = 0;
+  private snapshotAt: number | null = null;
+  private snapshotIncomplete = false;
 
   constructor(
     hyperliquid: HyperliquidService,
@@ -162,7 +167,7 @@ export class PerpsMarketDatasetService {
   /** 当前列表；只有在手里那份太旧时才先取一次快照。 */
   getMarkets(): Observable<PerpsMarket[]> {
     const current = this.dataset.peek(MARKET_LIST);
-    if (this.isFresh(current)) {
+    if (this.isFresh()) {
       return of(current.markets);
     }
     return this.dataset.refresh(MARKET_LIST).pipe(
@@ -315,7 +320,7 @@ export class PerpsMarketDatasetService {
       return state;
     }
     return {
-      availability: state.availability === 'incomplete' ? 'incomplete' : 'live',
+      availability: this.snapshotIncomplete ? 'incomplete' : 'live',
       markets: mergeDexAssetContexts(state.markets, update.dex, update.ctxs),
       updatedAt: Date.now(),
     };
@@ -325,14 +330,14 @@ export class PerpsMarketDatasetService {
     this.lastState = state;
   }
 
-  private isFresh(state: PerpsMarketDatasetState): boolean {
+  private isFresh(): boolean {
     return (
-      state.updatedAt !== null && Date.now() - state.updatedAt < SNAPSHOT_TTL_MS
+      this.snapshotAt !== null && Date.now() - this.snapshotAt < SNAPSHOT_TTL_MS
     );
   }
 
   private ensureSnapshot() {
-    if (this.isFresh(this.dataset.peek(MARKET_LIST))) {
+    if (this.retryTimer !== undefined || this.isFresh()) {
       return;
     }
     this.dataset
@@ -349,11 +354,22 @@ export class PerpsMarketDatasetService {
   private loadSnapshot(
     current: PerpsMarketDatasetState
   ): Observable<PerpsMarketDatasetState> {
+    clearTimeout(this.retryTimer);
+    this.retryTimer = undefined;
     return this.source.getDexRegistry().pipe(
       switchMap((perpDexs) => this.snapshotRequests(perpDexs)),
       map((responses) => {
         const { markets, missing } = this.foldSnapshot(responses);
-        this.retryAttempts = 0;
+        this.snapshotIncomplete = missing;
+        this.snapshotAt = missing ? null : Date.now();
+        if (missing) {
+          const failure =
+            responses.find((response) => response.error?.status === 429) ||
+            responses.find((response) => !response.response);
+          this.scheduleRetry(failure?.error);
+        } else {
+          this.retryAttempts = 0;
+        }
         return {
           availability: missing
             ? ('incomplete' as const)
@@ -363,6 +379,7 @@ export class PerpsMarketDatasetService {
         };
       }),
       catchError((error) => {
+        this.snapshotAt = null;
         this.scheduleRetry(error);
         // 已经在屏幕上的市场还不构成用户的问题：原样继续显示，
         // 并按逐渐拉长的间隔再问一次。
@@ -390,13 +407,16 @@ export class PerpsMarketDatasetService {
       RETRY_CAP_MS
     );
     this.retryAttempts += 1;
-    this.retryTimer = setTimeout(() => this.ensureSnapshot(), delay);
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = undefined;
+      this.dataset.refresh(MARKET_LIST).subscribe({ error: () => undefined });
+    }, delay);
   }
 
   private snapshotRequests(
     perpDexs: any[]
-  ): Observable<Array<{ dex: string; dexIndex: number; response: MetaAndAssetCtxs } | null>> {
-    const requests = [
+  ): Observable<DexMarketSnapshot[]> {
+    const requests: Observable<DexMarketSnapshot>[] = [
       this.source.getMetaAndAssetCtxs().pipe(
         map((response) => ({ dex: '', dexIndex: 0, response }))
       ),
@@ -412,7 +432,7 @@ export class PerpsMarketDatasetService {
           map((response) => ({ dex, dexIndex, response })),
           // 一个取不到的 builder DEX 不能把标准永续市场一起藏掉 ——
           // 但这样得到的列表是 `incomplete`，不是 `live`。
-          catchError(() => of(null))
+          catchError((error) => of({ dex, dexIndex, response: null, error }))
         )
       );
     });
@@ -420,10 +440,10 @@ export class PerpsMarketDatasetService {
   }
 
   private foldSnapshot(
-    responses: Array<{ dex: string; dexIndex: number; response: MetaAndAssetCtxs } | null>
+    responses: DexMarketSnapshot[]
   ): { markets: PerpsMarket[]; missing: boolean } {
     const markets: PerpsMarket[] = [];
-    responses.filter(Boolean).forEach(({ dex, dexIndex, response }) => {
+    responses.forEach(({ dex, dexIndex, response }) => {
       const [meta, ctxs] = response || ([] as any);
       (meta?.universe || []).forEach((item, index) => {
         const ctx = ctxs?.[index];
@@ -437,7 +457,7 @@ export class PerpsMarketDatasetService {
       markets: markets.sort((a, b) =>
         new BigNumber(b.dayVolumeExact).comparedTo(a.dayVolumeExact)
       ),
-      missing: responses.some((r) => r === null),
+      missing: responses.some((r) => r.response === null),
     };
   }
 
