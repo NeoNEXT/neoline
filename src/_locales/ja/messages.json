@@ -1940,12 +1940,6 @@
   "perpsWalletBalance": {
     "message": "ウォレット残高"
   },
-  "perpsArrivalDeposit": {
-    "message": "約 1 分（予定）"
-  },
-  "perpsArrivalWithdraw": {
-    "message": "約 5 分（予定）"
-  },
   "perpsEstimated": {
     "message": "概算"
   },
@@ -1988,26 +1982,11 @@
   "perpsGasShortfall": {
     "message": "{{chain}} 上の {{symbol}} がネットワーク手数料に足りません。"
   },
-  "perpsDepositAwaitingChain": {
-    "message": "入金を送信、チェーンの確認待ち"
-  },
-  "perpsDepositAwaitingCredit": {
-    "message": "チェーン上で確認済み、ブリッジの反映待ち"
-  },
-  "perpsDepositNotCredited": {
-    "message": "チェーン上にありますが未反映です。下のトランザクションで確認できます"
-  },
-  "perpsDismiss": {
-    "message": "閉じる"
-  },
   "perpsWithdrawable": {
     "message": "出金可能額"
   },
   "perpsBalance": {
     "message": "残高"
-  },
-  "perpsArrivalTime": {
-    "message": "着金時間"
   },
   "perpsNetworkFee": {
     "message": "ネットワーク手数料"
@@ -2019,7 +1998,13 @@
     "message": "最低額 {{amount}} {{symbol}} を下回っています。この経路は出金ごとに {{fee}} {{symbol}} を差し引くため、これを下回ると手数料の段階で拒否されます。"
   },
   "perpsRouteFee": {
-    "message": "経路手数料"
+    "message": "クロスチェーン手数料"
+  },
+  "perpsTransactionFee": {
+    "message": "取引手数料"
+  },
+  "perpsDepositFeeBreakdown": {
+    "message": "入金額から差し引かれます。クロスチェーン手数料と、Hyperliquid アカウントが未作成の場合の新規アカウント手数料を含みます。"
   },
   "perpsYouReceive": {
     "message": "受取額"
@@ -2219,14 +2204,11 @@
   "perpsWithdrawStatusUnknown": {
     "message": "取引所から結果が返らなかったため、この出金が実行されたかどうかは不明です。残高と Hyperliquid の台帳を確認してから、再送するか判断してください。"
   },
-  "perpsWithdrawSuccess": {
-    "message": "出金を送信しました。"
+  "perpsWithdrawSubmitted": {
+    "message": "出金を開始しました。Arbitrum ウォレットへの USDC の着金をお待ちください。"
   },
   "perpsDepositSubmitted": {
-    "message": "入金を送信しました。ネットワークの確認を待っています。"
-  },
-  "perpsDepositConfirmed": {
-    "message": "入金がチェーン上で確認されました。Hyperliquid への反映を待っています。"
+    "message": "入金を開始しました。Hyperliquid アカウントへの USDC の反映をお待ちください。"
   },
   "perpsDepositStillPending": {
     "message": "入金はまだ確認されていません。反映されるまでここで追跡します。"

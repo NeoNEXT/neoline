@@ -25,16 +25,13 @@ import {
   PerpsFeeQuote,
   PerpsFeeQuoteService,
 } from '@/app/core/services/perps/perps-fee-quote.service';
-import { PerpsPendingDepositsService } from '@/app/core/services/perps/perps-pending-deposits.service';
 import { EvmWalletJSON } from '@popup/_lib/evm';
 import {
   PerpsAccount,
   PerpsConnectionState,
   PerpsDepositConfig,
   PERPS_MIN_DEPOSIT,
-  PerpsPendingDeposit,
   PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS,
-  PERPS_PENDING_DEPOSIT_POLL_MS,
   PERPS_WALLET_BALANCE_POLL_MS,
 } from '@popup/_lib/perps';
 import { clampDecimals, formatBalance, formatUsd } from '../perps.util';
@@ -93,9 +90,14 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
    * —— 私钥会在广播时重新取，而不是跨整个对话框一直留着。
    */
   private depositAuthorization: PerpsDepositAuthorization | null = null;
+  private depositPreparationSeq = 0;
+  /**
+   * 确认页当初据以绘制、并且已经签名的那份报价。
+   *
+   * 入金只有这一份，不像提现那样另有一份实时的：表单上不报价，因为这里两笔费用都要等确认页
+   * 才知道 —— 网络费需要一份签过名的授权才估得出来，而跨链费与它同时敲定。
+   */
   depositQuote: PerpsFeeQuote | null = null;
-  /** 已经离开钱包、但还不能动用的入金。 */
-  pending: PerpsPendingDeposit[] = [];
 
   readonly minDeposit = PERPS_MIN_DEPOSIT;
   /**
@@ -127,7 +129,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   private connectionSub: Unsubscribable;
   private accountStateSub: Unsubscribable;
   private balanceTimer: ReturnType<typeof setInterval>;
-  private pendingTimer: ReturnType<typeof setInterval>;
 
   constructor(
     private route: ActivatedRoute,
@@ -139,7 +140,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     private evmWallet: EvmWalletService,
     private depositChain: PerpsDepositChainService,
     private feeQuote: PerpsFeeQuoteService,
-    private pendingDeposits: PerpsPendingDepositsService,
     private channel: PerpsDataChannel,
     private writes: PerpsExchangeWriteService
   ) {}
@@ -166,7 +166,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
         this.loadedConfig = this.token;
         this.watchAccountState(address);
         this.startBalancePolling(address);
-        this.startPendingTracking(address);
       }
     });
   }
@@ -251,10 +250,12 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
    * 留着的原因。
    */
   private async prepareDeposit() {
+    const seq = ++this.depositPreparationSeq;
     const config = this.token;
     const amount = this.submissionAmount;
     const address = this.address;
     const superseded = () =>
+      seq !== this.depositPreparationSeq ||
       config !== this.token || address !== this.address || !this.confirming;
 
     this.preparingDeposit = true;
@@ -263,16 +264,25 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     this.depositQuote = null;
     try {
       const quote = await this.feeQuote.depositQuote(amount, address);
+      if (superseded()) {
+        return;
+      }
       const password = await this.chrome.getPassword();
       const privateKey = await this.evmWallet.getPrivateKey(
         this.wallet,
         password
       );
+      if (superseded()) {
+        return;
+      }
       const authorization = await this.depositChain.authorizeDeposit(
         config,
         privateKey,
         amount
       );
+      if (superseded()) {
+        return;
+      }
       const fee = await this.depositChain.depositFeeExact(
         config,
         authorization,
@@ -297,7 +307,9 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
         this.global.snackBarTip('txFailed', (error as Error)?.message || error);
       }
     } finally {
-      this.preparingDeposit = false;
+      if (seq === this.depositPreparationSeq) {
+        this.preparingDeposit = false;
+      }
     }
   }
 
@@ -321,72 +333,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     this.connectionSub?.unsubscribe();
     this.accountStateSub?.unsubscribe();
     clearInterval(this.balanceTimer);
-    clearInterval(this.pendingTimer);
     this.discardDepositPreparation();
-  }
-
-  /**
-   * 接上仍在途中的入金，包括在更早一次弹窗会话里发起的那些。已经离开钱包的钱，绝不能仅仅
-   * 因为窗口在入账途中被关掉就变得无影无踪。
-   */
-  private async startPendingTracking(address: string) {
-    clearInterval(this.pendingTimer);
-    await this.reloadPending(address);
-    this.pendingTimer = setInterval(
-      () => this.pollPending(address),
-      PERPS_PENDING_DEPOSIT_POLL_MS
-    );
-  }
-
-  private async reloadPending(address: string) {
-    const list = await this.pendingDeposits.listFor(
-      address,
-      this.token.chainId
-    );
-    if (address === this.address) {
-      this.pending = list;
-    }
-  }
-
-  private async pollPending(address: string) {
-    if (address !== this.address || !this.pending.length) {
-      return;
-    }
-    const config = this.token;
-    for (const deposit of [...this.pending]) {
-      if (this.pendingDeposits.isCredited(deposit, this.withdrawableExact)) {
-        await this.pendingDeposits.remove(deposit.hash);
-        continue;
-      }
-      if (!deposit.chainConfirmed && !deposit.reverted) {
-        const outcome = await this.depositChain.depositOutcome(
-          config,
-          deposit.hash,
-          PERPS_PENDING_DEPOSIT_POLL_MS
-        );
-        if (outcome === 'confirmed') {
-          await this.pendingDeposits.update(deposit.hash, {
-            chainConfirmed: true,
-          });
-        } else if (outcome === 'reverted') {
-          // 停止跟踪：销毁根本没有发生，所以等待入账，
-          // 等的是一件早已被判定不会发生的事。
-          await this.pendingDeposits.update(deposit.hash, { reverted: true });
-        }
-      }
-    }
-    await this.reloadPending(address);
-  }
-
-  /** 已经跟踪得够久了；转账在链上，但尚未入账。 */
-  isStalled(deposit: PerpsPendingDeposit): boolean {
-    return this.pendingDeposits.isStalled(deposit);
-  }
-
-  /** 删掉一条用户已知悉的记录；交易本身不受影响。 */
-  async dismissPending(deposit: PerpsPendingDeposit) {
-    await this.pendingDeposits.remove(deposit.hash);
-    await this.reloadPending(this.address);
   }
 
   /**
@@ -425,6 +372,20 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
 
   get isWithdraw(): boolean {
     return this.tab === 'withdraw';
+  }
+
+  /**
+   * 这台钱包在本地根本签不了这两条意图。
+   *
+   * 硬件钱包与二维码钱包手上没有可导出的私钥，而两个方向都要用到它：提现要签一条交易场所
+   * 动作，存入要签一份 EIP-3009 授权 —— 后者发生在**确认页打开的那一刻**（`prepareDeposit`），
+   * 早于任何一次提交。所以这个判断必须和余额、报价一样进闸门。放在 `submit()` 里太晚了：
+   * 存入路径会先一步在取私钥时抛错，被当成一次失败的交易报给用户，而真正的原因
+   * ——「这台钱包签不了」—— 那条文案反而永远到不了。
+   */
+  get signingUnavailable(): boolean {
+    const extra = this.wallet?.accounts[0]?.extra;
+    return !!(extra?.ledgerSLIP44 || extra?.qrBasedXFP);
   }
 
   /**
@@ -469,25 +430,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     return this.withdrawQuote?.feeExact ?? null;
   }
 
-  /** 入金通道会扣走多少 —— 只有在入金准备好之后才知道。 */
-  get depositFeeExact(): string | null {
-    return this.depositQuote?.feeExact ?? null;
-  }
-
-  /**
-   * 永续账户将被入账多少，作为估算值。
-   *
-   * 通道费是从金额里扣的而不是外加的，所以一笔入金入账的金额少于它发出的。报价是上限，
-   * 因此这个数是下限：账户只可能被入账得比它更多。
-   */
-  get depositReceiveExact(): string | null {
-    if (!this.hasPositiveAmount || !this.depositFeeExact) {
-      return null;
-    }
-    const net = new BigNumber(this.submissionAmount).minus(this.depositFeeExact);
-    return net.isGreaterThan(0) ? net.toFixed() : '0';
-  }
-
   /**
    * 提现的落点：签名者本人在入金链上的地址。
    *
@@ -498,10 +440,10 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     return this.address;
   }
 
-  /** 确认页正在同意的那笔通道费，无论它对应的是哪种意图。 */
+  /** 确认页正在同意的那笔跨链费，无论它对应的是哪种意图。 */
   get confirmFeeExact(): string | null {
     return this.isDeposit
-      ? this.depositFeeExact
+      ? this.depositQuote?.feeExact ?? null
       : this.withdrawConfirmedQuote?.feeExact ?? null;
   }
 
@@ -509,9 +451,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
    * 该意图估算会到账多少，由同一屏上的手续费推导而来，这样两行绝不可能描述不同的报价。
    */
   get confirmReceiveExact(): string | null {
-    if (this.isDeposit) {
-      return this.depositReceiveExact;
-    }
     const fee = this.confirmFeeExact;
     if (!this.hasPositiveAmount || fee === null) {
       return null;
@@ -625,6 +564,10 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
    * 排序，这样界面绝不会出现一个没有任何解释的死按钮。
    */
   get disabledReason(): string {
+    // 排在最前：别的每一条都能靠重试、改金额或换账户解决，这一条不能，所以它先说。
+    if (this.signingUnavailable) {
+      return 'perpsSigningUnavailable';
+    }
     if (this.unsupportedAccountMode) {
       return 'perpsPortfolioMarginNoDeposit';
     }
@@ -675,6 +618,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
       !this.exceedsBalance &&
       !this.amountExceedsPrecision &&
       !this.unsupportedAccountMode &&
+      !this.signingUnavailable &&
       !this.gasShortfall &&
       this.maxAmountKnown &&
       (this.isDeposit || !!this.withdrawQuote)
@@ -875,6 +819,8 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
    * 重新签名只会请用户去同意他们已经同意过的东西。
    */
   private discardDepositPreparation() {
+    ++this.depositPreparationSeq;
+    this.preparingDeposit = false;
     this.depositAuthorization = null;
     this.depositQuote = null;
     this.networkFeeExact = null;
@@ -896,11 +842,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
       return;
     }
     this.confirming = false;
-    const walletExtra = this.wallet?.accounts[0]?.extra;
-    if (walletExtra?.ledgerSLIP44 || walletExtra?.qrBasedXFP) {
-      this.global.snackBarTip('perpsSigningUnavailable');
-      return;
-    }
     this.submitting = true;
     this.clearRefreshWarnings();
     // 这个金额意味着「就是这个数」还是「全部」，决定了下面能对它做什么；
@@ -963,7 +904,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
       request.subscribe({
         next: () => {
           this.submitting = false;
-          this.global.snackBarTip('perpsWithdrawSuccess');
+          this.global.snackBarTip('perpsWithdrawSubmitted');
           this.amount = null;
           this.activePreset = null;
           this.refreshAfterWrite();
@@ -989,15 +930,12 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   /**
    * 广播这笔入金，然后守候它的回执。
    *
-   * 两个事实分别上报：转账已上链，以及 HyperCore 已经入账。把它们压成一句「已提交」，正是
-   * 用户回到账户看到旧余额时会以为出了故障的原因。
+   * 广播后提示已发起；源链回执用于刷新余额和报告异常，不代表 HyperCore 已到账。
    */
   private async sendDeposit(privateKey: string) {
     const config = this.token;
     const amount = this.submissionAmount;
     const address = this.address;
-    // 在发送之前记下：这笔入金预期要抬高的那个余额。
-    const withdrawableBeforeExact = this.withdrawableExact ?? '0';
     let hash: string;
     try {
       const authorization = this.depositAuthorization;
@@ -1039,18 +977,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     this.submitting = false;
     this.amount = null;
     this.activePreset = null;
-    // 在别的地方还来不及出错之前先记下来：从这一刻起钱已经离开钱包，
-    // 而把它跟丢是我们唯一不能允许的结局。
-    await this.pendingDeposits.add({
-      chainId: config.chainId,
-      address,
-      amountExact: amount,
-      hash,
-      startedAt: Date.now(),
-      chainConfirmed: false,
-      withdrawableBeforeExact,
-    });
-    await this.reloadPending(address);
     this.global.snackBarTip('perpsDepositSubmitted');
     await this.trackDeposit(config, hash, address);
   }
@@ -1068,22 +994,16 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     if (config !== this.token || address !== this.address) {
       return;
     }
-    if (outcome !== 'pending') {
-      await this.pendingDeposits.update(hash, {
-        chainConfirmed: outcome === 'confirmed',
-        reverted: outcome === 'reverted',
-      });
-      await this.reloadPending(address);
-    }
     // 没有在我们愿意等待的时间内确认，这不算失败 —— 交易已经广播，仍有可能落块，所以它保持
     // 待处理而不是报错。revert 才是唯一终局，而它会被明明白白地说出来。
-    this.global.snackBarTip(
-      outcome === 'confirmed'
-        ? 'perpsDepositConfirmed'
-        : outcome === 'reverted'
-        ? 'perpsDepositReverted'
-        : 'perpsDepositStillPending'
-    );
+    // 正常确认后只刷新余额，避免与广播后的发起提示重复。
+    if (outcome !== 'confirmed') {
+      this.global.snackBarTip(
+        outcome === 'reverted'
+          ? 'perpsDepositReverted'
+          : 'perpsDepositStillPending'
+      );
+    }
     this.refreshAfterWrite();
     this.loadWalletBalance(address);
   }

@@ -256,12 +256,21 @@
       padding: 8px 0;
       font-size: 12px;
 
+      // `tooltip` 自带一个 flex 容器，所以这一行也得是 flex，否则它会自己占一行。
       .label {
+        display: flex;
+        align-items: center;
+        gap: 4px;
         color: var(--sub-title-color);
         flex-shrink: 0;
 
         em {
           font-style: normal;
+        }
+
+        tooltip img {
+          width: 13px;
+          height: 13px;
         }
       }
 
@@ -320,42 +329,5 @@
         }
       }
     }
-  }
-}
-
-.pending-deposit {
-  margin: 12px 22px 0;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  font-size: 12px;
-
-  .pending-line {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-
-    .state {
-      color: var(--sub-title-color);
-    }
-
-    .amount {
-      color: var(--title-color);
-      flex-shrink: 0;
-    }
-  }
-
-  .pending-hash {
-    margin-top: 6px;
-    font-size: 11px;
-    color: var(--tip-color);
-    word-break: break-all;
-  }
-
-  .dismiss {
-    display: inline-block;
-    margin-top: 8px;
-    color: var(--theme-color);
-    cursor: pointer;
   }
 }

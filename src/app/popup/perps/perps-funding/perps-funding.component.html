@@ -25,39 +25,6 @@
     {{ "perpsFeedStale" | translate | async }}
   </div>
 
-  <!-- 已经离开钱包、但还不能动用的钱。两个事实，就按两个事实来显示：
-       已上链，以及已在 HyperCore 入账。被 revert 的转账是第三个、也是最终的
-       一个 —— 它永远不会入账了。 -->
-  <div
-    class="pending-deposit"
-    [class.reverted]="deposit.reverted"
-    *ngFor="let deposit of pending"
-  >
-    <div class="pending-line">
-      <span class="state">
-        {{
-          (deposit.reverted
-            ? "perpsDepositReverted"
-            : isStalled(deposit)
-            ? "perpsDepositNotCredited"
-            : deposit.chainConfirmed
-            ? "perpsDepositAwaitingCredit"
-            : "perpsDepositAwaitingChain"
-          ) | translate | async
-        }}
-      </span>
-      <span class="amount">${{ formatBalance(deposit.amountExact) }}</span>
-    </div>
-    <div class="pending-hash">{{ deposit.hash }}</div>
-    <span
-      class="dismiss"
-      *ngIf="deposit.reverted || isStalled(deposit)"
-      (click)="dismissPending(deposit)"
-    >
-      {{ "perpsDismiss" | translate | async }}
-    </span>
-  </div>
-
   <div class="amount-area">
     <div class="amount-input">
       <span class="prefix">$</span>
@@ -132,22 +99,10 @@
     }}
   </p>
 
-  <div class="detail-rows">
-    <ng-container *ngIf="isDeposit">
-      <div class="row">
-        <span class="label">{{ "perpsArrivalTime" | translate | async }}</span>
-        <span class="value">
-          {{ "perpsArrivalDeposit" | translate | async }}
-        </span>
-      </div>
-      <div class="row">
-        <span class="label">{{ "perpsNetworkFee" | translate | async }}</span>
-        <span class="value">
-          {{ formatBalance(networkFeeExact, 6) }} {{ token.nativeSymbol }}
-        </span>
-      </div>
-    </ng-container>
-    <ng-container *ngIf="isWithdraw">
+  <!-- 只有提现侧在表单上报数。存入的两笔费用都要等确认页才知道 —— 网络费需要一份签过名的
+       授权才估得出来，跨链费与它同时敲定 —— 而一个永远读作 `--` 的行不如不放。
+       到账时间两侧都不再有：见 P3-5，那一行曾经是个没有任何事实支撑的硬编码文案。 -->
+  <div class="detail-rows" *ngIf="isWithdraw">
       <div class="row">
         <span class="label">{{ "perpsRouteFee" | translate | async }}</span>
         <span class="value">
@@ -156,12 +111,6 @@
               ? ("perpsUnknownValue" | translate | async)
               : formatUsd(withdrawFeeExact)
           }}
-        </span>
-      </div>
-      <div class="row">
-        <span class="label">{{ "perpsArrivalTime" | translate | async }}</span>
-        <span class="value">
-          {{ "perpsArrivalWithdraw" | translate | async }}
         </span>
       </div>
       <div class="row">
@@ -177,7 +126,6 @@
           }}
         </span>
       </div>
-    </ng-container>
   </div>
 
   <!-- 一条原因，控件不可用期间始终显示。 -->
@@ -219,7 +167,24 @@
         }}</span>
       </div>
       <div class="row">
-        <span class="label">{{ "perpsRouteFee" | translate | async }}</span>
+        <span class="label">
+          <!-- 存入那笔是两项之和，所以用更宽的「交易费」并在旁边拆开说；提现只有合约报的
+               那一笔跨链费，叫得准就不必改口。 -->
+          {{
+            (isDeposit ? "perpsTransactionFee" : "perpsRouteFee")
+              | translate
+              | async
+          }}
+          <!-- 存入的这个数是两笔钱的和，而用户同意的是那个和；hover 说明和里有什么。
+               提现那边只有一笔，拆开说没有可拆的。 -->
+          <tooltip
+            *ngIf="isDeposit"
+            placement="topLeft"
+            [tip]="'perpsDepositFeeBreakdown' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </span>
         <span class="value">
           {{
             confirmFeeExact === null

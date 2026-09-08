@@ -1940,12 +1940,6 @@
   "perpsWalletBalance": {
     "message": "Wallet balance"
   },
-  "perpsArrivalDeposit": {
-    "message": "about 1 min (estimate)"
-  },
-  "perpsArrivalWithdraw": {
-    "message": "about 5 min (estimate)"
-  },
   "perpsEstimated": {
     "message": "estimate"
   },
@@ -1988,26 +1982,11 @@
   "perpsGasShortfall": {
     "message": "Not enough {{symbol}} on {{chain}} to pay the network fee."
   },
-  "perpsDepositAwaitingChain": {
-    "message": "Deposit sent, waiting for chain confirmation"
-  },
-  "perpsDepositAwaitingCredit": {
-    "message": "Confirmed on chain, waiting for the bridge to credit it"
-  },
-  "perpsDepositNotCredited": {
-    "message": "On chain but not credited yet — check the transaction below"
-  },
-  "perpsDismiss": {
-    "message": "Dismiss"
-  },
   "perpsWithdrawable": {
     "message": "Withdrawable"
   },
   "perpsBalance": {
     "message": "balance"
-  },
-  "perpsArrivalTime": {
-    "message": "Arrival time"
   },
   "perpsNetworkFee": {
     "message": "Network fee"
@@ -2019,7 +1998,13 @@
     "message": "Amount is below the minimum of {{amount}} {{symbol}}. The route takes {{fee}} {{symbol}} out of every withdrawal, and a smaller amount is refused where it is charged."
   },
   "perpsRouteFee": {
-    "message": "Route fee"
+    "message": "Cross-chain fee"
+  },
+  "perpsTransactionFee": {
+    "message": "Transaction fee"
+  },
+  "perpsDepositFeeBreakdown": {
+    "message": "Deducted from your deposit. Covers the cross-chain fee, plus the new-account fee if your Hyperliquid account does not exist yet."
   },
   "perpsYouReceive": {
     "message": "You receive"
@@ -2219,14 +2204,11 @@
   "perpsWithdrawStatusUnknown": {
     "message": "The exchange did not return a result, so it is unknown whether this withdrawal ran. Check your balance and the Hyperliquid ledger before sending it again."
   },
-  "perpsWithdrawSuccess": {
-    "message": "Withdrawal submitted."
+  "perpsWithdrawSubmitted": {
+    "message": "Withdrawal initiated. Waiting for USDC to arrive in your Arbitrum wallet."
   },
   "perpsDepositSubmitted": {
-    "message": "Deposit sent. Waiting for the network to confirm it."
-  },
-  "perpsDepositConfirmed": {
-    "message": "Deposit confirmed on chain. Waiting for Hyperliquid to credit it."
+    "message": "Deposit initiated. Waiting for USDC to arrive in your Hyperliquid account."
   },
   "perpsDepositStillPending": {
     "message": "Deposit not confirmed yet. It stays tracked here until it is credited."

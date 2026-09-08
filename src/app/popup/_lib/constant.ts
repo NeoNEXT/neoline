@@ -43,7 +43,6 @@ export enum STORAGE_NAME {
   InvokeArgsArray = 'InvokeArgsArray', // dAPi N3 invoke args
   perpsChartInterval = 'perpsChartInterval', // preferred perps candle interval
   perpsMaxSlippage = 'perpsMaxSlippage', // preferred perps max slippage percent
-  perpsPendingDeposits = 'perpsPendingDeposits', // bridge deposits not yet credited
   isBackupLater = 'isBackupLater', // show backup tip if create wallet
   hasLoginAddress = 'hasLoginAddress', // has login address
   shouldFindNode = 'shouldFindNode',
@@ -177,10 +176,6 @@ export const STORAGE_VALUE_MESSAGE = {
   },
   perpsMaxSlippage: {
     type: STORAGE_VALUE_TYPE.number,
-    isLocal: true,
-  },
-  perpsPendingDeposits: {
-    type: STORAGE_VALUE_TYPE.array,
     isLocal: true,
   },
   isBackupLater: {

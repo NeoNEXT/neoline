@@ -1940,12 +1940,6 @@
   "perpsWalletBalance": {
     "message": "钱包余额"
   },
-  "perpsArrivalDeposit": {
-    "message": "约 1 分钟（预计）"
-  },
-  "perpsArrivalWithdraw": {
-    "message": "约 5 分钟（预计）"
-  },
   "perpsEstimated": {
     "message": "预计"
   },
@@ -1988,26 +1982,11 @@
   "perpsGasShortfall": {
     "message": "{{chain}} 上的 {{symbol}} 不足以支付网络费用。"
   },
-  "perpsDepositAwaitingChain": {
-    "message": "存入已发送，等待链上确认"
-  },
-  "perpsDepositAwaitingCredit": {
-    "message": "已在链上确认，等待桥入账"
-  },
-  "perpsDepositNotCredited": {
-    "message": "已上链但尚未入账，可用下方交易哈希查询"
-  },
-  "perpsDismiss": {
-    "message": "知道了"
-  },
   "perpsWithdrawable": {
     "message": "可提余额"
   },
   "perpsBalance": {
     "message": "余额"
-  },
-  "perpsArrivalTime": {
-    "message": "到账时间"
   },
   "perpsNetworkFee": {
     "message": "网络费用"
@@ -2019,7 +1998,13 @@
     "message": "低于最低限额 {{amount}} {{symbol}}。该通道每笔提取都会扣除 {{fee}} {{symbol}}，低于此金额会在扣费环节被拒绝。"
   },
   "perpsRouteFee": {
-    "message": "通道费"
+    "message": "跨链费"
+  },
+  "perpsTransactionFee": {
+    "message": "交易费"
+  },
+  "perpsDepositFeeBreakdown": {
+    "message": "从存入金额中扣除。含跨链费，以及 Hyperliquid 账户尚未创建时的新账户费。"
   },
   "perpsYouReceive": {
     "message": "您收到"
@@ -2219,14 +2204,11 @@
   "perpsWithdrawStatusUnknown": {
     "message": "交易所未返回结果，本次提款是否已执行无法判定。请先核对余额与 Hyperliquid 账本，再决定是否重新发起。"
   },
-  "perpsWithdrawSuccess": {
-    "message": "提款已提交。"
+  "perpsWithdrawSubmitted": {
+    "message": "提现已发起，等待 USDC 到达 Arbitrum 钱包。"
   },
   "perpsDepositSubmitted": {
-    "message": "存入已发送，等待链上确认。"
-  },
-  "perpsDepositConfirmed": {
-    "message": "存入已在链上确认，等待 Hyperliquid 入账。"
+    "message": "存入已发起，等待 USDC 到达 Hyperliquid 账户。"
   },
   "perpsDepositStillPending": {
     "message": "存入尚未确认，将在此处持续跟踪直到入账。"

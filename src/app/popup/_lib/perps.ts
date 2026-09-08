@@ -340,43 +340,9 @@ export const PERPS_CHAIN_REQUEST_TIMEOUT_MS = 10000;
 /**
  * 一笔入金的回执要守候多久，界面才不再等下去。
  *
- * 到时并不算失败：交易已经广播，之后仍可能确认，所以它会变成一笔待入账的入金而不是一个错误。
+ * 到时并不算失败：交易已经广播，之后仍可能确认，所以只提示尚未确认，不将其视为失败。
  */
 export const PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS = 90000;
-
-/** 一笔待入账的入金多久重查一次，以及要跟踪多久。 */
-export const PERPS_PENDING_DEPOSIT_POLL_MS = 10000;
-export const PERPS_PENDING_DEPOSIT_MAX_MS = 300000;
-
-/**
- * 一笔已经广播、但资金尚不可用的跨桥入金。
- *
- * 会持久化，因为弹窗关闭绝不能把在途的钱跟丢。它只保存公开的交易参数 —— 绝不含私钥、密码，
- * 或任何可被重放的东西。
- */
-export interface PerpsPendingDeposit {
-  /** 这笔是在哪条入金链上发出的，这样切换网络也不会把它搞混。 */
-  chainId: number;
-  /** 发送地址，也是跨桥入账的那个地址。 */
-  address: string;
-  amountExact: string;
-  hash: string;
-  startedAt: number;
-  /** 转账在入金链上已经拿到状态为成功的回执时为 true。 */
-  chainConfirmed: boolean;
-  /**
-   * 已确知源链交易被 revert 时为 true。
-   *
-   * 这是一个有定论的结局，而不是一个缓慢的过程：USDC 从未被销毁，所以入账不会到来，这条记录
-   * 必须停止显示成「仍在途中」。
-   */
-  reverted?: boolean;
-  /**
-   * 入金发出之前的可提余额，按账户模式规定的方式读取。当那个余额升到高于它时，入账就已落地
-   * —— 这是交易场所给出的唯一一个「跨桥已完成」的信号。
-   */
-  withdrawableBeforeExact: string;
-}
 
 /**
  * NeoLine 的 builder 费用，由 Hyperliquid 在它自己的 taker/maker 费率之上收取，并付给下面

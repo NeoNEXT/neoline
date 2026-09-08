@@ -3,7 +3,9 @@ import { of, throwError } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
+import { TooltipComponent } from '@/app/share/components/tooltip/tooltip.component';
 import { ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
 
@@ -17,25 +19,14 @@ import {
 } from '@app/core/services/perps/perps-exchange-write.service';
 import { PerpsDepositChainService } from '@/app/core/services/perps/perps-deposit-chain.service';
 import { PerpsFeeQuoteService } from '@/app/core/services/perps/perps-fee-quote.service';
-import { PerpsPendingDepositsService } from '@/app/core/services/perps/perps-pending-deposits.service';
 import { PerpsFundingComponent } from './perps-funding.component';
+import { PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS } from '@popup/_lib/perps';
 
 /**
  * 提现的定价来自报价而不是常量，所以这些测试会写明它们据以计算的那份报价。取 1 USDC 是为了
  * 让算术一目了然；真实数字是合约在当时所说的那个。
  */
 const QUOTE = { feeExact: '1', maxFeeExact: '1' };
-
-/** 这些测试不发送任何入金，因此永远不会记录待入账记录。 */
-const pendingStub = () =>
-  ({
-    listFor: () => Promise.resolve([]),
-    add: () => Promise.resolve(),
-    update: () => Promise.resolve(),
-    remove: () => Promise.resolve(),
-    isStalled: () => false,
-    isCredited: () => false,
-  } as any);
 
 /**
  * 这些测试里准备入金总是失败，而且失败会被上报而不是吞掉，所以组件需要一个上报的去处。
@@ -149,7 +140,6 @@ describe('PerpsFundingComponent balance line', () => {
         { provide: EvmWalletService, useValue: {} },
         { provide: PerpsDepositChainService, useValue: depositChainStub() },
         { provide: PerpsFeeQuoteService, useValue: feeQuoteStub() },
-        { provide: PerpsPendingDepositsService, useValue: pendingStub() },
         { provide: PerpsExchangeWriteService, useValue: writesStub() },
       ],
     }).compileComponents();
@@ -217,7 +207,6 @@ describe('PerpsFundingComponent amount boundaries', () => {
       null,
       depositChainStub(),
       feeQuoteStub(),
-      pendingStub(),
       null,
       writesStub()
     );
@@ -406,8 +395,8 @@ describe('PerpsFundingComponent amount boundaries', () => {
     component.amount = '50';
     component.depositQuote = { feeExact: '0.2', maxFeeExact: '0.2' };
 
-    expect(component.depositFeeExact).toBe('0.2');
-    expect(component.depositReceiveExact).toBe('49.8');
+    expect(component.confirmFeeExact).toBe('0.2');
+    expect(component.confirmReceiveExact).toBe('49.8');
   });
 
   it('reports the credited amount as unknown until the route is quoted', () => {
@@ -417,7 +406,8 @@ describe('PerpsFundingComponent amount boundaries', () => {
     component.amount = '50';
     component.depositQuote = null;
 
-    expect(component.depositReceiveExact).toBeNull();
+    expect(component.confirmFeeExact).toBeNull();
+    expect(component.confirmReceiveExact).toBeNull();
   });
 
   it('blocks deposits for portfolio-margin accounts but never withdrawals', () => {
@@ -470,7 +460,6 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
       evmWallet,
       depositChainStub(),
       feeQuoteStub(),
-      pendingStub(),
       null,
       writes
     );
@@ -673,7 +662,6 @@ describe('PerpsFundingComponent submit gate', () => {
       null,
       depositChainStub(),
       feeQuoteStub(),
-      pendingStub(),
       null,
       writesStub()
     );
@@ -821,6 +809,25 @@ describe('PerpsFundingComponent submit gate', () => {
     expect(component.amount).toBe('18.75');
     expect(component.exceedsBalance).toBeFalse();
   });
+
+  it('names the wallet ahead of everything else it could also complain about', () => {
+    component.account = { abstractionMode: 'default' } as any;
+    component.walletBalanceExact = '100';
+    component.amount = '10';
+    expect(component.disabledReason).toBe('');
+
+    (component as any).wallet = { accounts: [{ extra: { ledgerSLIP44: 60 } }] };
+    expect(component.disabledReason).toBe('perpsSigningUnavailable');
+    expect(component.canSubmit).toBeFalse();
+
+    // 二维码签名器同理。而且即使同时还有别的可抱怨的（这里是金额空着），先说的仍然是这一条
+    // —— 它是这张表上唯一一条用户在这个页面里做什么都解决不了的。
+    (component as any).wallet = {
+      accounts: [{ extra: { qrBasedXFP: 'abcd1234' } }],
+    };
+    component.amount = null;
+    expect(component.disabledReason).toBe('perpsSigningUnavailable');
+  });
 });
 
 /**
@@ -838,11 +845,11 @@ describe('PerpsFundingComponent deposit confirmation', () => {
   };
 
   /** 够不够付下面那笔估算的 gas —— 这是唯一要紧的变量。 */
-  function build(nativeBalanceExact: string) {
+  function build(nativeBalanceExact: string, global: any = globalStub()) {
     const component = new PerpsFundingComponent(
       { snapshot: { queryParams: {} } } as any,
       null,
-      globalStub(),
+      global,
       { depositConfig: CONFIG } as any,
       accountStateStub(),
       { getPassword: () => Promise.resolve('password') } as any,
@@ -858,7 +865,6 @@ describe('PerpsFundingComponent deposit confirmation', () => {
         depositQuote: () =>
           Promise.resolve({ feeExact: '0.2', maxFeeExact: '0.2' }),
       } as any,
-      pendingStub(),
       null,
       writesStub()
     );
@@ -879,6 +885,66 @@ describe('PerpsFundingComponent deposit confirmation', () => {
       await Promise.resolve();
     }
   }
+
+  it('ignores a cancelled preparation that finishes after its replacement', async () => {
+    component = build('1');
+    let finishOld: (fee: string) => void;
+    const chain = (component as any).depositChain;
+    chain.authorizeDeposit = (_config, _key, amountExact) =>
+      Promise.resolve({ from: '0xabc', amountExact });
+    chain.depositFeeExact = (_config, authorization) =>
+      authorization.amountExact === '50'
+        ? new Promise<string>((resolve) => (finishOld = resolve))
+        : Promise.resolve('0.002');
+
+    component.requestSubmit();
+    await settle();
+    component.cancelConfirm();
+    component.amount = '10';
+    component.requestSubmit();
+    await settle();
+    finishOld('0.004');
+    await settle();
+
+    expect((component as any).depositAuthorization.amountExact).toBe('10');
+    expect(component.networkFeeExact).toBe('0.002');
+    expect(component.canConfirm).toBeTrue();
+  });
+
+  it('does not let an old failure close or finish a replacement preparation', async () => {
+    component = build('1');
+    let failOld: (error: Error) => void;
+    const quotes = (component as any).feeQuote;
+    quotes.depositQuote = (amount) => amount === '50'
+      ? new Promise((_resolve, reject) => (failOld = reject))
+      : new Promise(() => {});
+
+    component.requestSubmit();
+    component.cancelConfirm();
+    component.amount = '10';
+    component.requestSubmit();
+    failOld(new Error('old request failed'));
+    await settle();
+
+    expect(component.confirming).toBeTrue();
+    expect(component.preparingDeposit).toBeTrue();
+    expect(component.canConfirm).toBeFalse();
+  });
+
+  it('does not restore an in-flight authorization after destruction', async () => {
+    component = build('1');
+    let finish: (fee: string) => void;
+    (component as any).depositChain.depositFeeExact = () =>
+      new Promise<string>((resolve) => (finish = resolve));
+    component.requestSubmit();
+    await settle();
+    component.ngOnDestroy();
+    finish('0.004');
+    await settle();
+
+    expect((component as any).depositAuthorization).toBeNull();
+    expect(component.depositQuote).toBeNull();
+  });
 
   it('offers the confirm button once the deposit is priced', async () => {
     component = build('1');
@@ -968,6 +1034,29 @@ describe('PerpsFundingComponent deposit confirmation', () => {
 
     expect((component as any).depositAuthorization).toBeNull();
   });
+
+  // 入金要私钥的时刻是**确认页打开的那一刻**，早于任何一次提交。这个判断曾经放在 `submit()`
+  // 里，于是硬件钱包用户按下「存入」得到的是 `getPrivateKey` 抛出的错误被报成一次失败的交易,
+  // 而「这台钱包签不了」那条文案永远到不了。闸门失效时，下面这个 reject 会重新变成一次
+  // `txFailed`。
+  it('never reaches for a key a hardware wallet does not have', async () => {
+    const global = jasmine.createSpyObj('GlobalService', ['snackBarTip']);
+    component = build('1', global);
+    (component as any).wallet = { accounts: [{ extra: { ledgerSLIP44: 60 } }] };
+    (component as any).evmWallet = {
+      getPrivateKey: () => Promise.reject(new Error('invalid JSON wallet')),
+    };
+
+    expect(component.disabledReason).toBe('perpsSigningUnavailable');
+    expect(component.canSubmit).toBeFalse();
+
+    component.requestSubmit();
+    await settle();
+
+    expect(component.confirming).toBeFalse();
+    expect(component.networkFeeExact).toBeNull();
+    expect(global.snackBarTip).not.toHaveBeenCalled();
+  });
 });
 
 /**
@@ -1000,7 +1089,6 @@ describe('PerpsFundingComponent withdrawal quote', () => {
         ...feeQuoteStub(),
         withdrawQuote: (...args: unknown[]) => withdrawQuote(...args),
       } as any,
-      pendingStub(),
       null,
       writesStub()
     );
@@ -1129,7 +1217,6 @@ describe('PerpsFundingComponent deposit authorisation lifetime', () => {
         ...feeQuoteStub(),
         depositQuote: (...args: unknown[]) => depositQuote(...args),
       } as any,
-      pendingStub(),
       null,
       writesStub()
     );
@@ -1157,6 +1244,42 @@ describe('PerpsFundingComponent deposit authorisation lifetime', () => {
     await component.submit();
     await settle();
   }
+
+  [
+    { outcome: 'confirmed', message: null },
+    { outcome: 'reverted', message: 'perpsDepositReverted' },
+    { outcome: 'pending', message: 'perpsDepositStillPending' },
+  ].forEach(({ outcome, message }) => {
+    it(`waits for the current deposit receipt and reports ${outcome}`, async () => {
+      let finish: (value: string) => void;
+      const receipt = spyOn((component as any).depositChain, 'depositOutcome')
+        .and.returnValue(new Promise<string>((resolve) => (finish = resolve)));
+      const notify = spyOn((component as any).global, 'snackBarTip');
+      const refresh = spyOn((component as any).accountStates, 'refreshAccount').and.callThrough();
+      const balances = spyOn<any>(component, 'loadWalletBalance').and.callThrough();
+
+      component.requestSubmit();
+      await settle();
+      const submission = component.submit();
+      await settle();
+
+      expect(receipt).toHaveBeenCalledOnceWith(CONFIG, '0xhash', PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS);
+      expect(notify.calls.allArgs()).toEqual([['perpsDepositSubmitted']]);
+      expect(refresh).toHaveBeenCalledTimes(1);
+      expect(balances).toHaveBeenCalledTimes(1);
+
+      finish(outcome);
+      await submission;
+      await settle();
+
+      expect(notify.calls.allArgs()).toEqual(
+        message ? [['perpsDepositSubmitted'], [message]] : [['perpsDepositSubmitted']]
+      );
+      expect(refresh).toHaveBeenCalledTimes(2);
+      expect(balances).toHaveBeenCalledTimes(2);
+      expect(component.submitting).toBeFalse();
+    });
+  });
 
   it('drops the permission once the send has spent it', async () => {
     await confirmDeposit();
@@ -1193,5 +1316,78 @@ describe('PerpsFundingComponent deposit authorisation lifetime', () => {
     expect(sendDeposit).not.toHaveBeenCalled();
     expect(component.confirming).toBeTrue();
     expect(held()).toBe(signed);
+  });
+});
+
+/**
+ * 确认页那一行「交易费」带一个 hover 说明。
+ *
+ * 它活在 `*ngIf="confirming"` 里，而 JIT 只在视图真正创建时才校验属性绑定——在这个用例
+ * 出现之前，整套测试从没把确认面板渲染过一次，所以一个拼错的指令名会一路安静地走到
+ * 生产构建才炸。这两条用例的第一份价值是「面板能渲染出来」。
+ */
+describe('PerpsFundingComponent confirmation fee breakdown', () => {
+  let fixture: ComponentFixture<PerpsFundingComponent>;
+  let component: PerpsFundingComponent;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      declarations: [PerpsFundingComponent, TranslateStubPipe, TooltipComponent],
+      imports: [FormsModule],
+      providers: [
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParams: {} } } },
+        {
+          provide: Store,
+          useValue: { select: () => of({ currentWallet: null }) },
+        },
+        { provide: GlobalService, useValue: globalStub() },
+        {
+          provide: HyperliquidService,
+          useValue: {
+            depositConfig: {
+              decimals: 6,
+              symbol: 'USDC',
+              chainName: 'Arbitrum Sepolia',
+              nativeSymbol: 'ETH',
+              cctp: { extension: '0xext' },
+            },
+            watchConnectionState: () => of('live'),
+          },
+        },
+        { provide: ChromeService, useValue: {} },
+        { provide: EvmWalletService, useValue: {} },
+        { provide: PerpsDepositChainService, useValue: depositChainStub() },
+        { provide: PerpsFeeQuoteService, useValue: feeQuoteStub() },
+        { provide: PerpsExchangeWriteService, useValue: writesStub() },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(PerpsFundingComponent);
+    component = fixture.componentInstance;
+    component.amount = '50';
+    component.confirming = true;
+  });
+
+  afterEach(() => fixture.destroy());
+
+  const tooltip = () => fixture.debugElement.query(By.directive(TooltipComponent));
+
+  it('explains what the deposit transaction fee is made of', () => {
+    component.tab = 'deposit';
+    fixture.detectChanges();
+
+    const found = tooltip();
+    expect(found).not.toBeNull();
+    // TranslateStubPipe 原样返回 key，所以这里读到的就是那条文案的 key。
+    expect((found.componentInstance as TooltipComponent).tip).toBe(
+      'perpsDepositFeeBreakdown'
+    );
+  });
+
+  it('gives the withdrawal side no breakdown, because there is only one fee', () => {
+    component.tab = 'withdraw';
+    fixture.detectChanges();
+
+    expect(tooltip()).toBeNull();
   });
 });

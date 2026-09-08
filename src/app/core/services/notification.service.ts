@@ -39,11 +39,17 @@ interface NotificationContent {
   getBridgeInfoFailed: string;
   perpsOrderSubmitted: string;
   perpsOrderCanceled: string;
+  perpsOrderStatusResolved: string;
+  perpsMarketChangedReviewAgain: string;
+  perpsPositionChangedReviewAgain: string;
   perpsDepositSubmitted: string;
-  perpsDepositConfirmed: string;
   perpsDepositStillPending: string;
-  perpsWithdrawSuccess: string;
+  perpsDepositReverted: string;
+  perpsWithdrawSubmitted: string;
+  perpsWithdrawStatusUnknown: string;
   perpsSigningUnavailable: string;
+  perpsRefreshFailed: string;
+  perpsFeeQuoteChangedReviewAgain: string;
 }
 
 @Injectable()
@@ -90,14 +96,26 @@ export class NotificationService {
       'Unable to load the bridge fee and limits. Please try again later.',
     perpsOrderSubmitted: 'Perps order submitted.',
     perpsOrderCanceled: 'Order canceled.',
-    perpsDepositSubmitted: 'Deposit sent. Waiting for confirmation.',
-    perpsDepositConfirmed:
-      'Deposit confirmed on chain. The bridge credits it within about a minute.',
+    perpsOrderStatusResolved:
+      'Order status was recovered. Account data has been refreshed.',
+    perpsMarketChangedReviewAgain:
+      'The price moved beyond your max slippage. Nothing was sent — review the order again.',
+    perpsPositionChangedReviewAgain:
+      'Your position changed before the order was signed. Review it again.',
+    perpsDepositSubmitted: 'Deposit initiated. Waiting for USDC to arrive in your Hyperliquid account.',
     perpsDepositStillPending:
       'Deposit is on chain but not confirmed yet. It may still land — check the transaction before sending another.',
-    perpsWithdrawSuccess: 'Withdrawal successful.',
+    perpsDepositReverted:
+      'The deposit failed on chain. Nothing was transferred, but the network fee was still spent.',
+    perpsWithdrawSubmitted: 'Withdrawal initiated. Waiting for USDC to arrive in your Arbitrum wallet.',
+    perpsWithdrawStatusUnknown:
+      'The exchange did not return a result, so it is unknown whether this withdrawal ran. Check your balance and the Hyperliquid ledger before sending it again.',
     perpsSigningUnavailable:
       'This wallet does not support Hyperliquid typed-data signing yet.',
+    perpsRefreshFailed:
+      'Could not confirm the latest balance, so nothing was sent. Try again.',
+    perpsFeeQuoteChangedReviewAgain:
+      'The fee quote changed. Review it again before submitting.',
   };
   private CN: NotificationContent = {
     close: '关闭',
@@ -137,12 +155,21 @@ export class NotificationService {
     getBridgeInfoFailed: '暂时无法获取跨链手续费和限额，请稍后重试。',
     perpsOrderSubmitted: '永续合约订单已提交。',
     perpsOrderCanceled: '订单已撤销。',
-    perpsDepositSubmitted: '存入交易已发送，等待确认。',
-    perpsDepositConfirmed: '存入已在链上确认，桥通常约 1 分钟内入账。',
+    perpsOrderStatusResolved: '已恢复订单状态，并刷新账户数据。',
+    perpsMarketChangedReviewAgain:
+      '价格变动已超过你设置的最大滑点，订单未发出，请重新审核。',
+    perpsPositionChangedReviewAgain: '签名前仓位已发生变化，请重新审核订单。',
+    perpsDepositSubmitted: '存入已发起，等待 USDC 到达 Hyperliquid 账户。',
     perpsDepositStillPending:
       '存入已上链但尚未确认，仍可能成功。再次发送前请先查询该笔交易。',
-    perpsWithdrawSuccess: '提现成功。',
+    perpsDepositReverted:
+      '存入交易在链上失败。资金未转出，但网络费已消耗。',
+    perpsWithdrawSubmitted: '提现已发起，等待 USDC 到达 Arbitrum 钱包。',
+    perpsWithdrawStatusUnknown:
+      '交易所未返回结果，本次提款是否已执行无法判定。请先核对余额与 Hyperliquid 账本，再决定是否重新发起。',
     perpsSigningUnavailable: '该钱包暂不支持 Hyperliquid 类型化数据签名。',
+    perpsRefreshFailed: '无法取得最新余额，未发起任何操作，请重试。',
+    perpsFeeQuoteChangedReviewAgain: '费用报价已变化。提交前请重新确认。',
   };
   private JA: NotificationContent = {
     close: '閉じる',
@@ -186,14 +213,25 @@ export class NotificationService {
       'ブリッジの手数料と上限を取得できません。後でもう一度お試しください。',
     perpsOrderSubmitted: '無期限先物注文を送信しました。',
     perpsOrderCanceled: '注文をキャンセルしました。',
-    perpsDepositSubmitted: '入金を送信しました。確認を待っています。',
-    perpsDepositConfirmed:
-      'チェーン上で確認されました。ブリッジは約 1 分で反映します。',
+    perpsOrderStatusResolved: '注文状態を復元し、口座データを更新しました。',
+    perpsMarketChangedReviewAgain:
+      '価格が最大スリッページを超えて変動したため、注文は送信されませんでした。もう一度確認してください。',
+    perpsPositionChangedReviewAgain:
+      '署名前にポジションが変化しました。もう一度確認してください。',
+    perpsDepositSubmitted: '入金を開始しました。Hyperliquid アカウントへの USDC の反映をお待ちください。',
     perpsDepositStillPending:
       '入金はチェーンに送信済みですが未確認です。成立する可能性があるため、再送前に取引を確認してください。',
-    perpsWithdrawSuccess: '出金に成功しました。',
+    perpsDepositReverted:
+      '入金トランザクションがチェーン上で失敗しました。資金は送られていませんが、ネットワーク手数料は消費されています。',
+    perpsWithdrawSubmitted: '出金を開始しました。Arbitrum ウォレットへの USDC の着金をお待ちください。',
+    perpsWithdrawStatusUnknown:
+      '取引所から結果が返らなかったため、この出金が実行されたかどうかは不明です。残高と Hyperliquid の台帳を確認してから、再送するか判断してください。',
     perpsSigningUnavailable:
       'このウォレットはHyperliquidの型付きデータ署名にまだ対応していません。',
+    perpsRefreshFailed:
+      '最新の残高を確認できなかったため、何も送信していません。再試行してください。',
+    perpsFeeQuoteChangedReviewAgain:
+      '手数料の見積もりが変わりました。送信する前にもう一度確認してください。',
   };
   private KO: NotificationContent = {
     close: '닫기',
@@ -236,14 +274,25 @@ export class NotificationService {
       '브리지 수수료와 한도를 가져올 수 없습니다. 나중에 다시 시도해 주세요.',
     perpsOrderSubmitted: '무기한 선물 주문을 제출했습니다.',
     perpsOrderCanceled: '주문을 취소했습니다.',
-    perpsDepositSubmitted: '입금을 전송했습니다. 확인을 기다리는 중입니다.',
-    perpsDepositConfirmed:
-      '체인에서 확인되었습니다. 브리지가 약 1분 내에 반영합니다.',
+    perpsOrderStatusResolved: '주문 상태를 복구하고 계정 데이터를 갱신했습니다.',
+    perpsMarketChangedReviewAgain:
+      '가격이 최대 슬리피지를 넘어 변동해 주문을 보내지 않았습니다. 다시 검토해 주세요.',
+    perpsPositionChangedReviewAgain:
+      '서명 전에 포지션이 변경되었습니다. 다시 검토해 주세요.',
+    perpsDepositSubmitted: '입금을 시작했습니다. USDC가 Hyperliquid 계정에 도착할 때까지 기다려 주세요.',
     perpsDepositStillPending:
       '입금이 체인에 전송되었으나 아직 확인되지 않았습니다. 성사될 수 있으니 재전송 전에 거래를 확인하세요.',
-    perpsWithdrawSuccess: '출금에 성공했습니다.',
+    perpsDepositReverted:
+      '입금 트랜잭션이 체인에서 실패했습니다. 자금은 이동하지 않았지만 네트워크 수수료는 소모되었습니다.',
+    perpsWithdrawSubmitted: '출금을 시작했습니다. USDC가 Arbitrum 지갑에 도착할 때까지 기다려 주세요.',
+    perpsWithdrawStatusUnknown:
+      '거래소가 결과를 반환하지 않아 이 출금이 실행되었는지 알 수 없습니다. 잔액과 Hyperliquid 장부를 확인한 뒤 다시 보낼지 결정하세요.',
     perpsSigningUnavailable:
       '이 지갑은 아직 Hyperliquid 형식화 데이터 서명을 지원하지 않습니다.',
+    perpsRefreshFailed:
+      '최신 잔액을 확인하지 못해 아무것도 전송하지 않았습니다. 다시 시도하세요.',
+    perpsFeeQuoteChangedReviewAgain:
+      '수수료 견적이 변경되었습니다. 제출하기 전에 다시 확인하세요.',
   };
   constructor(private settingState: SettingState) {
     this.content = this.EN;
