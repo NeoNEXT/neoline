@@ -28,30 +28,16 @@ const parseSpotUsdc = (spot: any) => {
   return { totalExact, holdExact, freeExact };
 };
 
-const calculateMarginRatioExact = (
-  maintenanceMarginUsed: string,
-  riskCapital: string
-): string => {
-  const capital = new BigNumber(riskCapital);
-  return capital.isGreaterThan(0)
-    ? new BigNumber(maintenanceMarginUsed)
-        .dividedBy(capital)
-        .times(100)
-        .toFixed()
-    : '0';
-};
-
 const emptyAccount = (): PerpsAccount => ({
   unified: false,
   abstractionMode: 'unknown',
   dex: '',
-  accountValueExact: '0',
-  totalBalanceExact: '0',
+  accountValueExact: null,
+  totalBalanceExact: null,
   totalMarginUsedExact: '0',
   totalNtlPosExact: '0',
-  marginRatioExact: null,
-  withdrawableExact: '0',
-  availableBalanceExact: '0',
+  withdrawableExact: null,
+  availableBalanceExact: null,
   spotUsdcExact: '0',
   spotUsdcHoldExact: '0',
   positions: [],
@@ -65,6 +51,7 @@ export function parsePerpsAccount(
   dex = ''
 ): PerpsAccount {
   const unified = isUnifiedMode(mode);
+  const modeKnown = mode !== 'unknown';
   const {
     totalExact: spotUsdcExact,
     holdExact: spotUsdcHoldExact,
@@ -76,9 +63,10 @@ export function parsePerpsAccount(
       unified,
       abstractionMode: mode,
       dex,
-      accountValueExact: unified ? spotUsdcExact : '0',
-      totalBalanceExact: unified ? spotUsdcExact : '0',
-      availableBalanceExact: unified ? freeSpotUsdcExact : '0',
+      accountValueExact: modeKnown ? (unified ? spotUsdcExact : '0') : null,
+      totalBalanceExact: modeKnown ? (unified ? spotUsdcExact : '0') : null,
+      availableBalanceExact: modeKnown ? (unified ? freeSpotUsdcExact : '0') : null,
+      withdrawableExact: modeKnown ? '0' : null,
       spotUsdcExact,
       spotUsdcHoldExact,
     };
@@ -133,31 +121,18 @@ export function parsePerpsAccount(
       ? '0'
       : freeSpotUsdcExact
     : withdrawableExact;
-  const maintenanceMarginUsedExact = toFiniteDecimal(
-    response.crossMaintenanceMarginUsed
-  );
-  const riskCapitalExact = toFiniteDecimal(
-    response.crossMarginSummary?.accountValue ?? perDexAccountValueExact
-  );
-
   return {
     unified,
     abstractionMode: mode,
     dex,
-    accountValueExact,
-    totalBalanceExact: accountValueExact,
+    accountValueExact: modeKnown ? accountValueExact : null,
+    totalBalanceExact: modeKnown ? accountValueExact : null,
     totalMarginUsedExact: toFiniteDecimal(
       response.marginSummary.totalMarginUsed
     ),
     totalNtlPosExact: toFiniteDecimal(response.marginSummary.totalNtlPos),
-    marginRatioExact: unified
-      ? null
-      : calculateMarginRatioExact(
-          maintenanceMarginUsedExact,
-          riskCapitalExact
-        ),
-    withdrawableExact,
-    availableBalanceExact,
+    withdrawableExact: modeKnown ? withdrawableExact : null,
+    availableBalanceExact: modeKnown ? availableBalanceExact : null,
     spotUsdcExact,
     spotUsdcHoldExact,
     positions,
@@ -230,6 +205,11 @@ export function aggregatePerpsAccounts(
 ): PerpsAggregatedAccount {
   const canonical = snapshots.find((account) => account.dex === '') ?? null;
   const unified = canonical?.unified ?? false;
+  const modeKnown = !!canonical && snapshots.every(
+    (account) => account.abstractionMode !== 'unknown'
+  );
+  const sumKnown = (pick: (account: PerpsAccount) => string | null) =>
+    snapshots.some((account) => pick(account) === null) ? null : sum(pick);
   const sum = (pick: (account: PerpsAccount) => string) =>
     snapshots
       .reduce(
@@ -237,20 +217,6 @@ export function aggregatePerpsAccounts(
         new BigNumber(0)
       )
       .toFixed();
-  const riskiest = unified
-    ? null
-    : snapshots
-        .filter((account) => account.marginRatioExact !== null)
-        .reduce(
-          (worst, account) =>
-            !worst ||
-            new BigNumber(account.marginRatioExact).isGreaterThan(
-              worst.marginRatioExact
-            )
-              ? account
-              : worst,
-          null as PerpsAccount
-        );
   const freeSpotExact = canonical
     ? BigNumber.maximum(
         0,
@@ -263,32 +229,30 @@ export function aggregatePerpsAccounts(
   return {
     unified,
     abstractionMode: canonical?.abstractionMode ?? 'unknown',
-    accountValueExact: canonical
+    accountValueExact: modeKnown
       ? unified
         ? canonical.spotUsdcExact
-        : sum((account) => account.accountValueExact)
+        : sumKnown((account) => account.accountValueExact)
       : null,
-    totalBalanceExact: canonical
+    totalBalanceExact: modeKnown
       ? unified
         ? canonical.spotUsdcExact
-        : sum((account) => account.totalBalanceExact)
+        : sumKnown((account) => account.totalBalanceExact)
       : null,
     totalMarginUsedExact: sum((account) => account.totalMarginUsedExact),
     totalNtlPosExact: sum((account) => account.totalNtlPosExact),
-    withdrawableExact: canonical
+    withdrawableExact: modeKnown
       ? unified
         ? freeSpotExact
-        : sum((account) => account.withdrawableExact)
+        : sumKnown((account) => account.withdrawableExact)
       : null,
-    availableBalanceExact: canonical
+    availableBalanceExact: modeKnown
       ? unified
         ? freeSpotExact
-        : sum((account) => account.availableBalanceExact)
+        : sumKnown((account) => account.availableBalanceExact)
       : null,
     spotUsdcExact: canonical?.spotUsdcExact ?? null,
     spotUsdcHoldExact: canonical?.spotUsdcHoldExact ?? null,
-    marginRatioExact: riskiest?.marginRatioExact ?? null,
-    marginRatioDex: riskiest?.dex ?? null,
     positions: snapshots.reduce(
       (all, account) => all.concat(account.positions || []),
       [] as PerpsPosition[]

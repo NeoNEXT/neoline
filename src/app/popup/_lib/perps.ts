@@ -630,26 +630,22 @@ export interface PerpsAccount {
   abstractionMode: PerpsAccountMode;
   /** 这份快照覆盖的 DEX；标准永续清算所为空。 */
   dex: string;
-  /** 永续清算所权益 —— 只对标准账户有意义。 */
-  accountValueExact: string;
-  /** 当前账户模式下可用的抵押品权益。 */
-  totalBalanceExact: string;
+  /** 标准账户读取永续清算所；统一模式仅计 USDC。模式未知为 null。 */
+  accountValueExact: string | null;
+  /** 当前支持的抵押品口径；不代表组合保证金账户的完整多资产净值。 */
+  totalBalanceExact: string | null;
   totalMarginUsedExact: string;
   totalNtlPosExact: string;
-  /**
-   * 以百分比表示的强平风险比率。统一账户/组合保证金账户需要跨全部 DEX 计算，因此目前不设置它。
-   */
-  marginRatioExact: string | null;
   /**
    * 永续清算所自己的 `withdrawable`：对标准账户来说它是自由抵押品，而对统一账户来说，无论有
    * 多少资金它都是 0。因此提现上限必须经由账户模式来读，而不能直接取这个值。
    */
-  withdrawableExact: string;
+  withdrawableExact: string | null;
   /**
    * 可用于下单或提现的自由抵押品。统一账户/组合保证金账户会把空闲的现货 USDC 折算进来；
    * 标准账户仍然只算永续。
    */
-  availableBalanceExact: string;
+  availableBalanceExact: string | null;
   /**
    * 现货余额（代币下标 0）里的 USDC 总额。只有在统一账户下它才是全仓抵押品；在标准账户下它是
    * 一个必须先划进永续才能用于交易的独立钱包，因此绝不能把它折算进永续权益。
@@ -685,9 +681,6 @@ export interface PerpsAggregatedAccount {
    */
   spotUsdcExact: string | null;
   spotUsdcHoldExact: string | null;
-  /** 风险最高的那个资金池的保证金率，以及该池属于哪个 DEX。 */
-  marginRatioExact: string | null;
-  marginRatioDex: string | null;
   /** 跨所有 DEX 的全部持仓；每一个都带着它所属的 DEX。 */
   positions: PerpsPosition[];
   /**
@@ -717,6 +710,11 @@ export interface PerpsAccountState<T> {
   updatedAt: number | null;
 }
 
+/**
+ * unifiedAccount 为主支持模式；default/disabled 按标准账户兼容。
+ * dexAbstraction 为遗留自动划转模式；portfolioMargin 仅兼容 USDC 基础操作，
+ * 不代表完整组合估值。unknown 是本地读取失败状态，不是协议返回值。
+ */
 export type PerpsAccountMode =
   | 'default'
   | 'disabled'

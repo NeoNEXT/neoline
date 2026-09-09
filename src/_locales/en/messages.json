@@ -1757,11 +1757,11 @@
   "perps": {
     "message": "Perps"
   },
+  "perpsUsdcBalance": {
+    "message": "USDC balance"
+  },
   "perpsAccountValue": {
     "message": "Perps balance"
-  },
-  "perpsMarginRatio": {
-    "message": "Margin ratio"
   },
   "perpsAvailableMargin": {
     "message": "Available"
@@ -1770,7 +1770,7 @@
     "message": "used"
   },
   "perpsSpotSeparate": {
-    "message": "Spot (transfer to trade)"
+    "message": "Spot USDC (excluded from perps balances)"
   },
   "perpsDeposit": {
     "message": "Deposit"
@@ -1961,9 +1961,6 @@
   "perpsDepositIrreversible": {
     "message": "Sent to the CCTP contract, which credits your Hyperliquid account. This transfer cannot be recalled."
   },
-  "perpsPortfolioMarginNoDeposit": {
-    "message": "Deposits are unavailable for portfolio-margin accounts. Withdrawals still work; use the Hyperliquid frontend to manage this account."
-  },
   "perpsBalanceUnknown": {
     "message": "Could not read your balance on the deposit chain."
   },
@@ -2059,9 +2056,6 @@
   },
   "perpsReviewTip": {
     "message": "Review the direction, amount, leverage, entry price, estimated liquidation price, margin, fee and slippage before confirming."
-  },
-  "perpsPortfolioUnsupported": {
-    "message": "Portfolio margin accounts are not supported yet. Trading is disabled to avoid showing incomplete collateral data."
   },
   "perpsOpenOrders": {
     "message": "Open orders"

@@ -1757,11 +1757,11 @@
   "perps": {
     "message": "無期限先物"
   },
+  "perpsUsdcBalance": {
+    "message": "USDC 残高"
+  },
   "perpsAccountValue": {
     "message": "無期限先物口座残高"
-  },
-  "perpsMarginRatio": {
-    "message": "証拠金率"
   },
   "perpsAvailableMargin": {
     "message": "利用可能証拠金"
@@ -1770,7 +1770,7 @@
     "message": "使用中"
   },
   "perpsSpotSeparate": {
-    "message": "現物（振替が必要）"
+    "message": "現物 USDC（無期限先物残高には含まれません）"
   },
   "perpsDeposit": {
     "message": "入金"
@@ -1961,9 +1961,6 @@
   "perpsDepositIrreversible": {
     "message": "CCTP コントラクトへ送金し、そこから Hyperliquid の口座に反映されます。この送金は取り消せません。"
   },
-  "perpsPortfolioMarginNoDeposit": {
-    "message": "ポートフォリオマージン口座への入金には未対応です。出金は利用できます。口座全体の管理は Hyperliquid 公式フロントエンドをご利用ください。"
-  },
   "perpsBalanceUnknown": {
     "message": "入金チェーン上の残高を取得できませんでした。"
   },
@@ -2059,9 +2056,6 @@
   },
   "perpsReviewTip": {
     "message": "確定前に方向、金額、レバレッジ、約定価格、推定清算価格、証拠金、手数料、スリッページを確認してください。"
-  },
-  "perpsPortfolioUnsupported": {
-    "message": "ポートフォリオマージン口座は現在未対応です。不完全な担保情報を避けるため取引を無効にしています。"
   },
   "perpsOpenOrders": {
     "message": "未約定注文"

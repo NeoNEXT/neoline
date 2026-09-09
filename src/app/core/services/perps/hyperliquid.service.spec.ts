@@ -256,7 +256,6 @@ describe('HyperliquidService accounts and fees', () => {
       expect(account.availableBalanceExact).toBe('998.01');
       expect(account.withdrawableExact).toBe('0');
       expect(account.totalMarginUsedExact).toBe('0.96');
-      expect(account.marginRatioExact).toBeNull();
       done();
     });
   });
@@ -269,11 +268,6 @@ describe('HyperliquidService accounts and fees', () => {
       expect(account.totalBalanceExact).toBe('1.9');
       expect(account.availableBalanceExact).toBe('0');
       expect(account.spotUsdcExact).toBe('998.97');
-      expect(Number(account.marginRatioExact)).toBeCloseTo(
-        (0.48 / 1.9) * 100,
-        8
-      );
-      expect(account.marginRatioExact).toMatch(/^25\.2631578947/);
       done();
     });
   });
@@ -310,6 +304,28 @@ describe('HyperliquidService accounts and fees', () => {
     });
   });
 
+  it('reports mode read failures as unknown and recovers on refresh', () => {
+    let modeAvailable = false;
+    http.post.and.callFake(((_url: string, body: any) => {
+      if (body.type === 'userAbstraction') {
+        return modeAvailable ? of('unifiedAccount') : throwError(() => new Error('offline'));
+      }
+      return of(body.type === 'spotClearinghouseState'
+        ? { balances: [{ coin: 'USDC', total: '1000', hold: '20' }] }
+        : { marginSummary: { accountValue: '5' }, withdrawable: '4', assetPositions: [] });
+    }) as any);
+    let value;
+    service.getAccount('0xabc').subscribe((account) => (value = account));
+    expect(value.abstractionMode).toBe('unknown');
+    expect(value.totalBalanceExact).toBeNull();
+    expect(value.withdrawableExact).toBeNull();
+    modeAvailable = true;
+    service.getAccount('0xabc', true).subscribe((account) => (value = account));
+    expect(value.abstractionMode).toBe('unifiedAccount');
+    expect(value.totalBalanceExact).toBe('1000');
+    expect(value.availableBalanceExact).toBe('980');
+  });
+
   it('accepts an empty but successfully loaded unified spot wallet', () => {
     http.post.and.callFake(((_url: string, body: any) => {
       if (body.type === 'clearinghouseState') {
@@ -343,37 +359,6 @@ describe('HyperliquidService accounts and fees', () => {
     service.getAccount('0xabc').subscribe((value) => (result = value));
     expect(result.totalBalanceExact).toBe('5');
     expect(result.availableBalanceExact).toBe('4');
-  });
-
-  it('uses cross-margin equity for a standard account risk ratio', (done) => {
-    http.post.and.callFake(((_url: string, body: any) => {
-      if (body.type === 'clearinghouseState') {
-        return of({
-          marginSummary: {
-            accountValue: '5',
-            totalMarginUsed: '3',
-            totalNtlPos: '30',
-          },
-          crossMarginSummary: {
-            accountValue: '80',
-          },
-          crossMaintenanceMarginUsed: '2',
-          withdrawable: '1',
-          assetPositions: [],
-        });
-      }
-      if (body.type === 'spotClearinghouseState') {
-        return of({
-          balances: [{ coin: 'USDC', token: 0, total: '100', hold: '3' }],
-        });
-      }
-      return of('disabled');
-    }) as any);
-
-    service.getAccount('0xABC').subscribe((account) => {
-      expect(account.marginRatioExact).toBe('2.5');
-      done();
-    });
   });
 
   it('loads and normalizes directional active asset availability', (done) => {

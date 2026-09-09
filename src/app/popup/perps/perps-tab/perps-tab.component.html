@@ -6,9 +6,6 @@
   </div>
   <!-- 合约账户卡：净值 + 保证金 + 资金操作 -->
   <div class="account-card">
-    <p class="account-warning" *ngIf="unsupportedAccountMode">
-      {{ "perpsPortfolioUnsupported" | translate | async }}
-    </p>
     <p class="account-warning" *ngIf="accountLoadError">
       {{ "perpsLoadFailed" | translate | async }}
     </p>
@@ -16,22 +13,17 @@
       {{ "perpsAggregateIncomplete" | translate | async }}
     </p>
     <div class="card-top">
-      <span class="label">{{ "perpsAccountValue" | translate | async }}</span>
-      <span class="label" *ngIf="hasEquity && marginRatioExact !== null">
-        {{ "perpsMarginRatio" | translate | async }}
-        <span class="ratio">{{ marginRatioExact | number: "1.0-2" }}%</span>
-        <span class="ratio-dex" *ngIf="marginRatioDex">{{ marginRatioDex }}</span>
-      </span>
+      <span class="label">{{ accountValueLabel | translate | async }}</span>
     </div>
     <!--
       净值 / 可用余额按账户模式分别计算：统一账户用现货 USDC 给永续做抵押（会折算进来），
       标准账户把两者分开（这里只算永续，现货余额单独显示在下面一行），
-      这样一笔无法划转的余额就不会把保证金率算低。
+      避免将无法划转的现货余额计入永续购买力。
     -->
-    <div class="card-value" *ngIf="!unsupportedAccountMode && !accountLoadError">
+    <div class="card-value" *ngIf="!accountLoadError">
       <span class="value">{{ accountEquityExact | perpsUsd }}</span>
     </div>
-    <div class="card-margin" *ngIf="!unsupportedAccountMode && !accountLoadError">
+    <div class="card-margin" *ngIf="!accountLoadError">
       {{ "perpsAvailableMargin" | translate | async }}
       {{ availableMarginExact | perpsUsd }}
       ·
@@ -117,7 +109,7 @@
   </ng-container>
 
   <!-- 空状态：引导入金（净值含现货，真正无资金时才提示） -->
-  <div class="fund-prompt" *ngIf="!hasPositions && !hasEquity">
+  <div class="fund-prompt" *ngIf="emptyAccount">
     <p>{{ "perpsFundPrompt" | translate | async }}</p>
   </div>
 

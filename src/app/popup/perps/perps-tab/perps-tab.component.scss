@@ -34,9 +34,6 @@
       font-size: 13px;
       color: var(--sub-title-color);
     }
-    .ratio {
-      color: var(--theme-color);
-    }
   }
 
   .card-value {
@@ -267,16 +264,3 @@
     opacity: 0.45;
   }
 }
-
-// 保证金率来自哪个池:聚合口径下这个标注不是装饰,是这个数字的含义
-.ratio-dex {
-  margin-left: 4px;
-  padding: 0 4px;
-  border-radius: 3px;
-  background: var(--tip-bg, rgba(0, 0, 0, 0.06));
-  color: var(--tip-color);
-  font-size: 10px;
-  line-height: 14px;
-  text-transform: uppercase;
-}
-

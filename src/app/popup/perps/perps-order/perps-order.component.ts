@@ -81,7 +81,6 @@ const UNAVAILABLE_MESSAGES: Record<PerpsOrderUnavailableCode, string> = {
   'account-unavailable': 'perpsLoadFailed',
   'market-missing': 'perpsMarketNotFound',
   'market-error': 'perpsLoadFailed',
-  'portfolio-margin': 'perpsPortfolioUnsupported',
   'cross-position': 'perpsCrossPositionUnsupported',
   'holding-long': 'perpsHoldingLongChooseExit',
   'holding-short': 'perpsHoldingShortChooseExit',

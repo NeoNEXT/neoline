@@ -117,6 +117,30 @@ const sides = (
  * 所以断言改从 `availableExact` 和 `percentBase` 上读 —— 那才是页面看得见的东西。
  */
 describe('composeOrder 购买力', () => {
+  ['unknown', 'dexAbstraction'].forEach((mode: PerpsAccount['abstractionMode']) => {
+    it(`uses venue capacity rather than guessing transferred collateral for ${mode}`, () => {
+      const f = facts({
+        market: priced('ETH', 100, 2),
+        account: {
+          ...withPositions(ethPosition({ sziExact: '1', isLong: true })),
+          account: account({
+            abstractionMode: mode,
+            availableBalanceExact: mode === 'unknown' ? null : '1',
+            positions: [ethPosition({ sziExact: '1', isLong: true })],
+          }),
+        },
+      });
+      if (mode === 'unknown') {
+        expect(composeOrder(f, input({ amount: '20' })).availableExact).toBeNull();
+        expect(reason(f, input({ amount: '20' }))).toBe('account-unavailable');
+        expect(reason(f, input({ mode: 'close', side: 'short', amount: '20' })))
+          .not.toBe('account-unavailable');
+      }
+      f.activeAssetData = capacity('ETH', 100, '200', '10');
+      expect(composeOrder(f, input({ amount: '20' })).availableExact).toBe('200');
+    });
+  });
+
   it('reads each side of the exchange capacity independently', () => {
     const f = facts({
       market: priced('ETH', 1895, 4),
@@ -783,28 +807,32 @@ describe('composeOrder', () => {
   });
 
   /**
-   * 组合保证金账户的账户级数字不可用，所以增加风险的订单既不能换算数量也不能预览。平仓
-   * 改为读取仓位本身，而「用户在这里退不出仓位」是唯一值得竭力避免的结局（ADR-0007）。
+   * 本产品兼容两种模式的 USDC 下单路径；完整多资产估值、借贷和组合风险不在此处建模。
+   * 所以这一页不能有账户模式分支 —— 这条用例钉的就是「同一批事实，
+   * 换个模式，结论必须一字不差」，因为撤销 ADR-0007 之后回退它最省事的方式，正是给
+   * portfolioMargin 单独加一条拦截。
    */
-  it('bars a portfolio-margin account from opening but not from closing', () => {
+  it('reaches the same verdict for portfolio margin as for a unified account', () => {
     const position = ethPosition({ isLong: true, sziExact: '0.75' });
-    const f = facts({
-      market: priced('ETH', 100, 2),
-      account: {
-        availability: 'live',
-        account: account({
-          abstractionMode: 'portfolioMargin',
-          positions: [position],
-        }),
-        missingDexes: [],
-        updatedAt: 1,
-      },
-    });
+    const asMode = (abstractionMode: PerpsAccount['abstractionMode']) =>
+      facts({
+        market: priced('ETH', 100, 2),
+        account: {
+          availability: 'live',
+          account: account({ abstractionMode, positions: [position] }),
+          missingDexes: [],
+          updatedAt: 1,
+        },
+      });
 
-    expect(reason(f, input({ amount: '20' }))).toBe('portfolio-margin');
-    expect(
-      reason(f, input({ mode: 'close', side: 'short', amount: '18.89' }))
-    ).not.toBe('portfolio-margin');
+    for (const i of [
+      input({ amount: '20' }),
+      input({ mode: 'close', side: 'short', amount: '18.89' }),
+    ]) {
+      expect(reason(asMode('portfolioMargin'), i)).toBe(
+        reason(asMode('unifiedAccount'), i)
+      );
+    }
   });
 
   /**

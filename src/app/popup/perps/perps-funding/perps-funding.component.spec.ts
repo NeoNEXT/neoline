@@ -410,14 +410,28 @@ describe('PerpsFundingComponent amount boundaries', () => {
     expect(component.confirmReceiveExact).toBeNull();
   });
 
-  it('blocks deposits for portfolio-margin accounts but never withdrawals', () => {
-    component.account = { abstractionMode: 'portfolioMargin' } as any;
+  // 本产品对两种模式采用同一条 USDC 资金路径。这一页因此不认账户模式：
+  // 换个模式而其余事实不变，两个 tab 的结论都必须一字不差。
+  it('reaches the same verdict for portfolio margin as for a unified account', () => {
     component.accountLoading = false;
     component.walletBalanceExact = '100';
     component.amount = '50';
 
-    expect(component.unsupportedAccountMode).toBeTrue();
-    expect(component.canSubmit).toBeFalse();
+    const verdicts = (abstractionMode: string) => {
+      component.account = {
+        abstractionMode,
+        unified: true,
+        withdrawableExact: '100',
+        spotUsdcExact: '100',
+        spotUsdcHoldExact: '0',
+      } as any;
+      return (['deposit', 'withdraw'] as const).map((tab) => {
+        component.tab = tab;
+        return { reason: component.disabledReason, canSubmit: component.canSubmit };
+      });
+    };
+
+    expect(verdicts('portfolioMargin')).toEqual(verdicts('unifiedAccount'));
   });
 });
 
@@ -548,6 +562,15 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
 
     await component.submit();
     expect(writes.withdraw).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not withdraw when the refreshed account mode becomes unknown', async () => {
+    component.amount = '50';
+    hyperliquid.getAccount.and.returnValue(of({ ...account('100'), abstractionMode: 'unknown' }));
+    await component.submit();
+    expect(component.withdrawableExact).toBeNull();
+    expect(component.refreshFailed).toBeTrue();
+    expect(writes.withdraw).not.toHaveBeenCalled();
   });
 
   it('proceeds when the refreshed balance still covers the amount', async () => {
@@ -691,21 +714,24 @@ describe('PerpsFundingComponent submit gate', () => {
     expect(component.canSubmit).toBeTrue();
   });
 
-  it('lets a portfolio-margin account withdraw even though it cannot deposit', () => {
+  // 存入曾经因为「我们给这类账户估不准值」被拦下（ADR-0007）。折算既然和统一账户是同一段
+  // 代码，那个理由就不成立了，两个方向都得放行。
+  it('lets a portfolio-margin account both deposit and withdraw', () => {
     component.account = {
       abstractionMode: 'portfolioMargin',
+      unified: true,
       withdrawableExact: '100',
+      spotUsdcExact: '100',
+      spotUsdcHoldExact: '0',
     } as any;
     component.walletBalanceExact = '100';
-    component.amount = '50';
+    component.amount = '10';
 
-    expect(component.unsupportedAccountMode).toBeTrue();
-    expect(component.disabledReason).toBe('perpsPortfolioMarginNoDeposit');
-    expect(component.canSubmit).toBeFalse();
+    expect(component.disabledReason).toBe('');
+    expect(component.canSubmit).toBeTrue();
 
-    // 就算账户我们建不了模，把钱取出来仍然是用户的权利。
     component.tab = 'withdraw';
-    expect(component.unsupportedAccountMode).toBeFalse();
+    expect(component.disabledReason).toBe('');
     expect(component.canSubmit).toBeTrue();
   });
 

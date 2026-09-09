@@ -1757,11 +1757,11 @@
   "perps": {
     "message": "永续合约"
   },
+  "perpsUsdcBalance": {
+    "message": "USDC 余额"
+  },
   "perpsAccountValue": {
     "message": "合约账户净值"
-  },
-  "perpsMarginRatio": {
-    "message": "保证金率"
   },
   "perpsAvailableMargin": {
     "message": "可用保证金"
@@ -1770,7 +1770,7 @@
     "message": "已用"
   },
   "perpsSpotSeparate": {
-    "message": "现货（需划转）"
+    "message": "现货 USDC（未计入永续余额）"
   },
   "perpsDeposit": {
     "message": "存入"
@@ -1961,9 +1961,6 @@
   "perpsDepositIrreversible": {
     "message": "转入 CCTP 合约，由它把资金记入您的 Hyperliquid 账户。该转账无法撤回。"
   },
-  "perpsPortfolioMarginNoDeposit": {
-    "message": "组合保证金账户暂不支持存入。提取仍然可用；完整账户管理请使用 Hyperliquid 官方前端。"
-  },
   "perpsBalanceUnknown": {
     "message": "无法读取你在存入链上的余额。"
   },
@@ -2059,9 +2056,6 @@
   },
   "perpsReviewTip": {
     "message": "确认前请检查方向、金额、杠杆、入场价、预计强平价、保证金、费用和滑点。"
-  },
-  "perpsPortfolioUnsupported": {
-    "message": "暂不支持组合保证金账户。为避免展示不完整的抵押品数据，已禁用交易。"
   },
   "perpsOpenOrders": {
     "message": "当前委托"

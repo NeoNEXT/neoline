@@ -346,7 +346,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
    */
   get withdrawableExact(): string {
     const account = this.account;
-    if (!account) {
+    if (!account || account.abstractionMode === 'unknown') {
       return null;
     }
     if (!account.unified) {
@@ -386,14 +386,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   get signingUnavailable(): boolean {
     const extra = this.wallet?.accounts[0]?.extra;
     return !!(extra?.ledgerSLIP44 || extra?.qrBasedXFP);
-  }
-
-  /**
-   * 组合保证金是一种本产品无法正确呈现其抵押品与风险的账户形态，所以它不能再往里进钱。往外
-   * 取钱是另一回事：拒绝那个，会把资金困在一个唯一过错只是「我们看不懂它」的账户里。
-   */
-  get unsupportedAccountMode(): boolean {
-    return this.isDeposit && this.account?.abstractionMode === 'portfolioMargin';
   }
 
   /** 供 MAX 和余额校验使用的精确源余额。 */
@@ -568,9 +560,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     if (this.signingUnavailable) {
       return 'perpsSigningUnavailable';
     }
-    if (this.unsupportedAccountMode) {
-      return 'perpsPortfolioMarginNoDeposit';
-    }
     if (this.accountLoading) {
       return '';
     }
@@ -617,7 +606,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
       !this.belowMinimum &&
       !this.exceedsBalance &&
       !this.amountExceedsPrecision &&
-      !this.unsupportedAccountMode &&
       !this.signingUnavailable &&
       !this.gasShortfall &&
       this.maxAmountKnown &&
@@ -749,6 +737,9 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
       throw new Error('Account changed during refresh');
     }
     this.account = state.account;
+    if (this.isWithdraw && !this.maxAmountKnown) {
+      throw new Error('Withdrawal source balance unavailable');
+    }
     if (this.isDeposit) {
       await this.loadWalletBalance(address);
       if (this.walletBalanceExact === null) {
@@ -898,9 +889,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
         privateKey,
         this.address,
         this.submissionAmount,
-        // 统一账户把 USDC 放在现货里。本页面读不到的账户按标准账户处理：交易场所会拒绝余额
-        // 不足以覆盖的扣款，所以猜错的代价只是一次拒绝，而不是从用户没打算动的地方扣走一笔
-        // 提现。
+        // 来源由已确认的账户模式决定；模式未知时可提余额未知，不能进入提现提交。
         { fromSpot: !!this.account?.unified }
       );
       request.subscribe({

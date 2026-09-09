@@ -109,10 +109,19 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
 
   /** 当前账户模式下的抵押品权益。 */
   get accountEquityExact(): string | null {
-    if (this.unsupportedAccountMode) {
-      return null;
-    }
     return this.account?.totalBalanceExact ?? null;
+  }
+
+  get accountValueLabel(): string {
+    return this.account?.unified ? 'perpsUsdcBalance' : 'perpsAccountValue';
+  }
+
+  get emptyAccount(): boolean {
+    return this.accountAvailability === 'live' &&
+      this.account?.abstractionMode !== 'unknown' &&
+      this.accountEquityExact !== null && !this.aggregateIncomplete &&
+      !this.hasPositions && !this.hasEquity &&
+      !new BigNumber(this.account?.spotUsdcExact ?? 0).isGreaterThan(0);
   }
 
   /**
@@ -128,9 +137,6 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
 
   /** 购买力；只有统一账户/组合保证金模式才会把空闲的现货 USDC 折算进来。 */
   get availableMarginExact(): string | null {
-    if (this.unsupportedAccountMode) {
-      return null;
-    }
     return this.account?.availableBalanceExact ?? null;
   }
 
@@ -142,18 +148,6 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
    */
   get usedMarginExact(): string | null {
     return this.account?.totalMarginUsedExact ?? null;
-  }
-
-  get marginRatioExact(): string | null {
-    return this.account?.marginRatioExact ?? null;
-  }
-
-  /**
-   * 上面那个保证金率描述的是哪个资金池。只要不是标准永续那个就显示出来，因为如果用户
-   * 分不清是自己哪个独立清算的池子处在 25%，「25%」就毫无意义。
-   */
-  get marginRatioDex(): string {
-    return this.account?.marginRatioDex || '';
   }
 
   /**
@@ -172,7 +166,6 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     return (
       !this.account ||
       this.accountAvailability === 'loading' ||
-      this.unsupportedAccountMode ||
       this.aggregateIncomplete
     );
   }
@@ -182,7 +175,8 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
    * 而 NeoLine 不做这件事。所以它单独展示，而不是去抬高上面的永续权益。
    */
   get separateSpotUsdcExact(): string {
-    return this.account && !this.account.unified
+    return this.account && !this.account.unified &&
+      this.account.abstractionMode !== 'unknown'
       ? this.account.spotUsdcExact ?? '0'
       : '0';
   }
@@ -222,10 +216,6 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     return (this.account?.positions?.length || 0) > 0;
   }
 
-  get unsupportedAccountMode(): boolean {
-    return this.account?.abstractionMode === 'portfolioMargin';
-  }
-
   /**
    * 按仓位所属市场的最小变动单位精度格式化的仓位数量。按市场主键定位，而不是按符号：
    * 同一个符号可能同时存在于标准永续 DEX 和某个 HIP-3 DEX 上，且精度不同。市场与账户
@@ -243,9 +233,6 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   }
 
   toFunding(tab: 'deposit' | 'withdraw') {
-    if (this.unsupportedAccountMode) {
-      return;
-    }
     this.router.navigateByUrl(`/popup/perps/funding?tab=${tab}`);
   }
 

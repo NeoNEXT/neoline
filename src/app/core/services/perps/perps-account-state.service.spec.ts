@@ -20,7 +20,6 @@ const account = (
   totalBalanceExact: '10',
   totalMarginUsedExact: '2',
   totalNtlPosExact: '20',
-  marginRatioExact: '5',
   withdrawableExact: '8',
   availableBalanceExact: '8',
   spotUsdcExact: '0',
@@ -263,13 +262,12 @@ describe('PerpsAccountStateService', () => {
     subscription.unsubscribe();
   });
 
-  it('aggregates standard DEXes at protocol precision and keeps the riskiest pool', () => {
+  it('aggregates standard DEXes at protocol precision', () => {
     source.getAccount.and.callFake((address: string, force: boolean, dex: string) =>
       of(
         account(dex, {
           accountValueExact: dex ? '0.2' : '0.1',
           totalBalanceExact: dex ? '0.2' : '0.1',
-          marginRatioExact: dex ? '12' : '5',
         })
       )
     );
@@ -280,8 +278,6 @@ describe('PerpsAccountStateService', () => {
 
     expect(latest.availability).toBe('live');
     expect(latest.account.accountValueExact).toBe('0.3');
-    expect(latest.account.marginRatioExact).toBe('12');
-    expect(latest.account.marginRatioDex).toBe('xyz');
   });
 
   it('uses canonical spot collateral once for a unified account', () => {
@@ -295,7 +291,6 @@ describe('PerpsAccountStateService', () => {
           availableBalanceExact: dex ? '40' : '480',
           spotUsdcExact: dex ? '0' : '500',
           spotUsdcHoldExact: dex ? '0' : '20',
-          marginRatioExact: null,
         })
       )
     );
@@ -308,7 +303,6 @@ describe('PerpsAccountStateService', () => {
     expect(latest.account.totalBalanceExact).toBe('500');
     expect(latest.account.availableBalanceExact).toBe('480');
     expect(latest.account.withdrawableExact).toBe('480');
-    expect(latest.account.marginRatioExact).toBeNull();
   });
 
   it('routes a clearinghouse frame only to the DEX that sent it', () => {

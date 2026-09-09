@@ -24,16 +24,31 @@ describe('PerpsTabComponent', () => {
     ).toBe(hip3);
   });
 
-  // 账户卡无法为组合保证金账户估值，但仓位是真的，
-  // 它们上面的平仓按钮也是真的。
-  it('lists positions on a portfolio-margin account it cannot value', () => {
+  // 本产品对两种模式展示同一套 USDC 金额，不代表完整组合估值。这一页因此不认账户模式：
+  // 权益、可用余额和出入金入口都照常，不再有一条只对 portfolioMargin 生效的分支。
+  it('values a portfolio-margin account exactly like a unified one', () => {
     const value = component();
-    value.account = {
-      abstractionMode: 'portfolioMargin',
+    const state = {
+      totalBalanceExact: '1250.5',
+      availableBalanceExact: '900.25',
       positions: [{ key: 'hl:ETH', symbol: 'ETH' }],
-    } as any;
+      missingDexes: [],
+    };
+    value.accountAvailability = 'live' as any;
 
-    expect(value.unsupportedAccountMode).toBeTrue();
+    value.account = { ...state, abstractionMode: 'unifiedAccount' } as any;
+    const unified = {
+      equity: value.accountEquityExact,
+      available: value.availableMarginExact,
+      actionsDisabled: value.globalActionsDisabled,
+    };
+
+    value.account = { ...state, abstractionMode: 'portfolioMargin' } as any;
+
+    expect(value.accountEquityExact).toBe(unified.equity);
+    expect(value.availableMarginExact).toBe(unified.available);
+    expect(value.globalActionsDisabled).toBe(unified.actionsDisabled);
+    expect(value.globalActionsDisabled).toBeFalse();
     expect(value.hasPositions).toBeTrue();
   });
 

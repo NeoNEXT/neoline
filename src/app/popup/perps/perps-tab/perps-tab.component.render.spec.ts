@@ -86,8 +86,6 @@ describe('PerpsTabComponent 渲染与接线', () => {
       totalMarginUsedExact: '200',
       availableBalanceExact: '800',
       spotUsdcExact: '0',
-      marginRatioExact: '20',
-      marginRatioDex: '',
       missingDexes: [],
       positions: [HIP3_POSITION],
     };
@@ -235,6 +233,43 @@ describe('PerpsTabComponent 渲染与接线', () => {
 
       expect(fixture.nativeElement.querySelector('.position-card')).toBeNull();
     });
+  });
+
+  // 账户卡不再有任何账户级风险比率：NeoLine 只开逐仓，而那个指标只测全仓，
+  // 它描述不了本产品开出来的任何一笔仓位。风险读数改由每个仓位自己的强平价承担。
+  it('shows no account-level risk ratio in the account card', () => {
+    account.abstractionMode = 'disabled';
+    account.unified = false;
+    account.totalBalanceExact = '1000';
+    fixture.detectChanges();
+
+    expect(text('.card-top')).not.toContain('perpsMarginRatio');
+    expect(fixture.nativeElement.querySelector('.ratio')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.ratio-dex')).toBeNull();
+  });
+
+  it('labels USDC balances and keeps standard spot balances separate', () => {
+    account.abstractionMode = 'portfolioMargin';
+    fixture.detectChanges();
+    expect(text('.card-top')).toContain('perpsUsdcBalance');
+
+    account.unified = false;
+    account.abstractionMode = 'disabled';
+    account.spotUsdcExact = '500';
+    fixture.detectChanges();
+    expect(text('.card-spot')).toContain('500');
+  });
+
+  it('shows unknown balances without an empty-account deposit prompt', () => {
+    account.unified = false;
+    account.abstractionMode = 'unknown';
+    account.totalBalanceExact = null;
+    account.availableBalanceExact = null;
+    account.positions = [];
+    fixture.detectChanges();
+    expect(text('.card-value')).toContain('--');
+    expect(text('.card-margin')).toContain('--');
+    expect(fixture.nativeElement.querySelector('.fund-prompt')).toBeNull();
   });
 
   describe('市场接线', () => {

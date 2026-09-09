@@ -89,7 +89,6 @@ export type PerpsOrderUnavailableCode =
   | 'account-unavailable'
   | 'market-missing'
   | 'market-error'
-  | 'portfolio-margin'
   | 'cross-position'
   | 'holding-long'
   | 'holding-short'
@@ -143,7 +142,7 @@ export interface PerpsOrderComposition {
   increasesPosition: boolean;
   showsCurrentLiquidationPrice: boolean;
   /** 该方向上的自由抵押品，取交易场所上报的值。 */
-  availableExact: string;
+  availableExact: string | null;
   positionSizeExact: string;
   orderPriceExact: string;
   orderSizeExact: string;
@@ -172,7 +171,9 @@ export function composeOrder(
 ): PerpsOrderComposition {
   const market = facts.market.status === 'ready' ? facts.market.market : null;
   const account = facts.account.account;
-  const accountUnavailable = facts.account.availability === 'unavailable';
+  const accountUnavailable = facts.account.availability === 'unavailable' ||
+    (input.mode !== 'close' && !facts.activeAssetData &&
+      account?.abstractionMode === 'unknown');
   const activeAssetData = facts.activeAssetData;
   const { takerRate, makerRate, builderRate } = facts.feeRates;
 
@@ -242,7 +243,7 @@ export function composeOrder(
 
   const availableExact = activeAssetData
     ? availableToTradeForSide(activeAssetData, input.side)
-    : account?.availableBalanceExact ?? '0';
+    : account?.availableBalanceExact ?? null;
 
   const maxOrderNotional = activeAssetData
     ? maxOrderNotionalForSide(
@@ -251,7 +252,7 @@ export function composeOrder(
         input.leverage,
         orderPriceExact
       )
-    : new BigNumber(collateralToNotional(availableExact, input.leverage));
+    : new BigNumber(collateralToNotional(availableExact ?? '0', input.leverage));
 
   const percentBase = percentBaseFor({
     closeMode,
@@ -627,12 +628,6 @@ function orderUnavailable(params: {
   }
   if (marketStatus === 'error') {
     return reason('market-error');
-  }
-  // 组合保证金账户的永续清算所数字没有意义，所以在这类账户上，增加风险的订单既不能换算
-  // 数量也不能预览（ADR-0007）。平仓是另一个问题：reduce-only 的平仓读的是仓位而不是账户
-  // 数字，拒绝它会让用户守着一份只能到别处才退得掉的风险。
-  if (!closeMode && account?.abstractionMode === 'portfolioMargin') {
-    return reason('portfolio-margin');
   }
   // NeoLine 只开逐仓订单，无法改动一个存续中的全仓仓位。
   if (!closeMode && position?.leverageType === 'cross') {

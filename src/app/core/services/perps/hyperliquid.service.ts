@@ -406,6 +406,12 @@ export class HyperliquidService {
       type: 'userAbstraction',
       user,
     }).pipe(
+      map((mode) => {
+        if (!['default', 'disabled', 'dexAbstraction', 'unifiedAccount', 'portfolioMargin'].includes(mode)) {
+          throw new Error('Unknown account abstraction mode');
+        }
+        return mode;
+      }),
       // 失败时取保守值：未知模式绝不能把现货折算成抵押品。
       catchError(() => {
         if (this.accountModeCache.get(user)?.request === request) {

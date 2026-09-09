@@ -1757,11 +1757,11 @@
   "perps": {
     "message": "무기한 선물"
   },
+  "perpsUsdcBalance": {
+    "message": "USDC 잔액"
+  },
   "perpsAccountValue": {
     "message": "무기한 계좌 잔액"
-  },
-  "perpsMarginRatio": {
-    "message": "증거금 비율"
   },
   "perpsAvailableMargin": {
     "message": "사용 가능 증거금"
@@ -1770,7 +1770,7 @@
     "message": "사용됨"
   },
   "perpsSpotSeparate": {
-    "message": "현물 (이체 필요)"
+    "message": "현물 USDC(무기한 잔액에 포함되지 않음)"
   },
   "perpsDeposit": {
     "message": "입금"
@@ -1961,9 +1961,6 @@
   "perpsDepositIrreversible": {
     "message": "CCTP 컨트랙트로 전송되며, 여기서 Hyperliquid 계정에 반영됩니다. 이 전송은 취소할 수 없습니다."
   },
-  "perpsPortfolioMarginNoDeposit": {
-    "message": "포트폴리오 마진 계정은 입금을 지원하지 않습니다. 출금은 가능하며, 계정 전체 관리는 Hyperliquid 공식 프런트엔드를 이용하세요."
-  },
   "perpsBalanceUnknown": {
     "message": "입금 체인의 잔액을 읽지 못했습니다."
   },
@@ -2059,9 +2056,6 @@
   },
   "perpsReviewTip": {
     "message": "확정 전 방향, 금액, 레버리지, 진입 가격, 예상 청산가, 증거금, 수수료 및 슬리피지를 확인하세요."
-  },
-  "perpsPortfolioUnsupported": {
-    "message": "포트폴리오 마진 계정은 아직 지원되지 않습니다. 불완전한 담보 정보 표시를 방지하기 위해 거래가 비활성화되었습니다."
   },
   "perpsOpenOrders": {
     "message": "미체결 주문"
