@@ -37,8 +37,14 @@ interface NotificationContent {
   exceedBridgeCapacity: string;
   EstimateFeeNetworkError: string;
   getBridgeInfoFailed: string;
-  perpsOrderSubmitted: string;
   perpsOrderCanceled: string;
+  perpsOrderFilled: string;
+  perpsOrderPartiallyFilled: string;
+  perpsOrderResting: string;
+  perpsOrderUnfilled: string;
+  perpsOrderRejected: string;
+  perpsOrderUnknown: string;
+  perpsLeverageUpdateFailed: string;
   perpsOrderStatusResolved: string;
   perpsMarketChangedReviewAgain: string;
   perpsPositionChangedReviewAgain: string;
@@ -94,8 +100,18 @@ export class NotificationService {
       'Network error: unable to fetch the gas fee right now. Please try again later.',
     getBridgeInfoFailed:
       'Unable to load the bridge fee and limits. Please try again later.',
-    perpsOrderSubmitted: 'Perps order submitted.',
     perpsOrderCanceled: 'Order canceled.',
+    perpsOrderFilled: 'Order filled.',
+    perpsOrderPartiallyFilled:
+      'Order partially filled. Check the remaining position before retrying.',
+    perpsOrderResting: 'Limit order placed and resting.',
+    perpsOrderUnfilled: 'Market order was not filled. No retry was sent.',
+    perpsOrderRejected:
+      'Order rejected. Check the current market and account state.',
+    perpsOrderUnknown:
+      'Order status is unknown. Do not retry until open orders and fills are refreshed.',
+    perpsLeverageUpdateFailed:
+      'Leverage could not be set, so no order was submitted. Try again.',
     perpsOrderStatusResolved:
       'Order status was recovered. Account data has been refreshed.',
     perpsMarketChangedReviewAgain:
@@ -153,8 +169,14 @@ export class NotificationService {
     exceedBridgeCapacity: '跨链桥容量不足，剩余可存入',
     EstimateFeeNetworkError: '网络异常，暂时无法获取手续费，请稍后重试。',
     getBridgeInfoFailed: '暂时无法获取跨链手续费和限额，请稍后重试。',
-    perpsOrderSubmitted: '永续合约订单已提交。',
     perpsOrderCanceled: '订单已撤销。',
+    perpsOrderFilled: '订单已全部成交。',
+    perpsOrderPartiallyFilled: '订单部分成交，重试前请检查剩余持仓。',
+    perpsOrderResting: '限价单已挂单。',
+    perpsOrderUnfilled: '市价单未成交，未自动重试。',
+    perpsOrderRejected: '订单被拒绝，请检查当前市场与账户状态。',
+    perpsOrderUnknown: '订单状态未知，请在刷新挂单与成交记录前不要重试。',
+    perpsLeverageUpdateFailed: '杠杆设置失败，订单未提交，请重试。',
     perpsOrderStatusResolved: '已恢复订单状态，并刷新账户数据。',
     perpsMarketChangedReviewAgain:
       '价格变动已超过你设置的最大滑点，订单未发出，请重新审核。',
@@ -211,8 +233,14 @@ export class NotificationService {
       'ネットワークエラー：現在ガス料金を取得できません。後でもう一度お試しください。',
     getBridgeInfoFailed:
       'ブリッジの手数料と上限を取得できません。後でもう一度お試しください。',
-    perpsOrderSubmitted: '無期限先物注文を送信しました。',
     perpsOrderCanceled: '注文をキャンセルしました。',
+    perpsOrderFilled: '注文は全て約定しました。',
+    perpsOrderPartiallyFilled: '注文は一部約定しました。再試行前に残りのポジションを確認してください。',
+    perpsOrderResting: '指値注文を発注しました。',
+    perpsOrderUnfilled: '成行注文は約定しませんでした。自動再試行は行っていません。',
+    perpsOrderRejected: '注文が拒否されました。現在の市場と口座の状態を確認してください。',
+    perpsOrderUnknown: '注文状態が不明です。未決注文と約定履歴を更新するまで再試行しないでください。',
+    perpsLeverageUpdateFailed: 'レバレッジを設定できなかったため、注文は送信されていません。再試行してください。',
     perpsOrderStatusResolved: '注文状態を復元し、口座データを更新しました。',
     perpsMarketChangedReviewAgain:
       '価格が最大スリッページを超えて変動したため、注文は送信されませんでした。もう一度確認してください。',
@@ -272,8 +300,15 @@ export class NotificationService {
       '네트워크 오류: 현재 가스 수수료를 가져올 수 없습니다. 나중에 다시 시도해 주세요.',
     getBridgeInfoFailed:
       '브리지 수수료와 한도를 가져올 수 없습니다. 나중에 다시 시도해 주세요.',
-    perpsOrderSubmitted: '무기한 선물 주문을 제출했습니다.',
     perpsOrderCanceled: '주문을 취소했습니다.',
+    perpsOrderFilled: '주문이 전부 체결되었습니다.',
+    perpsOrderPartiallyFilled: '주문이 일부 체결되었습니다. 다시 시도하기 전에 남은 포지션을 확인하세요.',
+    perpsOrderResting: '지정가 주문이 등록되었습니다.',
+    perpsOrderUnfilled: '시장가 주문이 체결되지 않았습니다. 자동 재시도하지 않았습니다.',
+    perpsOrderRejected: '주문이 거부되었습니다. 현재 시장 및 계정 상태를 확인하세요.',
+    perpsOrderUnknown:
+      '주문 상태를 확인할 수 없습니다. 미체결 주문과 체결 내역을 갱신하기 전에는 다시 시도하지 마세요.',
+    perpsLeverageUpdateFailed: '레버리지를 설정하지 못해 주문이 제출되지 않았습니다. 다시 시도해 주세요.',
     perpsOrderStatusResolved: '주문 상태를 복구하고 계정 데이터를 갱신했습니다.',
     perpsMarketChangedReviewAgain:
       '가격이 최대 슬리피지를 넘어 변동해 주문을 보내지 않았습니다. 다시 검토해 주세요.',

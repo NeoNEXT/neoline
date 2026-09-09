@@ -1,4 +1,7 @@
-import { of } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
+import { fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
+
+import { NotificationService } from '@/app/core';
 
 import { PerpsOrderComponent } from './perps-order.component';
 import { PerpsOrderFacts } from './perps-order-composition';
@@ -23,7 +26,8 @@ function component(builderAddress = ''): PerpsOrderComponent {
     null,
     null,
       null,
-      { builderAddress } as any
+      { builderAddress } as any,
+      { watchConnectionState: () => of('live') } as any
     );
 }
 
@@ -239,7 +243,8 @@ describe('PerpsOrderComponent submission seam', () => {
       evmWallet,
       null,
       null,
-      { builderAddress: '' } as any
+      { builderAddress: '' } as any,
+      { watchConnectionState: () => of('live') } as any
     );
     value.facts = facts({
       market: {
@@ -381,7 +386,8 @@ describe('PerpsOrderComponent review under live frames', () => {
       null,
       null,
       null,
-      { builderAddress: '' } as any
+      { builderAddress: '' } as any,
+      { watchConnectionState: () => of('live') } as any
     );
     value.facts = capacity('1000');
     value.leverage = 10;
@@ -404,4 +410,340 @@ describe('PerpsOrderComponent review under live frames', () => {
     expect(value.reviewing).toBeFalse();
     expect(value.amount).toBe('2500');
   });
+});
+
+/**
+ * 用户已经离开了页面，而那笔订单还在路上。
+ *
+ * 提交**不会**被退订：掐掉一个已经签名发出的请求，换来的是一笔可能已经到达交易场所、
+ * 而客户端再也读不到结果的订单。所以请求照常跑完，只是它的结局不再动这个界面。
+ */
+describe('PerpsOrderComponent 离开页面之后', () => {
+  it('does not navigate away once the page is gone', async () => {
+    const router = jasmine.createSpyObj('Router', ['navigateByUrl']);
+    const global = jasmine.createSpyObj('GlobalService', ['snackBarTip']);
+    const tradeOrders = jasmine.createSpyObj('PerpsTradeOrderService', [
+      'submit',
+    ]);
+    const chrome = jasmine.createSpyObj('ChromeService', ['getPassword']);
+    const evmWallet = jasmine.createSpyObj('EvmWalletService', [
+      'getPrivateKey',
+    ]);
+    chrome.getPassword.and.returnValue(Promise.resolve('password'));
+    evmWallet.getPrivateKey.and.returnValue(Promise.resolve('private-key'));
+
+    const value = new PerpsOrderComponent(
+      null,
+      router,
+      null,
+      global,
+      null,
+      { refreshAccount: () => of(null) } as any,
+      tradeOrders,
+      chrome,
+      evmWallet,
+      null,
+      null,
+      { builderAddress: '' } as any,
+      { watchConnectionState: () => of('live') } as any
+    );
+    // 订单发出去之后、结果回来之前，用户返回了。
+    tradeOrders.submit.and.callFake(() => {
+      value.ngOnDestroy();
+      return of({
+        kind: 'order-submitted',
+        result: {
+          status: 'filled',
+          cloid: '0x00000000000000000000000000000001',
+          submittedSizeExact: '1',
+          filledSizeExact: '1',
+          remainingSizeExact: '0',
+        },
+      });
+    });
+    value.facts = facts({
+      market: {
+        status: 'ready',
+        market: ethMarket({
+          key: 'hl:ETH',
+          coin: 'ETH',
+          symbol: 'ETH',
+          assetId: 3,
+          szDecimals: 2,
+          maxLeverage: 20,
+          midPxExact: '100',
+        }),
+      },
+      activeAssetData: {
+        user: '0xabc',
+        coin: 'ETH',
+        leverage: { type: 'isolated', value: 5 },
+        maxTradeSzs: ['10', '10'],
+        availableToTrade: ['100', '100'],
+        markPxExact: '100',
+        markPx: 100,
+      },
+    });
+    value.leverage = 5;
+    value.amount = '100';
+    (value as any).wallet = { accounts: [{ extra: {} }] };
+
+    value.review();
+    await value.submit();
+
+    // 订单确实发出去了 —— 被掐掉的话，它的下落就再也没人知道。
+    expect(tradeOrders.submit).toHaveBeenCalled();
+    // 但用户不会被从他现在所在的界面拽回永续首页。
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
+    expect(global.snackBarTip).not.toHaveBeenCalled();
+  });
+});
+
+
+/**
+ * 每一条会弹出去的提示，背后都得有一句真话。
+ *
+ * `global.snackBarTip(key)` 查的是 `notification.service.ts` 里那份与 `_locales` 平行的
+ * 硬编码表，`content[key] || key` 查不到就把 key 名当提示弹给用户 —— 而这里的 key 是从
+ * `result.status` 索引出来的，TypeScript 看不见，`tsc` 也就守不住。这一页栽过两次：
+ * 第一次补的是三条字面量 key，两条不是字面量的（成交结果那六条、跨行写的杠杆那条）
+ * 被单行 grep 一起漏掉，于是**下单成交**那一刻用户看到的是英文字符串 `perpsOrderFilled`。
+ *
+ * 所以 key 在这里不是抄一份常量表，而是从真实的提交路径上取回来的。
+ */
+describe('PerpsOrderComponent 提示文案', () => {
+  const STATUSES = [
+    'filled',
+    'partial',
+    'resting',
+    'unfilled',
+    'rejected',
+    'unknown',
+  ];
+
+  /** 走一遍提交，把这个结果状态实际弹出去的那个 key 取回来。 */
+  async function keyRaisedBy(status: string): Promise<string> {
+    const global = jasmine.createSpyObj('GlobalService', ['snackBarTip']);
+    const tradeOrders = {
+      submit: () =>
+        of({
+          kind: 'order-submitted',
+          result: {
+            status,
+            cloid: '0x00000000000000000000000000000001',
+            submittedSizeExact: '1',
+            filledSizeExact: status === 'filled' ? '1' : '0',
+            remainingSizeExact: status === 'filled' ? '0' : '1',
+          },
+        }),
+    };
+    const value = new PerpsOrderComponent(
+      null,
+      { navigateByUrl: () => {} } as any,
+      null,
+      global,
+      null,
+      { refreshAccount: () => of(null) } as any,
+      tradeOrders as any,
+      { getPassword: () => Promise.resolve('password') } as any,
+      { getPrivateKey: () => Promise.resolve('private-key') } as any,
+      null,
+      null,
+      { builderAddress: '' } as any,
+      { watchConnectionState: () => of('live') } as any
+    );
+    (value as any).address = '0xabc';
+    (value as any).wallet = { accounts: [{ extra: {} }] };
+    value.facts = facts({
+      market: {
+        status: 'ready',
+        market: ethMarket({
+          key: 'hl:ETH',
+          coin: 'ETH',
+          symbol: 'ETH',
+          assetId: 3,
+          szDecimals: 2,
+          maxLeverage: 20,
+          midPxExact: '100',
+        }),
+      },
+      activeAssetData: {
+        user: '0xabc',
+        coin: 'ETH',
+        leverage: { type: 'isolated', value: 5 },
+        maxTradeSzs: ['10', '10'],
+        availableToTrade: ['100', '100'],
+        markPxExact: '100',
+        markPx: 100,
+      },
+    });
+    value.leverage = 5;
+    value.amount = '100';
+
+    value.review();
+    await value.submit();
+    value.ngOnDestroy();
+
+    return global.snackBarTip.calls.mostRecent().args[0];
+  }
+
+  it('has real wording behind every order outcome it reports', async () => {
+    const notification = new NotificationService({
+      langSub: new BehaviorSubject('en'),
+    } as any);
+
+    for (const status of STATUSES) {
+      const key = await keyRaisedBy(status);
+      expect(key)
+        .withContext(`${status} raises a key with no wording behind it`)
+        .toBeTruthy();
+      expect(notification.content[key])
+        .withContext(`${key} (${status}) is missing from NotificationContent`)
+        .toBeTruthy();
+    }
+  });
+
+  /** 跨行写的那条字面量：单行 grep 看不见它，所以它也漏过一轮。 */
+  it('has wording for a refused leverage write', () => {
+    const notification = new NotificationService({
+      langSub: new BehaviorSubject('en'),
+    } as any);
+
+    expect(notification.content.perpsLeverageUpdateFailed).toBeTruthy();
+  });
+});
+
+
+describe('PerpsOrderComponent asynchronous confirmation', () => {
+  let value: PerpsOrderComponent;
+  let unlock: (key: string) => void;
+  let trades: jasmine.Spy;
+  let router: jasmine.SpyObj<any>;
+  let wallets: BehaviorSubject<any>;
+  let writes: jasmine.SpyObj<any>;
+
+  beforeEach(() => {
+    wallets = new BehaviorSubject({
+      currentWallet: { accounts: [{ address: '0xabc', extra: {} }] },
+    });
+    trades = jasmine.createSpy('submit').and.returnValue(of({
+      result: { status: 'resting' },
+    }));
+    router = jasmine.createSpyObj('Router', ['navigateByUrl']);
+    writes = jasmine.createSpyObj('Writes', ['getOrderStatus']);
+    writes.builderAddress = '';
+    writes.getOrderStatus.and.returnValue(of({ status: 'order' }));
+    const f = facts();
+    value = new PerpsOrderComponent(
+      { snapshot: { params: { coin: 'ETH' }, queryParams: {} } } as any,
+      router,
+      { select: () => wallets } as any,
+      { snackBarTip: () => {} } as any,
+      {
+        watchActiveAssetData: () => of(f.activeAssetData),
+        getUserFeeRates: () => of(f.feeRates),
+      } as any,
+      { watchAccount: () => of(f.account), refreshAccount: () => of(f.account) } as any,
+      { submit: trades } as any,
+      { getStorage: () => of(null), getPassword: () => Promise.resolve('password') } as any,
+      { getPrivateKey: () => new Promise<string>((resolve) => { unlock = resolve; }) } as any,
+      null,
+      { watchMarketDetail: () => of((f.market as any).market) } as any,
+      writes,
+      { watchConnectionState: () => of('live') } as any
+    );
+    value.ngOnInit();
+    value.amount = '100';
+    value.leverage = 10;
+    value.review();
+  });
+
+  afterEach(() => value.ngOnDestroy());
+
+  it('keeps the reviewed reference price and submitted size while unlocking', async () => {
+    // 价格在审核窗口内变化，不应再以新价格扩大 IOC 边界。
+    value.facts = facts({ market: {
+      status: 'ready', market: ethMarket({ midPxExact: '2020', szDecimals: 4 }),
+    } });
+    const confirmedSize = value.composition.intent.requestedSizeExact;
+    const pending = value.submit();
+    await Promise.resolve();
+    value.facts = facts({ market: {
+      status: 'ready', market: ethMarket({ midPxExact: '2040', szDecimals: 4 }),
+    } });
+    unlock('private-key');
+    await pending;
+    expect(trades).toHaveBeenCalledTimes(1);
+    const intent = trades.calls.mostRecent().args[1];
+    expect(intent.referencePriceExact).toBe('2000');
+    expect(intent.requestedSizeExact).toBe(confirmedSize);
+  });
+
+  it('does not seed or reprice inputs during unlock', async () => {
+    value.setPercent(50);
+    value.review();
+    const amount = value.amount;
+    const leverage = value.leverage;
+    const pending = value.submit();
+    await Promise.resolve();
+    const updated = facts();
+    updated.activeAssetData = {
+      ...updated.activeAssetData,
+      leverage: { type: 'isolated', value: 5 },
+      availableToTrade: ['500', '500'],
+    };
+    value.facts = updated;
+    (value as any).applySeed();
+    (value as any).repricePercent();
+    expect(value.amount).toBe(amount);
+    expect(value.leverage).toBe(leverage);
+    unlock('private-key');
+    await pending;
+  });
+
+  it('refuses an intent changed during asynchronous unlock', async () => {
+    const pending = value.submit();
+    await Promise.resolve();
+    // 即使输入绕过 DOM 禁用，提交边界仍应检查审核内容。
+    value.amount = '200';
+    unlock('private-key');
+    await pending;
+    expect(trades).not.toHaveBeenCalled();
+  });
+
+  it('stops before sending when the price leaves the review window', async () => {
+    const pending = value.submit();
+    await Promise.resolve();
+    value.facts = facts({ market: {
+      status: 'ready', market: ethMarket({ midPxExact: '2200' }),
+    } });
+    unlock('private-key');
+    await pending;
+    expect(trades).not.toHaveBeenCalled();
+  });
+
+  it('leaves the form and aborts an unsigned order on wallet change', async () => {
+    const pending = value.submit();
+    await Promise.resolve();
+    wallets.next({ currentWallet: { accounts: [{ address: '0xdef', extra: {} }] } });
+    unlock('private-key');
+    await pending;
+    expect(trades).not.toHaveBeenCalled();
+    expect(router.navigateByUrl).toHaveBeenCalled();
+  });
+
+  it('never queries an unresolved order with the newly selected account', fakeAsync(() => {
+    trades.and.returnValue(of({ result: { status: 'unknown', cloid: 'cloid' } }));
+    writes.getOrderStatus.and.returnValue(of(null));
+    value.submit();
+    flushMicrotasks();
+    unlock('private-key');
+    flushMicrotasks();
+    tick(1500);
+    expect(writes.getOrderStatus).toHaveBeenCalledWith('0xabc', 'cloid');
+    wallets.next({ currentWallet: { accounts: [{ address: '0xdef', extra: {} }] } });
+    tick(6000);
+    expect(writes.getOrderStatus).toHaveBeenCalledTimes(1);
+    expect(value.canSubmit).toBeFalse();
+  }));
 });

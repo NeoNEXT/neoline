@@ -3,7 +3,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { of } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
+import { PerpsConnectionState } from '@popup/_lib/perps';
+import { PerpsDataChannel } from '@/app/core/services/perps/perps-data-channel.service';
 
 import { ChromeService, EvmWalletService, GlobalService } from '@/app/core';
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
@@ -79,10 +81,14 @@ describe('PerpsOrderComponent 渲染与接线', () => {
   /** 每个用例自己决定订阅推什么；默认是一个有市场、有容量、没有仓位的账户。 */
   let account: any;
   let queryParams: any;
+  let connection: BehaviorSubject<PerpsConnectionState>;
+  let markets: BehaviorSubject<typeof MARKET>;
 
   beforeEach(async () => {
     account = null;
     queryParams = {};
+    connection = new BehaviorSubject<PerpsConnectionState>('live');
+    markets = new BehaviorSubject(MARKET);
     await TestBed.configureTestingModule({
       declarations: [
         PerpsOrderComponent,
@@ -92,6 +98,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
         CoinLogoStubComponent,
       ],
       providers: [
+        { provide: PerpsDataChannel, useValue: { watchConnectionState: () => connection } },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -142,7 +149,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
         { provide: MatDialog, useValue: { open: () => ({ afterClosed: () => of(null) }) } },
         {
           provide: PerpsMarketDatasetService,
-          useValue: { watchMarketDetail: () => of(MARKET) },
+          useValue: { watchMarketDetail: () => markets },
         },
         {
           provide: PerpsExchangeWriteService,
@@ -161,6 +168,60 @@ describe('PerpsOrderComponent 渲染与接线', () => {
     (fixture.nativeElement.querySelector(selector)?.textContent ?? '')
       .replace(/\s+/g, ' ')
       .trim();
+
+  describe('断流提示', () => {
+    it('marks retained quotes stale and clears the warning on reconnect', () => {
+      fixture.detectChanges();
+      component.amount = '200';
+      component.review();
+      const intent = component.composition.intent;
+      const price = text('.order-header .price');
+      expect(fixture.nativeElement.querySelector('.stale-banner')).toBeNull();
+
+      connection.next('stale');
+      fixture.detectChanges();
+      expect(text('.stale-banner')).toBe('perpsFeedStale');
+      expect(text('.order-header .price')).toBe(price);
+      expect(component.reviewing).toBeTrue();
+      expect(component.composition.intent).toEqual(intent);
+      expect(component.canSubmit).toBeTrue();
+
+      connection.next('live');
+      markets.next({ ...MARKET, midPxExact: '2010' });
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.stale-banner')).toBeNull();
+      expect(text('.order-header .price')).not.toBe(price);
+    });
+
+    it('shows an already stale connection when entering from a position', () => {
+      connection.next('stale');
+      fixture.detectChanges();
+      expect(text('.stale-banner')).toBe('perpsFeedStale');
+    });
+
+    it('keeps an explicit limit order and a reduce-only exit available', () => {
+      queryParams = { close: '1' };
+      account = { positions: [ethPosition({
+        coin: 'ETH', isLong: true, sziExact: '1', positionValueExact: '2000',
+      })] };
+      connection.next('stale');
+      fixture.detectChanges();
+      component.setOrderType('limit');
+      fixture.detectChanges();
+      expect(text('.stale-banner')).toBe('perpsFeedStale');
+      expect(component.canSubmit).toBeTrue();
+      expect(component.composition.intent.operation).toBe('close');
+      expect(component.composition.intent.side).toBe('short');
+      expect(component.composition.intent.orderType).toBe('limit');
+    });
+
+    it('unsubscribes the connection state when the page is destroyed', () => {
+      fixture.detectChanges();
+      expect(connection.observed).toBeTrue();
+      fixture.destroy();
+      expect(connection.observed).toBeFalse();
+    });
+  });
 
   describe('播种接线', () => {
     it('seeds the form from the frames the page subscribes to', () => {
@@ -242,6 +303,25 @@ describe('PerpsOrderComponent 渲染与接线', () => {
 
       expect(text('.submit-wrap button')).toContain('perpsLong');
       expect(fixture.nativeElement.querySelector('.review-tip')).not.toBeNull();
+    });
+
+    it('locks editable controls while submitting', () => {
+      fixture.detectChanges();
+      component.amount = '200';
+      component.review();
+      (component as any).lifecycle.beginSubmit(true);
+      fixture.detectChanges();
+
+      const inputs: HTMLInputElement[] = Array.from(
+        fixture.nativeElement.querySelectorAll('input')
+      );
+      expect(inputs.length).toBeGreaterThan(0);
+      expect(inputs.every((input) => input.disabled)).toBeTrue();
+      fixture.nativeElement.querySelector('.side-toggle .option:last-child').click();
+      fixture.nativeElement.querySelector('.order-type .chip.plain').click();
+      expect(component.side).toBe('long');
+      expect(component.orderType).toBe('market');
+      expect(fixture.nativeElement.querySelector('.edit-slippage').disabled).toBeTrue();
     });
 
     it('disables the button while nothing can be submitted', () => {

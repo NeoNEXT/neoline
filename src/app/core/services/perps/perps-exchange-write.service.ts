@@ -229,6 +229,7 @@ export class PerpsExchangeWriteService {
           // 已签名的订单一旦发出，传输故障就证明不了「被拒绝」。
           // 保住 cloid 并就此停手：重试可能让风险敞口翻倍。
           catchError((error) =>
+            !(error instanceof PerpsExecutionStatusUnknownError) &&
             isExchangeAnswer(error)
               ? throwError(() => error)
               : of({
@@ -411,12 +412,28 @@ export class PerpsExchangeWriteService {
       })
       .pipe(
         map((text) => {
-          const response = normalizeIds(
-            parseProtocolJson(text)
-          ) as PerpsExchangeResponse;
+          let response: PerpsExchangeResponse;
+          try {
+            response = normalizeIds(
+              parseProtocolJson(text)
+            ) as PerpsExchangeResponse;
+          } catch (error) {
+            // 订单的回复无法解码，不证明它没有执行。
+            if (allowItemErrors) {
+              throw new PerpsExecutionStatusUnknownError(error);
+            }
+            throw error;
+          }
           if (response?.status !== 'ok') {
+            if (allowItemErrors && response?.status !== 'err') {
+              throw new PerpsExecutionStatusUnknownError();
+            }
             throw new Error(
-              response?.error || 'Hyperliquid rejected the action'
+              response?.error ||
+                (typeof response?.response === 'string'
+                  ? response.response
+                  : null) ||
+                'Hyperliquid rejected the action'
             );
           }
           if (!allowItemErrors) {
@@ -465,6 +482,14 @@ export class PerpsExchangeWriteService {
     const submitted = new BigNumber(submittedSizeExact);
     if (status?.filled) {
       const filled = new BigNumber(status.filled.totalSz || 0);
+      const averagePriceExact = perpsFiniteDecimal(status.filled.avgPx);
+      if (
+        !filled.isFinite() || !filled.isGreaterThan(0) ||
+        !new BigNumber(averagePriceExact ?? 0).isGreaterThan(0) ||
+        !status.filled.oid
+      ) {
+        throw new PerpsExecutionStatusUnknownError();
+      }
       const remaining = BigNumber.maximum(submitted.minus(filled), 0);
       return {
         status: remaining.isZero() ? 'filled' : 'partial',
@@ -473,11 +498,11 @@ export class PerpsExchangeWriteService {
         submittedSizeExact: submitted.toFixed(),
         filledSizeExact: filled.toFixed(),
         remainingSizeExact: remaining.toFixed(),
-        averagePriceExact: perpsFiniteDecimal(status.filled.avgPx),
+        averagePriceExact,
         raw: response,
       };
     }
-    if (status?.resting) {
+    if (status?.resting?.oid) {
       return {
         status: 'resting',
         cloid,
@@ -488,7 +513,7 @@ export class PerpsExchangeWriteService {
         raw: response,
       };
     }
-    if (status?.error) {
+    if (typeof status?.error === 'string' && status.error) {
       const unfilled = /ioc|no liquidity/i.test(status.error);
       return {
         status: unfilled ? 'unfilled' : 'rejected',
@@ -501,7 +526,7 @@ export class PerpsExchangeWriteService {
       };
     }
     return {
-      status: 'rejected',
+      status: 'unknown',
       cloid,
       submittedSizeExact: submitted.toFixed(),
       filledSizeExact: '0',

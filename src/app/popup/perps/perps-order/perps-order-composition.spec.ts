@@ -394,7 +394,7 @@ describe('composeOrder 预览', () => {
     expect(composed.orderSizeExact).toBe('0.01');
     expect(composed.preview.sizeExact).toBe('0.01');
     expect(composed.preview.marginExact).toBe('9.44');
-    expect(composed.preview.feeExact).toBe('0.00850275');
+    expect(composed.preview.feeExact).toBe('0.0085005');
   });
 
   it('scales size and released margin for a partial close', () => {
@@ -409,8 +409,89 @@ describe('composeOrder 预览', () => {
     );
 
     expect(composed.fullClose).toBeFalse();
-    expect(composed.preview.sizeExact).toBe('0.005');
-    expect(composed.preview.marginExact).toBe('4.72');
+    // 9.44 / 1889 按最小变动单位向下取整。它不是持仓的整半 —— 仓位估值用的是标记价，
+    // 而这笔订单成交在参考价上，两者本来就不是同一个数。
+    expect(composed.preview.sizeExact).toBe('0.0049');
+    expect(composed.preview.marginExact).toBe('4.6256');
+  });
+
+  /**
+   * 预览的数量必须**就是**会被提交的那个数量。
+   *
+   * 过去预览按 `amount / 标记价` 折算、提交按 `amount / 成交参考价` 折算，于是市价单差
+   * 几个基点，限价单差多少全看那个限价离标记价多远 —— 用限价 3778（标记价的两倍）平掉
+   * 「$11.34」，旧代码在屏幕上写的是 0.006，实际提交的是 0.003。
+   */
+  it('previews a partial close at the size it will actually submit', () => {
+    const f = facts({
+      market: priced('ETH', 1889, 4),
+      account: withPositions(ethPosition({ positionValueExact: '18.88' })),
+    });
+
+    const composed = composeOrder(
+      f,
+      input({
+        mode: 'close',
+        side: 'long',
+        orderType: 'limit',
+        limitPrice: '3778',
+        amount: '11.34',
+      })
+    );
+
+    expect(composed.fullClose).toBeFalse();
+    expect(composed.preview.sizeExact).toBe('0.003');
+    expect(composed.orderSizeExact).toBe('0.003');
+    expect(composed.intent.requestedSizeExact).toBe('0.003');
+    // 保证金按持仓比例释放，成交额与费用按输入限价估算。
+    expect(composed.preview.marginExact).toBe('2.832');
+    expect(composed.preview.notionalExact).toBe('11.334');
+    expect(composed.preview.feeExact).toBe('0.0051003');
+  });
+
+  it('keeps close notional exact when the closed fraction is recurring', () => {
+    const composed = composeOrder(
+      facts({
+        market: priced('ETH', 100, 2),
+        account: withPositions(ethPosition({
+          sziExact: '-3', positionValueExact: '300', marginUsedExact: '60',
+        })),
+      }),
+      input({ mode: 'close', side: 'long', amount: '100' })
+    );
+    expect(composed.preview.sizeExact).toBe('1');
+    expect(composed.preview.notionalExact).toBe('100');
+    expect(composed.preview.feeExact).toBe('0.045');
+  });
+
+  /**
+   * 一个远低于标记价的限价，会把「平掉 $18.87」换算成比整个仓位还大的数量。
+   * reduce-only 本来就不会成交那么多，但预览和提交都得先收在仓位以内。
+   */
+  it('never previews or submits more than the position holds', () => {
+    const f = facts({
+      market: priced('ETH', 1889, 4),
+      account: withPositions(ethPosition({ positionValueExact: '18.88' })),
+    });
+
+    const composed = composeOrder(
+      f,
+      input({
+        mode: 'close',
+        side: 'long',
+        orderType: 'limit',
+        limitPrice: '1000',
+        amount: '18.87',
+      })
+    );
+
+    // 18.87 / 1000 = 0.0188，比 0.01 的持仓还大。
+    expect(composed.fullClose).toBeFalse();
+    expect(composed.orderSizeExact).toBe('0.01');
+    expect(composed.preview.sizeExact).toBe('0.01');
+    expect(composed.intent.requestedSizeExact).toBe('0.01');
+    // 整个仓位的保证金，一分不多。
+    expect(composed.preview.marginExact).toBe('9.44');
   });
 
   it('charges the builder fee on a close as well', () => {
@@ -430,9 +511,9 @@ describe('composeOrder 预览', () => {
       })
     );
 
-    expect(preview.protocolFeeExact).toBe('0.00850275');
-    expect(preview.builderFeeExact).toBe('0.00850275');
-    expect(preview.feeExact).toBe('0.0170055');
+    expect(preview.protocolFeeExact).toBe('0.0085005');
+    expect(preview.builderFeeExact).toBe('0.0085005');
+    expect(preview.feeExact).toBe('0.017001');
   });
 });
 
@@ -581,6 +662,40 @@ describe('composeOrder', () => {
     expect(reason(f, input({ leverage: 10, amount: '48.08' }))).toBe(
       'insufficient-margin'
     );
+  });
+
+  /**
+   * 一个还空着的限价框不是「保证金不足」。
+   *
+   * 过去 `insufficient-margin` 兼任「事实还不够」的兜底，于是切到限价、先填金额的用户
+   * 被告知他的钱不够，而他缺的只是一个价格。按本页 CONTEXT：未填完的输入框不出声，
+   * 只让按钮保持禁用。
+   */
+  it('says nothing while the limit price box is still empty', () => {
+    const price = 1877.99;
+    const f = facts({
+      coin: 'ETH',
+      market: priced('ETH', price, 4),
+      activeAssetData: capacity('ETH', price, '4.8', '0.0255'),
+    });
+    const typed = input({
+      leverage: 10,
+      orderType: 'limit',
+      limitPrice: '',
+      amount: '47.89',
+    });
+
+    expect(reason(f, typed)).toBeNull();
+    expect(composeOrder(f, typed).submittable).toBeFalse();
+  });
+
+  /** 市场事实还在路上，同样不是保证金不足 —— 它是还答不上来。 */
+  it('says nothing while the market is still loading', () => {
+    const f = facts({ coin: 'ETH', market: { status: 'loading' } });
+    const typed = input({ leverage: 10, amount: '47.89' });
+
+    expect(reason(f, typed)).toBeNull();
+    expect(composeOrder(f, typed).submittable).toBeFalse();
   });
 
   /**

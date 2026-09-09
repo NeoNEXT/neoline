@@ -114,6 +114,45 @@ describe('PerpsExchangeWriteService orders', () => {
     expect(failure).toBe(rejection);
   }));
 
+  for (const body of [
+    '{"status":',
+    '<html>upstream error</html>',
+    { status: 'ok', response: { type: 'order', data: {
+      statuses: [{ filled: { totalSz: 'invalid', avgPx: '100', oid: '42' } }],
+    } } },
+    { status: 'ok', response: { type: 'order', data: {
+      statuses: [{ resting: {} }],
+    } } },
+    { status: 'ok', response: { type: 'order', data: { statuses: [] } } },
+    { status: 'ok', response: { type: 'order', data: {
+      statuses: [{ filled: { totalSz: '1', avgPx: '100', oid: 'invalid' } }],
+    } } },
+  ]) {
+    it(`keeps an undecidable order response unknown: ${JSON.stringify(body)}`, fakeAsync(() => {
+      http.post.and.returnValue(of(body) as any);
+      let result: any;
+      let failure: any;
+      service.submitOrder(PRIVATE_KEY, ORDER).subscribe({
+        next: (value) => (result = value),
+        error: (error) => (failure = error),
+      });
+      flushMicrotasks();
+      expect(failure).toBeUndefined();
+      expect(result?.status).toBe('unknown');
+      expect(result?.cloid).toBe(CLOID);
+      expect(http.post).toHaveBeenCalledTimes(1);
+    }));
+  }
+
+  it('preserves the explicit top-level rejection reason', fakeAsync(() => {
+    http.post.and.returnValue(of({ status: 'err', response: 'Invalid nonce' }) as any);
+    let failure: any;
+    service.submitOrder(PRIVATE_KEY, ORDER).subscribe({ error: (error) => (failure = error) });
+    flushMicrotasks();
+    expect(failure?.message).toBe('Invalid nonce');
+    expect(http.post).toHaveBeenCalledTimes(1);
+  }));
+
   it('queries an ambiguous order by cloid', () => {
     http.post.and.returnValue(
       of({

@@ -20,19 +20,23 @@
     </span>
   </div>
 
+  <div class="stale-banner" role="status" *ngIf="connectionState === 'stale'">
+    {{ "perpsFeedStale" | translate | async }}
+  </div>
+
   <!-- 做多 / 做空 -->
   <div class="side-toggle" *ngIf="!closeMode">
     <div
       class="option"
       [class.active-long]="isLong"
-      (click)="setSide('long')"
+      (click)="!submitting && setSide('long')"
     >
       {{ "perpsLong" | translate | async }}
     </div>
     <div
       class="option"
       [class.active-short]="!isLong"
-      (click)="setSide('short')"
+      (click)="!submitting && setSide('short')"
     >
       {{ "perpsShort" | translate | async }}
     </div>
@@ -52,14 +56,14 @@
     <span
       class="chip"
       [class.active]="orderType === 'market'"
-      (click)="setOrderType('market')"
+      (click)="!submitting && setOrderType('market')"
     >
       {{ "perpsMarketOrder" | translate | async }}
     </span>
     <span
       class="chip plain"
       [class.active]="orderType === 'limit'"
-      (click)="setOrderType('limit')"
+      (click)="!submitting && setOrderType('limit')"
     >
       {{ "perpsLimitOrder" | translate | async }}
     </span>
@@ -74,6 +78,7 @@
     <span class="label">{{ "perpsLimitPrice" | translate | async }}</span>
     <span class="input-value">
       <input
+        [disabled]="submitting"
         type="text"
         inputmode="decimal"
         [value]="limitPrice"
@@ -89,6 +94,7 @@
     <span class="label">{{ "perpsAmount" | translate | async }}</span>
     <span class="input-value">
       <input
+        [disabled]="submitting"
         type="text"
         inputmode="decimal"
         [value]="amount"
@@ -105,6 +111,7 @@
       [style.--slider-progress]="amountSliderPercent + '%'"
     >
       <input
+        [disabled]="submitting"
         type="range"
         min="0"
         max="100"
@@ -122,6 +129,7 @@
     </div>
     <label class="range-value">
       <input
+        [disabled]="submitting"
         type="number"
         inputmode="numeric"
         min="0"
@@ -156,6 +164,7 @@
     </p>
     <div class="range-control leverage-range">
       <input
+        [disabled]="submitting"
         type="range"
         min="1"
         [max]="market?.maxLeverage || 1"
@@ -167,6 +176,7 @@
       />
       <label class="range-value">
         <input
+          [disabled]="submitting"
           type="number"
           inputmode="numeric"
           min="1"
@@ -289,6 +299,7 @@
         <button
           type="button"
           class="edit-slippage"
+          [disabled]="submitting"
           (click)="openSlippageDialog()"
           [attr.aria-label]="'perpsEditSlippage' | translate | async"
         >

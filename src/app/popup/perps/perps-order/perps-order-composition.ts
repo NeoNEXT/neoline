@@ -67,7 +67,7 @@ export interface PerpsOrderFacts {
  * 还不是正数小数的文本，直接读作「没有金额」。
  */
 export interface PerpsOrderInput {
-  /** close 是减少已有仓位；open 涵盖开仓、加仓和减仓到某个数量。 */
+  /** close 是减少已有仓位；open 涵盖开仓和同向加仓。 */
   mode: 'open' | 'close';
   side: PerpsOrderSide;
   orderType: PerpsOrderType;
@@ -226,10 +226,6 @@ export function composeOrder(
     orderPriceExact
   );
 
-  const closeFractionExact = new BigNumber(positionSizeExact).isGreaterThan(0)
-    ? new BigNumber(orderSizeExact).dividedBy(positionSizeExact).toFixed()
-    : '0';
-
   const operation: PerpsTradeIntent = closeMode
     ? fullClose
       ? 'close'
@@ -271,16 +267,13 @@ export function composeOrder(
     market,
     position,
     closeMode,
-    fullClose,
     hasAmount,
     increasesPosition,
-    amount: input.amount,
     leverage: input.leverage,
     isLong,
     orderPriceExact,
     orderSizeExact,
     executableNotional,
-    closeFractionExact,
     takerRate,
     builderRate,
   });
@@ -473,15 +466,23 @@ function submittedSize(params: {
   if (!market || !hasAmount || !hasExecutionPrice) {
     return '0';
   }
-  // 全平必须原封不动地保住交易场所上报的数量：把两位小数的美元显示值再通过价格换算回去，
-  // 可能会向下少算一个最小变动单位，留下一个并非本意的零头仓位。
-  if (closeMode && position && fullClose) {
-    return new BigNumber(position.sziExact).absoluteValue().toFixed();
-  }
-  return perpsSizeAtLot(
+  const requested = perpsSizeAtLot(
     amountExact.dividedBy(orderPriceExact),
     market.szDecimals
   );
+  if (!closeMode || !position) {
+    return requested;
+  }
+  const held = new BigNumber(position.sziExact).absoluteValue();
+  // 全平必须原封不动地保住交易场所上报的数量：把两位小数的美元显示值再通过价格换算回去，
+  // 可能会向下少算一个最小变动单位，留下一个并非本意的零头仓位。
+  if (fullClose) {
+    return held.toFixed();
+  }
+  // 部分平仓的数量按成交参考价换算，而它可以离标记价很远 —— 一个明显低于标记价的限价，
+  // 会把「平掉 $500」换算成比整个仓位还大的数量。多出来的部分 reduce-only 本来就不会成交，
+  // 但它会让预览里的比例、手续费和释放的保证金全部虚高，所以在这里就收住。
+  return BigNumber.minimum(requested, held).toFixed();
 }
 
 /** 预览各行；在还没有东西可供报价时为 null。 */
@@ -489,16 +490,13 @@ function composePreview(params: {
   market: PerpsMarket | null;
   position: PerpsPosition | null;
   closeMode: boolean;
-  fullClose: boolean;
   hasAmount: boolean;
   increasesPosition: boolean;
-  amount: string;
   leverage: number;
   isLong: boolean;
   orderPriceExact: string;
   orderSizeExact: string;
   executableNotional: BigNumber;
-  closeFractionExact: string;
   takerRate: number;
   builderRate: number;
 }): PerpsOrderPreview | null {
@@ -506,16 +504,13 @@ function composePreview(params: {
     market,
     position,
     closeMode,
-    fullClose,
     hasAmount,
     increasesPosition,
-    amount,
     leverage,
     isLong,
     orderPriceExact,
     orderSizeExact,
     executableNotional,
-    closeFractionExact,
     takerRate,
     builderRate,
   } = params;
@@ -525,16 +520,14 @@ function composePreview(params: {
   if (closeMode && position) {
     const closePreview = previewClosePosition({
       position,
-      notionalExact: amount,
-      szDecimals: market.szDecimals,
+      sizeExact: orderSizeExact,
+      executionPriceExact: orderPriceExact,
       feeRate: takerRate,
       builderFeeRate: builderRate,
-      fullClose,
     });
     return {
-      notionalExact: new BigNumber(position.positionValueExact)
-        .times(closeFractionExact)
-        .toFixed(),
+      // 成交额与费用按成交参考价估算；释放保证金仍按持仓比例。
+      notionalExact: closePreview.closedValueExact,
       marginExact: closePreview.releasedMarginExact,
       feeExact: closePreview.feeExact,
       protocolFeeExact: closePreview.protocolFeeExact,
@@ -662,8 +655,13 @@ function orderUnavailable(params: {
     return null;
   }
   if (!closeMode) {
+    // 「事实还没到」和「限价框还空着」都不是保证金不足 —— 它们是**还答不上来**。
+    // 过去这里用 `insufficient-margin` 当兜底，于是切到限价、先填金额的用户被告知他的钱
+    // 不够，而他缺的只是一个价格；市场帧还在路上时同理。按本页 CONTEXT：未填完的输入框
+    // 不是一条原因，它只让按钮保持禁用 —— `submittable` 本来就要求 `hasExecutionPrice`
+    // 和 `market.status === 'ready'`，所以这里安静下来并不会放行任何东西。
     if (!market || !hasExecutionPrice) {
-      return reason('insufficient-margin');
+      return null;
     }
     const maxSize = perpsSizeAtLot(
       maxOrderNotional.dividedBy(orderPriceExact),
@@ -673,7 +671,7 @@ function orderUnavailable(params: {
       return reason('insufficient-margin');
     }
   }
-  // 全平是例外：交易场所允许仓位以任意数量退出。
+  // 全平跳过本地最低额预检，最终是否接受由交易场所判定。
   if (
     hasExecutionPrice &&
     !(closeMode && fullClose) &&
@@ -800,10 +798,8 @@ function exceedsMaxSlippage(
 /**
  * 把输入的限价量化到这个市场实际能报出的价位。
  *
- * Hyperliquid 不会拒绝一个不在最小变动价位上的价格，它会把它舍入 —— 于是一张接受了
- * `1234.567` 的表单，在一个只报一位小数的市场上签的是 `1234.5`，屏幕上却还显示着用户输入
- * 的数字。在失焦时跑一遍这个函数并把结果写回输入框，就能让屏幕上的价格和签名里的价格是
- * 同一个值。
+ * 不符合 tick 的价格可能被交易场所拒绝。客户端先按协议精度舍入并回填，
+ * 让用户看到实际用于签名的价格。
  *
  * 空输入框、只有一个减号或只有一个小数点的输入框，留给用户去填完：这些情况返回 `''`，
  * 而不是一个为零的价格。
@@ -905,75 +901,57 @@ function notionalAtLotSize(
 }
 
 /**
- * 用真实的有符号仓位数量来预览一次 reduce-only 平仓。
+ * 从**真正会被提交的那个数量**出发，预览一次 reduce-only 平仓。
  *
- * 全平必须原封不动地保住交易场所上报的 `szi`。把两位小数的美元显示值再通过实时标记价格
- * 换算回去，可能会向下少算一个最小变动单位，留下一个并非本意的零头仓位。
+ * 入参是数量而不是美元，这一点是要点：过去它按 `amount / positionValue` 自己算一遍比例，
+ * 而那条算式的隐含价格是标记价，提交用的却是成交参考价（市价单的中间价，或用户输入的限价）。
+ * 于是同一张表单上，屏幕显示的数量和签名里的数量出自两条不同的算式 —— 市价单差几个基点，
+ * 限价单差多少全看那个限价离标记价多远。现在两者是同一个值。
  */
 function previewClosePosition(params: {
   position: PerpsPosition;
-  /** 请求平掉的名义价值，以美元计；设置了 `fullClose` 时忽略。 */
-  notionalExact: BigNumber.Value;
-  szDecimals: number;
+  /** 这笔订单会提交的基础数量，与 `intent.requestedSizeExact` 是同一个值。 */
+  sizeExact: string;
+  executionPriceExact: string;
   /** Hyperliquid 自己的 taker 费率。 */
   feeRate: BigNumber.Value;
   /** NeoLine 的 builder 费率；没有配置 builder 时为零。 */
   builderFeeRate?: BigNumber.Value;
-  fullClose: boolean;
 }): {
   sizeExact: string;
+  closedValueExact: string;
   releasedMarginExact: string;
   feeExact: string;
   protocolFeeExact: string;
   builderFeeExact: string;
 } {
   const {
-    position,
-    notionalExact,
-    szDecimals,
-    feeRate,
-    builderFeeRate = 0,
-    fullClose,
+    position, sizeExact, executionPriceExact, feeRate, builderFeeRate = 0,
   } = params;
   const positionSize = new BigNumber(position?.sziExact ?? 0).absoluteValue();
-  const positionValue = new BigNumber(
-    position?.positionValueExact ?? 0
-  ).absoluteValue();
-  if (!positionSize.isGreaterThan(0) || !positionValue.isGreaterThan(0)) {
+  const size = new BigNumber(sizeExact || 0);
+  if (!positionSize.isGreaterThan(0) || !size.isGreaterThan(0)) {
     return {
       sizeExact: '0',
+      closedValueExact: '0',
       releasedMarginExact: '0',
       feeExact: '0',
       protocolFeeExact: '0',
       builderFeeExact: '0',
     };
   }
-  const requestedFraction = fullClose
-    ? new BigNumber(1)
-    : BigNumber.minimum(
-        1,
-        BigNumber.maximum(
-          0,
-          new BigNumber(notionalExact || 0).dividedBy(positionValue)
-        )
-      );
-  const sizeExact = fullClose
-    ? positionSize.toFixed()
-    : perpsSizeAtLot(positionSize.times(requestedFraction), szDecimals);
-  // 上面按最小变动单位取整只会让请求变小，所以手续费和释放的保证金要跟随真正实现的那个
-  // 比例 —— 而不是当初请求的那个。
-  const actualFraction = BigNumber.minimum(
-    1,
-    new BigNumber(sizeExact).dividedBy(positionSize)
-  );
-  const closedValue = positionValue.times(actualFraction);
+  // 数量在到这里之前已经收在持仓以内，但仓位随时可能在下一帧变小，
+  // 而一个大于 1 的比例会报出比账户实际拥有的还多的保证金和手续费。
+  const fraction = BigNumber.minimum(1, size.dividedBy(positionSize));
+  const closedValue = BigNumber.minimum(size, positionSize).times(executionPriceExact);
   const protocolFee = closedValue.times(feeRate || 0);
   const builderFee = closedValue.times(builderFeeRate || 0);
   return {
-    sizeExact,
+    sizeExact: size.toFixed(),
+    closedValueExact: closedValue.toFixed(),
     releasedMarginExact: new BigNumber(position.marginUsedExact ?? 0)
       .absoluteValue()
-      .times(actualFraction)
+      .times(fraction)
       .toFixed(),
     feeExact: protocolFee.plus(builderFee).toFixed(),
     protocolFeeExact: protocolFee.toFixed(),

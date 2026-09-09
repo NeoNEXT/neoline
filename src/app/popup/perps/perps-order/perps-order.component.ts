@@ -14,6 +14,7 @@ import {
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
 import { PerpsExchangeWriteService } from '@app/core/services/perps/perps-exchange-write.service';
 import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
+import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
 import { PerpsTradeOrderService } from '@/app/core/services/perps/perps-trade-order.service';
 import { PerpsTradeOrderError } from '@/app/core/services/perps/perps-trade-order';
@@ -22,6 +23,7 @@ import { STORAGE_NAME } from '@popup/_lib';
 import { PopupPerpsSlippageDialogComponent } from '@popup/_dialogs/perps-slippage/perps-slippage.dialog';
 import {
   PerpsMarket,
+  PerpsConnectionState,
   PerpsOrderPreview,
   PerpsOrderSide,
   PerpsOrderType,
@@ -116,6 +118,7 @@ function sameInput(a: PerpsOrderInput, b: PerpsOrderInput): boolean {
 })
 export class PerpsOrderComponent implements OnInit, OnDestroy {
   coin: string;
+  connectionState: PerpsConnectionState = 'connecting';
   /**
    * 本页面读到的交易场所现状，整体交给组合模块。表单显示的每一个读数都由它推导而来，
    * 因此「什么是真的」只有一份记述，而不是每个答案各占一个字段。
@@ -163,6 +166,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
 
   private address: string;
   private wallet: EvmWalletJSON;
+  private connectionSub: Unsubscribable;
   private accountSub: Unsubscribable;
   private accountStateSub: Unsubscribable;
   private marketsSub: Unsubscribable;
@@ -198,6 +202,15 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    * 就能保住整段选中，于是输入即替换；之后在框内的点击照样能定位光标。
    */
   private selectingOnFocus = false;
+  /**
+   * 页面已经走了。
+   *
+   * 一次已经签名发出的提交**不会**被退订：中途掐掉那个请求，换来的是一笔可能已经到达
+   * 交易场所、而客户端再也读不到结果的订单 —— 正是 `submitOrder` 里「传输故障证明不了
+   * 被拒绝」所守的那条线。所以请求照常跑完，只是它的回调不再动这个已经不存在的界面：
+   * 过去那个 `filled` 回调会在用户早已离开之后，把他从任何界面拽回永续首页。
+   */
+  private destroyed = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -211,7 +224,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     private evmWallet: EvmWalletService,
     private dialog: MatDialog,
     private markets$: PerpsMarketDatasetService,
-    private writes: PerpsExchangeWriteService
+    private writes: PerpsExchangeWriteService,
+    private channel: PerpsDataChannel
   ) {
     this.lifecycle = new PerpsOrderLifecycle(
       {
@@ -228,6 +242,10 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    // 连接状态只用于说明最后报价可能过期，不推断 HTTP 下单是否可用。
+    this.connectionSub = this.channel.watchConnectionState().subscribe((state) => {
+      this.connectionState = state;
+    });
     this.coin = this.route.snapshot.params.coin;
     this.patchFacts({
       coin: this.coin,
@@ -248,7 +266,16 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
 
     this.loadMaxSlippage();
     this.accountSub = this.store.select('account').subscribe((state) => {
+      if (this.destroyed) {
+        return;
+      }
       const address = state.currentWallet?.accounts[0]?.address;
+      // 当前页面及其未决订单只属于进入时的账户，切换后从首页重新进入。
+      if (this.address && address?.toLowerCase() !== this.address.toLowerCase()) {
+        this.ngOnDestroy();
+        this.router.navigateByUrl(PERPS_HOME_URL);
+        return;
+      }
       this.wallet = state.currentWallet as EvmWalletJSON;
       if (address && address !== this.address) {
         this.address = address;
@@ -261,6 +288,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.destroyed = true;
+    this.connectionSub?.unsubscribe();
     this.accountSub?.unsubscribe();
     this.accountStateSub?.unsubscribe();
     this.marketsSub?.unsubscribe();
@@ -312,14 +341,14 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    *
    * 每帧都跑，因为播种是幂等的纯映射：它只填用户没亲手给过值的字段，所以「哪一帧先到」
    * 不再改变结果 —— 过去三条播种规则散在三个订阅回调里各带各的守卫，行情先到和账户先到
-   * 会得出不同的杠杆。审核态下整个跳过：用户批准的就是屏幕上这些值。
+   * 会得出不同的杠杆。审核和提交期间整个跳过：用户批准的就是屏幕上这些值。
    */
   private applySeed() {
     const seed = seedForm(
       this.facts,
       this.input,
       this.touched,
-      this.lifecycle.reviewing
+      this.reviewing || this.submitting
     );
     Object.assign(this, seed);
   }
@@ -350,8 +379,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 最大滑点是一种习惯，而不是某个市场的属性，所以它按钱包记住一次 ——
-   * 与图表周期的做法相同。
+   * 最大滑点通过共享存储键保存，不按市场或钱包地址隔离。
    */
   private loadMaxSlippage() {
     this.chrome
@@ -638,12 +666,18 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    * 的方式。
    */
   get canSubmit(): boolean {
-    return this.lifecycle.gateOpen && this.composition.submittable;
+    return (
+      !this.destroyed && this.lifecycle.gateOpen && this.composition.submittable
+    );
   }
 
   //#region 生命周期的读数，直接绑给模板
   get reviewing(): boolean {
     return this.lifecycle.reviewing;
+  }
+
+  get submitting(): boolean {
+    return this.lifecycle.submitting;
   }
 
   get executionStatusUnknown(): boolean {
@@ -731,7 +765,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   /**
    * 帧到达时，按当前购买力重算百分比所对应的金额。
    *
-   * 审核态下什么都不做。屏幕上那个美元数正是用户批准的东西，背着他重算等于改掉他批准的
+   * 审核和提交期间什么都不做。屏幕上那个美元数正是用户批准的东西，背着他重算等于改掉他批准的
    * 输入 —— 而按 ADR-0006，页面保存的基线就是「用户输入 + 审核价」。
    * `activeAssetData` 是一条实时订阅，所以过去这里每来一帧就静默作废一次审核：用户点完
    * 百分比再点审核，下一帧就把他退回编辑态，而 CTA 绑的是 `reviewing ? submit() : review()`，
@@ -741,7 +775,9 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    * 提交按钮自己就禁用并说明原因，不需要在这里抢先改数字。
    */
   private repricePercent() {
-    if (this.reviewing || this.closeMode || this.activePercent === null) {
+    if (
+      this.reviewing || this.submitting || this.closeMode || this.activePercent === null
+    ) {
       return;
     }
     this.amount = amountForPercent(this.composition, this.activePercent);
@@ -832,7 +868,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       })
       .afterClosed()
       .subscribe((value: number) => {
-        if (typeof value !== 'number') {
+        if (this.destroyed || this.submitting || typeof value !== 'number') {
           return;
         }
         this.slippagePercent = Number(
@@ -901,20 +937,36 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       this.global.snackBarTip('perpsMarketChangedReviewAgain');
       return;
     }
+    // 固定此次点击的意图和签名钱包。IOC 的价格边界只从审核价计算一次。
+    const wallet = this.wallet;
+    const intent = {
+      ...this.composition.intent,
+      referencePriceExact: this.lifecycle.baseline.priceExact,
+    };
     try {
       const password = await this.chrome.getPassword();
+      if (this.destroyed) {
+        return;
+      }
       const privateKey = await this.evmWallet.getPrivateKey(
-        this.wallet,
+        wallet,
         password
       );
-      const intent = this.composition.intent;
-      if (!intent) {
+      if (this.destroyed) {
+        return;
+      }
+      if (!this.stillApproved || !this.composition.submittable) {
         this.lifecycle.settled();
         this.global.snackBarTip('perpsMarketChangedReviewAgain');
         return;
       }
       this.tradeOrders.submit(privateKey, intent).subscribe({
         next: (submission) => {
+          // 页面已经走了。订单照常发完，但它的结局不再由这个界面来说 ——
+          // 尤其不再把用户从他现在所在的地方拽走。
+          if (this.destroyed) {
+            return;
+          }
           const result = submission.result;
           const message = {
             filled: 'perpsOrderFilled',
@@ -935,6 +987,9 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
           }
         },
         error: (error) => {
+          if (this.destroyed) {
+            return;
+          }
           this.lifecycle.settled();
           if (error instanceof PerpsTradeOrderError) {
             if (error.code === 'position-changed') {
@@ -956,6 +1011,9 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         },
       });
     } catch (error) {
+      if (this.destroyed) {
+        return;
+      }
       this.lifecycle.settled();
       this.global.snackBarTip('verifyFailed', error?.message || error);
     }
