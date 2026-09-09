@@ -106,12 +106,18 @@
           <div class="price">
             ${{ fill.px | perpsPrice: (markets | perpsCoinSzDecimals: fill.coin) }}
           </div>
-          <div class="price" *ngIf="fill | perpsFillFee as fee">
-            {{ "perpsFee" | translate | async }}: {{ fee }}
-          </div>
-          <div class="price" *ngIf="fill | perpsFillNetPnl as pnl">
+          <!--
+            第四行只有一个位置：平仓成交给净盈亏（费用已扣在里面），开仓成交给费用。
+            开仓的 PnL 恒等于负的费用，两行一起出就是同一个数字说两遍。
+          -->
+          <div class="price" *ngIf="fill | perpsFillNetPnl as pnl; else fillFeeRow">
             PnL: {{ pnl | perpsSignedUsd }}
           </div>
+          <ng-template #fillFeeRow>
+            <div class="price" *ngIf="fill | perpsFillFee as fee">
+              {{ "perpsFee" | translate | async }}: {{ fee }}
+            </div>
+          </ng-template>
         </div>
       </div>
       <p class="empty" *ngIf="fills.length === 0">

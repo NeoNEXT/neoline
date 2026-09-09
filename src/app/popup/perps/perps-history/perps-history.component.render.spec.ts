@@ -280,25 +280,26 @@ describe('PerpsHistoryComponent 渲染与接线', () => {
       expect(rows()[1].querySelector('.dir.buy')).toBeTruthy();
     });
 
-    it('与测试网地址的三笔 ETH 成交费用和净盈亏一致', () => {
+    it('与测试网地址的三笔 ETH 成交一致：开仓给费用，平仓给净盈亏', () => {
       component.fills = [
         fill({ fee: '0.449968', closedPnl: '0.0' }),
         fill({ fee: '0.008487', closedPnl: '0.353' }),
         fill({ fee: '0.008646', closedPnl: '0.0' }),
       ];
       fixture.detectChanges();
+      // 第四行只有一个位置。开仓的 PnL 恒等于负的费用，同一个数字不说两遍。
       expect(rows().map((r) => prices(r).slice(1))).toEqual([
-        ['perpsFee: 0.45 USDC', 'PnL: -$0.45'],
-        ['perpsFee: 0.01 USDC', 'PnL: +$0.34'],
-        ['perpsFee: 0.01 USDC', 'PnL: -$0.01'],
+        ['perpsFee: 0.45 USDC'],
+        ['PnL: +$0.34'],
+        ['perpsFee: 0.01 USDC'],
       ]);
     });
 
-    it('费用保留两位小数，开仓和平仓均显示扣费后盈亏', () => {
-      // 平仓（在上面）：亏了 12.5，手续费为零。
-      expect(prices(rows()[0])).toEqual(['$1,710.5', 'perpsFee: 0.00 USDC', 'PnL: -$12.50']);
-      // 开仓：协议盈亏为零，扣费后为负。协议零值以 `'0.0'` 到达。
-      expect(prices(rows()[1])).toEqual(['$1,710.5', 'perpsFee: 0.05 USDC', 'PnL: -$0.05']);
+    it('每行最多三项：价格加费用或净盈亏，二者不同时出现', () => {
+      // 平仓（在上面）：亏了 12.5，手续费为零 —— 给净盈亏，不给那条 0.00 的费用。
+      expect(prices(rows()[0])).toEqual(['$1,710.5', 'PnL: -$12.50']);
+      // 开仓：协议盈亏为零（以 `'0.0'` 到达），只给费用。
+      expect(prices(rows()[1])).toEqual(['$1,710.5', 'perpsFee: 0.05 USDC']);
     });
   });
 

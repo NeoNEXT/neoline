@@ -176,7 +176,15 @@ describe('活动页的手续费', () => {
     expect(fillNetPnl({ closedPnl: '0.353', fee: '0.008487', builderFee: '0.001' } as PerpsFill)).toBe('0.344513');
   });
   it('maker 返佣增加净盈亏', () => {
-    expect(fillNetPnl({ closedPnl: '0', fee: '-0.001' } as PerpsFill)).toBe('0.001');
+    expect(fillNetPnl({ closedPnl: '0.5', fee: '-0.001' } as PerpsFill)).toBe('0.501');
+  });
+  it('开仓成交不给净盈亏 —— 那个数就是负的手续费，交给费用行去说', () => {
+    expect(fillNetPnl({ closedPnl: '0', fee: '0.45' } as PerpsFill)).toBeNull();
+    expect(fillNetPnl({ closedPnl: '0.0', fee: '-0.001' } as PerpsFill)).toBeNull();
+  });
+  it('平仓恰好打平仍然报 0，不折叠成开仓', () => {
+    // 判据是 closedPnl 为零，不是相减的结果为零：这笔真平了仓位，$0.00 是它的结果。
+    expect(fillNetPnl({ closedPnl: '0.01', fee: '0.01' } as PerpsFill)).toBe('0');
   });
   it('缺失或非有限数值、不同计价币种不编造美元净盈亏', () => {
     expect(fillNetPnl(undefined)).toBeNull();

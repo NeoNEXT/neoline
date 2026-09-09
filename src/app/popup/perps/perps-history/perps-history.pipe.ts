@@ -225,7 +225,16 @@ export function fillFee(fill: PerpsFill): string {
   return `${value} ${token}`;
 }
 
-/** 先以协议精度扣除本笔费用，再由展示管道舍入；fee 已包含 builderFee。 */
+/**
+ * 先以协议精度扣除本笔费用，再由展示管道舍入；fee 已包含 builderFee。
+ *
+ * 开仓成交没有已实现盈亏，`closedPnl` 为零，于是 `closedPnl - fee` 恰好等于负的手续费 ——
+ * 和同一行里的费用是同一个数字，只差一个负号。把它显示成 PnL，等于把手续费说成这笔交易的
+ * 亏损。所以开仓不给 PnL，那一行让给费用。
+ *
+ * 判据是 `closedPnl` 本身为零，而不是相减的结果为零：一笔真平掉了仓位、扣完费用恰好打平的
+ * 成交，`PnL: $0.00` 是它准确的结果，不该被折叠成费用。
+ */
 export function fillNetPnl(fill: PerpsFill): string | null {
   if (fill?.closedPnl == null || fill?.fee == null) {
     return null;
@@ -234,7 +243,11 @@ export function fillNetPnl(fill: PerpsFill): string | null {
   if (fill.feeToken && fill.feeToken !== 'USDC') {
     return null;
   }
-  const pnl = new BigNumber(fill.closedPnl).minus(fill.fee);
+  const closed = new BigNumber(fill.closedPnl);
+  if (!closed.isFinite() || closed.isZero()) {
+    return null;
+  }
+  const pnl = closed.minus(fill.fee);
   return pnl.isFinite() ? pnl.toFixed() : null;
 }
 
