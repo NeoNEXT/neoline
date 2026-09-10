@@ -602,26 +602,29 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return `${Number(this.slippagePercent).toFixed(2)}%`;
   }
 
-  /** Hyperliquid 自己的费率，按手续费提示框逐项列出的形式给出。 */
+  /**
+   * Hyperliquid 在这个市场上收的费率，按手续费提示框逐项列出的形式给出。取组合模块的读数
+   * 而不是 `facts` 里的账户费率：HIP-3 市场在账户费率之上还有部署方倍数和 growth mode。
+   */
   get formattedTakerFeeRate(): string {
-    return formatFeeRatePercent(this.facts.feeRates.takerRate);
+    return formatFeeRatePercent(this.composition.feeRates.takerRate);
   }
 
   get formattedMakerFeeRate(): string {
-    return formatFeeRatePercent(this.facts.feeRates.makerRate);
+    return formatFeeRatePercent(this.composition.feeRates.makerRate);
   }
 
   get formattedBuilderFeeRate(): string {
-    return formatFeeRatePercent(this.facts.feeRates.builderRate);
+    return formatFeeRatePercent(this.composition.feeRates.builderRate);
   }
 
   /** 费率始终显示；一旦订单有了数量，再加上它对这笔订单意味着多少钱。 */
   get feeText(): string {
-    return this.feeSideText(this.facts.feeRates.takerRate);
+    return this.feeSideText(this.composition.feeRates.takerRate);
   }
 
   get makerFeeText(): string {
-    return this.feeSideText(this.facts.feeRates.makerRate);
+    return this.feeSideText(this.composition.feeRates.makerRate);
   }
 
   /**
@@ -632,7 +635,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    * 悄悄抹掉用户应得的钱。
    */
   private feeSideText(rate: number): string {
-    const total = rate + this.facts.feeRates.builderRate;
+    const total = rate + this.composition.feeRates.builderRate;
     const formattedRate = formatFeeRatePercent(total);
     const preview = this.preview;
     if (!preview) {

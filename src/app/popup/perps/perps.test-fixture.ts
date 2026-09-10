@@ -3,7 +3,7 @@ import { PerpsCandle, PerpsMarket, PerpsPosition } from '@popup/_lib/perps';
 /**
  * 所有 perps 测试的共同起点：一个市场和一根 K 线。
  *
- * `PerpsMarket` 有十九个必填字段，而一个具体的测试只关心其中两三个。把另外十六个手抄进
+ * `PerpsMarket` 有二十一个必填字段，而一个具体的测试只关心其中两三个。把另外十八个手抄进
  * 每个 spec，正是当初新增 `changeAmountExact` 时要同时在三个文件里各改一行的原因；把这些
  * 样板放在这里，spec 就只需写出它的断言真正依赖的那几个值。
  */
@@ -23,6 +23,8 @@ export function ethMarket(overrides: Partial<PerpsMarket> = {}): PerpsMarket {
     szDecimals: 4,
     maxLeverage: 25,
     marginMode: null,
+    deployerFeeScaleExact: null,
+    growthMode: false,
     markPxExact: '100',
     midPxExact: '100',
     oraclePxExact: '100',

@@ -136,6 +136,41 @@ describe('PerpsOrderComponent summary rows', () => {
     expect(value.feeText).toBe('0.09% ($0.18)');
   });
 
+  /**
+   * HIP-3 市场的费率由部署方设置决定：这一行报的必须是这个市场上的费率 —— 这里是账户费率的
+   * 两倍再打一折 —— 而不是账户费率本身。
+   */
+  it('quotes a HIP-3 market at its own rate', () => {
+    const value = component();
+    value.facts = facts({
+      coin: 'xyz:ETH',
+      market: {
+        status: 'ready',
+        market: ethMarket({
+          key: 'xyz:ETH',
+          dex: 'xyz',
+          coin: 'xyz:ETH',
+          symbol: 'ETH',
+          markPxExact: '2000',
+          midPxExact: '2000',
+          oraclePxExact: '2000',
+          prevDayPxExact: '2000',
+          deployerFeeScaleExact: '1',
+          growthMode: true,
+        }),
+      },
+    });
+    value.leverage = 10;
+    value.amount = '200';
+    value.orderType = 'limit';
+    value.limitPrice = '2000';
+
+    expect(value.feeEstimateUnavailable).toBeFalse();
+    expect(value.formattedTakerFeeRate).toBe('0.009%');
+    expect(value.makerFeeText).toBe('0.003% ($<0.01)');
+    expect(value.feeText).toBe('0.009% ($0.02)');
+  });
+
   /** 模块负责陈述条件；只有页面负责为它措辞。 */
   it('words the one condition blocking submission', () => {
     const value = component();

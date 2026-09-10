@@ -491,6 +491,10 @@ export interface PerpsUniverseItem {
   /** 当前的协议字段。它缺失表示支持全仓。 */
   marginMode?: PerpsMarketMarginMode;
   isDelisted?: boolean;
+  /** HIP-3 部署方费率倍数，十进制字符串；标准永续的条目没有这个字段。 */
+  deployerFeeScale?: string;
+  /** HIP-3 growth mode；开着时为 `'enabled'`，关着时字段缺失。 */
+  growthMode?: string;
 }
 
 /** 来自 `metaAndAssetCtxs` 的原始资产上下文；所有数字都以字符串到达。 */
@@ -530,6 +534,13 @@ export interface PerpsMarket {
   maxLeverage: number;
   /** 精确的协议限制；为 null 表示支持全仓。 */
   marginMode: PerpsMarketMarginMode | null;
+  /**
+   * HIP-3 部署方费率倍数，即 universe 条目的 `deployerFeeScale`。条目没有它时为 null ——
+   * 标准永续本来就没有部署方；HIP-3 市场缺了它，手续费就无从估算，而不是按 0 或某个默认值去猜。
+   */
+  deployerFeeScaleExact: string | null;
+  /** HIP-3 growth mode：开着时，这个市场的费用和返佣都只剩一成。 */
+  growthMode: boolean;
   markPxExact: string;
   /**
    * 盘口中间价，也是每一笔市价单据以定价的参考。Hyperliquid 自家前端换算数量和定价用的都是

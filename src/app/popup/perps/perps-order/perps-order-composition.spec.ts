@@ -1,6 +1,7 @@
 import {
   PerpsAccount,
   PerpsActiveAssetData,
+  PerpsMarket,
   PerpsPosition,
 } from '@popup/_lib/perps';
 import {
@@ -981,13 +982,12 @@ describe('composeOrder', () => {
     }
   });
 
-  /**
-   * HIP-3 市场上部署方分成的那一份在任何地方都没有上报，所以手续费那一行必须如实说明，
-   * 而不是照报标准永续的费率 —— 但它不能拦下订单，因为手续费并不改变订单本身。
-   */
-  it('declines to quote a fee on a HIP-3 market without blocking the order', () => {
-    const canonical = facts({ market: priced('ETH', 100, 2) });
-    const hip3 = facts({
+  /** xyz 上的一个市场，部署方设置取自它的 universe 条目。 */
+  const hip3 = (
+    settings: Partial<PerpsMarket>,
+    feeRates = { takerRate: 0.00045, makerRate: 0.00015, builderRate: 0 }
+  ) =>
+    facts({
       coin: 'xyz:ETH',
       market: {
         status: 'ready',
@@ -996,14 +996,68 @@ describe('composeOrder', () => {
           dex: 'xyz',
           coin: 'xyz:ETH',
           symbol: 'ETH',
+          ...settings,
         }),
       },
       activeAssetData: capacity('xyz:ETH', 100, '100', '10'),
+      feeRates,
     });
 
+  /**
+   * Hyperliquid 自家前端在 xyz:XYZ100 上给一个带 4% 推荐折扣的账户报 0.0086% / 0.0029%：
+   * 账户费率 0.0432% / 0.0144%，乘部署方倍数 1.0 对应的 2 倍，再打 growth mode 的一折。
+   */
+  it('quotes a HIP-3 market at the rate its deployer settings give', () => {
+    const f = hip3(
+      { deployerFeeScaleExact: '1', growthMode: true },
+      { takerRate: 0.000432, makerRate: 0.000144, builderRate: 0 }
+    );
+    const composition = composeOrder(f, input({ amount: '20' }));
+
+    expect(composition.feeEstimateUnavailable).toBeFalse();
+    expect(composition.feeRates.takerRate).toBe(0.0000864);
+    expect(composition.feeRates.makerRate).toBe(0.0000288);
+    // 预览里的手续费同样按这个市场的费率算，而不是账户费率。
+    expect(composition.preview?.feeExact).toBe('0.001728');
+  });
+
+  /** 倍数低于 1 时是「加上」而不是「翻倍」：0.5 意味着 1.5 倍。 */
+  it('adds a deployer share below one instead of doubling it', () => {
+    const { feeRates } = composeOrder(
+      hip3({ deployerFeeScaleExact: '0.5', growthMode: false }),
+      input()
+    );
+
+    expect(feeRates.takerRate).toBe(0.000675);
+    expect(feeRates.makerRate).toBe(0.000225);
+  });
+
+  /** 部署方分走的是收上来的费；返佣是交易场所付出去的钱，只打 growth mode 那一折。 */
+  it('leaves the deployer share out of a maker rebate', () => {
+    const composition = composeOrder(
+      hip3(
+        { deployerFeeScaleExact: '1', growthMode: true },
+        { takerRate: 0.00045, makerRate: -0.00002, builderRate: 0 }
+      ),
+      input()
+    );
+
+    expect(composition.feeRates.makerRate).toBe(-0.000002);
+    expect(composition.makerFeeIsRebate).toBeTrue();
+  });
+
+  /**
+   * 读不到部署方倍数，就不知道这个市场收多少，所以手续费那一行必须如实说明，而不是照报账户
+   * 费率 —— 但它不能拦下订单，因为手续费并不改变订单本身。
+   */
+  it('declines to quote a HIP-3 fee it cannot derive, without blocking the order', () => {
+    const canonical = facts({ market: priced('ETH', 100, 2) });
+    const unknown = hip3({ deployerFeeScaleExact: null });
+
     expect(composeOrder(canonical, input()).feeEstimateUnavailable).toBeFalse();
-    expect(composeOrder(hip3, input()).feeEstimateUnavailable).toBeTrue();
-    expect(reason(hip3, input({ amount: '20' }))).toBeNull();
+    expect(composeOrder(canonical, input()).feeRates).toEqual(canonical.feeRates);
+    expect(composeOrder(unknown, input()).feeEstimateUnavailable).toBeTrue();
+    expect(reason(unknown, input({ amount: '20' }))).toBeNull();
   });
 
   it('reports an unreadable account before anything the form could fix', () => {

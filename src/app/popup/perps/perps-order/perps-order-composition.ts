@@ -153,6 +153,11 @@ export interface PerpsOrderComposition {
   amountSliderPercent: number;
   leverageSliderPercent: number;
   nearMarginLimit: boolean;
+  /**
+   * 这个市场上实际收取的费率，页面报出的每一个费率和手续费都取自这里。
+   * `feeEstimateUnavailable` 时它只是账户费率，页面不拿它报价。
+   */
+  feeRates: PerpsOrderFeeRates;
   feeEstimateUnavailable: boolean;
   quotesBothFeeSides: boolean;
   makerFeeIsRebate: boolean;
@@ -175,7 +180,10 @@ export function composeOrder(
     (input.mode !== 'close' && !facts.activeAssetData &&
       account?.abstractionMode === 'unknown');
   const activeAssetData = facts.activeAssetData;
-  const { takerRate, makerRate, builderRate } = facts.feeRates;
+  const marketRates = marketFeeRates(facts.feeRates, market);
+  // 估不出这个市场的费率时，内部算术退回账户费率；页面凭 `feeEstimateUnavailable` 不拿它报价。
+  const feeRates = marketRates ?? facts.feeRates;
+  const { takerRate, makerRate, builderRate } = feeRates;
 
   const closeMode = input.mode === 'close';
   const isLong = input.side === 'long';
@@ -371,9 +379,10 @@ export function composeOrder(
       !!market &&
       amountExact.isGreaterThan(bufferedMax) &&
       amountExact.isLessThanOrEqualTo(maxOrderNotional),
-    // HIP-3 DEX 会在账户费率之上再抽走部署方自己的一份，而 `userFees` 里什么都不报。
-    // 在这里照报标准永续的费率，等于把一个明知偏低的数字摆到屏幕上，所以这一行改为如实说明。
-    feeEstimateUnavailable: !!market?.dex,
+    feeRates,
+    // 读不到部署方倍数的 HIP-3 市场，照报账户费率等于把一个明知不对的数字摆到屏幕上，
+    // 所以这一行改为如实说明。它不拦订单：手续费并不改变订单本身。
+    feeEstimateUnavailable: marketRates === null,
     // 市价单必定吃单，所以 taker 费率就是完整答案。GTC 限价单通常挂着以 maker 成交，
     // 但它进场时也可能直接吃单，所以两者都显示，而不是挑一个。
     quotesBothFeeSides: input.orderType === 'limit',
@@ -485,6 +494,45 @@ function submittedSize(params: {
   // 会把「平掉 $500」换算成比整个仓位还大的数量。多出来的部分 reduce-only 本来就不会成交，
   // 但它会让预览里的比例、手续费和释放的保证金全部虚高，所以在这里就收住。
   return BigNumber.minimum(requested, held).toFixed();
+}
+
+/**
+ * 这个市场上实际收取的费率。
+ *
+ * `userFees` 报的是账户费率 —— 成交量档位、质押和推荐折扣都已算在里面 —— 对标准永续它就是
+ * 完整答案。HIP-3 市场按 Hyperliquid 公布的公式（Fees → Fee formula for developers）再乘两项：
+ * 部署方倍数 `deployerFeeScale < 1 ? deployerFeeScale + 1 : deployerFeeScale × 2`，以及 growth
+ * mode 的一折。返佣只打 growth mode 那一折、不乘部署方倍数：部署方分走的是收上来的费，返佣则是
+ * 交易场所付出去的钱。
+ *
+ * 公式里的 aligned quote token 调整没有计入：它只作用于以 aligned 稳定币为抵押的 DEX，而本版本
+ * 启用的 `xyz` 以 USDC 为抵押；扩大 DEX 白名单时需要复核。builder 费用由 NeoLine 按单指定，与
+ * 市场无关，原样保留。
+ *
+ * 读不到部署方倍数的 HIP-3 市场返回 null。
+ */
+function marketFeeRates(
+  rates: PerpsOrderFeeRates,
+  market: PerpsMarket | null
+): PerpsOrderFeeRates | null {
+  if (!market?.dex) {
+    return rates;
+  }
+  if (market.deployerFeeScaleExact === null) {
+    return null;
+  }
+  const deployerScale = new BigNumber(market.deployerFeeScaleExact);
+  const hip3Scale = deployerScale.isLessThan(1)
+    ? deployerScale.plus(1)
+    : deployerScale.times(2);
+  const growthScale = market.growthMode ? 0.1 : 1;
+  const scaled = (rate: number, scale: BigNumber.Value) =>
+    new BigNumber(rate).times(scale).times(growthScale).toNumber();
+  return {
+    takerRate: scaled(rates.takerRate, hip3Scale),
+    makerRate: scaled(rates.makerRate, rates.makerRate > 0 ? hip3Scale : 1),
+    builderRate: rates.builderRate,
+  };
 }
 
 /** 预览各行；在还没有东西可供报价时为 null。 */

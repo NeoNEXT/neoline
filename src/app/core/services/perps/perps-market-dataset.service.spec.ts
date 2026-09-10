@@ -258,6 +258,53 @@ describe('PerpsMarketDatasetService snapshots', () => {
   });
 });
 
+describe('PerpsMarketDatasetService fee settings', () => {
+  /**
+   * HIP-3 市场的手续费取决于部署方倍数与 growth mode，两者都在它的 universe 条目里。
+   * 条目没带倍数就是不知道 —— 不是 0，也不是默认的 1。
+   */
+  it('keeps the fee settings each market is charged by', () => {
+    const { service } = build({
+      getDexRegistry: () => of([null, { name: 'xyz' }]),
+      getMetaAndAssetCtxs: (dex = '') =>
+        dex
+          ? of([
+              {
+                universe: [
+                  {
+                    name: 'xyz:XYZ100',
+                    szDecimals: 4,
+                    maxLeverage: 30,
+                    deployerFeeScale: '1.0',
+                    growthMode: 'enabled',
+                  },
+                  { name: 'xyz:NEO', szDecimals: 2, maxLeverage: 5 },
+                ],
+              },
+              [ctx('29449.5'), ctx('10')],
+            ])
+          : of([
+              { universe: [{ name: 'ETH', szDecimals: 4, maxLeverage: 25 }] },
+              [ctx('1875.75')],
+            ]),
+    });
+    const view = watching(service);
+    const market = (coin: string) =>
+      view.last().markets.find((item) => item.coin === coin);
+
+    expect(market('xyz:XYZ100')).toEqual(
+      jasmine.objectContaining({ deployerFeeScaleExact: '1', growthMode: true })
+    );
+    expect(market('xyz:NEO')).toEqual(
+      jasmine.objectContaining({ deployerFeeScaleExact: null, growthMode: false })
+    );
+    expect(market('ETH')).toEqual(
+      jasmine.objectContaining({ deployerFeeScaleExact: null, growthMode: false })
+    );
+    view.stop();
+  });
+});
+
 describe('PerpsMarketDatasetService live list', () => {
   const oneMarket = () =>
     of([

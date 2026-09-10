@@ -118,6 +118,7 @@ export function buildMarket(
     item.marginMode === 'strictIsolated' || item.marginMode === 'noCross'
       ? item.marginMode
       : null;
+  const deployerFeeScale = new BigNumber(item.deployerFeeScale ?? NaN);
   return {
     key: `${dex || 'hl'}:${symbol}`,
     assetId: dex ? 100000 + dexIndex * 10000 + index : index,
@@ -128,6 +129,12 @@ export function buildMarket(
     szDecimals: item.szDecimals,
     maxLeverage: item.maxLeverage,
     marginMode,
+    // 读不懂的倍数与缺失同论：手续费宁可说「无法估算」，也不按一个猜出来的数报价。
+    deployerFeeScaleExact:
+      deployerFeeScale.isFinite() && !deployerFeeScale.isNegative()
+        ? deployerFeeScale.toFixed()
+        : null,
+    growthMode: item.growthMode === 'enabled',
     ...marketContextFields(ctx),
   };
 }
