@@ -1883,6 +1883,9 @@
   "perpsLiqPriceTip": {
     "message": "If the price reaches this level, your position will be liquidated and the entire margin may be lost. Higher leverage makes this more likely."
   },
+  "perpsEstimatedLiqPrice": {
+    "message": "Estimated liquidation price"
+  },
   "perpsMargin": {
     "message": "Margin"
   },
@@ -2054,8 +2057,26 @@
   "perpsReviewOrder": {
     "message": "Review order"
   },
-  "perpsReviewTip": {
-    "message": "Review the direction, amount, leverage, entry price, estimated liquidation price, margin, fee and slippage before confirming."
+  "perpsConfirmOrderTitle": {
+    "message": "Confirm order"
+  },
+  "perpsOrderDirection": {
+    "message": "Direction"
+  },
+  "perpsOrderSize": {
+    "message": "Size"
+  },
+  "perpsEntryPrice": {
+    "message": "Entry price"
+  },
+  "perpsMarketPriceValue": {
+    "message": "Market"
+  },
+  "perpsConfirmMarketNote": {
+    "message": "A market order goes out immediately. The fill price comes from the exchange."
+  },
+  "perpsConfirmLimitNote": {
+    "message": "A limit order may not fill right away, or may fill only in part."
   },
   "perpsOpenOrders": {
     "message": "Open orders"

@@ -446,10 +446,27 @@ export class HyperliquidService {
     }).pipe(map((res) => (Array.isArray(res) ? res : [])));
   }
 
+  /**
+   * 已经成交的部分。
+   *
+   * 一张吃单穿过盘口时，会被上面挂着的多张单分批吃掉，而协议为**每一次撮合**各记一行。
+   * 用户下的是一张单，屏幕上就该是一行 —— 所以这里请求交易场所自己合并：`aggregateByTime`
+   * 把同一时刻属于同一张单的那几行收成一行，数量、手续费、已实现盈亏精确相加，价格给成交量
+   * 加权均价。Hyperliquid 自己的活动表也开着这个开关。
+   *
+   * 自己在客户端合并，等于重算一遍加权均价，还要替这一行挑一个 `tid` 和 `hash` —— 那些数
+   * 交易场所已经算好了，没有理由再算一次，更没有理由算得和它不一样。
+   *
+   * 实时那条路（`userFills` 订阅）必须传同一个参数，否则同一笔成交会在推送时分成几行、
+   * 刷新之后又并成一行。
+   *
+   * 来源：Info endpoint 与 Subscriptions 的 `aggregateByTime`（可选）。
+   */
   getUserFills(address: string): Observable<PerpsFill[]> {
     return this.post<PerpsFill[]>({
       type: 'userFills',
       user: address.toLowerCase(),
+      aggregateByTime: true,
     }).pipe(
       map((res) => normalizeIds(Array.isArray(res) ? res : []))
     );

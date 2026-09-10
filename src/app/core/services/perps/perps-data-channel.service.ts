@@ -86,7 +86,20 @@ export class PerpsDataChannel {
   private channelObservers = new Map<string, number>();
   private reconnectAttempts = 0;
   private reconnectTimer: any;
-  /** Hyperliquid 会在 60 秒后关掉安静的套接字；要远早于此发送 ping。 */
+  /**
+   * 心跳。
+   *
+   * 保活是它的副业，而且多数时候用不上：交易场所关掉的是**它自己**六十秒没发过东西的
+   * 连接 —— 计时看的是下行，所以只要还有一条在推帧的订阅，那个计时就一直在被重置。
+   * 真正需要保活的，是冷清到整整一分钟连一帧都没有的连接。ping 的主业写在类文档里：
+   * 揭穿一条已经不再投递、却仍然读作 OPEN 的套接字。
+   *
+   * 不做成「距最后一帧满 30 秒才 ping」。那样有流量时一条都不用发，探活上也等价（帧到
+   * 达本身就是连接活着的证据），但省下的是每 30 秒 17 个字节，而代价是偏离 MetaMask 用
+   * 的那条基线：`@nktkas/hyperliquid` 的 `WebSocketKeepAlive` 同样是固定间隔加 pong
+   * 超时，默认 30_000 / 10_000，MetaMask 在 `HYPERLIQUID_TRANSPORT_CONFIG` 里显式配的
+   * 就是这两个数。
+   */
   private heartbeatTimer: any;
   private readonly heartbeatMs = 30000;
   /** 一次 `ping` 可以多久无人应答，超过就认定套接字已死。 */

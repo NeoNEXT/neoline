@@ -227,7 +227,14 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     // 所以这里没有 error 分支可写 —— 这个 tab 的失败路径是 `loadTab` 里那次 REST。
     this.liveSubs.add(
       this.channel
-        .subscribe({ type: 'userFills', user: this.address.toLowerCase() })
+        // `aggregateByTime` 和 REST 那条路必须一致：一张被盘口多张挂单分批吃掉的单，
+        // 交给交易场所合并成一行。少了它，同一笔成交会在推送时分成几行、刷新之后又并成
+        // 一行。合并语义见 `getUserFills`。
+        .subscribe({
+          type: 'userFills',
+          user: this.address.toLowerCase(),
+          aggregateByTime: true,
+        })
         .subscribe((update) => {
           const incoming: PerpsFill[] = update?.fills || [];
           // 快照是全部真相，增量并进屏幕上已有的那份 —— 但两条路都要重排：交易场所

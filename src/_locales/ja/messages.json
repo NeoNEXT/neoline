@@ -1883,6 +1883,9 @@
   "perpsLiqPriceTip": {
     "message": "価格がこの水準に達すると、ポジションが強制決済され、証拠金をすべて失う可能性があります。レバレッジが高いほど、その可能性は高まります。"
   },
+  "perpsEstimatedLiqPrice": {
+    "message": "推定清算価格"
+  },
   "perpsMargin": {
     "message": "証拠金"
   },
@@ -2054,8 +2057,26 @@
   "perpsReviewOrder": {
     "message": "注文を確認"
   },
-  "perpsReviewTip": {
-    "message": "確定前に方向、金額、レバレッジ、約定価格、推定清算価格、証拠金、手数料、スリッページを確認してください。"
+  "perpsConfirmOrderTitle": {
+    "message": "注文の確認"
+  },
+  "perpsOrderDirection": {
+    "message": "方向"
+  },
+  "perpsOrderSize": {
+    "message": "数量"
+  },
+  "perpsEntryPrice": {
+    "message": "約定価格"
+  },
+  "perpsMarketPriceValue": {
+    "message": "成行"
+  },
+  "perpsConfirmMarketNote": {
+    "message": "成行注文は直ちに発注されます。約定価格は取引所の記録によります。"
+  },
+  "perpsConfirmLimitNote": {
+    "message": "指値注文はすぐに約定しないことや、一部のみ約定することがあります。"
   },
   "perpsOpenOrders": {
     "message": "未約定注文"

@@ -139,19 +139,28 @@
   background: var(--box-color);
   border-radius: 8px;
   padding: 14px 16px;
+  // 整块都是输入框的点击区，所以整块都用文本光标。
+  cursor: text;
 
   .label {
     font-size: 13px;
     color: var(--sub-title-color);
+    flex-shrink: 0;
   }
 
   .input-value {
     display: flex;
     align-items: baseline;
     gap: 6px;
+    // 标签与单位之间剩下的宽度全归输入框：文字右对齐，所以看着没变，但直接点得中的
+    // 区域从 130px 变成了一整行。
+    flex: 1;
+    justify-content: flex-end;
+    min-width: 0;
 
     input {
-      width: 130px;
+      flex: 1;
+      min-width: 0;
       border: none;
       background: transparent;
       outline: none;
@@ -563,13 +572,6 @@
   }
 }
 
-.review-tip {
-  margin: 10px 24px 0;
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--sub-title-color);
-}
-
 .margin-mode-tip {
   margin: 0 24px 10px;
   font-size: 12px;
@@ -611,4 +613,118 @@
   color: var(--tip-color);
   font-size: 12px;
   line-height: 16px;
+}
+
+// 下单确认面板，与存取款那张同形：全屏遮罩 + 贴底的一张纸。
+.confirm-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+
+  .sheet {
+    width: 100%;
+    max-height: 100vh;
+    overflow-y: auto;
+    background: var(--body-background-color);
+    border-radius: 16px 16px 0 0;
+    padding: 20px 22px 22px;
+
+    .sheet-title {
+      font-family: NeverMind-Medium;
+      font-size: 16px;
+      color: var(--important-title-color);
+      margin-bottom: 12px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 8px 0;
+      font-size: 12px;
+
+      .label {
+        color: var(--sub-title-color);
+        flex-shrink: 0;
+      }
+
+      .value {
+        color: var(--title-color);
+        text-align: right;
+
+        // 方向那一行用按钮的配色：面板上说的做多做空，和用户按下去的是同一件事。
+        &.side {
+          color: var(--theme-color);
+
+          &.short {
+            color: var(--error-color);
+          }
+        }
+
+        .price-kind,
+        .current,
+        .arrow {
+          font-style: normal;
+          color: var(--sub-title-color);
+        }
+
+        .arrow {
+          margin: 0 3px;
+        }
+      }
+    }
+
+    .sheet-note {
+      margin-top: 10px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--sub-title-color);
+    }
+
+    // 面板自带左右留白，所以这条原因不再带它挂在表单下方时的那份。
+    .error-tip {
+      padding: 0;
+      margin-top: 10px;
+    }
+
+    .sheet-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 18px;
+
+      button {
+        flex: 1;
+        height: 44px;
+        border-radius: 24px;
+        border: none;
+        font-family: NeverMind-Medium;
+        font-size: 14px;
+        cursor: pointer;
+
+        &.ghost {
+          background: var(--line-color);
+          color: var(--title-color);
+        }
+
+        &.primary {
+          background: var(--theme-color);
+          color: var(--btn-title-color);
+
+          &.short {
+            background: var(--error-color);
+            color: #fff;
+          }
+        }
+
+        &:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
 }

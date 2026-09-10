@@ -1883,6 +1883,9 @@
   "perpsLiqPriceTip": {
     "message": "若价格达到该点位，您的仓位将被强制平仓并导致保证金全部损失。杠杆越高，这种情况发生的可能性越大。"
   },
+  "perpsEstimatedLiqPrice": {
+    "message": "预估强平价格"
+  },
   "perpsMargin": {
     "message": "保证金"
   },
@@ -2054,8 +2057,26 @@
   "perpsReviewOrder": {
     "message": "检查订单"
   },
-  "perpsReviewTip": {
-    "message": "确认前请检查方向、金额、杠杆、入场价、预计强平价、保证金、费用和滑点。"
+  "perpsConfirmOrderTitle": {
+    "message": "确认订单"
+  },
+  "perpsOrderDirection": {
+    "message": "方向"
+  },
+  "perpsOrderSize": {
+    "message": "数量"
+  },
+  "perpsEntryPrice": {
+    "message": "入场价"
+  },
+  "perpsMarketPriceValue": {
+    "message": "市价"
+  },
+  "perpsConfirmMarketNote": {
+    "message": "市价单立即发出，成交价以交易场所为准。"
+  },
+  "perpsConfirmLimitNote": {
+    "message": "限价单可能不会立即成交，也可能只成交一部分。"
   },
   "perpsOpenOrders": {
     "message": "当前委托"

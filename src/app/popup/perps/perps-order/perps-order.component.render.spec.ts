@@ -254,6 +254,38 @@ describe('PerpsOrderComponent 渲染与接线', () => {
     });
   });
 
+  describe('金额与限价输入框', () => {
+    /**
+     * 输入框自己只有 130px 宽、贴在右边，而它左边那一大片看起来同样可点。
+     * 整块用 `label` 包住，点哪儿都落到输入框上。
+     */
+    it('focuses the input from anywhere in the box', () => {
+      fixture.detectChanges();
+      const box: HTMLElement =
+        fixture.nativeElement.querySelector('.input-box');
+      const input: HTMLInputElement = box.querySelector('input');
+      expect(box.tagName).toBe('LABEL');
+
+      box.click();
+
+      expect(document.activeElement).toBe(input);
+    });
+
+    it('keeps the box out of reach while a submission is in flight', () => {
+      fixture.detectChanges();
+      component.amount = '200';
+      component.review();
+      (component as any).lifecycle.beginSubmit(true);
+      fixture.detectChanges();
+
+      const box: HTMLElement =
+        fixture.nativeElement.querySelector('.input-box');
+      box.click();
+
+      expect(document.activeElement).not.toBe(box.querySelector('input'));
+    });
+  });
+
   describe('摘要各行', () => {
     it('reads N/A before an amount is typed', () => {
       fixture.detectChanges();
@@ -292,17 +324,21 @@ describe('PerpsOrderComponent 渲染与接线', () => {
   });
 
   describe('审核与提交按钮', () => {
-    it('offers review first, then the side once reviewed', () => {
+    it('offers review first, and keeps offering it behind the sheet', () => {
       fixture.detectChanges();
       component.amount = '200';
       fixture.detectChanges();
       expect(text('.submit-wrap button')).toContain('perpsReviewOrder');
+      expect(fixture.nativeElement.querySelector('.confirm-sheet')).toBeNull();
 
       component.review();
       fixture.detectChanges();
 
-      expect(text('.submit-wrap button')).toContain('perpsLong');
-      expect(fixture.nativeElement.querySelector('.review-tip')).not.toBeNull();
+      // 页面上那个按钮不再是提交入口 —— 确认只发生在面板上。
+      expect(text('.submit-wrap button')).toContain('perpsReviewOrder');
+      expect(
+        fixture.nativeElement.querySelector('.confirm-sheet')
+      ).not.toBeNull();
     });
 
     it('locks editable controls while submitting', () => {
@@ -330,6 +366,130 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       const button: HTMLButtonElement =
         fixture.nativeElement.querySelector('.submit-wrap button');
       expect(button.disabled).toBeTrue();
+    });
+  });
+
+  describe('确认面板', () => {
+    /** 面板上的某一行读作什么，按它的标签取。 */
+    const sheetRow = (label: string): string => {
+      const rows: HTMLElement[] = Array.from(
+        fixture.nativeElement.querySelectorAll('.confirm-sheet .row')
+      );
+      const row = rows.find(
+        (item) => item.querySelector('.label').textContent.trim() === label
+      );
+      return (row?.querySelector('.value')?.textContent ?? '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+
+    const review = () => {
+      fixture.detectChanges();
+      component.amount = '200';
+      component.review();
+      fixture.detectChanges();
+    };
+
+    /** 面板只回答「按下去会发生什么」：方向、数量、价格、强平价，对齐 Hyperliquid 的确认框。 */
+    it('states the four things the button is about to do', () => {
+      review();
+
+      const labels = Array.from(
+        fixture.nativeElement.querySelectorAll('.confirm-sheet .row .label')
+      ).map((label: HTMLElement) => label.textContent.trim());
+      expect(labels).toEqual([
+        'perpsOrderDirection',
+        'perpsOrderSize',
+        'perpsEntryPrice',
+        'perpsEstimatedLiqPrice',
+      ]);
+
+      expect(sheetRow('perpsOrderDirection')).toBe('perpsLong');
+      // 200 USDC 在 $2,000 上是 0.1 ETH —— 交易场所收到的是这个数，而表单上没有它。
+      expect(sheetRow('perpsOrderSize')).toBe('0.1 ETH');
+      expect(sheetRow('perpsEntryPrice')).toBe(
+        `perpsMarketPriceValue · ${text('.order-header .price')}`
+      );
+      expect(sheetRow('perpsEstimatedLiqPrice')).toBe(
+        component.liquidationPriceText
+      );
+      expect(text('.sheet-actions .primary')).toContain('perpsLong');
+    });
+
+    /**
+     * 金额、杠杆、保证金、费用、滑点留在表单上，不在面板上重复一遍：用户刚在那里读过
+     * 并按下了「检查订单」，杠杆还印在面板的按钮上。
+     */
+    it('does not repeat what the form already said', () => {
+      review();
+
+      ['perpsAmount', 'perpsLeverage', 'perpsMargin', 'perpsFee', 'perpsMaxSlippage'].forEach(
+        (label) => expect(sheetRow(label)).toBe('')
+      );
+      expect(text('.sheet-actions .primary')).toContain('10x');
+    });
+
+    it('asks approval for the size it will actually submit', () => {
+      fixture.detectChanges();
+      // $2,000 上买不到 0.10005 ETH 那么细的数量：lot 是 4 位小数。
+      component.amount = '200.1';
+      component.review();
+      fixture.detectChanges();
+
+      expect(sheetRow('perpsOrderSize')).toBe('0.1 ETH');
+    });
+
+    it('names the limit price instead of the market', () => {
+      fixture.detectChanges();
+      component.setOrderType('limit');
+      component.onLimitPriceInput('1900');
+      component.amount = '190';
+      component.review();
+      fixture.detectChanges();
+
+      expect(sheetRow('perpsEntryPrice')).toBe('$1,900');
+    });
+
+    it('takes the order back to the form when cancelled', () => {
+      review();
+
+      fixture.nativeElement.querySelector('.sheet-actions .ghost').click();
+      fixture.detectChanges();
+
+      expect(component.reviewing).toBeFalse();
+      expect(fixture.nativeElement.querySelector('.confirm-sheet')).toBeNull();
+    });
+
+    /**
+     * 撤掉面板会把用户丢回一张所有控件都禁用了的表单，而屏幕上没有任何东西说明他刚按下的
+     * 那一下发生了什么。
+     */
+    it('stays on screen while the submission is in flight', () => {
+      review();
+      (component as any).lifecycle.beginSubmit(true);
+      fixture.detectChanges();
+
+      expect(
+        fixture.nativeElement.querySelector('.confirm-sheet')
+      ).not.toBeNull();
+      expect(
+        fixture.nativeElement.querySelector('.sheet-actions .primary').disabled
+      ).toBeTrue();
+      expect(
+        fixture.nativeElement.querySelector('.sheet-actions .ghost').disabled
+      ).toBeTrue();
+    });
+
+    /** 按钮为什么按不下去，必须在按钮旁边读得到：表单下方那条原因被面板挡住了。 */
+    it('carries the blocking reason onto the sheet', () => {
+      review();
+      component.amount = '999999';
+      fixture.detectChanges();
+
+      expect(text('.confirm-sheet .error-tip')).toBe('perpsInsufficientMargin');
+      expect(
+        fixture.nativeElement.querySelector('.sheet-actions .primary').disabled
+      ).toBeTrue();
     });
   });
 

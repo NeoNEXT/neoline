@@ -179,7 +179,9 @@ describe('PerpsHistoryComponent live fills', () => {
       getMarkets: () => EMPTY,
       watchOpenOrders: () => EMPTY,
     };
-    const channel: any = { subscribe: () => frames };
+    const channel: any = {
+      subscribe: jasmine.createSpy('subscribe').and.returnValue(frames),
+    };
     const component = new PerpsHistoryComponent(
       null,
       hyperliquid,
@@ -192,8 +194,22 @@ describe('PerpsHistoryComponent live fills', () => {
     );
     (component as any).address = '0xabc';
     (component as any).watchLiveActivity();
-    return { component, frames };
+    return { component, frames, channel };
   }
+
+  /**
+   * 实时那条路必须和 REST 那条路要求同一种合并。少了它，一张被盘口多张挂单分批吃掉的单
+   * 会在推送时占好几行，刷新之后又并成一行 —— 同一笔成交，两个样子。
+   */
+  it('订阅实时成交时同样要求交易场所合并', () => {
+    const { channel } = watching();
+
+    expect(channel.subscribe).toHaveBeenCalledWith({
+      type: 'userFills',
+      user: '0xabc',
+      aggregateByTime: true,
+    });
+  });
 
   it('takes a snapshot as the whole truth', () => {
     const { component, frames } = watching();

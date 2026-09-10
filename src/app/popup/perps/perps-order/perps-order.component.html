@@ -73,8 +73,12 @@
     </span>
   </div>
 
-  <!-- 限价 -->
-  <div class="input-box" *ngIf="orderType === 'limit'">
+  <!--
+    整块是一个 `label`，所以点这一行的任何地方都会聚焦到输入框 —— 输入框本身只有 130px 宽、
+    靠在右边，而它左边那一大片看起来同样可点。用原生 label 而不是 click 处理器：键盘、
+    读屏和禁用态都跟着一起对了。
+  -->
+  <label class="input-box" *ngIf="orderType === 'limit'">
     <span class="label">{{ "perpsLimitPrice" | translate | async }}</span>
     <span class="input-value">
       <input
@@ -87,10 +91,10 @@
       />
       <span class="unit">USDC</span>
     </span>
-  </div>
+  </label>
 
   <!-- 金额 -->
-  <div class="input-box">
+  <label class="input-box">
     <span class="label">{{ "perpsAmount" | translate | async }}</span>
     <span class="input-value">
       <input
@@ -103,7 +107,7 @@
       />
       <span class="unit">USDC</span>
     </span>
-  </div>
+  </label>
 
   <div class="range-control amount-range">
     <div
@@ -334,18 +338,95 @@
     </div>
   </div>
 
-  <p class="review-tip" *ngIf="reviewing">
-    {{ "perpsReviewTip" | translate | async }}
-  </p>
-
   <div class="submit-wrap">
-    <button
-      [class.short]="!isLong"
-      [disabled]="!canSubmit"
-      (click)="reviewing ? submit() : review()"
-    >
-      {{ ctaLabel | translate | async }} {{ symbol }}
+    <button [class.short]="!isLong" [disabled]="!canSubmit" (click)="review()">
+      {{ "perpsReviewOrder" | translate | async }} {{ symbol }}
       <ng-container *ngIf="!closeMode"> · {{ leverage }}x</ng-container>
     </button>
+  </div>
+
+  <!--
+    签名之前的那一遍确认，用的是存取款那张面板，内容对齐 Hyperliquid 自家的确认框：
+    方向、数量、价格、预估强平价，四行。
+
+    它**不是**表单的副本。金额、杠杆、保证金、费用、滑点都留在表单上 —— 用户刚刚在那里
+    读过并按下了「检查订单」，而杠杆还印在下面那个按钮上。这一层要回答的只有「我按下去
+    会发生什么」：往哪个方向、下多少币、按什么价、什么价位被强平。
+
+    数量和入场价是表单上没有的两项，所以它们必须在：交易场所收到的是币数量而表单收的是
+    名义价值，入场价只在被面板盖住的页头。每个数都取自表单同一批读数，两处不可能各说各话；
+    面板期间行情照常更新，因为用户同意的是签名那一刻的那笔单，而不是一张已经过期的截图 ——
+    偏移超出他同意的滑点时由 `withinReviewedSlippage` 拦下。
+  -->
+  <div class="confirm-sheet" *ngIf="confirming">
+    <div class="sheet">
+      <div class="sheet-title">
+        {{ "perpsConfirmOrderTitle" | translate | async }}
+      </div>
+      <div class="row">
+        <span class="label">{{
+          "perpsOrderDirection" | translate | async
+        }}</span>
+        <span class="value side" [class.short]="!isLong">{{
+          confirmLabel | translate | async
+        }}</span>
+      </div>
+      <!-- 交易场所收到的是币数量，表单收的却是名义价值；被签名的那个数只在这里出现过。 -->
+      <div class="row">
+        <span class="label">{{ "perpsOrderSize" | translate | async }}</span>
+        <span class="value">{{ confirmSizeText }} {{ symbol }}</span>
+      </div>
+      <div class="row">
+        <span class="label">{{ "perpsEntryPrice" | translate | async }}</span>
+        <span class="value">
+          <i class="price-kind" *ngIf="orderType === 'market'"
+            >{{ "perpsMarketPriceValue" | translate | async }} ·
+          </i>
+          {{ confirmPriceText }}
+        </span>
+      </div>
+      <!-- 表单上那行叫「强平价格」，旁边有 tooltip 说它是估算；面板没有 tooltip，
+           所以「预估」写进标签里 —— 用户在这里同意的是一个估算值。 -->
+      <div class="row" *ngIf="!closeMode">
+        <span class="label">{{
+          "perpsEstimatedLiqPrice" | translate | async
+        }}</span>
+        <span class="value">
+          <ng-container *ngIf="showsCurrentLiquidationPrice">
+            <i class="current">{{ currentLiquidationPriceText }}</i>
+            <i class="arrow">→</i>
+          </ng-container>
+          {{ liquidationPriceText }}
+        </span>
+      </div>
+      <p class="sheet-note">
+        {{
+          (orderType === "market"
+            ? "perpsConfirmMarketNote"
+            : "perpsConfirmLimitNote"
+          )
+            | translate
+            | async
+        }}
+      </p>
+      <!-- 面板挡住了表单下方那条原因，而按钮为什么按不下去必须在按钮旁边读得到。 -->
+      <p class="error-tip" *ngIf="orderUnavailableReason">
+        {{ orderUnavailableReason | translate: orderUnavailableParams | async }}
+      </p>
+      <div class="sheet-actions">
+        <button class="ghost" [disabled]="submitting" (click)="cancelReview()">
+          {{ "cancel" | translate | async }}
+        </button>
+        <button
+          class="primary"
+          [class.short]="!isLong"
+          [disabled]="!canSubmit"
+          (click)="submit()"
+        >
+          {{ confirmLabel | translate | async }} {{ symbol }}
+          <ng-container *ngIf="!closeMode"> · {{ leverage }}x</ng-container>
+        </button>
+      </div>
+    </div>
   </div>
 </div>

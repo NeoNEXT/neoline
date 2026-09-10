@@ -577,6 +577,26 @@ describe('HyperliquidService candle snapshots', () => {
 });
 
 
+describe('HyperliquidService 成交历史', () => {
+  /**
+   * 一张吃单会被盘口上多张挂单分批吃掉，协议为每一次撮合各记一行。用户下的是一张单，
+   * 屏幕上就该是一行 —— 合并交给交易场所，因为加权均价是它算的。
+   */
+  it('让交易场所把同一张单的分批成交合并成一行', () => {
+    const http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
+    http.post.and.returnValue(of([]) as any);
+    const service = new HyperliquidService(http, fakePerpsDataChannel(), writes());
+
+    service.getUserFills('0xABC').subscribe();
+
+    expect(http.post).toHaveBeenCalledWith(
+      jasmine.any(String),
+      { type: 'userFills', user: '0xabc', aggregateByTime: true },
+      jasmine.any(Object)
+    );
+  });
+});
+
 describe('HyperliquidService CCTP 历史关联', () => {
   const user = '0x5be1a4c623a63498d78c08b8890a6e5dad6bf359';
   const update = {
