@@ -211,6 +211,19 @@ describe('PerpsHistoryComponent live fills', () => {
     });
   });
 
+  it('excludes spot fills from snapshots and incremental updates', () => {
+    const { component, frames } = watching();
+    frames.next({ isSnapshot: true, fills: [
+      { ...fill('1', 1), coin: 'ETH' },
+      { ...fill('2', 2), coin: '@107' },
+    ] });
+    frames.next({ fills: [
+      { ...fill('3', 3), coin: 'PURR/USDC' },
+      { ...fill('4', 4), coin: 'xyz:NEO' },
+    ] });
+    expect(component.fills.map((row) => row.coin)).toEqual(['xyz:NEO', 'ETH']);
+  });
+
   it('takes a snapshot as the whole truth', () => {
     const { component, frames } = watching();
 
@@ -286,6 +299,56 @@ describe('PerpsHistoryComponent 成交 tab 的兜底', () => {
     (component as any).load();
     return { component, frames, hyperliquid };
   }
+
+  it('keeps another tab loading when a background request fails', () => {
+    const history = new Subject<any[]>();
+    const transfers = new Subject<any[]>();
+    const { component } = loaded({
+      getHistoricalOrders: () => history,
+      getLedgerUpdates: () => transfers,
+    });
+    component.setTab('orderHistory');
+    component.setTab('transfers');
+    history.error(new Error('offline'));
+    expect(component.tabLoading).toBeTrue();
+    expect(component.loadError).toBeFalse();
+    transfers.next([{ time: 1, delta: { type: 'deposit', usdc: '1' } }]);
+    expect(component.tabLoading).toBeFalse();
+    expect(component.loadError).toBeFalse();
+    expect(component.transfers.length).toBe(1);
+    component.ngOnDestroy();
+  });
+
+  it('clears the failed tab error when retry succeeds', () => {
+    const first = new Subject<any[]>();
+    const retry = new Subject<any[]>();
+    const getHistoricalOrders = jasmine.createSpy().and.returnValues(first, retry);
+    const { component } = loaded({ getHistoricalOrders });
+    component.setTab('orderHistory');
+    first.error(new Error('offline'));
+    expect(component.loadError).toBeTrue();
+    component.setTab('orders');
+    expect(component.loadError).toBeFalse();
+    component.setTab('orderHistory');
+    expect(component.tabLoading).toBeTrue();
+    expect(component.loadError).toBeFalse();
+    retry.next([]);
+    expect(component.tabLoading).toBeFalse();
+    expect(component.loadError).toBeFalse();
+    component.ngOnDestroy();
+  });
+
+  it('does not report a late REST failure after a successful fills snapshot', () => {
+    const rest = new Subject<any[]>();
+    const { component, frames } = loaded({ getUserFills: () => rest });
+    component.setTab('fills');
+    frames.next({ isSnapshot: true, fills: [fill('ws', 1)] });
+    rest.error(new Error('offline'));
+    expect(component.tabLoading).toBeFalse();
+    expect(component.loadError).toBeFalse();
+    expect(component.fills.length).toBe(1);
+    component.ngOnDestroy();
+  });
 
   it('快照还没到就打开这个 tab 时，花一次 REST 把历史取回来', () => {
     const { component, hyperliquid } = loaded();

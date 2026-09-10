@@ -1,6 +1,7 @@
 import { BehaviorSubject, of } from 'rxjs';
 import { fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
 
+import { PerpsAccount } from '@popup/_lib/perps';
 import { NotificationService } from '@/app/core';
 
 import { PerpsOrderComponent } from './perps-order.component';
@@ -45,7 +46,7 @@ const facts = (overrides: Partial<PerpsOrderFacts> = {}): PerpsOrderFacts => ({
   },
   account: {
     availability: 'live',
-    account: null,
+    account: { positions: [] } as PerpsAccount,
     missingDexes: [],
     updatedAt: 1,
   },

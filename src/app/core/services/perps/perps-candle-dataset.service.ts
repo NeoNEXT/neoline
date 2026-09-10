@@ -14,6 +14,7 @@ import { PerpsDataset } from './perps-dataset';
 import {
   PerpsCandleDatasetState,
   candlesAreFresh,
+  earliestQueryable,
   foldCandle,
   mergeCandles,
   recoveryWindow,
@@ -99,7 +100,11 @@ export class PerpsCandleDatasetService {
   /** 当前被观察着的数据集，供配给决策使用。 */
   private readonly watchers = new Map<string, number>();
   private readonly historyLoading = new Set<string>();
-  private readonly historyExhausted = new Set<string>();
+  /** 每个数据集已经问过的历史区间；空窗口也算问过。 */
+  private readonly historyProbed = new Map<
+    string,
+    { from: number; to: number }
+  >();
   private snapshotTimer: any = null;
   private pendingSnapshot: PerpsCandleKey | null = null;
 
@@ -152,32 +157,46 @@ export class PerpsCandleDatasetService {
   /**
    * 再要一页比本数据集手里更早的柱子。
    *
-   * 往前拼接不会动数据集的右端；空的一页意味着交易场所再往前没有东西了，
-   * 于是不再继续要。
+   * 往前拼接不会动数据集的右端。停止条件只有一个：窗口越过交易场所 5000 根的总历史边界
+   * （见 `earliestQueryable`）。空的一页**不是**停止条件 —— 低流动性的 HIP-3 市场整段
+   * 没有成交是常事，而官方从未承诺无成交的周期也会生成零量柱子。所以空窗口只把边界往前
+   * 推一格，下一次从这里继续问；否则一个空洞会把这个数据集的翻页永久钉死。
+   *
+   * 代价是一个刚上市的市场在数据用完之后，还会零星多问几次（每次用户滚动一下算一次），
+   * 直到窗口越过 5000 根的边界。这笔开销换的是「不把未知说成已知」。
    */
   loadEarlier(coin: string, interval: PerpsCandleInterval) {
     const key = { coin, interval };
     const id = this.keyOf(key);
-    if (this.historyExhausted.has(id) || this.historyLoading.has(id)) {
+    if (this.historyLoading.has(id)) {
       return;
     }
     const state = this.dataset.peek(key);
     if (state.availability === 'loading' || !state.candles.length) {
       return;
     }
+    const oldest = state.candles[0].t;
+    const probed = this.historyProbed.get(id);
+    // 只有当上次问过的区间确实接在手里这批柱子上时，才从它的左端继续。数据集过期重建到
+    // 一个更新的窗口之后，中间那段谁也没问过 —— 那时得从手里的柱子重新往前走。
+    const endTime = probed && probed.to >= oldest ? probed.from : oldest;
+    // 边界以手里最新的那根柱子为锚，而不是墙上时钟：5000 根是交易场所对**这个数据集**
+    // 能答出的全部范围，而一张停在昨天的图不该因此少问一页。
+    const newest = state.candles[state.candles.length - 1].t;
+    if (endTime <= earliestQueryable(interval, newest)) {
+      return;
+    }
     this.historyLoading.add(id);
     // 这次取数是数据集自己的，不是核心的，所以必须让条目站住等它落地。
     const release = this.dataset.keepAlive(key);
-    const endTime = state.candles[0].t;
     const { startTime } = snapshotWindow(interval, PERPS_CANDLE_LIMIT, endTime);
     this.source.getCandleRange(coin, interval, startTime, endTime).subscribe({
       next: (res) => {
         this.historyLoading.delete(id);
+        this.historyProbed.set(id, { from: startTime, to: endTime });
         // 交易场所可能会把窗口末端那根柱子重复给一次。
         const older = (res || []).filter((candle) => candle.t < endTime);
-        if (!older.length) {
-          this.historyExhausted.add(id);
-        } else {
+        if (older.length) {
           this.updates.get(id)?.next({ kind: 'batch', candles: older });
         }
         release();

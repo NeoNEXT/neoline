@@ -77,6 +77,29 @@ function watching(service: PerpsMarketDatasetService) {
 }
 
 describe('PerpsMarketDatasetService snapshots', () => {
+  it('retains a snapshot completed after the last observer leaves', () => {
+    const response = new Subject<any>();
+    const getMetaAndAssetCtxs = jasmine
+      .createSpy('getMetaAndAssetCtxs')
+      .and.returnValue(response);
+    const { service, channel } = build({ getMetaAndAssetCtxs });
+    const first = watching(service);
+    first.stop();
+
+    response.next([{ universe }, contexts]);
+    response.complete();
+
+    const next = watching(service);
+    expect(next.last().availability).toBe('live');
+    expect(next.last().markets.map((market) => market.coin)).toEqual([
+      'BTC', 'ETH',
+    ]);
+    expect(getMetaAndAssetCtxs).toHaveBeenCalledTimes(1);
+    channel.push(ALL_DEXS, ctxFrame(['', [ctx('64000'), ctx('1900')]]));
+    expect(next.last().markets[0].midPxExact).toBe('64000');
+    next.stop();
+  });
+
   it('preserves the current margin-mode metadata in the market model', (done) => {
     const { service } = build({
       getMetaAndAssetCtxs: () =>

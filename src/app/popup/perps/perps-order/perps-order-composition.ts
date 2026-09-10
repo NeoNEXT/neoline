@@ -301,6 +301,8 @@ export function composeOrder(
 
   const submittable =
     facts.market.status === 'ready' &&
+    // 单资产容量不包含持仓；首次账户快照到达前，无法检查反向仓位。
+    !!account &&
     hasAmount &&
     !availability &&
     hasExecutionPrice &&

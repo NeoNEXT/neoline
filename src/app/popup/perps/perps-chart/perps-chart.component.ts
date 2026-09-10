@@ -44,6 +44,7 @@ interface RenderedDataset {
   firstTime: number;
   lastTime: number;
   count: number;
+  candles: PerpsCandle[];
 }
 
 /** 图表视角下的一根 K 线：柱子本身，以及它下面的成交量柱。 */
@@ -158,11 +159,11 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
         firstTime: data[0].t,
         lastTime: data[data.length - 1].t,
         count: data.length,
+        candles: data,
       };
       const prev = this.rendered;
-      // 这是对「前缀未变」的一个廉价近似，而不是证明：生产方只会替换最后一根柱子、
-      // 前插历史，或者追加。在旧位置上检查旧的末根柱子，就能在不逐帧比较整个数组的
-      // 前提下，抓到意外的裁剪。
+      // 快照可能修正已收盘柱子的 OHLCV，不能仅凭时间与数量判定前缀未变。
+      // 数据集以不可变对象发布；相同引用可直接跳过字段比较。
       const appended = prev ? data.slice(prev.count) : [];
       let appendedAfter = prev?.lastTime ?? 0;
       const appendedInOrder = appended.every((candle) => {
@@ -188,7 +189,21 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
         // 柱子滚动时，前一根也会被重放一遍：一根柱子最终的 OHLCV，可能与它还开着时
         // 流式推送的最后一个值不同。
         const appendedCount = next.count - prev.count;
-        if (appendedCount <= MAX_INCREMENTAL_TAIL_BARS) {
+        const historyChanged = prev.candles
+          .slice(0, -1)
+          .some((candle, index) => {
+            const current = data[index];
+            return (
+              candle !== current &&
+              (candle.t !== current.t ||
+                candle.o !== current.o ||
+                candle.h !== current.h ||
+                candle.l !== current.l ||
+                candle.c !== current.c ||
+                candle.v !== current.v)
+            );
+          });
+        if (!historyChanged && appendedCount <= MAX_INCREMENTAL_TAIL_BARS) {
           data
             .slice(Math.max(0, prev.count - 1))
             .forEach((candle) => this.applyBar(candle));
@@ -292,7 +307,7 @@ export class PerpsChartComponent implements AfterViewInit, OnChanges, OnDestroy 
     });
   }
 
-  /** 批量替换一次大规模追加，且不改变已有的逻辑下标。 */
+  /** 同步历史修正或大规模追加，且不改变已有的逻辑下标。 */
   private replaceTailPreservingViewport(data: PerpsCandle[]) {
     const range = this.chart.timeScale().getVisibleLogicalRange();
     this.setAllData(data);

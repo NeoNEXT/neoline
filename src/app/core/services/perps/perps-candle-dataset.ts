@@ -113,6 +113,20 @@ export function snapshotWindow(
 }
 
 /**
+ * 交易场所还答得上来的最早时刻。
+ *
+ * 官方的表述是「只有最近 5000 根 K 线可用」——这是一条**总历史边界**，不是单次返回数，
+ * 翻页翻不过去。它也是唯一有承诺的停止条件：官方从未承诺「没有成交的周期一定生成零量
+ * K 线」，所以一个空窗口只说明那一段没有成交，说明不了历史已经到底。
+ */
+export function earliestQueryable(
+  interval: PerpsCandleInterval,
+  now: number
+): number {
+  return now - perpsIntervalMs(interval) * PERPS_CANDLE_HISTORY_LIMIT;
+}
+
+/**
  * 用于补上数据流缺失部分的范围，以及这段数据能否接得上。
  *
  * 一旦缺口比交易场所 5000 根的历史还老，可取到的范围就属于另一个数据集了：跨过窟窿硬接
@@ -123,8 +137,7 @@ export function recoveryWindow(
   interval: PerpsCandleInterval,
   now: number
 ): { startTime: number; endTime: number; reloadAvailableDataset: boolean } {
-  const earliestRecoverable =
-    now - perpsIntervalMs(interval) * PERPS_CANDLE_HISTORY_LIMIT;
+  const earliestRecoverable = earliestQueryable(interval, now);
   const lastTime = candles[candles.length - 1].t;
   const reloadAvailableDataset = lastTime < earliestRecoverable;
   return {

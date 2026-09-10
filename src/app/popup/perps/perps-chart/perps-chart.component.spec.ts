@@ -113,6 +113,27 @@ describe('PerpsChartComponent dataset updates', () => {
     expect(setVisibleLogicalRange).not.toHaveBeenCalled();
   });
 
+  it('renders snapshot corrections behind the live tail and preserves the viewport', () => {
+    const { component, render, series, setVisibleLogicalRange } = chartComponent();
+    component.candles = [bar(1000), bar(61_000)];
+    render();
+    component.candles = [...component.candles, bar(121_000)];
+    render();
+    (component as any).chart.timeScale = () => ({
+      setVisibleLogicalRange,
+      getVisibleLogicalRange: () => ({ from: 0.25, to: 1.75 }),
+    });
+    series().setData.calls.reset();
+    setVisibleLogicalRange.calls.reset();
+
+    component.candles = [bar(1000), bar(61_000, '125'), bar(121_000)];
+    render();
+
+    expect(series().setData).toHaveBeenCalledTimes(1);
+    expect(series().setData.calls.mostRecent().args[0][1].close).toBe(125);
+    expect(setVisibleLogicalRange).toHaveBeenCalledOnceWith({ from: 0.25, to: 1.75 });
+  });
+
   it('replays the previous bar when a new one is appended', () => {
     const { component, render, series, setVisibleLogicalRange } =
       chartComponent();

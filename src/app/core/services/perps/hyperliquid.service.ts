@@ -38,6 +38,7 @@ import {
   resolvePerpsTestnet,
 } from '@popup/_lib/perps';
 import { environment } from '@/environments/environment';
+import { isPerpsActivity } from './perps-activity';
 import { cctpCollectedFee } from './perps-cctp-history';
 import { parsePerpsAccount } from './perps-account-state';
 import { normalizeIds, parseProtocolJson } from './perps-protocol-json';
@@ -468,7 +469,9 @@ export class HyperliquidService {
       user: address.toLowerCase(),
       aggregateByTime: true,
     }).pipe(
-      map((res) => normalizeIds(Array.isArray(res) ? res : []))
+      map((res) => normalizeIds(
+        (Array.isArray(res) ? res : []).filter(isPerpsActivity)
+      ))
     );
   }
 
@@ -482,7 +485,9 @@ export class HyperliquidService {
           user,
           dex,
         }).pipe(
-          map((res) => normalizeIds(Array.isArray(res) ? res : []))
+          map((res) => normalizeIds(
+            (Array.isArray(res) ? res : []).filter(isPerpsActivity)
+          ))
         )
       )
     ).pipe(map((ordersByDex) => ordersByDex.flat()));
@@ -494,7 +499,9 @@ export class HyperliquidService {
     return combineLatest(
       this.enabledDexes.map((dex) =>
         this.channel.subscribe({ type: 'openOrders', user, dex }).pipe(
-          map((data) => (Array.isArray(data?.orders) ? data.orders : []))
+          map((data) =>
+            (Array.isArray(data?.orders) ? data.orders : []).filter(isPerpsActivity)
+          )
         )
       )
     ).pipe(map((ordersByDex) => ordersByDex.flat()));
@@ -506,7 +513,9 @@ export class HyperliquidService {
       type: 'historicalOrders',
       user: address.toLowerCase(),
     }).pipe(
-      map((res) => normalizeIds(Array.isArray(res) ? res : []))
+      map((res) => normalizeIds(
+        (Array.isArray(res) ? res : []).filter((row) => isPerpsActivity(row?.order))
+      ))
     );
   }
 

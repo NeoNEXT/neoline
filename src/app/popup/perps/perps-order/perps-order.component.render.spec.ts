@@ -85,7 +85,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
   let markets: BehaviorSubject<typeof MARKET>;
 
   beforeEach(async () => {
-    account = null;
+    account = { positions: [] };
     queryParams = {};
     connection = new BehaviorSubject<PerpsConnectionState>('live');
     markets = new BehaviorSubject(MARKET);

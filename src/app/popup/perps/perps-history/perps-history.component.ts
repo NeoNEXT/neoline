@@ -9,6 +9,7 @@ import {
   EvmWalletService,
   GlobalService,
 } from '@/app/core';
+import { isPerpsActivity } from '@app/core/services/perps/perps-activity';
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
 import { PerpsExchangeWriteService } from '@app/core/services/perps/perps-exchange-write.service';
 import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
@@ -48,9 +49,16 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
   transfers: PerpsLedgerUpdate[] = [];
   tab: PerpsActivityTab = 'orders';
   loading = true;
-  /** 按需拉取的那几个 tab 共用的加载指示。 */
-  tabLoading = false;
-  loadError = false;
+  /** 只展示当前 tab 的加载状态，已收到快照时无需等待 REST。 */
+  get tabLoading(): boolean {
+    return !this.loading && !this.loadedTabs.has(this.tab) &&
+      this.pendingTabs.has(this.tab);
+  }
+  get loadError(): boolean {
+    return this.initialLoadError || this.failedTabs.has(this.tab);
+  }
+  private initialLoadError = false;
+  private failedTabs = new Set<PerpsActivityTab>();
   pendingCancelOrderId: string;
   cancelingOrderId: string;
 
@@ -106,7 +114,8 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
 
   private load() {
     this.loading = true;
-    this.loadError = false;
+    this.initialLoadError = false;
+    this.failedTabs.clear();
     this.loadedTabs.clear();
     this.pendingTabs.clear();
     this.historicalOrders = [];
@@ -132,7 +141,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
         },
         () => {
           this.loading = false;
-          this.loadError = true;
+          this.initialLoadError = true;
         }
       )
     );
@@ -161,19 +170,18 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
       return;
     }
     this.pendingTabs.add(tab);
-    this.tabLoading = true;
+    this.failedTabs.delete(tab);
     this.requestSubs.add(
       this.requestFor(tab).subscribe((res: any[]) => {
         this.acceptTab(tab, res);
         this.pendingTabs.delete(tab);
         this.loadedTabs.add(tab);
-        if (this.tab === tab) {
-          this.tabLoading = false;
-        }
+        this.failedTabs.delete(tab);
       }, () => {
         this.pendingTabs.delete(tab);
-        this.tabLoading = false;
-        this.loadError = true;
+        if (!this.loadedTabs.has(tab)) {
+          this.failedTabs.add(tab);
+        }
       })
     );
   }
@@ -236,7 +244,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
           aggregateByTime: true,
         })
         .subscribe((update) => {
-          const incoming: PerpsFill[] = update?.fills || [];
+          const incoming: PerpsFill[] = (update?.fills || []).filter(isPerpsActivity);
           // 快照是全部真相，增量并进屏幕上已有的那份 —— 但两条路都要重排：交易场所
           // 按时间**升序**下发 `userFills`，而这一页最新的排最上面。
           this.fills = this.mergeFills(
@@ -245,9 +253,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
           );
           if (update?.isSnapshot) {
             this.loadedTabs.add('fills');
-            if (this.tab === 'fills') {
-              this.tabLoading = false;
-            }
+            this.failedTabs.delete('fills');
           }
         })
     );
@@ -280,7 +286,6 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
   setTab(tab: PerpsActivityTab) {
     this.tab = tab;
     this.pendingCancelOrderId = undefined;
-    this.tabLoading = !this.loading && !this.loadedTabs.has(tab);
     this.loadTab(tab);
   }
 

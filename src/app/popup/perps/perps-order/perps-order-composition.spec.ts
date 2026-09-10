@@ -21,7 +21,7 @@ const facts = (overrides: Partial<PerpsOrderFacts> = {}): PerpsOrderFacts => ({
   market: { status: 'ready', market: ethMarket() },
   account: {
     availability: 'live',
-    account: null,
+    account: { positions: [] } as PerpsAccount,
     missingDexes: [],
     updatedAt: 1,
   },
@@ -117,6 +117,37 @@ const sides = (
  * 所以断言改从 `availableExact` 和 `percentBase` 上读 —— 那才是页面看得见的东西。
  */
 describe('composeOrder 购买力', () => {
+  it('waits for positions even when market and asset capacity arrive first', () => {
+    const f = facts({
+      account: {
+        availability: 'loading',
+        account: null,
+        missingDexes: [],
+        updatedAt: null,
+      },
+      activeAssetData: capacity('ETH', 100, '100', '10'),
+    });
+    const order = input({ amount: '20', side: 'long' });
+    const loading = composeOrder(f, order);
+    expect(loading.submittable).toBeFalse();
+    expect(loading.intent).toBeNull();
+    expect(loading.availability).toBeNull();
+
+    f.account = withPositions(
+      ethPosition({ sziExact: '-1', isLong: false, leverageType: 'isolated' })
+    );
+    const holdingShort = composeOrder(f, order);
+    expect(holdingShort.submittable).toBeFalse();
+    expect(holdingShort.availability?.code).toBe('holding-short');
+
+    f.account = withPositions();
+    expect(composeOrder(f, order).submittable).toBeTrue();
+    expect(composeOrder(f, order).intent?.operation).toBe('open');
+
+    f.account = { ...f.account, availability: 'stale' };
+    expect(composeOrder(f, order).submittable).toBeTrue();
+  });
+
   ['unknown', 'dexAbstraction'].forEach((mode: PerpsAccount['abstractionMode']) => {
     it(`uses venue capacity rather than guessing transferred collateral for ${mode}`, () => {
       const f = facts({

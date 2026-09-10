@@ -22,6 +22,56 @@ describe('HyperliquidService accounts and fees', () => {
     service = new HyperliquidService(http, channel, writes());
   });
 
+  it('filters both spot coin formats from REST and live activity', () => {
+    spyOnProperty(service, 'enabledDexes', 'get').and.returnValue(['', 'xyz']);
+    // 现货的两种形状：canonical 对的真名，以及非 canonical 的 `@{index}`。
+    // 今天 `PURR/USDC` 是唯一的 canonical 对，所以这里按名字排除就够 —— 代价见
+    // docs/research 的现货命名一节。
+    const rows = ['ETH', 'xyz:NEO', '@107', 'PURR/USDC'].map((coin, i) => ({
+      coin,
+      oid: String(i),
+    }));
+    http.post.and.callFake(((_url: string, body: any) => of(
+      body.type === 'historicalOrders'
+        ? rows.map((order) => ({ order, status: 'filled' }))
+        : body.dex === 'xyz' ? [] : rows
+    )) as any);
+
+    service.getOpenOrders('0xabc').subscribe((orders) =>
+      expect(orders.map((row) => row.coin)).toEqual(['ETH', 'xyz:NEO'])
+    );
+    service.getUserFills('0xabc').subscribe((fills) =>
+      expect(fills.map((row) => row.coin)).toEqual(['ETH', 'xyz:NEO'])
+    );
+    service.getHistoricalOrders('0xabc').subscribe((orders) =>
+      expect(orders.map((row) => row.order.coin)).toEqual(['ETH', 'xyz:NEO'])
+    );
+    const updates = jasmine.createSpy('updates');
+    service.watchOpenOrders('0xabc').subscribe(updates);
+    channel.push({ type: 'openOrders', user: '0xabc', dex: '' }, { orders: rows });
+    channel.push({ type: 'openOrders', user: '0xabc', dex: 'xyz' }, { orders: [] });
+    expect(updates).toHaveBeenCalledWith(rows.slice(0, 2));
+  });
+
+  /**
+   * 数据通道的 observable 既不 error 也不 complete —— 订阅方因此没有 error 分支。
+   * 一行形状不对的协议 JSON 若在这里抛错，实时订阅会永久停摆，而页面说不出它停了。
+   */
+  it('keeps live orders flowing past a malformed row', () => {
+    spyOnProperty(service, 'enabledDexes', 'get').and.returnValue(['']);
+    const updates = jasmine.createSpy('updates');
+    const failed = jasmine.createSpy('failed');
+    service.watchOpenOrders('0xabc').subscribe(updates, failed);
+
+    channel.push(
+      { type: 'openOrders', user: '0xabc', dex: '' },
+      { orders: [null, {}, { coin: 'ETH', oid: '1' }, { coin: '@107' }] }
+    );
+
+    expect(failed).not.toHaveBeenCalled();
+    expect(updates).toHaveBeenCalledWith([null, {}, { coin: 'ETH', oid: '1' }]);
+  });
+
   it('loads both user fee sides and caches them by address', () => {
     http.post.and.returnValue(
       of({

@@ -244,6 +244,30 @@ describe('PerpsCandleDatasetService remembered datasets', () => {
     tick(300);
   }));
 
+  /** 重建到更新的窗口之后，中间那段谁也没问过 —— 得从手里的柱子重新往前走。 */
+  it('pages from the rebuilt window, not the stale probe', fakeAsync(() => {
+    const now = 1_700_000_120_000;
+    spyOn(Date, 'now').and.returnValue(now);
+    const getCandleRange = jasmine.createSpy('getCandleRange').and.returnValues(
+      of([at(now - 60_000)]), of([]),
+      of([at(now + 600_000)]), of([at(now + 540_000)])
+    );
+    const service = build({ getCandleRange });
+    const first = watching(service, 'ETH', '1m');
+    service.loadEarlier('ETH', '1m');
+    first.stop();
+    tick(300);
+
+    (Date.now as jasmine.Spy).and.returnValue(now + 600_000);
+    const second = watching(service, 'ETH', '1m');
+    service.loadEarlier('ETH', '1m');
+
+    expect(second.times()).toEqual([now + 540_000, now + 600_000]);
+    expect(getCandleRange).toHaveBeenCalledTimes(4);
+    second.stop();
+    tick(300);
+  }));
+
   it('keeps intervals of the same market apart', fakeAsync(() => {
     const now = 1_700_000_120_000;
     spyOn(Date, 'now').and.returnValue(now);
@@ -401,19 +425,45 @@ describe('PerpsCandleDatasetService history paging', () => {
     view.stop();
   });
 
-  it('stops paging once an earlier snapshot adds nothing new', () => {
+  /**
+   * 官方从未承诺无成交的周期也会生成零量柱子，所以空的一页只说明那一段没有成交。
+   * 把它读成「历史到底了」，会让一个低流动性市场的空洞永久钉死这张图的翻页。
+   */
+  it('keeps paging past an empty window instead of calling it the end', () => {
+    const WINDOW = 15 * 60e3 * 500;
+    const base = 15 * 60e3 * 5000;
     const getCandleRange = jasmine
       .createSpy('getCandleRange')
-      .and.returnValues(of([at(61_000)]), of([]), of([at(1000)]));
+      .and.returnValues(of([at(base)]), of([]), of([at(base - WINDOW - 1)]));
     const service = build({ getCandleRange });
     const view = watching(service);
 
     service.loadEarlier('ETH', '15m');
     service.loadEarlier('ETH', '15m');
 
-    // 第二次调用绝不能走到交易场所。
-    expect(getCandleRange).toHaveBeenCalledTimes(2);
-    expect(view.times()).toEqual([61_000]);
+    // 第一次调用是数据集自己的快照；两次翻页里，第二次从上一个空窗口的左端继续，
+    // 而不是重问同一段。
+    expect(
+      getCandleRange.calls.allArgs().slice(1).map((args) => args[3])
+    ).toEqual([base, base - WINDOW]);
+    expect(view.times()).toEqual([base - WINDOW - 1, base]);
+    view.stop();
+  });
+
+  /** 唯一有承诺的停止条件：交易场所只留最近 5000 根。 */
+  it('stops paging at the venue 5000-bar horizon', () => {
+    const span = 15 * 60e3 * 5000;
+    const getCandleRange = jasmine
+      .createSpy('getCandleRange')
+      .and.returnValues(of([at(span), at(span * 2)]), of([]));
+    const service = build({ getCandleRange });
+    const view = watching(service);
+
+    // 手里最老的柱子已经正好落在最新那根往前 5000 根的位置上。
+    service.loadEarlier('ETH', '15m');
+
+    expect(getCandleRange).toHaveBeenCalledTimes(1);
+    expect(view.times()).toEqual([span, span * 2]);
     view.stop();
   });
 

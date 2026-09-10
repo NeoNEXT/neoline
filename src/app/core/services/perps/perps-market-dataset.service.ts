@@ -392,7 +392,10 @@ export class PerpsMarketDatasetService {
                 updatedAt: current.updatedAt,
               }
         );
-      })
+      }),
+      // 请求可能在最后一个页面退订后才完成；集合的新鲜度与缓存必须一起保留，
+      // 否则下次进入会用新的 snapshotAt 跳过取数，却只拿到旧的 loading 状态。
+      tap((state) => this.retain(state))
     );
   }
 
