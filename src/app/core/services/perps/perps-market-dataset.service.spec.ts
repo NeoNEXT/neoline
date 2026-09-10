@@ -1,8 +1,9 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { discardPeriodicTasks, fakeAsync, tick } from '@angular/core/testing';
-import { Subject, of, throwError } from 'rxjs';
+import { Subject, defer, of, throwError } from 'rxjs';
 
 import { PerpsMarket } from '@popup/_lib/perps';
+import { HyperliquidService } from './hyperliquid.service';
 import { fakePerpsDataChannel } from './perps-data-channel.fake';
 import {
   PerpsMarketDatasetService,
@@ -75,6 +76,132 @@ function watching(service: PerpsMarketDatasetService) {
     stop: () => subscription.unsubscribe(),
   };
 }
+
+/** 注册表错误必须穿过真实读取服务，才能验证列表不会把降级结果误报为完整。 */
+describe('PerpsMarketDatasetService registry failures', () => {
+  let service: PerpsMarketDatasetService;
+  let channel: ReturnType<typeof fakePerpsDataChannel>;
+  let registryStatus: number;
+  let registryCalls: number;
+  let marketStatus: number;
+
+  beforeEach(() => {
+    registryStatus = 503;
+    registryCalls = 0;
+    marketStatus = 0;
+    channel = fakePerpsDataChannel();
+    const http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
+    // HttpClient 的每次订阅都会执行请求，包括详情页对同一 observable 的重试。
+    http.post.and.callFake(((_url: string, body: any) => defer(() => {
+      if (body.type === 'perpDexs') {
+        registryCalls += 1;
+        return registryStatus
+          ? throwError(() => new HttpErrorResponse({ status: registryStatus }))
+          : of(JSON.stringify([null, { name: 'xyz' }]));
+      }
+      if (marketStatus) {
+        return throwError(() => new HttpErrorResponse({ status: marketStatus }));
+      }
+      return of(JSON.stringify([
+        { universe: [{ name: body.dex ? 'xyz:NEO' : 'ETH', szDecimals: 2, maxLeverage: 5 }] },
+        [ctx('10')],
+      ]));
+    })) as any);
+    const hyperliquid = new HyperliquidService(
+      http, channel, { wrote: () => new Subject<void>() } as any
+    );
+    spyOnProperty<any>(hyperliquid, 'supportedHip3Dexes', 'get').and.returnValue(['xyz']);
+    service = new PerpsMarketDatasetService(hyperliquid, channel);
+  });
+
+  it('keeps standard markets visible and incomplete until the registry recovers', fakeAsync(() => {
+    const view = watching(service);
+    expect(view.last().markets.map((market) => market.coin)).toEqual(['ETH']);
+    expect(view.last().availability).toBe('incomplete');
+
+    channel.push(ALL_DEXS, ctxFrame(['', [ctx('11')]], ['xyz', [ctx('12')]]));
+    expect(view.last().markets[0].midPxExact).toBe('11');
+    expect(view.last().availability).toBe('incomplete');
+    expect(registryCalls).toBe(1);
+
+    registryStatus = 0;
+    tick(999);
+    expect(registryCalls).toBe(1);
+    tick(1);
+    expect(registryCalls).toBe(2);
+    expect(view.last().availability).toBe('live');
+    expect(view.last().markets.find((market) => market.coin === 'xyz:NEO')?.assetId)
+      .toBe(110000);
+    view.stop();
+  }));
+
+  it('uses the longer backoff for a rate-limited registry', fakeAsync(() => {
+    registryStatus = 429;
+    const view = watching(service);
+    expect(view.last().availability).toBe('incomplete');
+    tick(9999);
+    expect(registryCalls).toBe(1);
+    registryStatus = 0;
+    tick(1);
+    expect(registryCalls).toBe(2);
+    expect(view.last().availability).toBe('live');
+    view.stop();
+  }));
+
+  it('cancels the retry on exit and refreshes the incomplete list on re-entry', fakeAsync(() => {
+    const first = watching(service);
+    first.stop();
+    tick(10000);
+    expect(registryCalls).toBe(1);
+
+    registryStatus = 0;
+    const second = watching(service);
+    expect(registryCalls).toBe(2);
+    expect(second.last().availability).toBe('live');
+    expect(second.last().markets.map((market) => market.coin)).toContain('xyz:NEO');
+    second.stop();
+  }));
+
+  it('preserves registry rate limiting when standard markets also fail', fakeAsync(() => {
+    registryStatus = 429;
+    marketStatus = 503;
+    const view = watching(service);
+    expect(view.last().availability).toBe('unavailable');
+    tick(9999);
+    expect(registryCalls).toBe(1);
+
+    registryStatus = 0;
+    marketStatus = 0;
+    tick(1);
+    expect(registryCalls).toBe(2);
+    expect(view.last().availability).toBe('live');
+    expect(view.last().markets.map((market) => market.coin)).toContain('xyz:NEO');
+    view.stop();
+  }));
+
+  it('retries a transient registry failure when loading a HIP-3 detail', fakeAsync(() => {
+    const seen: (PerpsMarket | null)[] = [];
+    const subscription = service.watchMarketDetail('xyz:NEO')
+      .subscribe((market) => seen.push(market));
+    expect(seen).toEqual([]);
+    registryStatus = 0;
+    tick(1000);
+    expect(registryCalls).toBe(2);
+    expect(seen[0]?.coin).toBe('xyz:NEO');
+    subscription.unsubscribe();
+  }));
+
+  it('reports a refused registry request as a detail error, not an absent market', fakeAsync(() => {
+    registryStatus = 429;
+    const received = jasmine.createSpy('received');
+    const failed = jasmine.createSpy('failed');
+    service.watchMarketDetail('xyz:NEO').subscribe({ next: received, error: failed });
+    tick(5000);
+    expect(received).not.toHaveBeenCalled();
+    expect(failed).toHaveBeenCalledOnceWith(jasmine.objectContaining({ status: 429 }));
+    expect(registryCalls).toBe(1);
+  }));
+});
 
 describe('PerpsMarketDatasetService snapshots', () => {
   it('retains a snapshot completed after the last observer leaves', () => {

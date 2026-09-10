@@ -25,6 +25,14 @@ export class PerpsChainError extends Error {
   }
 }
 
+/** 广播可能已经被接受。调用方只能查询原哈希，不能把它当作失败重新签名。 */
+export class PerpsBroadcastStatusUnknownError extends Error {
+  constructor(readonly hash: string, readonly reason: unknown) {
+    super('No decidable response to the deposit broadcast');
+    this.name = 'PerpsBroadcastStatusUnknownError';
+  }
+}
+
 /** 产品会读取的一条链，以及它可以轮换使用的端点。 */
 export interface PerpsRpcEndpoints {
   chainId: number;
@@ -34,7 +42,7 @@ export interface PerpsRpcEndpoints {
    *
    * 与钱包网络上的 RPC 列表不同，这些端点从来不是用户选的：这些链只是资金通道的实现
    * 细节，因此从一个失效端点轮换走并不等于替换掉用户挑选的节点。每个条目都必须服务于
-   * 同一个链 id，使用前会做校验。
+   * 同一个链 id：列表由产品维护，运行时不做核对。
    */
   rpcUrls: string[];
 }
@@ -163,12 +171,26 @@ export class PerpsRpcService {
     signedTransaction: string
   ): Promise<string> {
     const hash = ethers.keccak256(signedTransaction);
+    let uncertain = false;
     try {
-      await this.withEndpoint(endpoints, (provider) =>
-        provider.broadcastTransaction(signedTransaction)
-      );
+      await this.withEndpoint(endpoints, async (provider) => {
+        try {
+          return await provider.broadcastTransaction(signedTransaction);
+        } catch (error) {
+          // nonce too low 也不能证明失败：先前丢失响应的尝试可能已经落块。
+          // 保留每次尝试的信息，避免后来的拒绝覆盖先前的未知结果。
+          const code = (error as any)?.code;
+          if (code !== 'INSUFFICIENT_FUNDS' && code !== 'REPLACEMENT_UNDERPRICED') {
+            uncertain = true;
+          }
+          throw error;
+        }
+      });
     } catch (error) {
       if (!isAlreadyBroadcast(error)) {
+        if (uncertain) {
+          throw new PerpsBroadcastStatusUnknownError(hash, error);
+        }
         throw error;
       }
     }
@@ -184,8 +206,8 @@ export class PerpsRpcService {
     if (!provider) {
       const request = new ethers.FetchRequest(url);
       request.timeout = PERPS_CHAIN_REQUEST_TIMEOUT_MS;
-      // 固定网络可以让 ethers 不必在每次调用时探测链 id，也让链 id 不匹配的端点大声
-      // 失败，而不是悄悄提供另一条链的状态。
+      // 固定网络让 ethers 不必在每次调用时探测链 id，也因此不核对节点所属的链：
+      // 端点列表由产品维护，默认每个条目都属于配置的链。
       const network = new ethers.Network(
         endpoints.chainName,
         endpoints.chainId

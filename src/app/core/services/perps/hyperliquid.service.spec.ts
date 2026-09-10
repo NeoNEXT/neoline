@@ -494,14 +494,19 @@ describe('HyperliquidService accounts and fees', () => {
 
   it('does not keep a failed DEX registry in the long-lived cache', fakeAsync(() => {
     let attempts = 0;
+    const failure = new Error('temporary');
+    const failed = jasmine.createSpy('failed');
+    const received = jasmine.createSpy('received');
     http.post.and.callFake((() => {
       attempts += 1;
       return attempts === 1
-        ? throwError(() => new Error('temporary'))
+        ? throwError(() => failure)
         : of([null, { name: 'xyz' }]);
     }) as any);
 
-    service.getDexRegistry().subscribe({ error: () => undefined });
+    service.getDexRegistry().subscribe({ next: received, error: failed });
+    expect(received).not.toHaveBeenCalled();
+    expect(failed).toHaveBeenCalledOnceWith(failure);
     tick(1);
     service.getDexRegistry().subscribe();
 

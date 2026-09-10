@@ -418,14 +418,11 @@ export class PerpsExchangeWriteService {
               parseProtocolJson(text)
             ) as PerpsExchangeResponse;
           } catch (error) {
-            // 订单的回复无法解码，不证明它没有执行。
-            if (allowItemErrors) {
-              throw new PerpsExecutionStatusUnknownError(error);
-            }
-            throw error;
+            // 任何写入的回复无法解码，都不证明它没有执行；提现同样如此。
+            throw new PerpsExecutionStatusUnknownError(error);
           }
           if (response?.status !== 'ok') {
-            if (allowItemErrors && response?.status !== 'err') {
+            if (response?.status !== 'err') {
               throw new PerpsExecutionStatusUnknownError();
             }
             throw new Error(

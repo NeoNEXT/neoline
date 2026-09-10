@@ -206,8 +206,8 @@ export class HyperliquidService {
 
   /**
    * builder 部署的 DEX 的注册表。一个 DEX 在这份列表里的位置会被烧进它各市场的资产 id，
-   * 所以条目只增不改，整个响应值得缓存的时间远长于它所喂养的价格。失败绝不缓存：它只会
-   * 把这次刷新降级为只有标准永续市场，并会被重试。
+   * 所以条目只增不改，整个响应值得缓存的时间远长于它所喂养的价格。失败绝不缓存，也不能
+   * 解释成空注册表；列表降级与重试由行情数据集处理，详情页则保留加载失败的语义。
    */
   getDexRegistry(): Observable<any[]> {
     if (this.supportedHip3Dexes.length === 0) {
@@ -218,12 +218,11 @@ export class HyperliquidService {
       return this.dexRegistryCache.request;
     }
     const request = this.post<any[]>({ type: 'perpDexs' }).pipe(
-      catchError(() => {
+      catchError((error) => {
         if (this.dexRegistryCache?.request === request) {
           this.dexRegistryCache = undefined;
         }
-        // 较老的/自建的 API 服务器可能还没暴露 HIP-3 发现接口。
-        return of([]);
+        throw error;
       }),
       shareReplay({ bufferSize: 1, refCount: false })
     );

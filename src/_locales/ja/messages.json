@@ -2225,6 +2225,9 @@
   "perpsDepositSubmitted": {
     "message": "入金を開始しました。Hyperliquid アカウントへの USDC の反映をお待ちください。"
   },
+  "perpsDepositStatusUnknown": {
+    "message": "入金の送信結果は不明です。元のトランザクションを確認しています。再度入金する前に、残高と取引履歴を確認してください。"
+  },
   "perpsDepositStillPending": {
     "message": "入金はまだ確認されていません。反映されるまでここで追跡します。"
   },

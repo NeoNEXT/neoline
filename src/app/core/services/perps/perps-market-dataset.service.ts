@@ -356,17 +356,25 @@ export class PerpsMarketDatasetService {
   ): Observable<PerpsMarketDatasetState> {
     clearTimeout(this.retryTimer);
     this.retryTimer = undefined;
+    let registryError: any;
     return this.source.getDexRegistry().pipe(
+      catchError((error) => {
+        // 标准市场不依赖注册表，仍可加载；但这不证明 HIP-3 市场不存在。
+        registryError = error;
+        return of([]);
+      }),
       switchMap((perpDexs) => this.snapshotRequests(perpDexs)),
       map((responses) => {
-        const { markets, missing } = this.foldSnapshot(responses);
+        const snapshot = this.foldSnapshot(responses);
+        const missing = snapshot.missing || !!registryError;
         this.snapshotIncomplete = missing;
         this.snapshotAt = missing ? null : Date.now();
         if (missing) {
           const failure =
-            responses.find((response) => response.error?.status === 429) ||
-            responses.find((response) => !response.response);
-          this.scheduleRetry(failure?.error);
+            responses.find((response) => response.error?.status === 429)?.error ||
+            registryError ||
+            responses.find((response) => !response.response)?.error;
+          this.scheduleRetry(failure);
         } else {
           this.retryAttempts = 0;
         }
@@ -374,13 +382,14 @@ export class PerpsMarketDatasetService {
           availability: missing
             ? ('incomplete' as const)
             : ('live' as const),
-          markets,
+          markets: snapshot.markets,
           updatedAt: Date.now(),
         };
       }),
       catchError((error) => {
         this.snapshotAt = null;
-        this.scheduleRetry(error);
+        // 注册表已经被限流时，即使标准市场也读取失败，仍遵守更长的退避。
+        this.scheduleRetry(registryError?.status === 429 ? registryError : error);
         // 已经在屏幕上的市场还不构成用户的问题：原样继续显示，
         // 并按逐渐拉长的间隔再问一次。
         return of(

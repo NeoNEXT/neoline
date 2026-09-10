@@ -2225,6 +2225,9 @@
   "perpsDepositSubmitted": {
     "message": "입금을 시작했습니다. USDC가 Hyperliquid 계정에 도착할 때까지 기다려 주세요."
   },
+  "perpsDepositStatusUnknown": {
+    "message": "입금 전송 결과를 알 수 없습니다. 원래 트랜잭션을 확인 중입니다. 다시 입금하기 전에 잔액과 거래 내역을 확인하세요."
+  },
   "perpsDepositStillPending": {
     "message": "입금이 아직 확인되지 않았습니다. 반영될 때까지 여기에서 계속 추적합니다."
   },

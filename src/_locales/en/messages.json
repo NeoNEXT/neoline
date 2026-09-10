@@ -2225,6 +2225,9 @@
   "perpsDepositSubmitted": {
     "message": "Deposit initiated. Waiting for USDC to arrive in your Hyperliquid account."
   },
+  "perpsDepositStatusUnknown": {
+    "message": "The deposit broadcast result is unknown. Checking the original transaction. Check your balance and transaction history before depositing again."
+  },
   "perpsDepositStillPending": {
     "message": "Deposit not confirmed yet. It stays tracked here until it is credited."
   },

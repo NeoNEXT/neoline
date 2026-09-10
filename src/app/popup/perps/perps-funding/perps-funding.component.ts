@@ -25,6 +25,7 @@ import {
   PerpsFeeQuote,
   PerpsFeeQuoteService,
 } from '@/app/core/services/perps/perps-fee-quote.service';
+import { PerpsBroadcastStatusUnknownError } from '@/app/core/services/perps/perps-rpc';
 import { EvmWalletJSON } from '@popup/_lib/evm';
 import {
   PerpsAccount,
@@ -929,6 +930,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     const amount = this.submissionAmount;
     const address = this.address;
     let hash: string;
+    let statusUnknown = false;
     try {
       const authorization = this.depositAuthorization;
       const confirmed = this.depositQuote;
@@ -955,21 +957,25 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
         fresh.maxFeeExact
       );
     } catch (error) {
-      // 这份许可下什么都没发出去，将来也不会：重试会重新走一遍确认并签一份新的。在这里把它
-      // 留着，等于为一次已经结束的尝试，让一份仍然可用的许可存活它的整个有效窗口。
-      this.discardDepositPreparation();
-      this.submitting = false;
-      this.global.snackBarTip('txFailed', (error as Error)?.message || error);
-      return;
+      if (error instanceof PerpsBroadcastStatusUnknownError) {
+        // 原交易可能已经被接受：保留它的哈希查回执，不重新准备或发送入金。
+        hash = error.hash;
+        statusUnknown = true;
+      } else {
+        this.discardDepositPreparation();
+        this.submitting = false;
+        this.global.snackBarTip('txFailed', (error as Error)?.message || error);
+        return;
+      }
     }
-    // 已用掉。nonce 已经在链上被消耗，所以从这里起留着的是一份再也授权不了任何东西的许可 ——
-    // 而把它留在 `sendDeposit` 读取授权的地方，正是第二次发送为一笔只可能 revert 的交易付
-    // gas 的原因。
+    // 已尝试发送的许可不能再次用于新交易；这里清除本地副本，不宣称它已在链上消耗。
     this.discardDepositPreparation();
     this.submitting = false;
     this.amount = null;
     this.activePreset = null;
-    this.global.snackBarTip('perpsDepositSubmitted');
+    this.global.snackBarTip(
+      statusUnknown ? 'perpsDepositStatusUnknown' : 'perpsDepositSubmitted'
+    );
     await this.trackDeposit(config, hash, address);
   }
 

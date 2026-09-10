@@ -19,6 +19,7 @@ import {
 } from '@app/core/services/perps/perps-exchange-write.service';
 import { PerpsDepositChainService } from '@/app/core/services/perps/perps-deposit-chain.service';
 import { PerpsFeeQuoteService } from '@/app/core/services/perps/perps-fee-quote.service';
+import { PerpsBroadcastStatusUnknownError } from '@/app/core/services/perps/perps-rpc';
 import { PerpsFundingComponent } from './perps-funding.component';
 import { PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS } from '@popup/_lib/perps';
 
@@ -1352,6 +1353,26 @@ describe('PerpsFundingComponent deposit authorisation lifetime', () => {
     await confirmDeposit();
 
     expect(held()).toBeNull();
+    expect(component.submitting).toBeFalse();
+  });
+
+  it('tracks the original hash after an ambiguous broadcast without resubmitting', async () => {
+    const hash = '0x' + '12'.repeat(32);
+    sendDeposit.and.callFake(() => Promise.reject(
+      new PerpsBroadcastStatusUnknownError(hash, new Error('response lost'))
+    ));
+    const notify = spyOn((component as any).global, 'snackBarTip');
+    const receipt = spyOn((component as any).depositChain, 'depositOutcome')
+      .and.resolveTo('confirmed');
+
+    await confirmDeposit();
+
+    expect(receipt).toHaveBeenCalledOnceWith(CONFIG, hash, PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS);
+    expect(notify.calls.allArgs()).toEqual([['perpsDepositStatusUnknown']]);
+    expect(sendDeposit).toHaveBeenCalledTimes(1);
+    expect(held()).toBeNull();
+    expect(component.amount).toBeNull();
+    expect(component.confirming).toBeFalse();
     expect(component.submitting).toBeFalse();
   });
 

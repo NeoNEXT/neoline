@@ -145,4 +145,62 @@ describe('PerpsRpcService broadcast', () => {
       jasmine.objectContaining({ failure: 'rejected' })
     );
   });
+
+  it('preserves the hash when a broadcast may have been accepted', async () => {
+    spyOn(rpc, 'withEndpoint').and.callFake(async (_endpoints: any, run: any) => {
+      try {
+        return await run({ broadcastTransaction: () => Promise.reject({ code: 'TIMEOUT' }) });
+      } catch {
+        throw new PerpsChainError('unavailable', 'No response');
+      }
+    });
+
+    await expectAsync(rpc.broadcast(endpoints, signed)).toBeRejectedWith(
+      jasmine.objectContaining({
+        name: 'PerpsBroadcastStatusUnknownError',
+        hash: ethers.keccak256(signed),
+      })
+    );
+  });
+
+  it('does not let a later nonce refusal erase an earlier ambiguous attempt', async () => {
+    const sent: string[] = [];
+    spyOn(rpc, 'withEndpoint').and.callFake(async (_endpoints: any, run: any) => {
+      try {
+        await run({ broadcastTransaction: (raw: string) => {
+          sent.push(raw);
+          return Promise.reject({ code: 'TIMEOUT' });
+        } });
+      } catch {
+        // The first endpoint could have mined the transaction before losing its reply.
+      }
+      try {
+        return await run({ broadcastTransaction: (raw: string) => {
+          sent.push(raw);
+          return Promise.reject({ code: 'NONCE_EXPIRED', message: 'nonce too low' });
+        } });
+      } catch {
+        throw new PerpsChainError('rejected', 'nonce too low');
+      }
+    });
+
+    await expectAsync(rpc.broadcast(endpoints, signed)).toBeRejectedWith(
+      jasmine.objectContaining({ name: 'PerpsBroadcastStatusUnknownError', hash: ethers.keccak256(signed) })
+    );
+    expect(sent).toEqual([signed, signed]);
+  });
+
+  it('keeps an insufficient-funds answer a definite rejection', async () => {
+    spyOn(rpc, 'withEndpoint').and.callFake(async (_endpoints: any, run: any) => {
+      try {
+        return await run({ broadcastTransaction: () => Promise.reject({ code: 'INSUFFICIENT_FUNDS' }) });
+      } catch {
+        throw new PerpsChainError('rejected', 'insufficient funds');
+      }
+    });
+
+    await expectAsync(rpc.broadcast(endpoints, signed)).toBeRejectedWith(
+      jasmine.objectContaining({ failure: 'rejected' })
+    );
+  });
 });

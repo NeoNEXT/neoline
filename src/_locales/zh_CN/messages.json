@@ -2225,6 +2225,9 @@
   "perpsDepositSubmitted": {
     "message": "存入已发起，等待 USDC 到达 Hyperliquid 账户。"
   },
+  "perpsDepositStatusUnknown": {
+    "message": "存入广播结果未知，正在查询原交易。请先核对余额与交易记录，再决定是否重新存入。"
+  },
   "perpsDepositStillPending": {
     "message": "存入尚未确认，将在此处持续跟踪直到入账。"
   },

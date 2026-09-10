@@ -341,6 +341,37 @@ describe('PerpsExchangeWriteService withdrawals', () => {
     // 绝不能把它报告成失败。
     expect(failure.name).toBe('PerpsExecutionStatusUnknownError');
   }));
+
+  for (const body of ['{"status":', '<html>upstream error</html>', {}, null]) {
+    it(`keeps an undecidable withdrawal unknown: ${JSON.stringify(body)}`, fakeAsync(() => {
+      http.post.and.returnValue(of(body) as any);
+      const accepted = jasmine.createSpy('accepted');
+      const wrote = jasmine.createSpy('wrote');
+      service.wrote().subscribe(wrote);
+      let failure: any;
+
+      service.withdraw(PRIVATE_KEY, SIGNER, '12.3', { fromSpot: false })
+        .subscribe({ next: accepted, error: (error) => (failure = error) });
+      flushMicrotasks();
+
+      expect(failure?.name).toBe('PerpsExecutionStatusUnknownError');
+      expect(accepted).not.toHaveBeenCalled();
+      expect(wrote).not.toHaveBeenCalled();
+      expect(http.post).toHaveBeenCalledTimes(1);
+    }));
+  }
+
+  it('preserves an explicit withdrawal rejection', fakeAsync(() => {
+    http.post.and.returnValue(of({ status: 'err', response: 'Insufficient balance' }) as any);
+    let failure: any;
+    service.withdraw(PRIVATE_KEY, SIGNER, '12.3', { fromSpot: false })
+      .subscribe({ error: (error) => (failure = error) });
+    flushMicrotasks();
+
+    expect(failure?.message).toBe('Insufficient balance');
+    expect(failure?.name).not.toBe('PerpsExecutionStatusUnknownError');
+    expect(http.post).toHaveBeenCalledTimes(1);
+  }));
 });
 
 describe('PerpsExchangeWriteService write notifications', () => {
