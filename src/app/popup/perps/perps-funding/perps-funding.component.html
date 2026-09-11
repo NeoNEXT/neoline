@@ -31,6 +31,7 @@
       <input
         type="text"
         inputmode="decimal"
+        [disabled]="submitting"
         [(ngModel)]="amount"
         (input)="onAmountInput($event)"
         placeholder="0"
@@ -58,13 +59,13 @@
       <span
         *ngFor="let percent of presetPercents"
         [class.active]="activePreset === percent"
-        [class.disabled]="!maxAmountKnown"
+        [class.disabled]="submitting || !maxAmountKnown"
         (click)="setPercent(percent)"
         >{{ percent }}%</span
       >
       <span
         [class.active]="activePreset === -1"
-        [class.disabled]="!maxAmountKnown"
+        [class.disabled]="submitting || !maxAmountKnown"
         (click)="setMax()"
       >
         {{ "perpsMaxFunding" | translate | async }}

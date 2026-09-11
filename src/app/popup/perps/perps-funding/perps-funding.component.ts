@@ -648,7 +648,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   }
 
   setTab(tab: FundingTab) {
-    if (this.tab === tab) {
+    if (this.submitting || this.tab === tab) {
       return;
     }
     this.tab = tab;
@@ -664,7 +664,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   }
 
   setPercent(percent: number) {
-    if (!this.maxAmountKnown) {
+    if (this.submitting || !this.maxAmountKnown) {
       return;
     }
     this.activePreset = percent;
@@ -674,7 +674,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   }
 
   setMax() {
-    if (!this.maxAmountKnown) {
+    if (this.submitting || !this.maxAmountKnown) {
       return;
     }
     this.activePreset = -1;
@@ -934,15 +934,32 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     try {
       const authorization = this.depositAuthorization;
       const confirmed = this.depositQuote;
-      if (!authorization || !confirmed) {
+      // 报价等待期间也可能发生编辑或取消；只有仍对应当前输入的同一份授权才能发送。
+      const stillPrepared = () =>
+        this.isDeposit &&
+        config === this.token &&
+        address === this.address &&
+        authorization === this.depositAuthorization &&
+        !!authorization &&
+        new BigNumber(authorization.amountExact).isEqualTo(this.submissionAmount);
+      const discardChangedIntent = () => {
+        this.discardDepositPreparation();
+        this.confirming = false;
         this.submitting = false;
         this.global.snackBarTip('perpsRefreshFailed');
+      };
+      if (!stillPrepared() || !confirmed) {
+        discardChangedIntent();
         return;
       }
       // 再读一次，而不是对着展示给用户的那个数字签名：转发费是一个合约变量，而屏幕上的报价
       // 可能已经在描述另一笔入金，而不是即将发出的这一笔。只有手续费变高才会退回确认 ——
       // 变低意味着入账得比界面承诺的更多，那不是需要用户同意的变化。
       const fresh = await this.feeQuote.depositQuote(amount, address);
+      if (!stillPrepared()) {
+        discardChangedIntent();
+        return;
+      }
       if (new BigNumber(fresh.feeExact).isGreaterThan(confirmed.feeExact)) {
         this.submitting = false;
         this.depositQuote = fresh;

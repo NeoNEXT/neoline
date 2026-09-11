@@ -1376,6 +1376,54 @@ describe('PerpsFundingComponent deposit authorisation lifetime', () => {
     expect(component.submitting).toBeFalse();
   });
 
+  ['refresh', 'quote'].forEach((phase) => {
+    it(`discards the old amount when input changes during ${phase}`, async () => {
+      component.requestSubmit();
+      await settle();
+      let finish: () => void;
+      if (phase === 'refresh') {
+        spyOn<any>(component, 'refreshBeforeSubmit').and.callFake(
+          () => new Promise<void>((resolve) => (finish = resolve))
+        );
+        depositQuote.and.resolveTo({ feeExact: '0.9', maxFeeExact: '0.9' });
+      } else {
+        depositQuote.and.callFake(() => new Promise((resolve) => {
+          finish = () => resolve({ feeExact: '0.9', maxFeeExact: '0.9' });
+        }));
+      }
+      const submission = component.submit();
+      await settle();
+      // 模拟绑定值变化，验证发送边界也能防住旧授权，而不只依赖 disabled。
+      component.amount = '10';
+      finish();
+      await submission;
+
+      expect(sendDeposit).not.toHaveBeenCalled();
+      expect(held()).toBeNull();
+      expect(component.confirming).toBeFalse();
+      expect(component.submitting).toBeFalse();
+      expect(component.amount).toBe('10');
+    });
+  });
+
+  it('keeps presets and tabs from changing an in-flight deposit', async () => {
+    component.requestSubmit();
+    await settle();
+    let finish: () => void;
+    spyOn<any>(component, 'refreshBeforeSubmit').and.callFake(
+      () => new Promise<void>((resolve) => (finish = resolve))
+    );
+    const submission = component.submit();
+    component.setPercent(25);
+    component.setMax();
+    component.setTab('withdraw');
+    expect(component.amount).toBe('50');
+    expect(component.tab).toBe('deposit');
+    finish();
+    await submission;
+    expect(sendDeposit).toHaveBeenCalledTimes(1);
+  });
+
   // 例外情形：这笔入金还没有被尝试过，面板是就着同一笔重新打开的，
   // 重新签名也只是把已经同意过的东西再要一次。
   it('keeps the permission when the sheet reopens on a moved quote', async () => {
@@ -1392,6 +1440,8 @@ describe('PerpsFundingComponent deposit authorisation lifetime', () => {
     expect(sendDeposit).not.toHaveBeenCalled();
     expect(component.confirming).toBeTrue();
     expect(held()).toBe(signed);
+    await component.submit();
+    expect(sendDeposit).toHaveBeenCalledOnceWith(CONFIG, '0xkey', signed, '0.9');
   });
 });
 
@@ -1447,6 +1497,20 @@ describe('PerpsFundingComponent confirmation fee breakdown', () => {
   afterEach(() => fixture.destroy());
 
   const tooltip = () => fixture.debugElement.query(By.directive(TooltipComponent));
+
+  it('disables the amount input while submission is pending', async () => {
+    component.confirming = false;
+    component.submitting = true;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const input: HTMLInputElement = fixture.nativeElement.querySelector('input');
+    expect(input.disabled).toBeTrue();
+
+    component.submitting = false;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(input.disabled).toBeFalse();
+  });
 
   it('explains what the deposit transaction fee is made of', () => {
     component.tab = 'deposit';
