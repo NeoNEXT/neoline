@@ -261,7 +261,7 @@ export class PerpsTradeOrderService {
     const priceExact = boundedPrice
       .decimalPlaces(
         perpsPriceDecimals(
-          boundedPrice.toNumber(),
+          boundedPrice,
           intent.market.szDecimals
         ),
         isBuy ? BigNumber.ROUND_FLOOR : BigNumber.ROUND_CEIL

@@ -7,6 +7,9 @@ import { PERPS_DEPOSIT_CONFIG, PerpsUserFeeRates } from '@popup/_lib/perps';
 import { HyperliquidService } from './hyperliquid.service';
 import { fakePerpsDataChannel } from './perps-data-channel.fake';
 import { SNAPSHOT_TTL_MS } from './perps-market-dataset.service';
+import { composeOrder } from '@popup/perps/perps-order/perps-order-composition';
+import { ethMarket } from '@popup/perps/perps.test-fixture';
+import { formatUsd } from '@popup/perps/perps.util';
 
 /** 本服务所用的写入路径：只做一次声明，不发起调用。 */
 const writes = () => ({ wrote: () => new Subject<void>() } as any);
@@ -86,15 +89,42 @@ describe('HyperliquidService accounts and fees', () => {
     service.getUserFeeRates('0xabc').subscribe((rate) => rates.push(rate));
 
     expect(rates.map((rate) => rate.takerRate)).toEqual([
-      0.000384, 0.000384,
+      '0.000384', '0.000384',
     ]);
-    expect(rates.map((rate) => rate.makerRate)).toEqual([0.000096, 0.000096]);
+    expect(rates.map((rate) => rate.makerRate)).toEqual(['0.000096', '0.000096']);
     expect(http.post).toHaveBeenCalledTimes(1);
     expect(http.post).toHaveBeenCalledWith(
       jasmine.any(String),
       { type: 'userFees', user: '0xabc' },
       jasmine.any(Object)
     );
+  });
+
+  it('keeps referral-discounted fees exact through the order preview', () => {
+    http.post.and.returnValue(of({
+      userCrossRate: '0.0003',
+      userAddRate: '0.00015',
+      activeReferralDiscount: '0.04',
+    }) as any);
+    service.getUserFeeRates('0xabc').subscribe((rates) => {
+      const composition = composeOrder({
+        coin: 'ETH',
+        market: { status: 'ready', market: ethMarket() },
+        account: {
+          availability: 'live',
+          account: { positions: [], availableBalanceExact: '1000' } as any,
+          missingDexes: [],
+          updatedAt: 1,
+        },
+        activeAssetData: null,
+        feeRates: { ...rates, builderRate: '0' },
+      }, {
+        mode: 'open', side: 'long', orderType: 'market', amount: '156.25',
+        limitPrice: '', leverage: 1, slippagePercent: 3, activePercent: null,
+      });
+      expect(composition.preview.feeExact).toBe('0.045');
+      expect(formatUsd(composition.preview.feeExact)).toBe('$0.05');
+    });
   });
 
   /**
@@ -113,7 +143,7 @@ describe('HyperliquidService accounts and fees', () => {
 
     service.getUserFeeRates('0xabc').subscribe((value) => (rates = value));
 
-    expect(rates.makerRate).toBe(-0.00002);
+    expect(rates.makerRate).toBe('-0.00002');
   });
 
   it('does not cache an invalid user fee response', () => {
@@ -132,7 +162,7 @@ describe('HyperliquidService accounts and fees', () => {
       .subscribe((rates) => (recovered = rates));
 
     expect(errors).toHaveBeenCalled();
-    expect(recovered.takerRate).toBe(0.00045);
+    expect(recovered.takerRate).toBe('0.00045');
     expect(http.post).toHaveBeenCalledTimes(2);
   });
 

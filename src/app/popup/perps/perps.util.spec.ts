@@ -8,6 +8,7 @@ import {
   formatFundingPercent,
   formatPrice,
   formatSignedPercent,
+  formatSignedUsd,
   formatSize,
   formatUsd,
   formatBalance,
@@ -132,6 +133,20 @@ describe('perps utilities', () => {
     expect(formatFeeRatePercent(0)).toBe('0%');
   });
 
+  it('rounds fee rates exactly and preserves sub-precision rebates', () => {
+    expect(formatFeeRatePercent('0.000017345')).toBe('0.001735%');
+    expect(formatFeeRatePercent('-0.000000001')).toBe('-<0.000001%');
+    expect(formatFeeRatePercent('0.000000001')).toBe('<0.000001%');
+    expect(formatFeeRatePercent('-0')).toBe('0%');
+  });
+
+  it('formats large monetary decimals without converting through Number', () => {
+    expect(formatUsd('100000000000.014999')).toBe('$100,000,000,000.01');
+    expect(formatUsd('9007199254740993.125')).toBe('$9,007,199,254,740,993.13');
+    expect(formatPrice('9007199254740993.12')).toBe('9,007,199,254,740,993.12');
+    expect(formatBalance('9007199254740993.129')).toBe('9,007,199,254,740,993.12');
+  });
+
   // 下面的期望值是测试网上的真实数值，配上它们真实的 `szDecimals`。用户会把这个界面和
   // Hyperliquid 自己的并排看，一个价格这边显示 63,394、那边显示 63,393.5，看起来就是数据打架。
   it('prices at the market tick, not at a magnitude band', () => {
@@ -205,6 +220,26 @@ describe('perps utilities', () => {
     expect(formatSignedPercent(0.001)).toBe('0.00%');
     expect(formatSignedPercent(0)).toBe('0.00%');
     expect(formatSignedPercent(-1.2)).toBe('-1.20%');
+  });
+
+  it('rounds percentages in decimal arithmetic and removes negative zero', () => {
+    expect(formatSignedPercent('0.145')).toBe('+0.15%');
+    expect(formatSignedPercent('-1.005')).toBe('-1.01%');
+    expect(formatSignedPercent('-0.0001')).toBe('0.00%');
+    expect(formatSignedPercent('-0')).toBe('0.00%');
+  });
+
+  it('preserves small signed PnL and exact decimal rounding', () => {
+    expect(formatSignedUsd('-0.0001')).toBe('-$<0.01');
+    expect(formatSignedUsd('0.0001')).toBe('+$<0.01');
+    expect(formatSignedUsd('1.005')).toBe('+$1.01');
+    expect(formatSignedUsd('9007199254740993.125')).toBe(
+      '+$9,007,199,254,740,993.13'
+    );
+    expect(formatSignedUsd('0')).toBe('+$0.00');
+    expect(formatSignedUsd('-0')).toBe('+$0.00');
+    expect(formatSignedUsd(null)).toBe(MISSING_DISPLAY);
+    expect(formatSignedUsd('0.0001', 4)).toBe('+$0.0001');
   });
 
   it('compacts volume in one style across every band', () => {

@@ -27,7 +27,7 @@ const facts = (overrides: Partial<PerpsOrderFacts> = {}): PerpsOrderFacts => ({
     updatedAt: 1,
   },
   activeAssetData: null,
-  feeRates: { takerRate: 0.00045, makerRate: 0.00015, builderRate: 0 },
+  feeRates: { takerRate: '0.00045', makerRate: '0.00015', builderRate: '0' },
   ...overrides,
 });
 
@@ -115,9 +115,33 @@ const sides = (
  *
  * 这些规则过去各自直接调 `availableToTradeForSide` / `collateralToNotional` /
  * `maxOrderNotionalForSide` / `notionalAtLotSize` 来断言。它们现在是 `composeOrder` 的实现，
- * 所以断言改从 `availableExact` 和 `percentBase` 上读 —— 那才是页面看得见的东西。
+ * 所以断言改从 `availableExact` 和 `percentBaseExact` 上读 —— 那才是页面看得见的东西。
  */
 describe('composeOrder 购买力', () => {
+  it('keeps fallback collateral exact through Max amount and submitted size', () => {
+    const f = facts({
+      market: priced('ETH', 0.01, 4),
+      account: {
+        ...withPositions(),
+        account: account({ availableBalanceExact: '999999999999.999999' }),
+      },
+    });
+    const amount = amountForPercent(composeOrder(f, input()), 100);
+    expect(amount).toBe('994999999999.99');
+    expect(composeOrder(f, input({ amount })).intent?.requestedSizeExact)
+      .toBe('99499999999999');
+  });
+
+  it('keeps position value exact when calculating a partial close percentage', () => {
+    const f = facts({
+      account: withPositions(ethPosition({
+        positionValueExact: '999999999999.999999',
+      })),
+    });
+    const composition = composeOrder(f, input({ mode: 'close' }));
+    expect(amountForPercent(composition, 50)).toBe('499999999999.99');
+  });
+
   it('waits for positions even when market and asset capacity arrive first', () => {
     const f = facts({
       account: {
@@ -192,8 +216,8 @@ describe('composeOrder 购买力', () => {
     );
     // 这里按单资产的数量上限先卡住，远早于抵押品卡住它。
     expect(
-      composeOrder(f, input({ side: 'long', leverage: 2 })).percentBase
-    ).toBeCloseTo(0.5323 * 1895, 6);
+      composeOrder(f, input({ side: 'long', leverage: 2 })).percentBaseExact
+    ).toBe('1008.7085');
   });
 
   it('reads availableToTrade as collateral, not as a leverage-scaled notional', () => {
@@ -216,16 +240,10 @@ describe('composeOrder 购买力', () => {
 
     // 4.8 USDC 在 3 倍杠杆下能买 14.4 的名义价值，所以一笔 10 USDC 的订单放得下 ——
     // 旧的按杠杆缩放会把它当成保证金不足而拒绝。
-    expect(composeOrder(f, input({ leverage: 3 })).percentBase).toBeCloseTo(
-      14.4,
-      6
-    );
+    expect(composeOrder(f, input({ leverage: 3 })).percentBaseExact).toBe('14.4');
     expect(reason(f, input({ leverage: 3, amount: '10' }))).toBeNull();
     // 低于 1 倍的杠杆，买不到比抵押品本身更多的东西。
-    expect(composeOrder(f, input({ leverage: 0.5 })).percentBase).toBeCloseTo(
-      4.8,
-      6
-    );
+    expect(composeOrder(f, input({ leverage: 0.5 })).percentBaseExact).toBe('4.8');
   });
 
   it('trims the 100% notional to the market lot, as Hyperliquid does', () => {
@@ -238,15 +256,15 @@ describe('composeOrder 购买力', () => {
     });
 
     expect(
-      Number(composeOrder(f, input({ leverage: 10 })).percentBase.toFixed(2))
-    ).toBe(47.95);
+      composeOrder(f, input({ leverage: 10 })).percentBaseExact
+    ).toBe('47.946693');
 
     // 只能整数计量的市场，表达不了合约的任何小数部分。
     const whole = facts({
       market: priced('ETH', 1925.57, 0),
       activeAssetData: capacity('ETH', 1925.57, '4.8', '1000000000', 10),
     });
-    expect(composeOrder(whole, input({ leverage: 10 })).percentBase).toBe(0);
+    expect(composeOrder(whole, input({ leverage: 10 })).percentBaseExact).toBe('0');
   });
 
   it('preserves an exchange size cap that is already on an exact lot', () => {
@@ -257,8 +275,8 @@ describe('composeOrder 购买力', () => {
     });
 
     expect(
-      composeOrder(onLot, input({ leverage: 10 })).percentBase
-    ).toBeCloseTo(0.0255 * price, 10);
+      composeOrder(onLot, input({ leverage: 10 })).percentBaseExact
+    ).toBe('47.882625');
 
     // 差一点点没到下一手，就落回上一手。
     const justUnder = facts({
@@ -266,8 +284,8 @@ describe('composeOrder 购买力', () => {
       activeAssetData: capacity('ETH', price, '4.8', '0.0254999', 10),
     });
     expect(
-      composeOrder(justUnder, input({ leverage: 10 })).percentBase
-    ).toBeCloseTo(0.0254 * price, 10);
+      composeOrder(justUnder, input({ leverage: 10 })).percentBaseExact
+    ).toBe('47.69485');
   });
 
   /**
@@ -308,8 +326,8 @@ describe('composeOrder 购买力', () => {
       composeOrder(
         f,
         input({ orderType: 'limit', limitPrice: '', leverage: 3 })
-      ).percentBase
-    ).toBeCloseTo(3026.25, 6);
+      ).percentBaseExact
+    ).toBe('3026.25');
   });
 
   it('treats a zero max trade size as a binding side capacity', () => {
@@ -319,12 +337,12 @@ describe('composeOrder 购买力', () => {
     });
 
     expect(
-      composeOrder(f, input({ side: 'long', leverage: 3 })).percentBase
-    ).toBe(0);
+      composeOrder(f, input({ side: 'long', leverage: 3 })).percentBaseExact
+    ).toBe('0');
     // 另一侧仍然有容量。
     expect(
-      composeOrder(f, input({ side: 'short', leverage: 3 })).percentBase
-    ).toBeGreaterThan(0);
+      composeOrder(f, input({ side: 'short', leverage: 3 })).percentBaseExact
+    ).toBe('989.7585');
   });
 });
 
@@ -332,11 +350,11 @@ describe('composeOrder 购买力', () => {
  * 预览：保证金、手续费和数量，从 `composeOrder` 的 `preview` 上读。
  */
 describe('composeOrder 预览', () => {
-  const funded = (price: number, szDecimals = 4, builderRate = 0) =>
+  const funded = (price: number, szDecimals = 4, builderRate = '0') =>
     facts({
       market: priced('ETH', price, szDecimals),
       activeAssetData: capacity('ETH', price, '100000', '1000000', 2),
-      feeRates: { takerRate: 0.00045, makerRate: 0.00015, builderRate },
+      feeRates: { takerRate: '0.00045', makerRate: '0.00015', builderRate },
     });
 
   it('prices size and the liquidation estimate off the limit price', () => {
@@ -352,7 +370,7 @@ describe('composeOrder 预览', () => {
     );
 
     expect(composed.orderSizeExact).toBe('10');
-    expect(composed.preview.marginExact).toBe('400');
+    expect(composed.preview.marginExact).toBe('500');
     expect(Number(composed.preview.liquidationPxExact)).toBeLessThan(80);
   });
 
@@ -386,7 +404,7 @@ describe('composeOrder 预览', () => {
 
   it('adds the builder fee to the exchange fee and reports both', () => {
     const { preview } = composeOrder(
-      funded(100, 4, 0.00045),
+      funded(100, 4, '0.00045'),
       input({ amount: '1000', leverage: 2 })
     );
 
@@ -530,7 +548,7 @@ describe('composeOrder 预览', () => {
     const f = facts({
       market: priced('ETH', 1889, 4),
       account: withPositions(ethPosition({ positionValueExact: '18.895' })),
-      feeRates: { takerRate: 0.00045, makerRate: 0.00015, builderRate: 0.00045 },
+      feeRates: { takerRate: '0.00045', makerRate: '0.00015', builderRate: '0.00045' },
     });
 
     const { preview } = composeOrder(
@@ -562,6 +580,7 @@ describe('composeOrder 加仓时的强平估算', () => {
       entryPxExact: '100',
       positionValueExact: '1000',
       marginUsedExact: '500',
+      unrealizedPnlExact: '0',
       leverage: 2,
       leverageType: 'isolated',
       isLong: true,
@@ -577,7 +596,7 @@ describe('composeOrder 加仓时的强平估算', () => {
       facts({
         market: priced('ETH', 100, szDecimals),
         activeAssetData: capacity('ETH', 100, '100000', '1000000', 2),
-        feeRates: { takerRate: 0, makerRate: 0, builderRate: 0 },
+        feeRates: { takerRate: '0', makerRate: '0', builderRate: '0' },
         account: position ? withPositions(position) : facts().account,
       }),
       input({
@@ -639,15 +658,12 @@ describe('composeOrder 加仓时的强平估算', () => {
 
   // 不足一手就没有订单可以合并，而除以为零的数量
   // 得到的会是一个无穷大而不是一个价格。
-  it('falls back to the ratio when the order cannot reach one lot', () => {
+  it('does not estimate liquidation when the order cannot reach one lot', () => {
     // 只能整数计量的市场上，$50 换不到一整个 ETH。
     const composed = at('100', heldLong(), 0, '50');
 
     expect(composed.preview.sizeExact).toBe('0');
-    expect(Number(composed.preview.liquidationPxExact)).toBeCloseTo(
-      51.0204,
-      4
-    );
+    expect(composed.preview.liquidationPxExact).toBeNull();
   });
 });
 
@@ -854,7 +870,7 @@ describe('composeOrder', () => {
   it('reports a negative maker total as a rebate', () => {
     const f = facts({
       market: priced('ETH', 2000, 4),
-      feeRates: { takerRate: 0.00045, makerRate: -0.00002, builderRate: 0 },
+      feeRates: { takerRate: '0.00045', makerRate: '-0.00002', builderRate: '0' },
     });
 
     expect(composeOrder(f, input()).makerFeeIsRebate).toBeTrue();
@@ -985,7 +1001,7 @@ describe('composeOrder', () => {
   /** xyz 上的一个市场，部署方设置取自它的 universe 条目。 */
   const hip3 = (
     settings: Partial<PerpsMarket>,
-    feeRates = { takerRate: 0.00045, makerRate: 0.00015, builderRate: 0 }
+    feeRates = { takerRate: '0.00045', makerRate: '0.00015', builderRate: '0' }
   ) =>
     facts({
       coin: 'xyz:ETH',
@@ -1010,13 +1026,13 @@ describe('composeOrder', () => {
   it('quotes a HIP-3 market at the rate its deployer settings give', () => {
     const f = hip3(
       { deployerFeeScaleExact: '1', growthMode: true },
-      { takerRate: 0.000432, makerRate: 0.000144, builderRate: 0 }
+      { takerRate: '0.000432', makerRate: '0.000144', builderRate: '0' }
     );
     const composition = composeOrder(f, input({ amount: '20' }));
 
     expect(composition.feeEstimateUnavailable).toBeFalse();
-    expect(composition.feeRates.takerRate).toBe(0.0000864);
-    expect(composition.feeRates.makerRate).toBe(0.0000288);
+    expect(composition.feeRates.takerRate).toBe('0.0000864');
+    expect(composition.feeRates.makerRate).toBe('0.0000288');
     // 预览里的手续费同样按这个市场的费率算，而不是账户费率。
     expect(composition.preview?.feeExact).toBe('0.001728');
   });
@@ -1028,8 +1044,8 @@ describe('composeOrder', () => {
       input()
     );
 
-    expect(feeRates.takerRate).toBe(0.000675);
-    expect(feeRates.makerRate).toBe(0.000225);
+    expect(feeRates.takerRate).toBe('0.000675');
+    expect(feeRates.makerRate).toBe('0.000225');
   });
 
   /** 部署方分走的是收上来的费；返佣是交易场所付出去的钱，只打 growth mode 那一折。 */
@@ -1037,12 +1053,12 @@ describe('composeOrder', () => {
     const composition = composeOrder(
       hip3(
         { deployerFeeScaleExact: '1', growthMode: true },
-        { takerRate: 0.00045, makerRate: -0.00002, builderRate: 0 }
+        { takerRate: '0.00045', makerRate: '-0.00002', builderRate: '0' }
       ),
       input()
     );
 
-    expect(composition.feeRates.makerRate).toBe(-0.000002);
+    expect(composition.feeRates.makerRate).toBe('-0.000002');
     expect(composition.makerFeeIsRebate).toBeTrue();
   });
 
@@ -1161,7 +1177,7 @@ describe('review baseline', () => {
       updatedAt: 1,
     },
     activeAssetData: null,
-    feeRates: { takerRate: 0.00045, makerRate: 0.00015, builderRate: 0 },
+    feeRates: { takerRate: '0.00045', makerRate: '0.00015', builderRate: '0' },
   });
 
   it('holds while the form still reads as it did at review', () => {
@@ -1239,5 +1255,75 @@ describe('review baseline', () => {
   it('refuses when there is no baseline at all', () => {
     expect(intentUnchanged(null, formInput)).toBeFalse();
     expect(withinReviewedSlippage(null, marketAt('100'), formInput)).toBeFalse();
+  });
+});
+
+
+describe('order margin price and maintenance tiers', () => {
+  it('uses mark for initial margin while keeping the execution price for size and fees', () => {
+    const composed = composeOrder(facts({
+      market: { status: 'ready', market: ethMarket({ markPxExact: '110' }) },
+    }), input({ amount: '100', leverage: 10 }));
+    expect(composed.preview.sizeExact).toBe('1');
+    expect(composed.preview.marginExact).toBe('11');
+    expect(composed.preview.protocolFeeExact).toBe('0.045');
+  });
+
+  it('applies the maintenance deduction of the tier containing liquidation notional', () => {
+    const market = ethMarket({ maxLeverage: 10 });
+    (market as any).marginTiers = [
+      { lowerBoundExact: '0', maxLeverage: 10 },
+      { lowerBoundExact: '3000000', maxLeverage: 5 },
+    ];
+    const composed = composeOrder(facts({ market: { status: 'ready', market } }),
+      input({ amount: '5000000', leverage: 5 }));
+    // M = 1m, deduction = 150k; (5m - 1m - 150k) / (50000 * 0.9).
+    expect(Number(composed.preview.liquidationPxExact)).toBeCloseTo(85.55555555555556, 10);
+  });
+});
+
+
+describe('unavailable and merged margin estimates', () => {
+  [null, '0', '-1', 'NaN', 'Infinity'].forEach((markPxExact) => {
+    it(`does not quote margin or liquidation with invalid mark ${markPxExact}`, () => {
+      const result = composeOrder(facts({
+        market: { status: 'ready', market: ethMarket({ markPxExact }) },
+      }), input({ amount: '100', leverage: 10 }));
+      expect(result.preview.marginExact).toBeNull();
+      expect(result.preview.liquidationPxExact).toBeNull();
+      expect(result.preview.sizeExact).toBe('1');
+    });
+  });
+
+  it('does not invent maintenance tiers from the maximum leverage', () => {
+    const result = composeOrder(facts({
+      market: { status: 'ready', market: ethMarket({ marginTiers: null }) },
+    }), input({ amount: '100', leverage: 10 }));
+    expect(result.preview.marginExact).toBe('10');
+    expect(result.preview.liquidationPxExact).toBeNull();
+  });
+
+  it('removes unrealized pnl from held equity before using entry cost', () => {
+    const result = composeOrder(facts({
+      market: { status: 'ready', market: ethMarket({ midPxExact: '120', markPxExact: '120' }) },
+      account: withPositions(ethPosition({
+        sziExact: '10', entryPxExact: '100', marginUsedExact: '700',
+        unrealizedPnlExact: '200', leverage: 2, leverageType: 'isolated', isLong: true,
+      })),
+    }), input({ amount: '1200', leverage: 2 }));
+    // 20 ETH, entry cost 2200, cash collateral (700 - 200) + 600 = 1100.
+    expect(result.preview.marginExact).toBe('600');
+    expect(Number(result.preview.liquidationPxExact)).toBeCloseTo(1100 / (20 * 0.98), 10);
+  });
+
+  it('does not reuse held margin when the order changes isolated leverage', () => {
+    const result = composeOrder(facts({
+      account: withPositions(ethPosition({
+        sziExact: '10', entryPxExact: '100', marginUsedExact: '500',
+        unrealizedPnlExact: '0', leverage: 2, leverageType: 'isolated', isLong: true,
+      })),
+    }), input({ amount: '100', leverage: 5 }));
+    expect(result.preview.marginExact).toBe('20');
+    expect(result.preview.liquidationPxExact).toBeNull();
   });
 });

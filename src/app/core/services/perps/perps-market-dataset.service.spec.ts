@@ -1029,3 +1029,31 @@ describe('PerpsMarketDatasetService market detail', () => {
     expect(seen.length).toBe(1);
   });
 });
+
+
+describe('market margin table propagation', () => {
+  it('resolves each DEX table for both list and detail, preserving it on price frames', () => {
+    const { service, channel } = build({
+      getDexRegistry: () => of([null, { name: 'xyz' }]),
+      getMetaAndAssetCtxs: (dex?: string) => of([{
+        universe: [{ name: 'ETH', szDecimals: 4, maxLeverage: 10, marginTableId: 51 }],
+        marginTables: [[51, { marginTiers: [
+          { lowerBound: '0', maxLeverage: 10 },
+          { lowerBound: dex ? '9007199254740993.1' : '3000000', maxLeverage: 5 },
+        ] }]],
+      }, [ctx('100', '100')]]),
+    });
+    let markets: PerpsMarket[];
+    service.getMarkets().subscribe((value) => { markets = value; });
+    expect(markets.find((m) => m.dex === '').marginTiers[1].lowerBoundExact).toBe('3000000');
+    expect(markets.find((m) => m.dex === 'xyz').marginTiers[1].lowerBoundExact).toBe('9007199254740993.1');
+    const seen: PerpsMarket[] = [];
+    const sub = service.watchMarketDetail('xyz:ETH').subscribe((value) => seen.push(value));
+    channel.push({ type: 'activeAssetCtx', coin: 'xyz:ETH' },
+      { coin: 'xyz:ETH', ctx: ctx('101', '102') });
+    expect(seen.length).toBe(2);
+    expect(seen[1].markPxExact).toBe('102');
+    expect(seen[1].marginTiers[1].lowerBoundExact).toBe('9007199254740993.1');
+    sub.unsubscribe();
+  });
+});

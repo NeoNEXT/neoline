@@ -1,9 +1,27 @@
 import {
   isCandleInterval,
   perpsIntervalMs,
+  perpsPriceDecimals,
   perpsSizeAtLot,
   resolvePerpsTestnet,
 } from './perps';
+
+describe('perps decimal price precision', () => {
+  it('uses the exact magnitude at powers of ten', () => {
+    expect(perpsPriceDecimals('9999.999999999999', 2)).toBe(1);
+    expect(perpsPriceDecimals('10000', 2)).toBe(0);
+    expect(perpsPriceDecimals('0.099999999999999999', 0)).toBe(6);
+    expect(perpsPriceDecimals('0.1', 0)).toBe(5);
+  });
+
+  it('respects the market decimal cap and integer prices', () => {
+    expect(perpsPriceDecimals('0.001234', 0)).toBe(6);
+    expect(perpsPriceDecimals('1234.5', 5)).toBe(1);
+    expect(perpsPriceDecimals('123456', 0)).toBe(0);
+    expect(perpsPriceDecimals('9007199254740993', 0)).toBe(0);
+    expect(perpsPriceDecimals('0', 2)).toBe(4);
+  });
+});
 
 describe('perps candle intervals', () => {
   it('sizes every interval the product offers', () => {

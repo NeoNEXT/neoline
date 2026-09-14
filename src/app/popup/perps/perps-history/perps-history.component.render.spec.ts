@@ -291,7 +291,7 @@ describe('PerpsHistoryComponent 渲染与接线', () => {
       expect(rows().map((r) => prices(r).slice(1))).toEqual([
         ['perpsFee: 0.45 USDC'],
         ['PnL: +$0.34'],
-        ['perpsFee: 0.01 USDC'],
+        ['perpsFee: <0.01 USDC'],
       ]);
     });
 

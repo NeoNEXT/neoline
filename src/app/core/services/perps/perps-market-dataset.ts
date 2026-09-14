@@ -3,9 +3,11 @@ import BigNumber from 'bignumber.js';
 import {
   PerpsAssetCtx,
   PerpsMarket,
+  PerpsMeta,
   PerpsUniverseItem,
   perpsFiniteDecimal,
 } from '@popup/_lib/perps';
+import { resolveMarginTiers } from '@popup/_lib/perps-margin';
 
 /**
  * 一条 universe 条目与一帧上下文如何变成一个永续合约市场（Perpetual Market），
@@ -107,7 +109,8 @@ export function buildMarket(
   ctx: PerpsAssetCtx,
   dex: string,
   dexIndex: number,
-  index: number
+  index: number,
+  marginTables?: PerpsMeta['marginTables']
 ): PerpsMarket {
   const protocolCoin =
     dex && !item.name.includes(':') ? `${dex}:${item.name}` : item.name;
@@ -128,6 +131,7 @@ export function buildMarket(
     symbol,
     szDecimals: item.szDecimals,
     maxLeverage: item.maxLeverage,
+    marginTiers: resolveMarginTiers(item.marginTableId, marginTables),
     marginMode,
     // 读不懂的倍数与缺失同论：手续费宁可说「无法估算」，也不按一个猜出来的数报价。
     deployerFeeScaleExact:

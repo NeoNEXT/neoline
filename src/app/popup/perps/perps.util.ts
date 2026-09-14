@@ -197,6 +197,15 @@ export function stripTrailingZeros(text: string): string {
     : text;
 }
 
+/** 分组和舍入都在十进制上完成，避免展示大金额时丢失整数或分币。 */
+function formatDecimal(value: BigNumber, decimals: number): string {
+  return value.toFormat(decimals, BigNumber.ROUND_HALF_UP, {
+    groupSize: 3,
+    groupSeparator: ',',
+    decimalSeparator: '.',
+  });
+}
+
 /**
  * 一个市场实际能报出的小数位数。
  *
@@ -260,12 +269,8 @@ export function formatPrice(
     decimals,
     BigNumber.ROUND_HALF_UP
   );
-  const [whole, fraction] = value.absoluteValue().toFixed(decimals).split('.');
-  const grouped = Number(whole).toLocaleString('en-US');
-  const sign = value.isNegative() ? '-' : '';
-  return `${sign}${stripTrailingZeros(
-    fraction ? `${grouped}.${fraction}` : grouped
-  )}`;
+  const sign = value.isNegative() && !value.isZero() ? '-' : '';
+  return `${sign}${stripTrailingZeros(formatDecimal(value.absoluteValue(), decimals))}`;
 }
 
 /**
@@ -280,16 +285,13 @@ export function formatUsd(value: PerpsExactValue, decimals = 2): string {
     return MISSING_DISPLAY;
   }
   const amount = new BigNumber(value);
-  const sign = amount.isNegative() ? '-' : '';
+  const sign = amount.isNegative() && !amount.isZero() ? '-' : '';
   const abs = amount.absoluteValue();
   const smallest = new BigNumber(1).shiftedBy(-decimals);
   if (abs.isGreaterThan(0) && abs.isLessThan(smallest)) {
     return `${sign}$<${smallest.toFixed(decimals)}`;
   }
-  const formatted = abs.toNumber().toLocaleString('en-US', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
+  const formatted = formatDecimal(abs, decimals);
   return `${sign}$${formatted.replace(/\.00$/, '')}`;
 }
 
@@ -305,16 +307,14 @@ export function formatBalance(value: PerpsExactValue, decimals = 2): string {
     return MISSING_DISPLAY;
   }
   const amount = new BigNumber(value);
-  const sign = amount.isNegative() ? '-' : '';
+  const sign = amount.isNegative() && !amount.isZero() ? '-' : '';
   const abs = amount.absoluteValue();
   const smallest = new BigNumber(1).shiftedBy(-decimals);
   if (abs.isGreaterThan(0) && abs.isLessThan(smallest)) {
     return `${sign}<${smallest.toFixed(decimals)}`;
   }
   const floored = abs.decimalPlaces(decimals, BigNumber.ROUND_FLOOR);
-  const [whole, fraction] = floored.toFixed(decimals).split('.');
-  const grouped = Number(whole).toLocaleString('en-US');
-  return `${sign}${fraction ? `${grouped}.${fraction}` : grouped}`;
+  return `${sign}${formatDecimal(floored, decimals)}`;
 }
 
 /** 带符号的金额，例如 "+$21.75" —— 用于正负号本身有含义的盈亏。 */
@@ -322,11 +322,14 @@ export function formatSignedUsd(value: PerpsExactValue, decimals = 2): string {
   if (isMissing(value)) {
     return MISSING_DISPLAY;
   }
-  const n = new BigNumber(value).toNumber();
-  return `${n >= 0 ? '+' : '-'}$${Math.abs(n).toLocaleString('en-US', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  })}`;
+  const amount = new BigNumber(value);
+  const sign = amount.isNegative() && !amount.isZero() ? '-' : '+';
+  const abs = amount.absoluteValue();
+  const smallest = new BigNumber(1).shiftedBy(-decimals);
+  if (abs.isGreaterThan(0) && abs.isLessThan(smallest)) {
+    return `${sign}$<${smallest.toFixed(decimals)}`;
+  }
+  return `${sign}$${formatDecimal(abs, decimals)}`;
 }
 
 /**
@@ -340,9 +343,12 @@ export function formatSignedPercent(
   if (isMissing(value)) {
     return MISSING_DISPLAY;
   }
-  const n = new BigNumber(value).toNumber();
-  const text = n.toFixed(decimals);
-  return `${Number(text) > 0 ? '+' : ''}${text}%`;
+  const rounded = new BigNumber(value).decimalPlaces(
+    decimals,
+    BigNumber.ROUND_HALF_UP
+  );
+  const text = (rounded.isZero() ? new BigNumber(0) : rounded).toFixed(decimals);
+  return `${rounded.isGreaterThan(0) ? '+' : ''}${text}%`;
 }
 
 /**
@@ -419,8 +425,11 @@ export function formatFeeRatePercent(value: PerpsExactValue): string {
   if (isMissing(value)) {
     return MISSING_DISPLAY;
   }
-  const percent = new BigNumber(value).times(100).toNumber();
-  return `${percent.toFixed(6).replace(/\.?0+$/, '')}%`;
+  const percent = new BigNumber(value).times(100);
+  if (!percent.isZero() && percent.absoluteValue().isLessThan('0.000001')) {
+    return `${percent.isNegative() ? '-' : ''}<0.000001%`;
+  }
+  return `${stripTrailingZeros(percent.toFixed(6, BigNumber.ROUND_HALF_UP))}%`;
 }
 
 /**

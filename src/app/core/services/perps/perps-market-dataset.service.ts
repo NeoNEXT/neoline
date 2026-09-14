@@ -13,7 +13,7 @@ import {
 import {
   PerpsAssetCtx,
   PerpsMarket,
-  PerpsUniverseItem,
+  PerpsMeta,
 } from '@popup/_lib/perps';
 import { HyperliquidService } from './hyperliquid.service';
 import { PerpsDataChannel } from './perps-data-channel.service';
@@ -27,7 +27,7 @@ import {
 } from './perps-market-dataset';
 
 /** 一个 DEX 的静态元数据，与它的实时上下文按同一顺序配对。 */
-type MetaAndAssetCtxs = [{ universe: PerpsUniverseItem[] }, PerpsAssetCtx[]];
+type MetaAndAssetCtxs = [PerpsMeta, PerpsAssetCtx[]];
 
 interface DexMarketSnapshot {
   dex: string;
@@ -253,7 +253,7 @@ export class PerpsMarketDatasetService {
             if (!item || item.isDelisted || !ctx) {
               return null;
             }
-            return buildMarket(item, ctx, dex, dexIndex, index);
+            return buildMarket(item, ctx, dex, dexIndex, index, meta.marginTables);
           })
         );
       })
@@ -462,7 +462,7 @@ export class PerpsMarketDatasetService {
         if (item.isDelisted || !ctx) {
           return;
         }
-        markets.push(buildMarket(item, ctx, dex, dexIndex, index));
+        markets.push(buildMarket(item, ctx, dex, dexIndex, index, meta.marginTables));
       });
     });
     return {

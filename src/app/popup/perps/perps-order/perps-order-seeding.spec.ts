@@ -16,7 +16,7 @@ const facts = (overrides: Partial<PerpsOrderFacts> = {}): PerpsOrderFacts => ({
     updatedAt: 1,
   },
   activeAssetData: null,
-  feeRates: { takerRate: 0.00045, makerRate: 0.00015, builderRate: 0 },
+  feeRates: { takerRate: '0.00045', makerRate: '0.00015', builderRate: '0' },
   ...overrides,
 });
 

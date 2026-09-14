@@ -22,6 +22,7 @@ export function ethMarket(overrides: Partial<PerpsMarket> = {}): PerpsMarket {
     symbol: 'ETH',
     szDecimals: 4,
     maxLeverage: 25,
+    marginTiers: [{ lowerBoundExact: '0', maxLeverage: overrides.maxLeverage ?? 25 }],
     marginMode: null,
     deployerFeeScaleExact: null,
     growthMode: false,

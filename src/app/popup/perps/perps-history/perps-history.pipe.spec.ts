@@ -145,7 +145,7 @@ describe('活动页的手续费', () => {
   it('真的收了才显示，并带上计价代币', () => {
     expect(fillFee(fill('0.05', 'USDC'))).toBe('0.05 USDC');
     // 没带 feeToken 的按 USDC 计价。
-    expect(fillFee(fill('0.000533'))).toBe('0.00 USDC');
+    expect(fillFee(fill('0.000533'))).toBe('<0.01 USDC');
   });
 
   it('零费用显示为零，缺失费用不编造金额', () => {
@@ -157,7 +157,7 @@ describe('活动页的手续费', () => {
   });
 
   it('maker 返佣留着 —— 它和「没有手续费」不是同一件事', () => {
-    expect(fillFee(fill('-0.001', 'USDC'))).toBe('-0.00 USDC');
+    expect(fillFee(fill('-0.001', 'USDC'))).toBe('-<0.01 USDC');
   });
 
   it('账本仍隐藏零费用，成交费用固定展示两位小数', () => {
@@ -228,6 +228,8 @@ describe('跨链历史费用不得使用固定值', () => {
     transfer.cctpDestinationChainId = 421614;
     expect(ledgerFee(transfer)).toBe('0.000505 USDC');
     transfer.cctpFeeExact = '0';
+    expect(ledgerFee(transfer)).toBe('<0.01 USDC');
+    transfer.delta.fee = '0';
     expect(ledgerFee(transfer)).toBe('0 USDC');
     transfer.cctpFeeExact = '1.25';
     expect(ledgerFee(transfer)).toBe('1.25 USDC');

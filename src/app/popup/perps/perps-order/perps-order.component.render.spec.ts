@@ -124,7 +124,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
           useValue: {
             watchActiveAssetData: () => of(ASSET_DATA),
             getUserFeeRates: () =>
-              of({ takerRate: 0.00045, makerRate: 0.00015 }),
+              of({ takerRate: '0.00045', makerRate: '0.00015' }),
           },
         },
         {

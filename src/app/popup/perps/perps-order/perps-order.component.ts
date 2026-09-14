@@ -61,8 +61,8 @@ import {
 import { seedForm, PerpsOrderUserSetField } from './perps-order-seeding';
 
 /** Hyperliquid 的基础费率，在 `userFees` 报出真实费率之前先用它。 */
-const TAKER_FEE_RATE = 0.00045;
-const MAKER_FEE_RATE = 0.00015;
+const TAKER_FEE_RATE = '0.00045';
+const MAKER_FEE_RATE = '0.00015';
 
 /** 美元金额按分输入、也按分提交。 */
 const AMOUNT_DECIMALS = 2;
@@ -136,7 +136,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     feeRates: {
       takerRate: TAKER_FEE_RATE,
       makerRate: MAKER_FEE_RATE,
-      builderRate: 0,
+      builderRate: '0',
     },
   };
 
@@ -194,6 +194,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   private lastComposition: PerpsOrderComposition = null;
   private lastFacts: PerpsOrderFacts = null;
   private lastInput: PerpsOrderInput = null;
+  private pendingSizeExact: string = null;
+  private lastPendingSizeExact: string = null;
   /** 正在输入框里敲的文本；显示实时值时为 null。 */
   private percentDraft: string = null;
   private leverageDraft: string = null;
@@ -255,7 +257,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         // 就正好是它实际会被收取的费用。
         builderRate: this.writes.builderAddress
           ? PERPS_BUILDER_FEE_RATE
-          : 0,
+          : '0',
       },
     });
     this.closeMode = this.route.snapshot.queryParams.close === '1';
@@ -363,6 +365,9 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     from: PerpsOrderLifecycleState,
     to: PerpsOrderLifecycleState
   ) {
+    if (from.kind === 'submitting') {
+      this.pendingSizeExact = null;
+    }
     // 从「下落未明」回到编辑态：交易场所终于给了答案。
     if (from.kind === 'unknown' && to.kind === 'composing') {
       this.global.snackBarTip('perpsOrderStatusResolved');
@@ -460,7 +465,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     });
   }
 
-  private setFeeRates(takerRate: number, makerRate: number) {
+  private setFeeRates(takerRate: string, makerRate: string) {
     this.patchFacts({
       feeRates: { ...this.facts.feeRates, takerRate, makerRate },
     });
@@ -477,13 +482,15 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     if (
       this.lastComposition &&
       this.lastFacts === this.facts &&
+      this.lastPendingSizeExact === this.pendingSizeExact &&
       sameInput(this.lastInput, input)
     ) {
       return this.lastComposition;
     }
     this.lastFacts = this.facts;
     this.lastInput = input;
-    this.lastComposition = composeOrder(this.facts, input);
+    this.lastPendingSizeExact = this.pendingSizeExact;
+    this.lastComposition = composeOrder(this.facts, input, this.pendingSizeExact);
     return this.lastComposition;
   }
 
@@ -587,7 +594,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   get marginText(): string {
-    return this.preview ? formatUsd(this.preview.marginExact) : NOT_APPLICABLE;
+    return this.preview?.marginExact != null
+      ? formatUsd(this.preview.marginExact) : NOT_APPLICABLE;
   }
 
   /** 同一个数量按市场最小变动单位精度呈现，用于显示。 */
@@ -634,8 +642,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    * 就是这个数。总额为负时保留符号：在返佣档位上成交会付钱给账户，把它压到 "$0.00" 等于
    * 悄悄抹掉用户应得的钱。
    */
-  private feeSideText(rate: number): string {
-    const total = rate + this.composition.feeRates.builderRate;
+  private feeSideText(rate: string): string {
+    const total = new BigNumber(rate).plus(this.composition.feeRates.builderRate);
     const formattedRate = formatFeeRatePercent(total);
     const preview = this.preview;
     if (!preview) {
@@ -985,6 +993,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       ...this.composition.intent,
       referencePriceExact: this.lifecycle.baseline.priceExact,
     };
+    this.pendingSizeExact = intent.requestedSizeExact;
     try {
       const password = await this.chrome.getPassword();
       if (this.destroyed) {
@@ -997,7 +1006,12 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       if (this.destroyed) {
         return;
       }
-      if (!this.stillApproved || !this.composition.submittable) {
+      const checked = this.composition;
+      const sameMarket = checked.intent && Object.keys(intent.market).every(
+        (key) => checked.intent.market[key] === intent.market[key]
+      );
+      if (!this.stillApproved || !checked.submittable || !sameMarket ||
+          checked.intent.operation !== intent.operation) {
         this.lifecycle.settled();
         this.global.snackBarTip('perpsMarketChangedReviewAgain');
         return;

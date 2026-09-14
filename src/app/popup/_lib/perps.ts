@@ -186,18 +186,19 @@ export const PERPS_PRICE_SIGNIFICANT_FIGURES = 5;
  * 携带的会是一个用户从未见过的价格。
  */
 export function perpsPriceDecimals(
-  price: number,
+  price: BigNumber.Value,
   szDecimals: number
 ): number {
   const maxDecimals = Math.max(0, PERPS_PRICE_MAX_DECIMALS - szDecimals);
-  const magnitude = Math.abs(price);
-    // 没有量级可供计算有效数字；此时只由最小变动价位说了算。
-  if (!Number.isFinite(magnitude) || magnitude === 0) {
+  const magnitude = new BigNumber(price);
+  // 没有量级可供计算有效数字；此时只由最小变动价位说了算。
+  if (!magnitude.isFinite() || magnitude.isZero()) {
     return maxDecimals;
   }
+  // 十进制指数直接给出量级，避免浮点 log10 把略小于 10000 的价格当成 10000。
   const significantDecimals = Math.max(
     0,
-    PERPS_PRICE_SIGNIFICANT_FIGURES - Math.floor(Math.log10(magnitude)) - 1
+    PERPS_PRICE_SIGNIFICANT_FIGURES - magnitude.e - 1
   );
   return Math.min(maxDecimals, significantDecimals);
 }
@@ -355,7 +356,9 @@ export const PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS = 90000;
  * 就等于留出了不必再问一次就能上调费用的空间。
  */
 export const PERPS_BUILDER_FEE_TENTHS_BPS = 45;
-export const PERPS_BUILDER_FEE_RATE = PERPS_BUILDER_FEE_TENTHS_BPS / 100000;
+export const PERPS_BUILDER_FEE_RATE = new BigNumber(PERPS_BUILDER_FEE_TENTHS_BPS)
+  .shiftedBy(-5)
+  .toFixed();
 export const PERPS_BUILDER_MAX_FEE_RATE = '0.045%';
 
 /**
@@ -484,7 +487,19 @@ export type PerpsConnectionState = 'connecting' | 'live' | 'stale';
 /** `meta` info 请求返回的原始 `universe` 条目。 */
 export type PerpsMarketMarginMode = 'strictIsolated' | 'noCross';
 
+/** meta 与 metaAndAssetCtxs 共用的保证金分档元数据。 */
+export interface PerpsMeta {
+  universe: PerpsUniverseItem[];
+  marginTables?: [number, { marginTiers: { lowerBound: string; maxLeverage: number }[] }][];
+}
+
+export interface PerpsMarginTier {
+  lowerBoundExact: string;
+  maxLeverage: number;
+}
+
 export interface PerpsUniverseItem {
+  marginTableId?: number;
   name: string;
   szDecimals: number;
   maxLeverage: number;
@@ -532,6 +547,8 @@ export interface PerpsMarket {
   symbol: string;
   szDecimals: number;
   maxLeverage: number;
+  /** 此市场的维持保证金分档；元数据缺失或无效时不能估算强平价。 */
+  marginTiers: PerpsMarginTier[] | null;
   /** 精确的协议限制；为 null 表示支持全仓。 */
   marginMode: PerpsMarketMarginMode | null;
   /**
@@ -891,19 +908,19 @@ export interface PerpsOrderExecutionResult {
 /**
  * 这个账户按盘口两侧分别被收取多少。
  *
- * 两者都是小数，例如 `0.00045` 表示 4.5 个基点。`makerRate` 可能为负：在 Hyperliquid 的返佣
+ * 两者都是十进制字符串，例如 `0.00045` 表示 4.5 个基点。`makerRate` 可能为负：在 Hyperliquid 的返佣
  * 档位上，挂单成交是付钱给账户而不是收取账户的费用，而把费率钳到零的界面会把这一点藏起来。
  */
 export interface PerpsUserFeeRates {
-  takerRate: number;
-  makerRate: number;
+  takerRate: string;
+  makerRate: string;
 }
 
 export interface PerpsOrderPreview {
   /** 以美元计的名义仓位价值。 */
   notionalExact: string;
-  /** 被该仓位锁定的抵押品。 */
-  marginExact: string;
+  /** 本单所需初始保证金；缺少标记价格时为 null。平仓时为预估释放额。 */
+  marginExact: string | null;
   /** 以该币种基础单位计的数量。 */
   sizeExact: string;
   /**

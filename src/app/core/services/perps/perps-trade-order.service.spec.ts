@@ -94,6 +94,14 @@ describe('PerpsTradeOrderService', () => {
     expect((submission as any).result.cloid).toBe(order.cloid);
   });
 
+  it('uses decimal magnitude when rounding a price just below a power of ten', () => {
+    service.submit(PRIVATE_KEY, intent({
+      orderType: 'limit', referencePriceExact: '9999.999999999999',
+    })).subscribe();
+    expect(exchange.submitOrder.calls.mostRecent().args[1].priceExact)
+      .toBe('9999.9');
+  });
+
   /**
    * 杠杆在使用它的那笔订单之前立即写入，属于同一次操作。用户只按一次按钮：交易场所侧
    * 的值与表单不一致，过去要让用户多按一次。

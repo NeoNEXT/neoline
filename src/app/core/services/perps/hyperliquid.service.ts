@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import BigNumber from 'bignumber.js';
 import { HttpClient } from '@angular/common/http';
 import {
   Observable,
@@ -30,7 +31,7 @@ import {
   PerpsHistoricalOrder,
   PerpsLedgerUpdate,
   PerpsOpenOrder,
-  PerpsUniverseItem,
+  PerpsMeta,
   PerpsUserFeeRates,
   PERPS_DEPOSIT_CONFIG,
   PERPS_HIP3_DEXES,
@@ -166,29 +167,30 @@ export class HyperliquidService {
       user,
     }).pipe(
       map((fees) => {
-        const userCrossRate = Number(fees?.userCrossRate);
-        const userAddRate = Number(fees?.userAddRate);
-        const referralDiscount = Number(
-          fees?.activeReferralDiscount || 0
+        const userCrossRate = new BigNumber(fees?.userCrossRate);
+        const userAddRate = new BigNumber(fees?.userAddRate);
+        const referralDiscount = new BigNumber(
+          fees?.activeReferralDiscount ?? 0
         );
         if (
-          !Number.isFinite(userCrossRate) ||
-          userCrossRate < 0 ||
-          !Number.isFinite(userAddRate) ||
-          !Number.isFinite(referralDiscount) ||
-          referralDiscount < 0 ||
-          referralDiscount > 1
+          !userCrossRate.isFinite() ||
+          userCrossRate.isLessThan(0) ||
+          !userAddRate.isFinite() ||
+          !referralDiscount.isFinite() ||
+          referralDiscount.isLessThan(0) ||
+          referralDiscount.isGreaterThan(1)
         ) {
           throw new Error('Invalid Hyperliquid user fee response');
         }
+        const discountFactor = new BigNumber(1).minus(referralDiscount);
         return {
-          takerRate: userCrossRate * (1 - referralDiscount),
+          takerRate: userCrossRate.times(discountFactor).toFixed(),
           // 推荐折扣减少的是「付出去」的钱；它减少不了「付回来」的钱，
           // 所以返佣保持原样、不打折。
           makerRate:
-            userAddRate < 0
-              ? userAddRate
-              : userAddRate * (1 - referralDiscount),
+            userAddRate.isLessThan(0)
+              ? userAddRate.toFixed()
+              : userAddRate.times(discountFactor).toFixed(),
         };
       }),
       catchError((error) => {
@@ -236,7 +238,7 @@ export class HyperliquidService {
   /** 某个 DEX 的 universe 及其实时上下文，顺序一一对应。 */
   getMetaAndAssetCtxs(
     dex?: string
-  ): Observable<[{ universe: PerpsUniverseItem[] }, PerpsAssetCtx[]]> {
+  ): Observable<[PerpsMeta, PerpsAssetCtx[]]> {
     const body: any = { type: 'metaAndAssetCtxs' };
     if (dex) {
       body.dex = dex;

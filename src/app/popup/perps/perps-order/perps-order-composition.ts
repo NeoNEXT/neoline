@@ -19,6 +19,7 @@ import {
   perpsSizeAtLot,
 } from '@popup/_lib/perps';
 import { PerpsExactValue } from '../perps.util';
+import { isolatedLiquidationPrice } from '@popup/_lib/perps-margin';
 
 /** 美元金额按分输入、也按分提交。 */
 const AMOUNT_DECIMALS = 2;
@@ -37,10 +38,10 @@ export type PerpsOrderMarketFacts =
 
 /** Hyperliquid 给这个账户的费率，外加 NeoLine 的 builder 抽成。 */
 export interface PerpsOrderFeeRates {
-  takerRate: number;
-  makerRate: number;
+  takerRate: string;
+  makerRate: string;
   /** 除非当前网络配置了 builder 地址，否则为零。 */
-  builderRate: number;
+  builderRate: string;
 }
 
 /**
@@ -147,7 +148,7 @@ export interface PerpsOrderComposition {
   orderPriceExact: string;
   orderSizeExact: string;
   /** 百分比按钮所度量的名义价值基数。 */
-  percentBase: number;
+  percentBaseExact: string;
   /** 开仓时 100% 瞄准的目标：购买力减去那笔已确认的预留。 */
   bufferedMaxNotionalExact: string;
   amountSliderPercent: number;
@@ -172,7 +173,9 @@ export interface PerpsOrderComposition {
  */
 export function composeOrder(
   facts: PerpsOrderFacts,
-  input: PerpsOrderInput
+  input: PerpsOrderInput,
+  /** 解锁及发送期间校验、展示同一个待提交数量。 */
+  pendingSizeExact?: string
 ): PerpsOrderComposition {
   const market = facts.market.status === 'ready' ? facts.market.market : null;
   const account = facts.account.account;
@@ -216,7 +219,7 @@ export function composeOrder(
         new BigNumber(position.positionValueExact).toFixed(AMOUNT_DECIMALS)
       ));
 
-  const orderSizeExact = submittedSize({
+  const orderSizeExact = pendingSizeExact ?? submittedSize({
     market,
     position,
     closeMode,
@@ -256,7 +259,7 @@ export function composeOrder(
         input.leverage,
         orderPriceExact
       )
-    : new BigNumber(collateralToNotional(availableExact ?? '0', input.leverage));
+    : collateralToNotional(availableExact ?? '0', input.leverage);
 
   const percentBase = percentBaseFor({
     closeMode,
@@ -354,12 +357,12 @@ export function composeOrder(
     positionSizeExact,
     orderPriceExact,
     orderSizeExact,
-    percentBase,
+    percentBaseExact: percentBase.toFixed(),
     bufferedMaxNotionalExact: bufferedMax.toFixed(),
     amountSliderPercent:
       input.activePercent !== null
         ? input.activePercent
-        : !percentBase || !hasAmount
+        : !percentBase.isGreaterThan(0) || !hasAmount
         ? 0
         : Math.max(
             0,
@@ -386,7 +389,7 @@ export function composeOrder(
     // 市价单必定吃单，所以 taker 费率就是完整答案。GTC 限价单通常挂着以 maker 成交，
     // 但它进场时也可能直接吃单，所以两者都显示，而不是挑一个。
     quotesBothFeeSides: input.orderType === 'limit',
-    makerFeeIsRebate: makerRate + builderRate < 0,
+    makerFeeIsRebate: new BigNumber(makerRate).plus(builderRate).isLessThan(0),
   };
 }
 
@@ -525,12 +528,15 @@ function marketFeeRates(
   const hip3Scale = deployerScale.isLessThan(1)
     ? deployerScale.plus(1)
     : deployerScale.times(2);
-  const growthScale = market.growthMode ? 0.1 : 1;
-  const scaled = (rate: number, scale: BigNumber.Value) =>
-    new BigNumber(rate).times(scale).times(growthScale).toNumber();
+  const growthScale = market.growthMode ? '0.1' : '1';
+  const scaled = (rate: string, scale: BigNumber.Value) =>
+    new BigNumber(rate).times(scale).times(growthScale).toFixed();
   return {
     takerRate: scaled(rates.takerRate, hip3Scale),
-    makerRate: scaled(rates.makerRate, rates.makerRate > 0 ? hip3Scale : 1),
+    makerRate: scaled(
+      rates.makerRate,
+      new BigNumber(rates.makerRate).isGreaterThan(0) ? hip3Scale : 1
+    ),
     builderRate: rates.builderRate,
   };
 }
@@ -547,8 +553,8 @@ function composePreview(params: {
   orderPriceExact: string;
   orderSizeExact: string;
   executableNotional: BigNumber;
-  takerRate: number;
-  builderRate: number;
+  takerRate: string;
+  builderRate: string;
 }): PerpsOrderPreview | null {
   const {
     market,
@@ -593,6 +599,7 @@ function composePreview(params: {
     // 用按最小变动单位向下取整后的名义价值，而不是输入的那个：保证金和手续费是按真正
     // 到达交易场所的那个数量收取的。
     notionalExact: executableNotional,
+    sizeExact: orderSizeExact,
     leverage,
     isLong,
     feeRate: takerRate,
@@ -745,15 +752,15 @@ function percentBaseFor(params: {
   position: PerpsPosition | null;
   maxOrderNotional: BigNumber;
   orderPriceExact: string;
-}): number {
+}): BigNumber {
   const { closeMode, market, position, maxOrderNotional, orderPriceExact } =
     params;
   if (closeMode) {
-    return Number(position?.positionValueExact ?? 0);
+    return new BigNumber(position?.positionValueExact ?? 0);
   }
   return market
     ? notionalAtLotSize(maxOrderNotional, orderPriceExact, market.szDecimals)
-    : maxOrderNotional.toNumber();
+    : maxOrderNotional;
 }
 
 /**
@@ -801,7 +808,7 @@ export function amountForPercent(
   const amount =
     clamped === 100 && !composition.closeMode
       ? new BigNumber(composition.bufferedMaxNotionalExact)
-      : new BigNumber(composition.percentBase).times(clamped).dividedBy(100);
+      : new BigNumber(composition.percentBaseExact).times(clamped).dividedBy(100);
   return amount.decimalPlaces(AMOUNT_DECIMALS, BigNumber.ROUND_FLOOR).toFixed();
 }
 
@@ -867,7 +874,7 @@ export function normalizeLimitPrice(
   }
   return price
     .decimalPlaces(
-      perpsPriceDecimals(price.toNumber(), szDecimals),
+      perpsPriceDecimals(price, szDecimals),
       BigNumber.ROUND_HALF_UP
     )
     .toFixed();
@@ -897,11 +904,11 @@ function availableToTradeForSide(
 function collateralToNotional(
   collateral: BigNumber.Value,
   leverage: number
-): number {
+): BigNumber {
   const value = new BigNumber(collateral || 0);
   return value.isFinite() && value.isGreaterThan(0)
-    ? value.times(Math.max(1, leverage || 1)).toNumber()
-    : 0;
+    ? value.times(Math.max(1, leverage || 1))
+    : new BigNumber(0);
 }
 
 /** 同时施加账户购买力和交易场所的单资产数量上限。 */
@@ -937,17 +944,15 @@ function notionalAtLotSize(
   notional: BigNumber.Value,
   price: BigNumber.Value,
   szDecimals: number
-): number {
+): BigNumber {
   const priceValue = new BigNumber(price || 0);
   const notionalValue = new BigNumber(notional || 0);
   if (!priceValue.isFinite() || !priceValue.isGreaterThan(0)) {
-    return notionalValue.toNumber();
+    return notionalValue;
   }
   return new BigNumber(
     perpsSizeAtLot(notionalValue.dividedBy(priceValue), szDecimals)
-  )
-    .times(priceValue)
-    .toNumber();
+  ).times(priceValue);
 }
 
 /**
@@ -1010,67 +1015,15 @@ function previewClosePosition(params: {
 }
 
 /**
- * 一笔加到已有仓位上的订单，最终留下的那个逐仓仓位。
- *
- * 入场价按数量加权，因为交易场所保留的就是这个：一半在 $100 买入、一半在 $120 买入的仓位，
- * 会作为一个入场价 $110 的仓位被强平。保证金相加也是同样的道理 —— 已经缴纳的抵押品仍然
- * 支撑着合并后的仓位。
- *
- * 凡是没有东西可合并时都返回 `null`：没有仓位、仓位在另一侧（此时下单表单会拒绝，而不是
- * 把它读成反手），或者订单小到够不上一个最小变动单位。
- */
-function mergedPositionForLiquidation(params: {
-  position: PerpsPosition | null;
-  isLong: boolean;
-  entryExact: BigNumber;
-  sizeExact: string;
-  marginExact: BigNumber;
-}): { entry: BigNumber; size: BigNumber; margin: BigNumber } | null {
-  const { position, isLong, entryExact, sizeExact, marginExact } = params;
-  const heldSize = new BigNumber(position?.sziExact ?? 0).absoluteValue();
-  const orderSize = new BigNumber(sizeExact || 0);
-  if (
-    !position ||
-    position.isLong !== isLong ||
-    !heldSize.isGreaterThan(0) ||
-    !orderSize.isGreaterThan(0)
-  ) {
-    return null;
-  }
-  const heldEntry = new BigNumber(position.entryPxExact || 0);
-  if (!heldEntry.isFinite() || !heldEntry.isGreaterThan(0)) {
-    return null;
-  }
-  const size = heldSize.plus(orderSize);
-  return {
-    entry: heldEntry
-      .times(heldSize)
-      .plus(entryExact.times(orderSize))
-      .dividedBy(size),
-    size,
-    margin: new BigNumber(position.marginUsedExact || 0)
-      .absoluteValue()
-      .plus(marginExact),
-  };
-}
-
-/**
- * 本地估算一笔市价单会花多少钱、以及会在哪里被强平。
- *
- * 强平价的估算假定这是一个只由自身保证金支撑的逐仓仓位，维持保证金率按 Hyperliquid 的
- * 规则固定为 1/(2 × 市场最大杠杆)。订单都是以逐仓下的（见 perps-order.component），
- * 所以这与交易场所实际生效的值一致；它仍然忽略手续费和资金费，因此把它当作一个接近的
- * 估算，而不是精确数字。
- *
- * 当这笔订单是加到账户已有的敞口上时要传入 `position`：交易场所强平的是合并后的仓位，
- * 而不是这笔订单本身，所以一个忽略已有数量和保证金的估算，报出的会是一个账户永远不会在
- * 那里被强平的价格。
+ * 数量与费用用成交参考价，初始保证金用标记价。
+ * 强平预估按逐仓抵押品和分档维持保证金计算，未计未来手续费、资金费和成交滑点。
  */
 function previewOrder(params: {
   market: PerpsMarket;
   /** 预期入场价；限价单绝不能使用当前的中间价。 */
   executionPriceExact?: BigNumber.Value | null;
   notionalExact: BigNumber.Value;
+  sizeExact: string;
   leverage: number;
   isLong: boolean;
   /** 以小数表示的 taker 费率，例如 4.5 个基点写作 0.00045。 */
@@ -1084,6 +1037,7 @@ function previewOrder(params: {
     market,
     executionPriceExact,
     notionalExact,
+    sizeExact,
     leverage,
     isLong,
     feeRate,
@@ -1096,59 +1050,42 @@ function previewOrder(params: {
   const notional = new BigNumber(notionalExact || 0);
   const lev = new BigNumber(Math.max(1, leverage));
   const hasPrice = price.isFinite() && price.isGreaterThan(0);
-  const sizeExact = hasPrice
-    ? perpsSizeAtLot(notional.dividedBy(price), market.szDecimals)
-    : '0';
-
-  // 维持保证金率是「最大杠杆下起始保证金」的一半，
-  // 与用户为这笔订单选的杠杆无关。
-  const maintenanceFraction = new BigNumber(1).dividedBy(
-    new BigNumber(2).times(market.maxLeverage)
-  );
-  const side = isLong ? 1 : -1;
-  const denominator = new BigNumber(1).minus(maintenanceFraction.times(side));
-  const marginExact = notional.dividedBy(lev);
-  const merged = mergedPositionForLiquidation({
-    position,
-    isLong,
-    entryExact: price,
-    sizeExact,
-    marginExact,
-  });
-  const liquidationPx = merged
-    ? // 交易场所按一个逐仓仓位计算保证金：把这笔订单的数量和保证金加到已有的上面，
-      // 入场价取按数量加权的平均值。
-      merged.entry.minus(
-        merged.margin
-          .minus(merged.entry.times(merged.size).times(maintenanceFraction))
-          .times(side)
-          .dividedBy(merged.size)
-          .dividedBy(denominator)
-      )
-    : // 还没有持仓，所以只由比率决定，数量会被约掉。
-      price.times(
-        new BigNumber(1).minus(
-          new BigNumber(1)
-            .dividedBy(lev)
-            .minus(maintenanceFraction)
-            .times(side)
-            .dividedBy(denominator)
-        )
-      );
+  const size = new BigNumber(sizeExact);
+  const mark = new BigNumber(market.markPxExact ?? NaN);
+  const margin = mark.isFinite() && mark.isGreaterThan(0) && lev.isFinite()
+    ? size.times(mark).dividedBy(lev)
+    : null;
+  let totalSize = size;
+  let entryNotional = notional;
+  let collateral = margin;
+  let canEstimate = hasPrice && !!margin;
+  if (position) {
+    const heldSize = new BigNumber(position.sziExact).absoluteValue();
+    const heldEntry = new BigNumber(position.entryPxExact ?? NaN);
+    const heldEquity = new BigNumber(position.marginUsedExact ?? NaN);
+    const heldPnl = new BigNumber(position.unrealizedPnlExact ?? NaN);
+    // marginUsed 已含未实现盈亏；还原抵押品后才能从入场价值推算权益。
+    // 改杠杆可能同时调整已有逐仓保证金，未得到写入后的账户值时不能沿用旧保证金报价。
+    canEstimate = canEstimate && position.leverageType === 'isolated' &&
+      position.leverage === leverage && heldSize.isFinite() && heldSize.isGreaterThan(0) &&
+      heldEntry.isFinite() && heldEntry.isGreaterThan(0) &&
+      heldEquity.isFinite() && heldPnl.isFinite();
+    totalSize = size.plus(heldSize);
+    entryNotional = notional.plus(heldSize.times(heldEntry));
+    collateral = margin?.plus(heldEquity.minus(heldPnl)) ?? null;
+  }
+  const liquidationPxExact = canEstimate && size.isGreaterThan(0)
+    ? isolatedLiquidationPrice(totalSize, entryNotional, collateral, isLong, market.marginTiers)
+    : null;
 
   const protocolFee = notional.times(feeRate || 0);
   const builderFee = notional.times(builderFeeRate || 0);
 
   return {
     notionalExact: notional.toFixed(),
-    marginExact: marginExact.toFixed(),
+    marginExact: margin?.toFixed() ?? null,
     sizeExact,
-    // 没有正的估算值就没有东西可报。null 说的正是这件事；
-    // 零则会声称这个仓位会在一个「什么都不是」的价格上被强平。
-    liquidationPxExact:
-      hasPrice && liquidationPx.isGreaterThan(0)
-        ? liquidationPx.toFixed()
-        : null,
+    liquidationPxExact,
     feeExact: protocolFee.plus(builderFee).toFixed(),
     protocolFeeExact: protocolFee.toFixed(),
     builderFeeExact: builderFee.toFixed(),

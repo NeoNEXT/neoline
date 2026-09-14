@@ -187,6 +187,16 @@ function feeLabel(fee: PerpsExactValue, feeToken?: string): string {
   return isNonZeroExact(fee) ? `${fee} ${feeToken || 'USDC'}`.trim() : '';
 }
 
+/** 小于一分的实际费用或返佣保留方向，不把非零费用印成零。 */
+function formatUsdcFee(fee: BigNumber, fixedDecimals = false): string {
+  if (!fee.isZero() && fee.absoluteValue().isLessThan('0.01')) {
+    return `${fee.isNegative() ? '-' : ''}<0.01`;
+  }
+  return fixedDecimals
+    ? fee.toFixed(2, BigNumber.ROUND_HALF_UP)
+    : fee.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toFixed();
+}
+
 /** 一条账本行额外收取的手续费。 */
 export function ledgerFee(update: PerpsLedgerUpdate): string {
   const delta = update?.delta || ({} as any);
@@ -197,7 +207,7 @@ export function ledgerFee(update: PerpsLedgerUpdate): string {
       (!delta.feeToken || delta.feeToken === 'USDC')) {
     const fee = new BigNumber(delta.fee ?? '0').plus(update.cctpFeeExact);
     return fee.isFinite()
-      ? `${fee.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toFixed()} USDC`
+      ? `${formatUsdcFee(fee)} USDC`
       : '';
   }
   return feeLabel(delta.fee, delta.feeToken);
@@ -217,10 +227,10 @@ export function fillFee(fill: PerpsFill): string {
   if (!fee.isFinite()) {
     return '';
   }
-  // USDC 成交费用与 Hyperliquid 一样保留两位小数。
+  // USDC 成交费用保留两位小数，小额费用另行标示显示阈值。
   const token = fill.feeToken || 'USDC';
   const value = token === 'USDC'
-    ? fee.toFixed(2, BigNumber.ROUND_HALF_UP)
+    ? formatUsdcFee(fee, true)
     : fee.toFixed();
   return `${value} ${token}`;
 }

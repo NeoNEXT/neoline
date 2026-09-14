@@ -59,7 +59,7 @@ const facts = (overrides: Partial<PerpsOrderFacts> = {}): PerpsOrderFacts => ({
     markPxExact: '2000',
     markPx: 2000,
   },
-  feeRates: { takerRate: 0.00045, makerRate: 0.00015, builderRate: 0 },
+  feeRates: { takerRate: '0.00045', makerRate: '0.00015', builderRate: '0' },
   ...overrides,
 });
 
@@ -92,6 +92,28 @@ describe('PerpsOrderComponent summary rows', () => {
     expect(value.liquidationPriceText).toContain('$');
   });
 
+  it('renders missing mark or margin tiers as unavailable estimates', () => {
+    const value = component();
+    value.amount = '100';
+    value.leverage = 10;
+    value.facts = facts({ market: { status: 'ready', market: ethMarket({ markPxExact: null }) } });
+    expect(value.marginText).toBe('N/A');
+    expect(value.liquidationPriceText).toBe('N/A');
+    value.facts = facts({ market: { status: 'ready', market: ethMarket({ marginTiers: null }) } });
+    expect(value.marginText).toBe('$10');
+    expect(value.liquidationPriceText).toBe('N/A');
+  });
+
+  it('adds builder fees exactly before rounding the displayed fee amount', () => {
+    const value = component();
+    value.facts = facts({
+      feeRates: { takerRate: '0.0003', makerRate: '0.0001', builderRate: '0.00015' },
+    });
+    value.amount = '100';
+    expect(value.preview.feeExact).toBe('0.045');
+    expect(value.feeText).toBe('0.045% ($0.05)');
+  });
+
   it('quotes the maker side too, for a limit order', () => {
     const value = component();
     value.facts = facts();
@@ -110,7 +132,7 @@ describe('PerpsOrderComponent summary rows', () => {
   it('shows a negative maker rate as a rebate rather than zero', () => {
     const value = component();
     value.facts = facts({
-      feeRates: { takerRate: 0.00045, makerRate: -0.00002, builderRate: 0 },
+      feeRates: { takerRate: '0.00045', makerRate: '-0.00002', builderRate: '0' },
     });
     value.leverage = 10;
     value.amount = '200';
@@ -125,7 +147,7 @@ describe('PerpsOrderComponent summary rows', () => {
   it('includes the builder fee on both sides', () => {
     const value = component('0xbuilder');
     value.facts = facts({
-      feeRates: { takerRate: 0.00045, makerRate: 0.00015, builderRate: 0.00045 },
+      feeRates: { takerRate: '0.00045', makerRate: '0.00015', builderRate: '0.00045' },
     });
     value.leverage = 10;
     value.amount = '200';
@@ -408,7 +430,7 @@ describe('PerpsOrderComponent review under live frames', () => {
    */
   it('holds the review across a user-fee response', () => {
     const hyperliquid = {
-      getUserFeeRates: () => of({ takerRate: 0.0003, makerRate: 0.0001 }),
+      getUserFeeRates: () => of({ takerRate: '0.0003', makerRate: '0.0001' }),
     } as any;
     const value = new PerpsOrderComponent(
       null,
@@ -713,6 +735,46 @@ describe('PerpsOrderComponent asynchronous confirmation', () => {
     const intent = trades.calls.mostRecent().args[1];
     expect(intent.referencePriceExact).toBe('2000');
     expect(intent.requestedSizeExact).toBe(confirmedSize);
+  });
+
+  it('validates the frozen size against capacity after unlocking', async () => {
+    const pending = value.submit();
+    await Promise.resolve();
+    const updated = facts();
+    (updated.market as any).market.midPxExact = '2040';
+    updated.activeAssetData.maxTradeSzs = ['0.0495', '0.0495'];
+    value.facts = updated;
+    // 新行情可买 0.049 ETH，但待发送的是 0.05 ETH，已经超过新容量。
+    expect(value.confirmSizeText).toBe('0.05');
+    unlock('private-key');
+    await pending;
+    expect(trades).not.toHaveBeenCalled();
+    expect(value.composition.orderSizeExact).toBe('0.049');
+  });
+
+  it('does not reject a frozen size merely because a lower mid increases the live size', async () => {
+    const pending = value.submit();
+    await Promise.resolve();
+    const updated = facts();
+    (updated.market as any).market.midPxExact = '1960';
+    updated.activeAssetData.maxTradeSzs = ['0.0505', '0.0505'];
+    value.facts = updated;
+    expect(value.confirmSizeText).toBe('0.05');
+    unlock('private-key');
+    await pending;
+    expect(trades).toHaveBeenCalledTimes(1);
+    expect(trades.calls.mostRecent().args[1].requestedSizeExact).toBe('0.05');
+  });
+
+  it('refuses changed asset metadata during unlock', async () => {
+    const pending = value.submit();
+    await Promise.resolve();
+    const updated = facts();
+    (updated.market as any).market.assetId = 2;
+    value.facts = updated;
+    unlock('private-key');
+    await pending;
+    expect(trades).not.toHaveBeenCalled();
   });
 
   it('does not seed or reprice inputs during unlock', async () => {
