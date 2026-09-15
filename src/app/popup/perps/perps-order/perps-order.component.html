@@ -67,10 +67,16 @@
     >
       {{ "perpsLimitOrder" | translate | async }}
     </span>
-    <span class="available" *ngIf="!closeMode">
-      {{ "perpsAvailable" | translate | async }}
-      <b>{{ formatBalance(availableExact) }} USDC</b>
-    </span>
+    <div class="account-summary" *ngIf="!closeMode">
+      <span class="available">
+        {{ "perpsAvailable" | translate | async }}
+        <b>{{ formatBalance(availableExact) }} USDC</b>
+      </span>
+      <span class="current-position" *ngIf="position">
+        {{ "perpsCurrentPosition" | translate | async }}：
+        <b [class.short]="!position.isLong">{{ formattedPositionSize }} {{ symbol }}</b>
+      </span>
+    </div>
   </div>
 
   <!--
@@ -82,7 +88,7 @@
     <span class="label">{{ "perpsLimitPrice" | translate | async }}</span>
     <span class="input-value">
       <input
-        [disabled]="submitting"
+        [disabled]="submitting || leverageUpdating"
         type="text"
         inputmode="decimal"
         [value]="limitPrice"
@@ -98,7 +104,7 @@
     <span class="label">{{ "perpsAmount" | translate | async }}</span>
     <span class="input-value">
       <input
-        [disabled]="submitting"
+        [disabled]="submitting || leverageUpdating"
         type="text"
         inputmode="decimal"
         [value]="amount"
@@ -115,7 +121,7 @@
       [style.--slider-progress]="amountSliderPercent + '%'"
     >
       <input
-        [disabled]="submitting"
+        [disabled]="submitting || leverageUpdating"
         type="range"
         min="0"
         max="100"
@@ -133,7 +139,7 @@
     </div>
     <label class="range-value">
       <input
-        [disabled]="submitting"
+        [disabled]="submitting || leverageUpdating"
         type="number"
         inputmode="numeric"
         min="0"
@@ -168,7 +174,7 @@
     </p>
     <div class="range-control leverage-range">
       <input
-        [disabled]="submitting"
+        [disabled]="submitting || leverageUpdating"
         type="range"
         min="1"
         [max]="market?.maxLeverage || 1"
@@ -180,7 +186,7 @@
       />
       <label class="range-value">
         <input
-          [disabled]="submitting"
+          [disabled]="submitting || leverageUpdating"
           type="number"
           inputmode="numeric"
           min="1"
@@ -197,6 +203,11 @@
         <span>x</span>
       </label>
     </div>
+    <button type="button" class="apply-leverage" *ngIf="canApplyLeverage"
+      [disabled]="submitting || leverageUpdating || executionStatusUnknown"
+      (click)="applyLeverage()">
+      {{ "perpsApplyLeverage" | translate | async }}
+    </button>
   </ng-container>
 
   <!-- 预估 -->
@@ -303,7 +314,7 @@
         <button
           type="button"
           class="edit-slippage"
-          [disabled]="submitting"
+          [disabled]="submitting || leverageUpdating"
           (click)="openSlippageDialog()"
           [attr.aria-label]="'perpsEditSlippage' | translate | async"
         >
@@ -414,7 +425,7 @@
         {{ orderUnavailableReason | translate: orderUnavailableParams | async }}
       </p>
       <div class="sheet-actions">
-        <button class="ghost" [disabled]="submitting" (click)="cancelReview()">
+        <button class="ghost" [disabled]="submitting || leverageUpdating" (click)="cancelReview()">
           {{ "cancel" | translate | async }}
         </button>
         <button

@@ -162,8 +162,8 @@ describe('composeOrder 购买力', () => {
       ethPosition({ sziExact: '-1', isLong: false, leverageType: 'isolated' })
     );
     const holdingShort = composeOrder(f, order);
-    expect(holdingShort.submittable).toBeFalse();
-    expect(holdingShort.availability?.code).toBe('holding-short');
+    expect(holdingShort.submittable).toBeTrue();
+    expect(holdingShort.availability).toBeNull();
 
     f.account = withPositions();
     expect(composeOrder(f, order).submittable).toBeTrue();
@@ -619,13 +619,11 @@ describe('composeOrder 加仓时的强平估算', () => {
     expect(merged).toBeCloseTo(51.0204, 4);
   });
 
-  // 在更高价位买入会把按数量加权的入场价拉高，所以合并后的价位高于仓位自身的，
-  // 又低于这笔订单单独面对的。
-  it('weights the entry by size when the order fills higher', () => {
+  // 较高成交参考价产生即时浮亏；权益不足时，统一使用初始保证金下限。
+  it('applies the margin floor when a higher entry leaves insufficient equity', () => {
     const merged = Number(at('120', heldLong()).preview.liquidationPxExact);
-
-    expect(merged).toBeGreaterThan(standalone('100'));
-    expect(merged).toBeLessThan(standalone('120'));
+    expect(merged).toBeCloseTo(100 * (1 - 1 / 2) / 0.98, 10);
+    expect(merged).toBeCloseTo(standalone('120'), 10);
   });
 
   // 保证金数字仍然是这笔订单自己的：它是这笔订单锁定的金额，
@@ -634,9 +632,8 @@ describe('composeOrder 加仓时的强平估算', () => {
     expect(at('100', heldLong()).preview.marginExact).toBe('500');
   });
 
-  // 反方向的订单要么是减仓要么是反手，而下单表单拒绝去猜是哪一种 ——
-  // 所以没有东西可供合并。
-  it('ignores a position held on the other side', () => {
+  // 相等的反向订单恰好抵消已有仓位。
+  it('has no liquidation price when an opposite order fully closes the position', () => {
     const composed = at(
       '100',
       ethPosition({
@@ -648,12 +645,8 @@ describe('composeOrder 加仓时的强平估算', () => {
       })
     );
 
-    expect(Number(composed.preview.liquidationPxExact)).toBeCloseTo(
-      standalone('100'),
-      10
-    );
-    // 它也不会被读成反手：表单改为直接问用户本意是什么。
-    expect(composed.availability.code).toBe('holding-short');
+    expect(composed.preview.liquidationPxExact).toBeNull();
+
   });
 
   // 不足一手就没有订单可以合并，而除以为零的数量
@@ -904,14 +897,15 @@ describe('composeOrder', () => {
 
   /**
    * 交易场所没有「翻转」这种订单：反手是在一张单子上下 |仓位| + 数量。把一笔普通的反方向
-   * 订单读成反手，会签下数倍于表单所预览的风险，所以页面改为直接问用户本意是什么。
+   * 订单读成反手，会签下数倍于表单所预览的风险，因此普通反向订单只提交输入数量。
    */
-  it('refuses to read an opposite-side order as a reverse', () => {
+  it('submits only the entered opposite size without adding the held size', () => {
     const f = facts({
       market: priced('ETH', 100, 2),
       account: {
         availability: 'live',
         account: account({
+          availableBalanceExact: '100',
           positions: [
             ethPosition({
               sziExact: '-0.75',
@@ -931,9 +925,10 @@ describe('composeOrder', () => {
 
     const composed = composeOrder(f, input({ side: 'long', amount: '20' }));
 
-    expect(composed.availability.code).toBe('holding-short');
-    expect(composed.submittable).toBeFalse();
-    expect(composed.intent).toBeNull();
+    expect(composed.availability).toBeNull();
+    expect(composed.submittable).toBeTrue();
+    expect(composed.intent.requestedSizeExact).toBe('0.2');
+    expect(composed.intent.operation).toBe('open');
   });
 
   it('adds to a position held on the same side', () => {
@@ -1326,4 +1321,53 @@ describe('unavailable and merged margin estimates', () => {
     expect(result.preview.marginExact).toBe('20');
     expect(result.preview.liquidationPxExact).toBeNull();
   });
+});
+
+
+describe('opposite orders use a single net isolated position', () => {
+  const f = facts({
+    account: { ...withPositions(), account: account({
+      availableBalanceExact: '1000', positions: [ethPosition({
+        sziExact: '-1', entryPxExact: '100', positionValueExact: '100',
+        marginUsedExact: '50', unrealizedPnlExact: '0', leverageType: 'isolated',
+      })],
+    }) },
+  });
+  it('quotes the remaining short for a partial buy', () => {
+    const result = composeOrder(f, input({ amount: '20', leverage: 2 }));
+    expect(result.submittable).toBeTrue();
+    expect(Number(result.preview.liquidationPxExact)).toBeCloseTo(150 / 1.02, 8);
+  });
+  it('quotes only the new long after buying beyond the short', () => {
+    const result = composeOrder(f, input({ amount: '120', leverage: 2 }));
+    expect(result.intent.requestedSizeExact).toBe('1.2');
+    expect(Number(result.preview.liquidationPxExact)).toBeCloseTo(50 / 0.98, 8);
+  });
+});
+
+
+describe('net position liquidation preview with insufficient initial margin', () => {
+  for (const isLong of [false, true]) {
+    for (const increase of [false, true]) {
+    it(`${increase ? 'increase' : 'reduce'} applies the venue preview margin floor to a losing ${isLong ? 'long' : 'short'}`, () => {
+      const mark = 2470;
+      const entry = isLong ? 2517.1 : 2422.9;
+      const heldSize = 0.4084;
+      const pnl = (mark - entry) * heldSize * (isLong ? 1 : -1);
+      const result = composeOrder(facts({
+        market: { status: 'ready', market: ethMarket({ markPxExact: '2470', midPxExact: '2469.85' }) },
+        account: { ...withPositions(), account: account({ availableBalanceExact: '1107',
+          positions: [ethPosition({
+            isLong, sziExact: String(heldSize * (isLong ? 1 : -1)),
+            entryPxExact: String(entry), leverage: 3, leverageType: 'isolated',
+            marginUsedExact: String(345.420892 + pnl), unrealizedPnlExact: String(pnl),
+          })],
+        }) },
+      }), input({ side: (increase ? isLong : !isLong) ? 'long' : 'short', amount: '100', leverage: 3 }));
+      // Hyperliquid Y6 uses max(projected equity, resulting notional / leverage).
+      const expected = isLong ? mark * (1 - 1 / 3) / 0.98 : mark * (1 + 1 / 3) / 1.02;
+      expect(Number(result.preview.liquidationPxExact)).toBeCloseTo(expected, 8);
+    });
+    }
+  }
 });

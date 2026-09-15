@@ -1838,6 +1838,9 @@
   "perpsFundingRate": {
     "message": "資金調達率"
   },
+  "perpsCurrentPosition": {
+    "message": "現在のポジション"
+  },
   "perpsMyPosition": {
     "message": "保有ポジション"
   },
@@ -2182,6 +2185,9 @@
   },
   "perpsCrossPositionUnsupported": {
     "message": "この市場にはクロスマージンのポジションがあります。NeoLine は分離注文のみ対応しているため、追加注文はできません。"
+  },
+  "perpsApplyLeverage": {
+    "message": "ポジションにレバレッジを適用"
   },
   "perpsLeverageUpdateFailed": {
     "message": "レバレッジを設定できなかったため、注文は送信されていません。再試行してください。"

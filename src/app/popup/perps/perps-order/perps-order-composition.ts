@@ -241,7 +241,7 @@ export function composeOrder(
     ? fullClose
       ? 'close'
       : 'reduce'
-    : position
+    : position && position.isLong === isLong
     ? 'increase'
     : 'open';
 
@@ -279,7 +279,6 @@ export function composeOrder(
     position,
     closeMode,
     hasAmount,
-    increasesPosition,
     leverage: input.leverage,
     isLong,
     orderPriceExact,
@@ -547,7 +546,6 @@ function composePreview(params: {
   position: PerpsPosition | null;
   closeMode: boolean;
   hasAmount: boolean;
-  increasesPosition: boolean;
   leverage: number;
   isLong: boolean;
   orderPriceExact: string;
@@ -561,7 +559,6 @@ function composePreview(params: {
     position,
     closeMode,
     hasAmount,
-    increasesPosition,
     leverage,
     isLong,
     orderPriceExact,
@@ -606,7 +603,7 @@ function composePreview(params: {
     builderFeeRate: builderRate,
     // 加到已有仓位上时，是作为合并后的一个仓位被强平的，
     // 所以估算必须由两者共同构建。
-    position: increasesPosition ? position : null,
+    position,
   });
   return { ...preview, sizeExact: orderSizeExact };
 }
@@ -682,11 +679,6 @@ function orderUnavailable(params: {
   // NeoLine 只开逐仓订单，无法改动一个存续中的全仓仓位。
   if (!closeMode && position?.leverageType === 'cross') {
     return reason('cross-position');
-  }
-  // 针对已持有仓位下的反方向订单不会被读作反手（见页面 CONTEXT 中的隐式翻转）：交易场所
-  // 没有「翻转」这种订单，所以改为直接问用户本意是什么。
-  if (!closeMode && position && position.isLong !== isLong) {
-    return reason(position.isLong ? 'holding-long' : 'holding-short');
   }
   if (closeMode && account && !position) {
     return reason('no-position-to-close');
@@ -1030,7 +1022,7 @@ function previewOrder(params: {
   feeRate: BigNumber.Value;
   /** NeoLine 的 builder 费率；没有配置 builder 时为零。 */
   builderFeeRate?: BigNumber.Value;
-  /** 这笔订单要加到的同方向仓位（如果有的话）。 */
+  /** 当前市场的净仓位（如果有的话）。 */
   position?: PerpsPosition | null;
 }): PerpsOrderPreview {
   const {
@@ -1055,6 +1047,7 @@ function previewOrder(params: {
   const margin = mark.isFinite() && mark.isGreaterThan(0) && lev.isFinite()
     ? size.times(mark).dividedBy(lev)
     : null;
+  let liquidationIsLong = isLong;
   let totalSize = size;
   let entryNotional = notional;
   let collateral = margin;
@@ -1070,12 +1063,40 @@ function previewOrder(params: {
       position.leverage === leverage && heldSize.isFinite() && heldSize.isGreaterThan(0) &&
       heldEntry.isFinite() && heldEntry.isGreaterThan(0) &&
       heldEquity.isFinite() && heldPnl.isFinite();
-    totalSize = size.plus(heldSize);
-    entryNotional = notional.plus(heldSize.times(heldEntry));
-    collateral = margin?.plus(heldEquity.minus(heldPnl)) ?? null;
+    if (position.isLong === isLong) {
+      totalSize = size.plus(heldSize);
+      entryNotional = notional.plus(heldSize.times(heldEntry));
+      collateral = margin?.plus(heldEquity.minus(heldPnl)) ?? null;
+    } else if (size.isLessThan(heldSize)) {
+      // 反向成交按比例释放逐仓保证金，剩余仓位保留原入场价与方向。
+      totalSize = heldSize.minus(size);
+      entryNotional = totalSize.times(heldEntry);
+      collateral = heldEquity.minus(heldPnl).times(totalSize).dividedBy(heldSize);
+      liquidationIsLong = position.isLong;
+
+    } else {
+      // 超过已有仓位的部分才构成新方向敞口；恰好全平时没有强平价。
+      totalSize = size.minus(heldSize);
+      entryNotional = totalSize.times(price);
+      collateral = margin?.times(totalSize).dividedBy(size) ?? null;
+    }
+  }
+  if (canEstimate && totalSize.isGreaterThan(0)) {
+    // Hyperliquid 的下单预估在权益不足时假设补足初始保证金；这不是实际补保证金操作。
+    // https://hyperliquid.gitbook.io/hyperliquid-docs/trading/liquidations
+    const remainingNotional = totalSize.times(mark);
+    const tier = market.marginTiers?.slice().reverse().find(
+      (item) => remainingNotional.isGreaterThanOrEqualTo(item.lowerBoundExact)
+    );
+    const initialMargin = remainingNotional.dividedBy(
+      Math.min(leverage, tier?.maxLeverage ?? leverage)
+    );
+    const remainingPnl = remainingNotional.minus(entryNotional)
+      .times(liquidationIsLong ? 1 : -1);
+    collateral = BigNumber.maximum(collateral, initialMargin.minus(remainingPnl));
   }
   const liquidationPxExact = canEstimate && size.isGreaterThan(0)
-    ? isolatedLiquidationPrice(totalSize, entryNotional, collateral, isLong, market.marginTiers)
+    ? isolatedLiquidationPrice(totalSize, entryNotional, collateral, liquidationIsLong, market.marginTiers)
     : null;
 
   const protocolFee = notional.times(feeRate || 0);

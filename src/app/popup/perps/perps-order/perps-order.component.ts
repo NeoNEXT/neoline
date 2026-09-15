@@ -155,6 +155,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   limitPrice = '';
   amount = '';
   leverage = 1;
+  leverageUpdating = false;
   slippagePercent = PERPS_DEFAULT_SLIPPAGE_PERCENT;
   activePercent: number = null;
 
@@ -678,7 +679,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    */
   get canSubmit(): boolean {
     return (
-      !this.destroyed && this.lifecycle.gateOpen && this.composition.submittable
+      !this.destroyed && !this.leverageUpdating && this.lifecycle.gateOpen && this.composition.submittable
     );
   }
 
@@ -719,6 +720,9 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   setLeverage(leverage: number) {
+    if (this.leverageUpdating || this.submitting) {
+      return;
+    }
     const max = this.market?.maxLeverage || 1;
     this.leverage = Math.max(
       1,
@@ -729,6 +733,60 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     // 金额滑块按购买力换算数量，而购买力刚刚随杠杆变了。
     if (this.activePercent !== null && !this.closeMode) {
       this.setPercent(this.activePercent);
+    }
+  }
+
+  get canApplyLeverage(): boolean {
+    return !this.closeMode && this.position?.leverageType === 'isolated' &&
+      this.position.leverage !== this.leverage;
+  }
+
+  async applyLeverage() {
+    if (!this.canApplyLeverage || this.leverageUpdating ||
+        !this.lifecycle.gateOpen || this.destroyed || !this.wallet) {
+      return;
+    }
+    const extra = this.wallet.accounts[0]?.extra;
+    if (extra?.ledgerSLIP44 || extra?.qrBasedXFP) {
+      this.global.snackBarTip('perpsSigningUnavailable');
+      return;
+    }
+    const wallet = this.wallet;
+    const market = this.market;
+    const previous = this.position.leverage;
+    const leverage = this.leverage;
+    this.lifecycle.edited();
+    this.leverageUpdating = true;
+    let applied = false;
+    try {
+      const password = await this.chrome.getPassword();
+      if (this.destroyed) { return; }
+      const privateKey = await this.evmWallet.getPrivateKey(wallet, password);
+      if (this.destroyed || this.wallet !== wallet || this.market?.key !== market.key) {
+        return;
+      }
+      await firstValueFrom(this.writes.updateLeverage(
+        privateKey, market.assetId, leverage, market.maxLeverage
+      ));
+      applied = true;
+      if (!this.destroyed) {
+        const state = await firstValueFrom(
+          this.accountStates.refreshAccount(this.address, market.dex)
+        );
+        if (!this.destroyed) { this.patchFacts({ account: state }); }
+      }
+    } catch (error) {
+      if (!this.destroyed) {
+        if (!applied) {
+          this.leverage = this.position?.leverage ?? previous;
+          this.leverageDraft = null;
+        }
+        this.global.snackBarTip(
+          applied ? 'perpsLoadFailed' : 'perpsLeverageUpdateFailed', error?.message || error
+        );
+      }
+    } finally {
+      this.leverageUpdating = false;
     }
   }
 

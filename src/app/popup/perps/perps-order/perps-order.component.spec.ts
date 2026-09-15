@@ -1,4 +1,4 @@
-import { BehaviorSubject, of } from 'rxjs';
+import { BehaviorSubject, of, throwError } from 'rxjs';
 import { fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
 
 import { PerpsAccount } from '@popup/_lib/perps';
@@ -6,7 +6,7 @@ import { NotificationService } from '@/app/core';
 
 import { PerpsOrderComponent } from './perps-order.component';
 import { PerpsOrderFacts } from './perps-order-composition';
-import { ethMarket } from '../perps.test-fixture';
+import { ethMarket, ethPosition } from '../perps.test-fixture';
 
 /**
  * 页面，架在一份它不必自己搭建的组合之上。
@@ -844,4 +844,59 @@ describe('PerpsOrderComponent asynchronous confirmation', () => {
     expect(writes.getOrderStatus).toHaveBeenCalledTimes(1);
     expect(value.canSubmit).toBeFalse();
   }));
+});
+
+
+describe('applying leverage to an existing isolated position', () => {
+  function setup() {
+    const value = component();
+    const state = (leverage: number) => ({ ...facts().account,
+      account: { positions: [ethPosition({ leverageType: 'isolated', leverage })] } as PerpsAccount,
+    });
+    value.facts = facts({ account: state(2) });
+    value.leverage = 3;
+    const writes = { updateLeverage: jasmine.createSpy().and.returnValue(of({ status: 'ok' })) };
+    const accounts = { refreshAccount: jasmine.createSpy().and.returnValue(of(state(3))) };
+    const global = { snackBarTip: jasmine.createSpy() };
+    Object.assign(value as any, {
+      writes, accountStates: accounts, global, address: '0xabc',
+      wallet: { accounts: [{ extra: {} }] },
+      chrome: { getPassword: () => Promise.resolve('password') },
+      evmWallet: { getPrivateKey: () => Promise.resolve('key') },
+    });
+    return { value, writes, accounts, global };
+  }
+
+  it('writes 3x without an order and refreshes the position', async () => {
+    const { value, writes, accounts } = setup();
+    await value.applyLeverage();
+    expect(writes.updateLeverage).toHaveBeenCalledWith('key', 0, 3, 25);
+    expect(accounts.refreshAccount).toHaveBeenCalledWith('0xabc', '');
+    expect(value.position.leverage).toBe(3);
+    expect(value.canApplyLeverage).toBeFalse();
+  });
+
+  it('retains 3x and surfaces the venue margin error when decreasing to 2x fails', async () => {
+    const { value, writes, global } = setup();
+    await value.applyLeverage();
+    value.setLeverage(2);
+    const message = 'Isolated position does not have sufficient margin available to decrease leverage. ' +
+      'To decrease leverage, add margin to the position.';
+    writes.updateLeverage.and.returnValue(throwError(() => new Error(message)));
+    await value.applyLeverage();
+    expect(value.leverage).toBe(3);
+    expect(value.position.leverage).toBe(3);
+    expect(global.snackBarTip).toHaveBeenCalledWith('perpsLeverageUpdateFailed', message);
+  });
+
+  it('blocks duplicate leverage writes and order submission during unlocking', async () => {
+    const { value, writes } = setup();
+    const pending = value.applyLeverage();
+    expect(value.canSubmit).toBeFalse();
+    value.setLeverage(4);
+    await value.applyLeverage();
+    await pending;
+    expect(writes.updateLeverage).toHaveBeenCalledTimes(1);
+    expect(value.leverage).toBe(3);
+  });
 });

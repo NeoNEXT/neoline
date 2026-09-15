@@ -1838,6 +1838,9 @@
   "perpsFundingRate": {
     "message": "Funding"
   },
+  "perpsCurrentPosition": {
+    "message": "Current position"
+  },
   "perpsMyPosition": {
     "message": "My position"
   },
@@ -2182,6 +2185,9 @@
   },
   "perpsCrossPositionUnsupported": {
     "message": "This market has an open cross-margin position. NeoLine cannot increase it because only isolated orders are supported."
+  },
+  "perpsApplyLeverage": {
+    "message": "Apply leverage to position"
   },
   "perpsLeverageUpdateFailed": {
     "message": "Leverage could not be set, so no order was submitted. Try again."

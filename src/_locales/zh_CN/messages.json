@@ -1838,6 +1838,9 @@
   "perpsFundingRate": {
     "message": "费率"
   },
+  "perpsCurrentPosition": {
+    "message": "当前仓位"
+  },
   "perpsMyPosition": {
     "message": "我的持仓"
   },
@@ -2182,6 +2185,9 @@
   },
   "perpsCrossPositionUnsupported": {
     "message": "该市场存在全仓持仓。NeoLine 仅支持逐仓订单，无法在此加仓。"
+  },
+  "perpsApplyLeverage": {
+    "message": "应用杠杆到当前仓位"
   },
   "perpsLeverageUpdateFailed": {
     "message": "杠杆设置失败，订单未提交，请重试。"
