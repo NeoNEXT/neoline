@@ -3,13 +3,14 @@ import BigNumber from 'bignumber.js';
 
 import {
   PerpsFill,
+  PerpsFundingUpdate,
   PerpsLedgerUpdate,
   PerpsOpenOrder,
 } from '@popup/_lib/perps';
-import { isNonZeroExact, PerpsExactValue } from '../perps.util';
+import { formatSignedUsd, formatUsd } from '../perps.util';
 
 /**
- * 活动页把协议事实读成人话的那些规则，以及包住它们的纯管道。
+ * 活动页的价格、金额和费用展示规则，以及包住它们的纯管道。
  *
  * 规则是普通函数，组件和测试直接调用；管道只是包一层。理由和
  * [perps-format.pipe.ts](../perps-format.pipe.ts) 一样：模板里直接调组件方法，会在每一轮
@@ -17,84 +18,7 @@ import { isNonZeroExact, PerpsExactValue } from '../perps.util';
  * 纯管道按参数缓存，没有变动的行只算一次。
  */
 
-/**
- * 有友好文案的订单状态。Hyperliquid 还有一长串 `xxxCanceled` / `xxxRejected` 变体，
- * 在 orderStatusKey 里按后缀统一处理。
- */
-const ORDER_STATUS_LABELS = {
-  filled: 'perpsStatusFilled',
-  open: 'perpsStatusOpen',
-  canceled: 'perpsStatusCanceled',
-  scheduledCancel: 'perpsStatusCanceled',
-  rejected: 'perpsStatusRejected',
-  triggered: 'perpsStatusTriggered',
-};
-
-/**
- * Hyperliquid 自己的活动表格命名的是「动作」而不是账本原语，这份列表跟着它来：Arbitrum
- * 跨桥读作入金或出金，它的点对点 USDC 操作按本钱包处在哪一端读作转出或转入，而在现货与
- * 永续余额之间挪动抵押品读作划转。
- */
-const LEDGER_TYPE_LABELS = {
-  deposit: 'perpsLedgerDeposit',
-  withdraw: 'perpsLedgerWithdraw',
-  internalTransfer: 'perpsLedgerSend',
-  accountClassTransfer: 'perpsLedgerTransfer',
-  subAccountTransfer: 'perpsLedgerTransfer',
-};
-
-/**
- * 成交方向的文案。
- *
- * `userFills` 的 `dir` 不是枚举，是交易场所直接给的英文短语，而这份短语表**没有进过官方
- * 文档**。所以这里只认四个能对上的常规方向，其余（仓位反手 `Long > Short`、强平、ADL……）
- * 退回协议原文 —— 与 `orderStatusKey` / `ledgerTypeKey` 同一条路子：宁可显示一句英文，
- * 也不猜一个中文出来。
- */
-const FILL_DIRECTION_LABELS = {
-  'Open Long': 'perpsOpenLong',
-  'Open Short': 'perpsOpenShort',
-  'Close Long': 'perpsCloseLong',
-  'Close Short': 'perpsCloseShort',
-};
-
-/**
- * 现货转账没有固定文案。HyperEVM 或跨桥转账正是以它的形式落地的，所以 Hyperliquid 按钱
- * 的流向来命名：转入读作入金，转出读作出金。
- */
-const DIRECTIONAL_LEDGER_TYPES = ['send', 'spotTransfer'];
-
 //#region 订单
-
-/** 把 Hyperliquid 的方向和 reduce-only 标记翻译成交易意图。 */
-export function orderDirectionKey(
-  order: PerpsOpenOrder
-): 'perpsOpenLong' | 'perpsOpenShort' | 'perpsCloseLong' | 'perpsCloseShort' {
-  const isBuy = order.side === 'B';
-  if (order.reduceOnly) {
-    return isBuy ? 'perpsCloseShort' : 'perpsCloseLong';
-  }
-  return isBuy ? 'perpsOpenLong' : 'perpsOpenShort';
-}
-
-/** 成交方向的 i18n key；短语表里没有的方向返回 ''，由模板显示协议原文。 */
-export function fillDirectionKey(fill: PerpsFill): string {
-  return FILL_DIRECTION_LABELS[fill?.dir] || '';
-}
-
-/** 订单状态的 i18n key；需要显示原始值时返回 ''。 */
-export function orderStatusKey(status: string): string {
-  if (ORDER_STATUS_LABELS[status]) {
-    return ORDER_STATUS_LABELS[status];
-  }
-  if (status?.endsWith('Canceled')) {
-    return 'perpsStatusCanceled';
-  }
-  if (status?.endsWith('Rejected')) {
-    return 'perpsStatusRejected';
-  }
-  return '';
-}
 
 /**
  * 这张挂单的价格是不是一个触发价。
@@ -120,6 +44,52 @@ export function orderPriceExact(order: PerpsOpenOrder): string {
   return orderIsTrigger(order) ? order.triggerPx : order.limitPx;
 }
 
+/**
+ * 当前和历史委托共用的行标题：订单类型 + 方向。
+ *
+ * `orderType` 先压成句首大写（`Take Profit Market` → `Take profit market`），再拼方向：
+ * 开仓只写 `long` / `short`，减仓写 `close long` / `close short`。缺类型时只留方向，
+ * 免得屏幕上冒出一个光秃秃的 `undefined short`。
+ */
+export function orderHistoryTitle(order: PerpsOpenOrder): string {
+  if (!order) {
+    return '';
+  }
+  const isBuy = order.side === 'B';
+  const direction = order.reduceOnly
+    ? isBuy
+      ? 'close short'
+      : 'close long'
+    : isBuy
+      ? 'long'
+      : 'short';
+  const type = sentenceCase(order.orderType || '');
+  return type ? `${type} ${direction}` : direction;
+}
+
+/** MetaMask 活动页状态文案；未知协议状态保留原文。 */
+export function orderStatusKey(status: string): string {
+  switch (status) {
+    case 'filled': return 'perpsStatusFilled';
+    case 'open': return 'perpsStatusOpen';
+    case 'canceled':
+    case 'scheduledCancel': return 'perpsStatusCanceled';
+    case 'rejected': return 'perpsStatusRejected';
+    case 'triggered': return 'perpsStatusTriggered';
+    case 'queued': return 'perpsStatusQueued';
+  }
+  if (status?.endsWith('Canceled')) {
+    return 'perpsStatusCanceled';
+  }
+  return status?.endsWith('Rejected') ? 'perpsStatusRejected' : '';
+}
+
+/** 句首大写，其余小写 —— 用来压平交易场所大小写不一的 `orderType`。 */
+function sentenceCase(value: string): string {
+  const lower = value.trim().toLowerCase();
+  return lower ? `${lower.charAt(0).toUpperCase()}${lower.slice(1)}` : '';
+}
+
 //#endregion
 
 //#region 账本
@@ -143,22 +113,20 @@ export function ledgerIsOut(
   return false;
 }
 
-/** 账本行的 i18n key；遇到冷门类型（vault、staking 等）时返回 ''。 */
-export function ledgerTypeKey(
-  update: PerpsLedgerUpdate,
-  address: string
-): string {
-  const type = update?.delta?.type;
-  if (DIRECTIONAL_LEDGER_TYPES.indexOf(type) > -1) {
-    return ledgerIsOut(update, address)
-      ? 'perpsLedgerWithdraw'
-      : 'perpsLedgerDeposit';
+/** 账本行在给用户看时用的代币：USDC 划转是 USDC，现货行用 `token`，其余没有。 */
+export function ledgerToken(update: PerpsLedgerUpdate): string {
+  const delta = update?.delta || ({} as any);
+  if (delta.usdc !== undefined) {
+    return 'USDC';
   }
-  return LEDGER_TYPE_LABELS[type] || '';
+  return delta.token || '';
 }
 
-/** 账本金额在跨桥/class 行里是 USDC，其余情况以对应代币计价。 */
-export function ledgerAmount(
+/**
+ * 账本行的协议金额：内部转账收款方扣掉费用，其余原样。
+ * 符号不在这里，右侧金额用 `ledgerResult`。
+ */
+function ledgerValue(
   update: PerpsLedgerUpdate,
   address: string
 ): string {
@@ -174,113 +142,115 @@ export function ledgerAmount(
     }
     value = received.toFixed();
   }
-  const token = delta.usdc !== undefined ? 'USDC' : delta.token || '';
-  return `${ledgerIsOut(update, address) ? '-' : '+'}${value} ${token}`.trim();
-}
-
-//#endregion
-
-//#region 手续费
-
-/** 账本手续费保留协议精度；零费用不占一行。 */
-function feeLabel(fee: PerpsExactValue, feeToken?: string): string {
-  return isNonZeroExact(fee) ? `${fee} ${feeToken || 'USDC'}`.trim() : '';
-}
-
-/** 小于一分的实际费用或返佣保留方向，不把非零费用印成零。 */
-function formatUsdcFee(fee: BigNumber, fixedDecimals = false): string {
-  if (!fee.isZero() && fee.absoluteValue().isLessThan('0.01')) {
-    return `${fee.isNegative() ? '-' : ''}<0.01`;
-  }
-  return fixedDecimals
-    ? fee.toFixed(2, BigNumber.ROUND_HALF_UP)
-    : fee.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toFixed();
-}
-
-/** 一条账本行额外收取的手续费。 */
-export function ledgerFee(update: PerpsLedgerUpdate): string {
-  const delta = update?.delta || ({} as any);
-  if (isNonZeroExact(delta.nativeTokenFee)) {
-    return feeLabel(delta.nativeTokenFee, 'HYPE');
-  }
-  if (update.cctpFeeExact != null &&
-      (!delta.feeToken || delta.feeToken === 'USDC')) {
-    const fee = new BigNumber(delta.fee ?? '0').plus(update.cctpFeeExact);
-    return fee.isFinite()
-      ? `${formatUsdcFee(fee)} USDC`
-      : '';
-  }
-  return feeLabel(delta.fee, delta.feeToken);
+  return String(value);
 }
 
 /**
- * 一笔成交收取的手续费。
- *
- * 它**已经含了 builder fee**（另有一个可选的 `builderFee` 字段单独报告同一笔钱），
- * 所以这里绝不能再加一次。来源：Subscriptions 与 Builder codes。
+ * 账本行标题：类型原文后面跟上代币，例如 `deposit USDC`。
+ * 金额只出现在右侧，标题里不再重复。没有代币的行只留类型。
  */
-export function fillFee(fill: PerpsFill): string {
-  if (fill?.fee == null) {
-    return '';
+export function ledgerTitle(update: PerpsLedgerUpdate): string {
+  const type = update?.delta?.type || '';
+  const token = ledgerToken(update);
+  return [type, token].filter(Boolean).join(' ');
+}
+
+/** 账本行右侧金额：USDC 用带符号美元，其它代币保留原币种。 */
+export function ledgerResult(
+  update: PerpsLedgerUpdate,
+  address: string
+): PerpsActivityResult | null {
+  const value = ledgerValue(update, address);
+  if (!value) {
+    return null;
+  }
+  const amount = new BigNumber(value);
+  return activityResult(
+    ledgerIsOut(update, address) ? amount.negated() : amount,
+    ledgerToken(update)
+  );
+}
+
+export interface PerpsActivityResult {
+  text: string;
+  positive: boolean;
+  negative: boolean;
+}
+
+/** 统一金额符号和颜色；资金费通过 decimals 保留协议精度。 */
+function activityResult(
+  amount: BigNumber,
+  token: string,
+  decimals = 2
+): PerpsActivityResult | null {
+  if (!amount.isFinite()) {
+    return null;
+  }
+  const positive = amount.isGreaterThan(0);
+  const negative = amount.isLessThan(0);
+  const sign = positive ? '+' : negative ? '-' : '';
+  return {
+    text: token === 'USDC'
+      ? amount.isZero() ? formatUsd('0') : formatSignedUsd(amount, decimals)
+      : `${sign}${amount.absoluteValue().toFixed()}${token ? ` ${token}` : ''}`,
+    positive,
+    negative,
+  };
+}
+
+/** 成交的净金额；费用为支出，返佣为收入，fee 已包含 builder fee。 */
+export function fillResult(fill: PerpsFill): PerpsActivityResult | null {
+  if (fill?.fee == null || fill.fee === '') {
+    return null;
   }
   const fee = new BigNumber(fill.fee);
-  if (!fee.isFinite()) {
-    return '';
-  }
-  // USDC 成交费用保留两位小数，小额费用另行标示显示阈值。
   const token = fill.feeToken || 'USDC';
-  const value = token === 'USDC'
-    ? formatUsdcFee(fee, true)
-    : fee.toFixed();
-  return `${value} ${token}`;
+  // 非 USDC 费用保留原币种，不与美元盈亏相减。
+  const amount = token === 'USDC'
+    ? new BigNumber(fill.closedPnl ?? '0').minus(fee)
+    : fee.negated();
+  return activityResult(amount, token);
 }
 
 /**
- * 先以协议精度扣除本笔费用，再由展示管道舍入；fee 已包含 builderFee。
- *
- * 开仓成交没有已实现盈亏，`closedPnl` 为零，于是 `closedPnl - fee` 恰好等于负的手续费 ——
- * 和同一行里的费用是同一个数字，只差一个负号。把它显示成 PnL，等于把手续费说成这笔交易的
- * 亏损。所以开仓不给 PnL，那一行让给费用。
- *
- * 判据是 `closedPnl` 本身为零，而不是相减的结果为零：一笔真平掉了仓位、扣完费用恰好打平的
- * 成交，`PnL: $0.00` 是它准确的结果，不该被折叠成费用。
+ * 资金费行标题，跟 Hyperliquid 活动页同一句英文。
+ * `usdc` 为正是收到，其余（支付、零）都读作支付。
  */
-export function fillNetPnl(fill: PerpsFill): string | null {
-  if (fill?.closedPnl == null || fill?.fee == null) {
+export function fundingTitle(update: PerpsFundingUpdate): string {
+  const usdc = new BigNumber(update?.delta?.usdc);
+  if (!usdc.isFinite()) {
+    return '';
+  }
+  return usdc.isGreaterThan(0)
+    ? 'Received funding fee'
+    : 'Paid funding fee';
+}
+
+/** 资金费金额保留协议精度；小于一分也不折叠成 `<$0.01`。 */
+export function fundingResult(
+  update: PerpsFundingUpdate
+): PerpsActivityResult | null {
+  const usdc = update?.delta?.usdc;
+  if (usdc == null || usdc === '') {
     return null;
   }
-  // 不把非 USDC 手续费直接当成美元扣除。
-  if (fill.feeToken && fill.feeToken !== 'USDC') {
-    return null;
-  }
-  const closed = new BigNumber(fill.closedPnl);
-  if (!closed.isFinite() || closed.isZero()) {
-    return null;
-  }
-  const pnl = closed.minus(fill.fee);
-  return pnl.isFinite() ? pnl.toFixed() : null;
+  const amount = new BigNumber(usdc);
+  return activityResult(amount, 'USDC', amount.decimalPlaces() ?? 0);
 }
 
 //#endregion
-
-@Pipe({ name: 'perpsOrderDirection' })
-export class PerpsOrderDirectionPipe implements PipeTransform {
-  transform(order: PerpsOpenOrder): string {
-    return orderDirectionKey(order);
-  }
-}
-
-@Pipe({ name: 'perpsFillDirection' })
-export class PerpsFillDirectionPipe implements PipeTransform {
-  transform(fill: PerpsFill): string {
-    return fillDirectionKey(fill);
-  }
-}
 
 @Pipe({ name: 'perpsOrderStatus' })
 export class PerpsOrderStatusPipe implements PipeTransform {
   transform(status: string): string {
     return orderStatusKey(status);
+  }
+}
+
+@Pipe({ name: 'perpsOrderHistoryTitle' })
+export class PerpsOrderHistoryTitlePipe implements PipeTransform {
+  transform(order: PerpsOpenOrder): string {
+    return orderHistoryTitle(order);
   }
 }
 
@@ -305,51 +275,105 @@ export class PerpsLedgerIsOutPipe implements PipeTransform {
   }
 }
 
-@Pipe({ name: 'perpsLedgerType' })
-export class PerpsLedgerTypePipe implements PipeTransform {
-  transform(update: PerpsLedgerUpdate, address: string): string {
-    return ledgerTypeKey(update, address);
-  }
-}
-
-@Pipe({ name: 'perpsLedgerAmount' })
-export class PerpsLedgerAmountPipe implements PipeTransform {
-  transform(update: PerpsLedgerUpdate, address: string): string {
-    return ledgerAmount(update, address);
-  }
-}
-
-@Pipe({ name: 'perpsLedgerFee' })
-export class PerpsLedgerFeePipe implements PipeTransform {
+@Pipe({ name: 'perpsLedgerToken' })
+export class PerpsLedgerTokenPipe implements PipeTransform {
   transform(update: PerpsLedgerUpdate): string {
-    return ledgerFee(update);
+    return ledgerToken(update);
   }
 }
 
-@Pipe({ name: 'perpsFillFee' })
-export class PerpsFillFeePipe implements PipeTransform {
-  transform(fill: PerpsFill): string {
-    return fillFee(fill);
+@Pipe({ name: 'perpsLedgerTitle' })
+export class PerpsLedgerTitlePipe implements PipeTransform {
+  transform(update: PerpsLedgerUpdate): string {
+    return ledgerTitle(update);
   }
 }
 
-@Pipe({ name: 'perpsFillNetPnl' })
-export class PerpsFillNetPnlPipe implements PipeTransform {
-  transform(fill: PerpsFill): string | null {
-    return fillNetPnl(fill);
+@Pipe({ name: 'perpsLedgerResult' })
+export class PerpsLedgerResultPipe implements PipeTransform {
+  transform(update: PerpsLedgerUpdate, address: string): PerpsActivityResult | null {
+    return ledgerResult(update, address);
+  }
+}
+
+@Pipe({ name: 'perpsFillResult' })
+export class PerpsFillResultPipe implements PipeTransform {
+  transform(fill: PerpsFill): PerpsActivityResult | null {
+    return fillResult(fill);
+  }
+}
+
+@Pipe({ name: 'perpsFundingTitle' })
+export class PerpsFundingTitlePipe implements PipeTransform {
+  transform(update: PerpsFundingUpdate): string {
+    return fundingTitle(update);
+  }
+}
+
+@Pipe({ name: 'perpsFundingResult' })
+export class PerpsFundingResultPipe implements PipeTransform {
+  transform(update: PerpsFundingUpdate): PerpsActivityResult | null {
+    return fundingResult(update);
+  }
+}
+
+export interface PerpsActivityDay {
+  key?: 'perpsActivityToday' | 'perpsActivityYesterday';
+  text?: string;
+}
+
+/** 按本地日历日分组；相邻两行属于同一天时不重复标题。 */
+export function activityDay(
+  time: number,
+  previous: number | undefined,
+  now: number
+): PerpsActivityDay | null {
+  if (!Number.isFinite(time)) {
+    return null;
+  }
+  const date = new Date(time);
+  const day = new Date(time).setHours(0, 0, 0, 0);
+  if (!Number.isFinite(day) ||
+      (Number.isFinite(previous) && day === new Date(previous).setHours(0, 0, 0, 0))) {
+    return null;
+  }
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+  if (day === today.getTime()) {
+    return { key: 'perpsActivityToday' };
+  }
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (day === yesterday.getTime()) {
+    return { key: 'perpsActivityYesterday' };
+  }
+  return {
+    text: date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      ...(date.getFullYear() !== today.getFullYear() ? { year: 'numeric' as const } : {}),
+    }),
+  };
+}
+
+@Pipe({ name: 'perpsActivityDay' })
+export class PerpsActivityDayPipe implements PipeTransform {
+  transform(time: number, previous: number | undefined, now: number): PerpsActivityDay | null {
+    return activityDay(time, previous, now);
   }
 }
 
 export const PERPS_HISTORY_PIPES = [
-  PerpsFillNetPnlPipe,
-  PerpsOrderDirectionPipe,
-  PerpsFillDirectionPipe,
+  PerpsActivityDayPipe,
+  PerpsFillResultPipe,
+  PerpsFundingResultPipe,
+  PerpsFundingTitlePipe,
+  PerpsOrderHistoryTitlePipe,
   PerpsOrderStatusPipe,
   PerpsOrderIsTriggerPipe,
   PerpsOrderPricePipe,
   PerpsLedgerIsOutPipe,
-  PerpsLedgerTypePipe,
-  PerpsLedgerAmountPipe,
-  PerpsLedgerFeePipe,
-  PerpsFillFeePipe,
+  PerpsLedgerTokenPipe,
+  PerpsLedgerTitlePipe,
+  PerpsLedgerResultPipe,
 ];

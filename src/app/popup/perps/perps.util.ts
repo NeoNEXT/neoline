@@ -457,10 +457,8 @@ export function pad2(value: number): string {
   return value < 10 ? `0${value}` : `${value}`;
 }
 
-/** 为紧凑的历史记录行格式化成交时间戳：M/D HH:mm。 */
+/** 日期已经在分组标题里，行内只显示本地时刻。 */
 export function formatFillTime(time: number): string {
   const date = new Date(time);
-  return `${date.getMonth() + 1}/${date.getDate()} ${pad2(
-    date.getHours()
-  )}:${pad2(date.getMinutes())}`;
+  return `${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
 }

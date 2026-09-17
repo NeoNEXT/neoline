@@ -1,6 +1,6 @@
 import { EMPTY, of, Subject, throwError } from 'rxjs';
 
-import { PerpsFill, PerpsLedgerUpdate, PerpsOpenOrder } from '@popup/_lib/perps';
+import { PerpsFill, PerpsOpenOrder } from '@popup/_lib/perps';
 
 import { PerpsHistoryComponent } from './perps-history.component';
 
@@ -8,7 +8,7 @@ import { PerpsHistoryComponent } from './perps-history.component';
 const markets = (overrides: any = {}) =>
   ({ getMarkets: () => EMPTY, ...overrides } as any);
 
-describe('PerpsHistoryComponent order direction', () => {
+describe('PerpsHistoryComponent open orders', () => {
   const order = (
     side: 'B' | 'A',
     reduceOnly: boolean
@@ -22,35 +22,6 @@ describe('PerpsHistoryComponent order direction', () => {
     timestamp: 1,
     orderType: 'Limit',
     reduceOnly,
-  });
-
-  const component = new PerpsHistoryComponent(
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-      markets(),
-      null
-    );
-
-  it('labels non-reduce-only orders as opening long or short', () => {
-    expect(component.orderDirectionKey(order('B', false))).toBe(
-      'perpsOpenLong'
-    );
-    expect(component.orderDirectionKey(order('A', false))).toBe(
-      'perpsOpenShort'
-    );
-  });
-
-  it('labels reduce-only orders as closing long or short', () => {
-    expect(component.orderDirectionKey(order('A', true))).toBe(
-      'perpsCloseLong'
-    );
-    expect(component.orderDirectionKey(order('B', true))).toBe(
-      'perpsCloseShort'
-    );
   });
 
   it('still shows open orders when the market snapshot fails', () => {
@@ -77,93 +48,6 @@ describe('PerpsHistoryComponent order direction', () => {
     expect(rateLimited.loading).toBeFalse();
     expect(rateLimited.openOrders.length).toBe(1);
     expect((rateLimited as any).markets).toEqual([]);
-  });
-});
-
-describe('PerpsHistoryComponent ledger rows', () => {
-  const WALLET = '0x5be1a4c623a63498d78c08b8890a6e5dad6bf359';
-
-  const component = new PerpsHistoryComponent(
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-      markets(),
-      null
-    );
-  (component as any).address = WALLET;
-
-  const row = (delta: any): PerpsLedgerUpdate => ({
-    time: 1,
-    hash: '0x1',
-    delta,
-  });
-
-  it('names bridge rows deposit and withdraw', () => {
-    expect(component.ledgerTypeKey(row({ type: 'deposit', usdc: '9.0' }))).toBe(
-      'perpsLedgerDeposit'
-    );
-    expect(
-      component.ledgerTypeKey(row({ type: 'withdraw', usdc: '9.0', fee: '1.0' }))
-    ).toBe('perpsLedgerWithdraw');
-  });
-
-  it('names a spot transfer by which way the money moved', () => {
-    expect(
-      component.ledgerTypeKey(
-        row({
-          type: 'send',
-          user: '0x0b80659a4076e9e93c7dbe0f10675a16a3e5c206',
-          destination: WALLET,
-          amount: '4.8',
-        })
-      )
-    ).toBe('perpsLedgerDeposit');
-    expect(
-      component.ledgerTypeKey(
-        row({
-          type: 'send',
-          user: WALLET,
-          destination: '0x2000000000000000000000000000000000000000',
-          amount: '6.0',
-        })
-      )
-    ).toBe('perpsLedgerWithdraw');
-  });
-
-  it('names a peer-to-peer USDC transfer send on both ends', () => {
-    expect(
-      component.ledgerTypeKey(
-        row({
-          type: 'internalTransfer',
-          usdc: '1000.0',
-          user: '0xe973105a27e17350500926ae664dfcfe6006d924',
-          destination: WALLET,
-          fee: '1.0',
-        })
-      )
-    ).toBe('perpsLedgerSend');
-  });
-
-  it('leaves exotic ledger types to their raw Hyperliquid name', () => {
-    expect(component.ledgerTypeKey(row({ type: 'vaultCreate' }))).toBe('');
-  });
-
-  it('shows a fee only when one was actually charged', () => {
-    expect(component.ledgerFee(row({ type: 'withdraw', fee: '1.0' }))).toBe(
-      '1.0 USDC'
-    );
-    expect(
-      component.ledgerFee(
-        row({ type: 'send', fee: '0.000533', feeToken: 'USDC' })
-      )
-    ).toBe('0.000533 USDC');
-    expect(
-      component.ledgerFee(row({ type: 'send', fee: '0.0', feeToken: '' }))
-    ).toBe('');
-    expect(component.ledgerFee(row({ type: 'deposit', usdc: '9.0' }))).toBe('');
   });
 });
 
@@ -335,6 +219,52 @@ describe('PerpsHistoryComponent 成交 tab 的兜底', () => {
     retry.next([]);
     expect(component.tabLoading).toBeFalse();
     expect(component.loadError).toBeFalse();
+    component.ngOnDestroy();
+  });
+
+  it('历史委托保留 open 状态，以显示未平仓记录', () => {
+    const order = {
+      coin: 'ETH',
+      oid: '1',
+      side: 'A',
+      limitPx: '2000',
+      sz: '1',
+      origSz: '1',
+      timestamp: 1,
+      orderType: 'Market',
+      reduceOnly: false,
+    };
+    const { component } = loaded({
+      getHistoricalOrders: () =>
+        of([
+          { order, status: 'filled', statusTimestamp: 3 },
+          { order, status: 'open', statusTimestamp: 2 },
+          { order, status: 'canceled', statusTimestamp: 1 },
+          { order, status: 'rejected', statusTimestamp: 0 },
+        ]),
+    });
+    component.setTab('orderHistory');
+    expect(component.historicalOrders.map((row) => row.status)).toEqual([
+      'filled',
+      'open',
+      'canceled',
+      'rejected',
+    ]);
+    component.ngOnDestroy();
+  });
+
+  it('打开资金费 tab 时按需拉取，最新的排最上面', () => {
+    const { component } = loaded({
+      getUserFunding: () =>
+        of([
+          { time: 1, hash: '0x1', delta: { type: 'funding', coin: 'ETH', usdc: '0.1' } },
+          { time: 3, hash: '0x3', delta: { type: 'funding', coin: 'ETH', usdc: '-0.2' } },
+          { time: 2, hash: '0x2', delta: { type: 'funding', coin: 'BTC', usdc: '0.3' } },
+        ]),
+    });
+    component.setTab('funding');
+    expect(component.fundings.map((row) => row.hash)).toEqual(['0x3', '0x2', '0x1']);
+    expect(component.tabLoading).toBeFalse();
     component.ngOnDestroy();
   });
 

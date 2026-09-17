@@ -1781,6 +1781,12 @@
   "perpsHistory": {
     "message": "활동"
   },
+  "perpsActivityToday": {
+    "message": "오늘"
+  },
+  "perpsActivityYesterday": {
+    "message": "어제"
+  },
   "perpsHistoryTitle": {
     "message": "무기한 선물 활동"
   },
@@ -1792,12 +1798,6 @@
   },
   "perpsShort": {
     "message": "숏"
-  },
-  "perpsOpenLong": {
-    "message": "롱 포지션 진입"
-  },
-  "perpsOpenShort": {
-    "message": "숏 포지션 진입"
   },
   "perpsEntry": {
     "message": "진입가"
@@ -2087,30 +2087,6 @@
   "perpsFills": {
     "message": "체결 내역"
   },
-  "perpsOrderHistory": {
-    "message": "주문 내역"
-  },
-  "perpsTransfers": {
-    "message": "입출금"
-  },
-  "perpsNoOrderHistory": {
-    "message": "주문 내역이 없습니다"
-  },
-  "perpsNoTransfers": {
-    "message": "입출금 내역이 없습니다"
-  },
-  "perpsLedgerTransfer": {
-    "message": "이체"
-  },
-  "perpsLedgerDeposit": {
-    "message": "입금"
-  },
-  "perpsLedgerWithdraw": {
-    "message": "출금"
-  },
-  "perpsLedgerSend": {
-    "message": "보내기"
-  },
   "perpsStatusFilled": {
     "message": "체결됨"
   },
@@ -2125,6 +2101,27 @@
   },
   "perpsStatusTriggered": {
     "message": "트리거됨"
+  },
+  "perpsStatusQueued": {
+    "message": "대기 중"
+  },
+  "perpsOrderHistory": {
+    "message": "주문 내역"
+  },
+  "perpsTransfers": {
+    "message": "입출금"
+  },
+  "perpsFundingHistory": {
+    "message": "펀딩 내역"
+  },
+  "perpsNoOrderHistory": {
+    "message": "주문 내역이 없습니다"
+  },
+  "perpsNoTransfers": {
+    "message": "입출금 내역이 없습니다"
+  },
+  "perpsNoFundingHistory": {
+    "message": "펀딩 내역이 없습니다"
   },
   "perpsCancelOrder": {
     "message": "취소"

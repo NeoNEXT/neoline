@@ -1781,6 +1781,12 @@
   "perpsHistory": {
     "message": "Activity"
   },
+  "perpsActivityToday": {
+    "message": "Today"
+  },
+  "perpsActivityYesterday": {
+    "message": "Yesterday"
+  },
   "perpsHistoryTitle": {
     "message": "Perps activity"
   },
@@ -1792,12 +1798,6 @@
   },
   "perpsShort": {
     "message": "Short"
-  },
-  "perpsOpenLong": {
-    "message": "Open long"
-  },
-  "perpsOpenShort": {
-    "message": "Open short"
   },
   "perpsEntry": {
     "message": "Entry"
@@ -2087,30 +2087,6 @@
   "perpsFills": {
     "message": "Trade history"
   },
-  "perpsOrderHistory": {
-    "message": "Order history"
-  },
-  "perpsTransfers": {
-    "message": "Deposits and Withdrawals"
-  },
-  "perpsNoOrderHistory": {
-    "message": "No order history"
-  },
-  "perpsNoTransfers": {
-    "message": "No deposits or withdrawals"
-  },
-  "perpsLedgerTransfer": {
-    "message": "Transfer"
-  },
-  "perpsLedgerDeposit": {
-    "message": "Deposit"
-  },
-  "perpsLedgerWithdraw": {
-    "message": "Withdraw"
-  },
-  "perpsLedgerSend": {
-    "message": "Send"
-  },
   "perpsStatusFilled": {
     "message": "Filled"
   },
@@ -2125,6 +2101,27 @@
   },
   "perpsStatusTriggered": {
     "message": "Triggered"
+  },
+  "perpsStatusQueued": {
+    "message": "Queued"
+  },
+  "perpsOrderHistory": {
+    "message": "Order history"
+  },
+  "perpsTransfers": {
+    "message": "Deposits and Withdrawals"
+  },
+  "perpsFundingHistory": {
+    "message": "Funding history"
+  },
+  "perpsNoOrderHistory": {
+    "message": "No order history"
+  },
+  "perpsNoTransfers": {
+    "message": "No deposits or withdrawals"
+  },
+  "perpsNoFundingHistory": {
+    "message": "No funding history"
   },
   "perpsCancelOrder": {
     "message": "Cancel"

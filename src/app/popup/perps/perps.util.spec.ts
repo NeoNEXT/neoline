@@ -277,10 +277,10 @@ describe('perps utilities', () => {
     expect(formatSize(0.25)).toBe('0.25');
   });
 
-  it('formats fill time as M/D HH:mm using local time', () => {
+  it('formats fill time as HH:mm using local time', () => {
     const time = new Date(2026, 0, 2, 3, 4).getTime();
 
-    expect(formatFillTime(time)).toBe('1/2 03:04');
+    expect(formatFillTime(time)).toBe('03:04');
   });
 
   describe('formatFundingPercent', () => {

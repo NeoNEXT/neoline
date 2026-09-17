@@ -15,6 +15,9 @@
     >
       {{ "perpsOrderHistory" | translate | async }}
     </button>
+    <button [class.active]="tab === 'funding'" (click)="setTab('funding')">
+      {{ "perpsFundingHistory" | translate | async }}
+    </button>
     <button [class.active]="tab === 'transfers'" (click)="setTab('transfers')">
       {{ "perpsTransfers" | translate | async }}
     </button>
@@ -27,53 +30,30 @@
   <ng-container *ngIf="!loading && !tabLoading">
     <!-- 当前委托 -->
     <ng-container *ngIf="tab === 'orders'">
-      <div class="fill-row" *ngFor="let order of openOrders">
-        <div class="fill-icon" [class.sell]="order.side !== 'B'">
-          {{ order.side === "B" ? "↗" : "↘" }}
-        </div>
-        <div class="fill-info">
-          <div class="dir">
-            {{ order | perpsOrderDirection | translate | async }}
-            {{ order.coin }}
-            <span class="status" *ngIf="order.isPositionTpsl">
-              {{ "perpsAutoClose" | translate | async }}
-            </span>
-          </div>
-          <div class="time">{{ order.timestamp | perpsFillTime }}</div>
-        </div>
-        <div class="fill-amount">
-          <div class="size">
-            {{ order.sz | perpsSize: (markets | perpsCoinSzDecimals: order.coin) }}
-            {{ order.coin }}
-          </div>
-          <!--
-            触发单显示的是用户设的触发价，不是 `limitPx` —— 后者是触发之后那张订单的
-            限价，市价触发单的它只是一个带滑点保护的激进价格。见 perpsOrderPrice。
-          -->
-          <div class="price">
-            <span class="trigger" *ngIf="order | perpsOrderIsTrigger">{{
-              "perpsTriggerPrice" | translate | async
-            }}</span>
-            ${{
-              order
-                | perpsOrderPrice
-                | perpsPrice: (markets | perpsCoinSzDecimals: order.coin)
+      <ng-container *ngFor="let order of openOrders; let i = index">
+        <ng-container
+          *ngTemplateOutlet="dayHeading; context: {
+            $implicit: order.timestamp, previous: openOrders[i - 1]?.timestamp
+          }"
+        ></ng-container>
+        <div class="fill-row fill-trade">
+          <ng-container
+            *ngTemplateOutlet="orderInfo; context: { $implicit: order }"
+          ></ng-container>
+          <button
+            class="cancel"
+            [disabled]="cancelingOrderId === order.oid"
+            (click)="requestCancel(order)"
+          >
+            {{
+              (pendingCancelOrderId === order.oid
+                ? "perpsConfirmCancel"
+                : "perpsCancelOrder"
+              ) | translate | async
             }}
-          </div>
+          </button>
         </div>
-        <button
-          class="cancel"
-          [disabled]="cancelingOrderId === order.oid"
-          (click)="requestCancel(order)"
-        >
-          {{
-            (pendingCancelOrderId === order.oid
-              ? "perpsConfirmCancel"
-              : "perpsCancelOrder"
-            ) | translate | async
-          }}
-        </button>
-      </div>
+      </ng-container>
       <p class="empty" *ngIf="openOrders.length === 0">
         {{ "perpsNoOpenOrders" | translate | async }}
       </p>
@@ -81,45 +61,29 @@
 
     <!-- 历史成交 -->
     <ng-container *ngIf="tab === 'fills'">
-      <div class="fill-row" *ngFor="let fill of fills">
-        <div class="fill-info">
-          <div
-            class="dir"
-            [class.buy]="fill.side === 'B'"
-            [class.sell]="fill.side !== 'B'"
-          >
-            <ng-container
-              *ngIf="fill | perpsFillDirection as dirKey; else rawDir"
-              >{{ dirKey | translate | async }}</ng-container
-            >
-            <ng-template #rawDir>{{ fill.dir }}</ng-template>
-            <!-- Angular 默认删掉纯空白文本节点，方向和币种之间的空格得写成 &ngsp; -->
-            &ngsp;<span class="coin">{{ fill.coin }}</span>
-          </div>
-          <div class="time">{{ fill.time | perpsFillTime }}</div>
-        </div>
-        <div class="fill-amount">
-          <div class="size">
-            {{ fill.sz | perpsSize: (markets | perpsCoinSzDecimals: fill.coin) }}
-            {{ fill.coin }}
-          </div>
-          <div class="price">
-            ${{ fill.px | perpsPrice: (markets | perpsCoinSzDecimals: fill.coin) }}
-          </div>
-          <!--
-            第四行只有一个位置：平仓成交给净盈亏（费用已扣在里面），开仓成交给费用。
-            开仓的 PnL 恒等于负的费用，两行一起出就是同一个数字说两遍。
-          -->
-          <div class="price" *ngIf="fill | perpsFillNetPnl as pnl; else fillFeeRow">
-            PnL: {{ pnl | perpsSignedUsd }}
-          </div>
-          <ng-template #fillFeeRow>
-            <div class="price" *ngIf="fill | perpsFillFee as fee">
-              {{ "perpsFee" | translate | async }}: {{ fee }}
+      <ng-container *ngFor="let fill of fills; let i = index">
+        <ng-container
+          *ngTemplateOutlet="dayHeading; context: {
+            $implicit: fill.time, previous: fills[i - 1]?.time
+          }"
+        ></ng-container>
+        <div class="fill-row fill-trade">
+          <perps-coin-logo
+            [symbol]="fill.coin.split(':').pop()"
+            [coin]="fill.coin"
+          ></perps-coin-logo>
+          <div class="fill-info">
+            <div class="dir" [title]="fill.dir">{{ fill.dir }}</div>
+            <div class="size">
+              {{ fill.sz | perpsSize: (markets | perpsCoinSzDecimals: fill.coin) }}
+              {{ fill.coin }}
             </div>
-          </ng-template>
+          </div>
+          <ng-container
+            *ngTemplateOutlet="amountDisplay; context: { $implicit: fill | perpsFillResult }"
+          ></ng-container>
         </div>
-      </div>
+      </ng-container>
       <p class="empty" *ngIf="fills.length === 0">
         {{ "perpsNoTransactions" | translate | async }}
       </p>
@@ -127,82 +91,89 @@
 
     <!-- 历史委托 -->
     <ng-container *ngIf="tab === 'orderHistory'">
-      <div class="fill-row" *ngFor="let item of historicalOrders">
-        <div class="fill-info">
-          <div
-            class="dir"
-            [class.buy]="item.order.side === 'B'"
-            [class.sell]="item.order.side !== 'B'"
-          >
-            {{ item.order | perpsOrderDirection | translate | async }}
-            <span class="coin">{{ item.order.coin }}</span>
-            <span class="status" *ngIf="item.order.isPositionTpsl">
-              {{ "perpsAutoClose" | translate | async }}
-            </span>
-            <span
-              class="status"
-              *ngIf="item.status | perpsOrderStatus as statusKey; else rawStatus"
-              >{{ statusKey | translate | async }}</span
-            >
-            <ng-template #rawStatus>
-              <span class="status">{{ item.status }}</span>
-            </ng-template>
-          </div>
-          <div class="time">{{ item.statusTimestamp | perpsFillTime }}</div>
-        </div>
-        <div class="fill-amount">
-          <div class="size">
-            {{
-              item.order.origSz
-                | perpsSize: (markets | perpsCoinSzDecimals: item.order.coin)
-            }}
-            {{ item.order.coin }}
-          </div>
-          <div class="price">
-            <span class="trigger" *ngIf="item.order | perpsOrderIsTrigger">{{
-              "perpsTriggerPrice" | translate | async
-            }}</span>
-            ${{
-              item.order
-                | perpsOrderPrice
-                | perpsPrice: (markets | perpsCoinSzDecimals: item.order.coin)
-            }}
+      <ng-container *ngFor="let item of historicalOrders; let i = index">
+        <ng-container
+          *ngTemplateOutlet="dayHeading; context: {
+            $implicit: item.statusTimestamp, previous: historicalOrders[i - 1]?.statusTimestamp
+          }"
+        ></ng-container>
+        <div class="fill-row fill-trade">
+          <ng-container
+            *ngTemplateOutlet="orderInfo; context: { $implicit: item.order }"
+          ></ng-container>
+          <div class="fill-result order-status">
+            <ng-container *ngIf="item.status | perpsOrderStatus as key; else rawStatus">{{
+              key | translate | async
+            }}</ng-container>
+            <ng-template #rawStatus>{{ item.status }}</ng-template>
           </div>
         </div>
-      </div>
+      </ng-container>
       <p class="empty" *ngIf="historicalOrders.length === 0">
         {{ "perpsNoOrderHistory" | translate | async }}
       </p>
     </ng-container>
 
+    <!-- 资金费历史 -->
+    <ng-container *ngIf="tab === 'funding'">
+      <ng-container *ngFor="let item of fundings; let i = index">
+        <ng-container
+          *ngTemplateOutlet="dayHeading; context: {
+            $implicit: item.time, previous: fundings[i - 1]?.time
+          }"
+        ></ng-container>
+        <div class="fill-row fill-trade">
+          <perps-coin-logo
+            [symbol]="item.delta.coin?.split(':').pop()"
+            [coin]="item.delta.coin"
+          ></perps-coin-logo>
+          <div class="fill-info">
+            <div class="dir" [title]="item | perpsFundingTitle">
+              {{ item | perpsFundingTitle }}
+            </div>
+            <div class="size">{{ item.delta.coin }}</div>
+          </div>
+          <ng-container
+            *ngTemplateOutlet="amountDisplay; context: { $implicit: item | perpsFundingResult }"
+          ></ng-container>
+        </div>
+      </ng-container>
+      <p class="empty" *ngIf="fundings.length === 0">
+        {{ "perpsNoFundingHistory" | translate | async }}
+      </p>
+    </ng-container>
+
     <!-- 存款和提款 -->
     <ng-container *ngIf="tab === 'transfers'">
-      <div class="fill-row" *ngFor="let item of transfers">
-        <div class="fill-icon" [class.sell]="item | perpsLedgerIsOut: address">
-          {{ (item | perpsLedgerIsOut: address) ? "↑" : "↓" }}
-        </div>
-        <div class="fill-info">
-          <div class="dir">
-            <ng-container
-              *ngIf="item | perpsLedgerType: address as typeKey; else rawType"
-              >{{ typeKey | translate | async }}</ng-container
-            >
-            <ng-template #rawType>{{ item.delta.type }}</ng-template>
-          </div>
-          <div class="time">{{ item.time | perpsFillTime }}</div>
-        </div>
-        <div class="fill-amount">
+      <ng-container *ngFor="let item of transfers; let i = index">
+        <ng-container
+          *ngTemplateOutlet="dayHeading; context: {
+            $implicit: item.time, previous: transfers[i - 1]?.time
+          }"
+        ></ng-container>
+        <div class="fill-row fill-trade">
+          <perps-coin-logo
+            *ngIf="item | perpsLedgerToken as token"
+            [symbol]="token.split(':').pop()"
+            [coin]="token"
+          ></perps-coin-logo>
           <div
-            class="size"
-            [class.negative]="item | perpsLedgerIsOut: address"
+            class="fill-icon"
+            *ngIf="!(item | perpsLedgerToken)"
+            [class.sell]="item | perpsLedgerIsOut: address"
           >
-            {{ item | perpsLedgerAmount: address }}
+            {{ (item | perpsLedgerIsOut: address) ? "↑" : "↓" }}
           </div>
-          <div class="price" *ngIf="item | perpsLedgerFee as fee">
-            {{ "perpsFee" | translate | async }}: {{ fee }}
+          <div class="fill-info">
+            <div class="dir" [title]="item | perpsLedgerTitle">
+              {{ item | perpsLedgerTitle }}
+            </div>
           </div>
+          <ng-container
+            *ngTemplateOutlet="amountDisplay; context: { $implicit: item | perpsLedgerResult: address }"
+          ></ng-container>
         </div>
-      </div>
+      </ng-container>
       <p class="empty" *ngIf="transfers.length === 0">
         {{ "perpsNoTransfers" | translate | async }}
       </p>
@@ -213,3 +184,37 @@
     {{ "perpsLoadFailed" | translate | async }}
   </p>
 </div>
+
+<ng-template #orderInfo let-order>
+  <perps-coin-logo
+    [symbol]="order.coin.split(':').pop()"
+    [coin]="order.coin"
+  ></perps-coin-logo>
+  <div class="fill-info">
+    <div class="dir" [title]="order | perpsOrderHistoryTitle">
+      {{ order | perpsOrderHistoryTitle }}
+    </div>
+    <div class="size">
+      {{ order.origSz | perpsSize: (markets | perpsCoinSzDecimals: order.coin) }}
+      {{ order.coin }}
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #dayHeading let-time let-previous="previous">
+  <h2 class="activity-day" *ngIf="time | perpsActivityDay: previous: now as day">
+    <ng-container *ngIf="day.key; else calendarDate">{{
+      day.key | translate | async
+    }}</ng-container>
+    <ng-template #calendarDate>{{ day.text }}</ng-template>
+  </h2>
+</ng-template>
+
+<ng-template #amountDisplay let-result>
+  <div
+    *ngIf="result"
+    class="fill-result"
+    [class.positive]="result.positive"
+    [class.negative]="result.negative"
+  >{{ result.text }}</div>
+</ng-template>

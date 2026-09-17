@@ -17,22 +17,19 @@ import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.se
 import { EvmWalletJSON } from '@popup/_lib/evm';
 import {
   PerpsFill,
+  PerpsFundingUpdate,
   PerpsHistoricalOrder,
   PerpsLedgerUpdate,
   PerpsMarket,
   PerpsOpenOrder,
 } from '@popup/_lib/perps';
 import { findMarketByCoin } from '../perps.util';
-import {
-  ledgerFee,
-  ledgerTypeKey,
-  orderDirectionKey,
-} from './perps-history.pipe';
 
 type PerpsActivityTab =
   | 'orders'
   | 'fills'
   | 'orderHistory'
+  | 'funding'
   | 'transfers';
 
 /** 弹窗最多也就能滚这么长；更早的行留给网页端去看。 */
@@ -43,9 +40,12 @@ const MAX_ARCHIVE_ROWS = 200;
   styleUrls: ['perps-history.component.scss'],
 })
 export class PerpsHistoryComponent implements OnInit, OnDestroy {
+  /** 相对日期锚点；切 tab 或收到新数据时刷新，不单独轮询。 */
+  now = Date.now();
   fills: PerpsFill[] = [];
   openOrders: PerpsOpenOrder[] = [];
   historicalOrders: PerpsHistoricalOrder[] = [];
+  fundings: PerpsFundingUpdate[] = [];
   transfers: PerpsLedgerUpdate[] = [];
   tab: PerpsActivityTab = 'orders';
   loading = true;
@@ -119,6 +119,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     this.loadedTabs.clear();
     this.pendingTabs.clear();
     this.historicalOrders = [];
+    this.fundings = [];
     this.transfers = [];
     this.requestSubs.add(
       forkJoin([
@@ -128,6 +129,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
         this.markets$.getMarkets().pipe(catchError(() => of([]))),
       ]).subscribe(
         ([openOrders, markets]) => {
+          this.refreshNow();
           this.openOrders = this.newestFirst(
             openOrders,
             (order) => order.timestamp
@@ -193,10 +195,14 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     if (tab === 'orderHistory') {
       return this.hyperliquid.getHistoricalOrders(this.address);
     }
+    if (tab === 'funding') {
+      return this.hyperliquid.getUserFunding(this.address);
+    }
     return this.hyperliquid.getLedgerUpdates(this.address);
   }
 
   private acceptTab(tab: PerpsActivityTab, res: any[]) {
+    this.refreshNow();
     if (tab === 'fills') {
       // 快照可能已经先到了，也可能随后才到。两边都走 `mergeFills`，于是谁先到都收敛到
       // 同一份 —— 成交是只增不减的，两份历史的并集就是历史本身。
@@ -204,12 +210,17 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
       return;
     }
     if (tab === 'orderHistory') {
-      // 每次状态变化一行，与 Hyperliquid 自己的订单历史渲染方式完全一致：一笔先挂单
-      // 后成交的订单会出现两次。排序是稳定的，因此时间戳相同的行保持 API 那种
-      // 「最新状态在前」的顺序。
+      // 保留接口状态记录，包括未平仓委托；时间相同的记录保持接口顺序。
       this.historicalOrders = this.newestFirst(
         res as PerpsHistoricalOrder[],
         (row) => row.statusTimestamp
+      ).slice(0, MAX_ARCHIVE_ROWS);
+      return;
+    }
+    if (tab === 'funding') {
+      this.fundings = this.newestFirst(
+        res as PerpsFundingUpdate[],
+        (row) => row.time
       ).slice(0, MAX_ARCHIVE_ROWS);
       return;
     }
@@ -224,11 +235,13 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     this.liveSubs = new Subscription();
     this.liveSubs.add(
       this.hyperliquid.watchOpenOrders(this.address).subscribe({
-        next: (orders) =>
-          (this.openOrders = this.newestFirst(
+        next: (orders) => {
+          this.refreshNow();
+          this.openOrders = this.newestFirst(
             orders,
             (order) => order.timestamp
-          )),
+          );
+        },
       })
     );
     // 数据通道的 observable 既不 error 也不 complete（它靠重连和重发订阅自愈），
@@ -247,6 +260,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
           const incoming: PerpsFill[] = (update?.fills || []).filter(isPerpsActivity);
           // 快照是全部真相，增量并进屏幕上已有的那份 —— 但两条路都要重排：交易场所
           // 按时间**升序**下发 `userFills`，而这一页最新的排最上面。
+          this.refreshNow();
           this.fills = this.mergeFills(
             incoming,
             update?.isSnapshot ? [] : this.fills
@@ -275,7 +289,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
   /**
    * 最新的排最上面。
    *
-   * 这一页的四个列表都归它管，因为交易场所的顺序不是屏幕的顺序：`userFills` 的快照按时间
+   * 这一页的五个列表都归它管，因为交易场所的顺序不是屏幕的顺序：`userFills` 的快照按时间
    * **升序**下发，挂单则是按 DEX 逐个请求再拼起来的。排序稳定，所以时间戳相同的行保持
    * 交易场所给的先后。
    */
@@ -285,8 +299,13 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
 
   setTab(tab: PerpsActivityTab) {
     this.tab = tab;
+    this.refreshNow();
     this.pendingCancelOrderId = undefined;
     this.loadTab(tab);
+  }
+
+  private refreshNow() {
+    this.now = Date.now();
   }
 
   requestCancel(order: PerpsOpenOrder) {
@@ -343,23 +362,4 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
       this.global.snackBarTip('verifyFailed', error?.message || error);
     }
   }
-
-  //#region 规则的转发口
-  //
-  // 规则本体在 `perps-history.pipe.ts` 上，模板走那里的管道。留在这里的这几个只服务于
-  // 代码和测试，模板一个都不调 —— 与 perps-tab 的做法一致。
-
-  orderDirectionKey(order: PerpsOpenOrder): string {
-    return orderDirectionKey(order);
-  }
-
-  ledgerTypeKey(update: PerpsLedgerUpdate): string {
-    return ledgerTypeKey(update, this.address);
-  }
-
-  ledgerFee(update: PerpsLedgerUpdate): string {
-    return ledgerFee(update);
-  }
-
-  //#endregion
 }

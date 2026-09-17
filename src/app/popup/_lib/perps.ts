@@ -807,6 +807,8 @@ export interface PerpsCctpHistoryTransfer {
 
 /**
  * 账户账本中不含资金费支付的一行：跨桥出入金、现货/永续之间的 class 划转，以及账户间转账。
+ *
+ * 资金费支付在 `userFunding` 上，见 `PerpsFundingUpdate`。
  */
 export interface PerpsLedgerUpdate {
   /** 按 nonce 匹配的跨链历史；用于展示，不能覆盖协议 delta.fee。 */
@@ -832,6 +834,22 @@ export interface PerpsLedgerUpdate {
     toPerp?: boolean;
     destination?: string;
     user?: string;
+  };
+}
+
+/**
+ * `userFunding` 返回的一行资金费支付。`usdc` 为正是收到，为负是支付。
+ */
+export interface PerpsFundingUpdate {
+  time: number;
+  hash: string;
+  delta: {
+    type: 'funding';
+    coin: string;
+    usdc: string;
+    szi?: string;
+    fundingRate?: string;
+    nSamples?: number | null;
   };
 }
 

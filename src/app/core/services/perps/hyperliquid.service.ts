@@ -28,6 +28,7 @@ import {
   PerpsCandleInterval,
   PerpsDepositConfig,
   PerpsFill,
+  PerpsFundingUpdate,
   PerpsHistoricalOrder,
   PerpsLedgerUpdate,
   PerpsOpenOrder,
@@ -567,6 +568,25 @@ export class HyperliquidService {
           catchError(() => of(updates))
         );
       })
+    );
+  }
+
+  /**
+   * 资金费支付历史。与出入金不是同一个端点：`userNonFundingLedgerUpdates` 刻意不含它们。
+   *
+   * 来源：Info endpoint 的 `{"type":"userFunding","user":addr,"startTime":0}`。
+   */
+  getUserFunding(address: string): Observable<PerpsFundingUpdate[]> {
+    return this.post<PerpsFundingUpdate[]>({
+      type: 'userFunding',
+      user: address.toLowerCase(),
+      startTime: 0,
+    }).pipe(
+      map((res) =>
+        (Array.isArray(res) ? res : []).filter((row) =>
+          isPerpsActivity({ coin: row?.delta?.coin })
+        )
+      )
     );
   }
 

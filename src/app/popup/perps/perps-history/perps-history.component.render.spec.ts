@@ -1,7 +1,7 @@
 import { Component, Pipe, PipeTransform } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, flushMicrotasks, TestBed } from '@angular/core/testing';
 import { Store } from '@ngrx/store';
-import { EMPTY, of } from 'rxjs';
+import { EMPTY, of, Subject } from 'rxjs';
 
 import { ChromeService, EvmWalletService, GlobalService } from '@/app/core';
 import { HyperliquidService } from '@/app/core/services/perps/hyperliquid.service';
@@ -9,8 +9,10 @@ import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.se
 import { PerpsExchangeWriteService } from '@app/core/services/perps/perps-exchange-write.service';
 import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
 import { PerpsOpenOrder } from '@popup/_lib/perps';
+import * as chineseMessages from '@/_locales/zh_CN/messages.json';
 
 import { PERPS_FORMAT_PIPES } from '../perps-format.pipe';
+import { PerpsCoinLogoComponent } from '../perps-coin-logo/perps-coin-logo.component';
 import { ethMarket } from '../perps.test-fixture';
 import { PerpsHistoryComponent } from './perps-history.component';
 import { PERPS_HISTORY_PIPES } from './perps-history.pipe';
@@ -18,14 +20,12 @@ import { PERPS_HISTORY_PIPES } from './perps-history.pipe';
 /**
  * 模板与接线 —— 直接构造组件的那些 spec 覆盖不到它们。
  *
- * 这一页的模板里住着真的逻辑：每一行要问它所属市场的精度、要在触发单和普通挂单之间选
- * 一个价来显示、还要在账本类型没有文案时退回协议原文。这些判断没有一条在断言 getter 的
- * 用例视野里 —— perps-tab 的持仓卡片就是这样漏掉一个运行时错误的。
+ * 覆盖逐行市场精度、订单类型和方向、状态翻译，以及撤单确认与提交的接线。
  */
 @Pipe({ name: 'translate' })
 class TranslateStubPipe implements PipeTransform {
   transform(value: string) {
-    return of(value);
+    return of(value.startsWith('perpsStatus') ? chineseMessages[value]?.message || value : value);
   }
 }
 
@@ -34,6 +34,7 @@ class LoadingDotStubComponent {}
 
 const WALLET = '0xabc';
 const T = 1_700_000_000_000;
+const NOW = new Date(2026, 8, 17, 12).getTime();
 
 /** ETH 有市场（精度 4），XYZ 没有 —— 精度必须逐行去查，不能一把抓。 */
 const MARKETS = [ethMarket({ szDecimals: 4 })];
@@ -100,7 +101,7 @@ const FILLS: any[] = [
     closedPnl: '-12.5',
     time: T,
   }),
-  // 仓位反手 —— 短语表里没有它，只能显示协议原文。
+  // 仓位反手，与常规成交方向一样显示接口原文。
   fill({
     tid: '3',
     oid: '3',
@@ -113,7 +114,7 @@ const FILLS: any[] = [
 ];
 
 const HISTORY: any[] = [
-  // 姊妹单成交导致的自动撤销 —— 后缀规则要把它归到「已撤销」。
+  // 姊妹单成交导致的自动撤销，完整保留接口状态。
   { order: STOP_MARKET, status: 'siblingFilledCanceled', statusTimestamp: T },
   {
     order: order({ oid: '9', side: 'B' }),
@@ -138,16 +139,31 @@ const LEDGER: any[] = [
   { time: T - 2000, hash: '0x3', delta: { type: 'vaultCreate' } },
 ];
 
+const FUNDINGS: any[] = [
+  {
+    time: T - 1000,
+    hash: '0x1',
+    delta: { type: 'funding', coin: 'ETH', usdc: '0.005588' },
+  },
+  {
+    time: T,
+    hash: '0x2',
+    delta: { type: 'funding', coin: 'ETH', usdc: '-0.005589' },
+  },
+];
+
 describe('PerpsHistoryComponent 渲染与接线', () => {
   let fixture: ComponentFixture<PerpsHistoryComponent>;
   let component: PerpsHistoryComponent;
 
   beforeEach(async () => {
+    spyOn(Date, 'now').and.returnValue(NOW);
     await TestBed.configureTestingModule({
       declarations: [
         PerpsHistoryComponent,
         TranslateStubPipe,
         LoadingDotStubComponent,
+        PerpsCoinLogoComponent,
         ...PERPS_FORMAT_PIPES,
         ...PERPS_HISTORY_PIPES,
       ],
@@ -166,6 +182,7 @@ describe('PerpsHistoryComponent 渲染与接线', () => {
             watchOpenOrders: () => EMPTY,
             getUserFills: () => of(FILLS),
             getHistoricalOrders: () => of(HISTORY),
+            getUserFunding: () => of(FUNDINGS),
             getLedgerUpdates: () => of(LEDGER),
           },
         },
@@ -196,25 +213,76 @@ describe('PerpsHistoryComponent 渲染与接线', () => {
       .replace(/\s+/g, ' ')
       .trim();
 
-  /** 一行右侧金额栏里的每一条小字，按出现顺序。 */
-  const prices = (row: HTMLElement): string[] =>
-    Array.from(row.querySelectorAll('.price')).map((el) =>
-      (el.textContent ?? '').replace(/\s+/g, ' ').trim()
-    );
-
-  it('触发单显示触发价，并说明这是个触发价', () => {
-    const row = rows()[0];
-
-    // `limitPx` 是 1710.5 —— 它不该出现在屏幕上。
-    expect(text(row, '.price')).toBe('perpsTriggerPrice $1,800');
-    expect(row.querySelector('.price .trigger')).toBeTruthy();
+  it('五个列表均按各自时间字段分组，同一天只显示一个标题', () => {
+    const times = [
+      NOW, NOW - 1000,
+      new Date(2026, 8, 16, 23, 59).getTime(),
+      new Date(2026, 8, 15, 12).getTime(),
+    ];
+    for (const tab of ['orders', 'fills', 'orderHistory', 'funding', 'transfers'] as const) {
+      component.setTab(tab);
+      component.openOrders = times.map((timestamp) => order({ timestamp }));
+      component.fills = times.map((time) => fill({ time, fee: '0.01' }));
+      component.historicalOrders = times.map((statusTimestamp) => ({
+        order: STOP_MARKET, status: 'filled', statusTimestamp,
+      }));
+      component.fundings = times.map((time) => ({
+        time, hash: '0x1', delta: { type: 'funding' as const, coin: 'ETH', usdc: '0.01' },
+      }));
+      component.transfers = times.map((time) => ({
+        time, hash: '0x1', delta: { type: 'deposit', usdc: '1' },
+      }));
+      fixture.detectChanges();
+      const sequence = Array.from(
+        fixture.nativeElement.querySelectorAll('.activity-day, .fill-row')
+      ).map((el: HTMLElement) => el.matches('.activity-day') ? el.textContent.trim() : 'row');
+      expect(sequence).withContext(tab).toEqual([
+        'perpsActivityToday', 'row', 'row',
+        'perpsActivityYesterday', 'row', 'Sep 15', 'row',
+      ]);
+    }
   });
 
-  it('普通挂单显示限价，前面不加触发价的标签', () => {
-    const row = rows()[1];
+  it('切 tab 时用当前时间重算今天和昨天的标题', () => {
+    component.openOrders = [order({ timestamp: NOW })];
+    fixture.detectChanges();
+    expect(text(fixture.nativeElement, '.activity-day')).toBe('perpsActivityToday');
+    (Date.now as jasmine.Spy).and.returnValue(new Date(2026, 8, 18, 0, 1).getTime());
+    component.setTab('orders');
+    fixture.detectChanges();
+    expect(text(fixture.nativeElement, '.activity-day')).toBe('perpsActivityYesterday');
+  });
 
-    expect(text(row, '.price')).toBe('$1,710.5');
-    expect(row.querySelector('.price .trigger')).toBeFalsy();
+  it('当前委托与历史委托共用图标、类型方向和原始数量，右侧显示撤单', () => {
+    const partialOrder = order({
+      sz: '0.25', origSz: '1.23456', isPositionTpsl: true,
+    });
+    component.openOrders = [partialOrder];
+    fixture.detectChanges();
+    const currentRow = rows()[0];
+    const title = text(currentRow, '.dir');
+    const size = text(currentRow, '.fill-info .size');
+    const logo = currentRow.querySelector('perps-coin-logo img')?.getAttribute('src');
+    const style = getComputedStyle(currentRow);
+    const layout = [style.padding, style.minHeight, style.gap];
+    expect(title).toBe('Limit short');
+    expect(size).toBe('1.2346 ETH');
+    expect(text(currentRow, '.cancel')).toBe('perpsCancelOrder');
+    expect(currentRow.querySelector('.order-status, .price, .time, .status')).toBeNull();
+
+    component.setTab('orderHistory');
+    component.historicalOrders = [{
+      order: partialOrder, status: 'open', statusTimestamp: T,
+    }];
+    fixture.detectChanges();
+    const historyRow = rows()[0];
+    expect(text(historyRow, '.dir')).toBe(title);
+    expect(text(historyRow, '.fill-info .size')).toBe(size);
+    expect(historyRow.querySelector('perps-coin-logo img')?.getAttribute('src')).toBe(logo);
+    const historyStyle = getComputedStyle(historyRow);
+    expect([historyStyle.padding, historyStyle.minHeight, historyStyle.gap]).toEqual(layout);
+    expect(text(historyRow, '.order-status')).toBe('未成交');
+    expect(historyRow.querySelector('.cancel')).toBeNull();
   });
 
   it('数量的精度来自该行自己的市场', () => {
@@ -223,15 +291,59 @@ describe('PerpsHistoryComponent 渲染与接线', () => {
     expect(text(rows()[1], '.size')).toBe('1.23 XYZ');
   });
 
-  it('方向读作交易意图，不是买卖方向', () => {
-    // 卖出 + reduceOnly = 平多；卖出 + 非 reduceOnly = 开空。
-    expect(text(rows()[0], '.dir')).toContain('perpsCloseLong');
-    expect(text(rows()[1], '.dir')).toContain('perpsOpenShort');
+  it('当前委托和历史委托按相同规则处理类型及开平仓方向', () => {
+    component.openOrders = [
+      order({ side: 'B', reduceOnly: false }),
+      order({ side: 'A', reduceOnly: false }),
+      order({ side: 'B', reduceOnly: true, orderType: 'Stop Market' }),
+      order({ side: 'A', reduceOnly: true, orderType: 'Take Profit Market' }),
+    ];
+    fixture.detectChanges();
+    expect(rows().map((r) => text(r, '.dir'))).toEqual([
+      'Limit long', 'Limit short', 'Stop market close short', 'Take profit market close long',
+    ]);
   });
 
-  it('当前委托保留方向图标，方向本身不着色', () => {
-    // 只有历史成交和历史委托去掉了图标；这一页的另外两个 tab 没跟着改。
-    expect(rows()[0].querySelector('.fill-icon')).toBeTruthy();
+  it('撤单先确认，提交中禁用按钮，成功后移除对应委托', fakeAsync(() => {
+    const canceled = new Subject<void>();
+    const cancelOrder = jasmine.createSpy('cancelOrder').and.returnValue(canceled);
+    Object.assign(TestBed.inject(ChromeService), {
+      getPassword: () => Promise.resolve('password'),
+    });
+    Object.assign(TestBed.inject(EvmWalletService), {
+      getPrivateKey: () => Promise.resolve('private-key'),
+    });
+    Object.assign(TestBed.inject(GlobalService), {
+      snackBarTip: jasmine.createSpy('snackBarTip'),
+    });
+    Object.assign(TestBed.inject(PerpsExchangeWriteService), { cancelOrder });
+    const button = rows()[0].querySelector<HTMLButtonElement>('.cancel');
+
+    button.click();
+    fixture.detectChanges();
+    expect(button.textContent.trim()).toBe('perpsConfirmCancel');
+    expect(cancelOrder).not.toHaveBeenCalled();
+
+    button.click();
+    flushMicrotasks();
+    fixture.detectChanges();
+    expect(cancelOrder).toHaveBeenCalledOnceWith('private-key', MARKETS[0].assetId, STOP_MARKET.oid);
+    expect(button.disabled).toBeTrue();
+    button.click();
+    expect(cancelOrder).toHaveBeenCalledTimes(1);
+
+    canceled.next();
+    canceled.complete();
+    fixture.detectChanges();
+    expect(component.openOrders).toEqual([LIMIT_ON_UNKNOWN_MARKET]);
+    expect(rows().length).toBe(1);
+    expect(text(rows()[0], '.cancel')).toBe('perpsCancelOrder');
+  }));
+
+  it('当前委托显示币种图标，方向本身不着色', () => {
+    expect(rows()[0].querySelector('perps-coin-logo img')?.getAttribute('src'))
+      .toBe('assets/images/token/eth.webp');
+    expect(rows()[0].querySelector('.fill-icon')).toBeFalsy();
     expect(rows()[0].querySelector('.dir.sell')).toBeFalsy();
     expect(rows()[0].querySelector('.dir.buy')).toBeFalsy();
   });
@@ -243,41 +355,43 @@ describe('PerpsHistoryComponent 渲染与接线', () => {
       fixture.detectChanges();
     });
 
-    it('数量和价格都按该行所属市场的精度', () => {
+    it('数量按该行所属市场的精度显示在方向下方', () => {
       expect(text(rows()[0], '.size')).toBe('1.2346 ETH');
-      expect(text(rows()[0], '.price')).toBe('$1,710.5');
+      expect(rows()[0].querySelector('.fill-info .size')).toBeTruthy();
     });
 
     it('最新的一笔排在最上面', () => {
       // 交易场所按升序下发；照单全收就会把最老的一笔顶在最上面。
       expect(rows().map((r) => text(r, '.dir'))).toEqual([
-        'perpsCloseLong ETH',
-        'perpsOpenLong ETH',
-        'Long > Short ETH',
+        'Close Long',
+        'Open Long',
+        'Long > Short',
       ]);
     });
 
-    it('认得的方向翻译，认不得的退回协议原文', () => {
-      // 交易场所的 `dir` 是一句英文短语，而且这份短语表没进过官方文档。
-      expect(text(rows()[0], '.dir')).toBe('perpsCloseLong ETH');
-      expect(text(rows()[2], '.dir')).toBe('Long > Short ETH');
+    it('成交方向直接显示接口原文', () => {
+      expect(text(rows()[0], '.dir')).toBe('Close Long');
+      expect(text(rows()[1], '.dir')).toBe('Open Long');
+      expect(text(rows()[2], '.dir')).toBe('Long > Short');
     });
 
-    it('币种跟着方向的颜色，但淡一档', () => {
-      // 币种在 `.dir` 里面，所以它继承那一行的红或绿；`.coin` 只负责把它压暗一点。
-      expect(rows()[0].querySelector('.dir.sell .coin')?.textContent).toBe(
-        'ETH'
-      );
-      expect(rows()[1].querySelector('.dir.buy .coin')?.textContent).toBe(
-        'ETH'
-      );
+    it('显示币种图标，缺失图标时回退到币种字母', () => {
+      expect(rows()[0].querySelector('perps-coin-logo img')?.getAttribute('src'))
+        .toBe('assets/images/token/eth.webp');
+      component.fills = [fill({ coin: 'xyz:UNKNOWN', fee: '0.01' })];
+      fixture.detectChanges();
+      const img = rows()[0].querySelector('perps-coin-logo img');
+      expect(img?.getAttribute('src')).toContain('xyz%3AUNKNOWN');
+      img?.dispatchEvent(new Event('error'));
+      fixture.detectChanges();
+      expect(text(rows()[0], 'perps-coin-logo')).toBe('U');
     });
 
-    it('不画方向图标，方向由这一行自己的颜色表达', () => {
+    it('方向使用正文颜色，正负颜色只用于右侧金额', () => {
       expect(rows()[0].querySelector('.fill-icon')).toBeFalsy();
-      // 卖出红、买入绿 —— 和原来那个圆形图标同一套颜色。
-      expect(rows()[0].querySelector('.dir.sell')).toBeTruthy();
-      expect(rows()[1].querySelector('.dir.buy')).toBeTruthy();
+      expect(rows()[0].querySelector('.dir.sell')).toBeFalsy();
+      expect(rows()[1].querySelector('.dir.buy')).toBeFalsy();
+      expect(rows()[0].querySelector('.fill-result.negative')).toBeTruthy();
     });
 
     it('与测试网地址的三笔 ETH 成交一致：开仓给费用，平仓给净盈亏', () => {
@@ -287,19 +401,22 @@ describe('PerpsHistoryComponent 渲染与接线', () => {
         fill({ fee: '0.008646', closedPnl: '0.0' }),
       ];
       fixture.detectChanges();
-      // 第四行只有一个位置。开仓的 PnL 恒等于负的费用，同一个数字不说两遍。
-      expect(rows().map((r) => prices(r).slice(1))).toEqual([
-        ['perpsFee: 0.45 USDC'],
-        ['PnL: +$0.34'],
-        ['perpsFee: <0.01 USDC'],
+      expect(rows().map((r) => text(r, '.fill-result'))).toEqual([
+        '-$0.45', '+$0.34', '-$<0.01',
       ]);
+      expect(rows()[0].querySelector('.fill-result.negative')).toBeTruthy();
+      expect(rows()[1].querySelector('.fill-result.positive')).toBeTruthy();
     });
 
-    it('每行最多三项：价格加费用或净盈亏，二者不同时出现', () => {
-      // 平仓（在上面）：亏了 12.5，手续费为零 —— 给净盈亏，不给那条 0.00 的费用。
-      expect(prices(rows()[0])).toEqual(['$1,710.5', 'PnL: -$12.50']);
-      // 开仓：协议盈亏为零（以 `'0.0'` 到达），只给费用。
-      expect(prices(rows()[1])).toEqual(['$1,710.5', 'perpsFee: 0.05 USDC']);
+    it('每行右侧只有净金额，不标注费用或 PnL，也不显示价格和逐笔时间', () => {
+      expect(text(rows()[0], '.fill-result')).toBe('-$12.50');
+      expect(text(rows()[1], '.fill-result')).toBe('-$0.05');
+      for (const r of rows()) {
+        expect(r.querySelectorAll('.fill-result').length).toBe(1);
+        expect(r.querySelector('.price, .time')).toBeFalsy();
+        expect(r.textContent).not.toContain('PnL');
+        expect(r.textContent).not.toContain('perpsFee');
+      }
     });
   });
 
@@ -309,22 +426,37 @@ describe('PerpsHistoryComponent 渲染与接线', () => {
       fixture.detectChanges();
     });
 
-    it('把交易场所的自动撤销归到已撤销', () => {
-      expect(text(rows()[0], '.dir')).toContain('perpsStatusCanceled');
+    it('左上显示类型加方向，下面是数量，右边是状态翻译', () => {
+      expect(text(rows()[0], '.dir')).toBe('Stop market close long');
+      expect(text(rows()[0], '.size')).toBe('1.2346 ETH');
+      expect(text(rows()[0], '.fill-result')).toBe('已取消');
+      expect(text(rows()[1], '.dir')).toBe('Limit long');
+      expect(text(rows()[1], '.fill-result')).toBe('brandNewStatus');
     });
 
-    it('没见过的状态原样显示，而不是猜一个', () => {
-      expect(text(rows()[1], '.dir')).toContain('brandNewStatus');
+    it('状态按 MetaMask 翻译，未知状态保留原文且均不使用盈亏颜色', () => {
+      const statuses = [
+        'filled', 'open', 'canceled', 'scheduledCancel', 'rejected', 'triggered', 'queued',
+        'marginCanceled', 'siblingFilledCanceled', 'reduceOnlyCanceled',
+        'badTriggerPxRejected', 'brandNewStatus',
+      ];
+      component.historicalOrders = statuses.map((status) => ({
+        order: STOP_MARKET, status, statusTimestamp: T,
+      }));
+      fixture.detectChanges();
+      expect(rows().map((r) => text(r, '.order-status'))).toEqual([
+        '已成交', '未成交', '已取消', '已取消', '已拒绝', '已触发', '队列中',
+        '已取消', '已取消', '已取消', '已拒绝', 'brandNewStatus',
+      ]);
+      expect(fixture.nativeElement.querySelector('.order-status.positive, .order-status.negative'))
+        .toBeNull();
     });
 
-    it('触发单在这里显示的同样是触发价', () => {
-      expect(text(rows()[0], '.price')).toBe('perpsTriggerPrice $1,800');
-    });
-
-    it('不画方向图标，方向由这一行自己的颜色表达', () => {
+    it('不显示价格和逐笔时间，方向用正文色', () => {
+      expect(rows()[0].querySelector('perps-coin-logo img')?.getAttribute('src'))
+        .toBe('assets/images/token/eth.webp');
       expect(rows()[0].querySelector('.fill-icon')).toBeFalsy();
-      expect(rows()[0].querySelector('.dir.sell')).toBeTruthy();
-      expect(rows()[1].querySelector('.dir.buy')).toBeTruthy();
+      expect(rows()[0].querySelector('.dir.sell, .dir.buy, .price, .time')).toBeFalsy();
     });
   });
 
@@ -334,7 +466,7 @@ describe('PerpsHistoryComponent 渲染与接线', () => {
       fixture.detectChanges();
     });
 
-    it('显示跨链提款总费用和内部转账实际到账金额', () => {
+    it('左上是类型加代币，右边是带符号金额', () => {
       component.transfers = [
         {
           time: T, hash: '0xcctp', cctpDestinationChainId: 421614, cctpFeeExact: '0.37',
@@ -353,23 +485,84 @@ describe('PerpsHistoryComponent 渲染与接线', () => {
         },
       ];
       fixture.detectChanges();
-      expect(text(rows()[0], '.size')).toBe('-1.123456 USDC');
-      expect(prices(rows()[0])).toContain('perpsFee: 0.37 USDC');
-      expect(text(rows()[1], '.size')).toBe('+999 USDC');
+      expect(rows().map((r) => text(r, '.dir'))).toEqual([
+        'send USDC', 'internalTransfer USDC',
+      ]);
+      expect(rows()[0].querySelector('.fill-info .size')).toBeFalsy();
+      expect(text(rows()[0], '.fill-result')).toBe('-$1.12');
+      expect(text(rows()[1], '.fill-result')).toBe('+$999.00');
+      expect(rows()[0].querySelector('.fill-result.negative')).toBeTruthy();
+      expect(rows()[1].querySelector('.fill-result.positive')).toBeTruthy();
     });
 
-    it('按钱的流向命名并标注符号', () => {
-      expect(text(rows()[0], '.dir')).toBe('perpsLedgerDeposit');
-      expect(text(rows()[0], '.size')).toBe('+9.0 USDC');
-      expect(rows()[0].querySelector('.size.negative')).toBeFalsy();
+    it('账本类型显示接口原文，代币跟在类型后面，不显示状态', () => {
+      expect(text(rows()[0], '.dir')).toBe('deposit USDC');
+      expect(rows()[0].querySelector('.fill-info .size')).toBeFalsy();
+      expect(text(rows()[0], '.fill-result')).toBe('+$9.00');
+      expect(rows()[0].querySelector('.fill-result.positive')).toBeTruthy();
 
-      expect(text(rows()[1], '.dir')).toBe('perpsLedgerWithdraw');
-      expect(text(rows()[1], '.size')).toBe('-2.5 HYPE');
-      expect(rows()[1].querySelector('.size.negative')).toBeTruthy();
+      expect(text(rows()[1], '.dir')).toBe('spotTransfer HYPE');
+      expect(text(rows()[1], '.fill-result')).toBe('-2.5 HYPE');
+      expect(rows()[1].querySelector('.fill-result.negative')).toBeTruthy();
     });
 
-    it('没有文案的账本类型退回协议原文', () => {
+    it('不显示逐笔时间和右侧费用，没有金额的行也不编造结果', () => {
+      expect(rows()[0].querySelector('.price, .time')).toBeFalsy();
       expect(text(rows()[2], '.dir')).toBe('vaultCreate');
+      expect(rows()[2].querySelector('.fill-info .size')).toBeFalsy();
+      expect(rows()[2].querySelector('.fill-result')).toBeFalsy();
+    });
+
+    it('能解析出代币时显示币种图标，否则保留进出箭头', () => {
+      expect(rows()[0].querySelector('perps-coin-logo img')?.getAttribute('src'))
+        .toBe('assets/images/token/usdc.webp');
+      expect(rows()[0].querySelector('.fill-icon')).toBeFalsy();
+      expect(rows()[1].querySelector('perps-coin-logo')).toBeTruthy();
+      expect(rows()[1].querySelector('.fill-icon')).toBeFalsy();
+      expect(rows()[2].querySelector('perps-coin-logo')).toBeFalsy();
+      expect(rows()[2].querySelector('.fill-icon')).toBeTruthy();
+    });
+
+    it('所有账本类型均显示原文，不根据资金流向改名', () => {
+      const types = [
+        'deposit', 'withdraw', 'internalTransfer', 'accountClassTransfer',
+        'subAccountTransfer', 'send', 'spotTransfer', 'vaultCreate',
+      ];
+      component.transfers = types.flatMap((type) => [
+        { time: T, hash: '0x1', delta: { type, destination: WALLET } },
+        { time: T, hash: '0x2', delta: { type, destination: '0xdef' } },
+      ]);
+      fixture.detectChanges();
+      expect(rows().map((r) => text(r, '.dir'))).toEqual(
+        types.flatMap((type) => [type, type])
+      );
+    });
+  });
+
+  describe('资金费历史', () => {
+    beforeEach(() => {
+      component.setTab('funding');
+      fixture.detectChanges();
+    });
+
+    it('左上是收到或支付，下面是币种，右边是带符号协议金额', () => {
+      expect(rows().map((r) => text(r, '.dir'))).toEqual([
+        'Paid funding fee',
+        'Received funding fee',
+      ]);
+      expect(rows().map((r) => text(r, '.size'))).toEqual(['ETH', 'ETH']);
+      expect(rows().map((r) => text(r, '.fill-result'))).toEqual([
+        '-$0.005589',
+        '+$0.005588',
+      ]);
+      expect(rows()[0].querySelector('.fill-result.negative')).toBeTruthy();
+      expect(rows()[1].querySelector('.fill-result.positive')).toBeTruthy();
+    });
+
+    it('显示币种图标，不显示逐笔时间和价格', () => {
+      expect(rows()[0].querySelector('perps-coin-logo img')?.getAttribute('src'))
+        .toBe('assets/images/token/eth.webp');
+      expect(rows()[0].querySelector('.fill-icon, .price, .time')).toBeFalsy();
     });
   });
 });

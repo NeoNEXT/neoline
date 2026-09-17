@@ -1781,6 +1781,12 @@
   "perpsHistory": {
     "message": "活动"
   },
+  "perpsActivityToday": {
+    "message": "今天"
+  },
+  "perpsActivityYesterday": {
+    "message": "昨天"
+  },
   "perpsHistoryTitle": {
     "message": "合约活动"
   },
@@ -1792,12 +1798,6 @@
   },
   "perpsShort": {
     "message": "做空"
-  },
-  "perpsOpenLong": {
-    "message": "开多"
-  },
-  "perpsOpenShort": {
-    "message": "开空"
   },
   "perpsEntry": {
     "message": "开仓"
@@ -2087,30 +2087,6 @@
   "perpsFills": {
     "message": "历史成交"
   },
-  "perpsOrderHistory": {
-    "message": "历史委托"
-  },
-  "perpsTransfers": {
-    "message": "存款和提款"
-  },
-  "perpsNoOrderHistory": {
-    "message": "暂无历史委托"
-  },
-  "perpsNoTransfers": {
-    "message": "暂无存款和提款记录"
-  },
-  "perpsLedgerTransfer": {
-    "message": "划转"
-  },
-  "perpsLedgerDeposit": {
-    "message": "存款"
-  },
-  "perpsLedgerWithdraw": {
-    "message": "提款"
-  },
-  "perpsLedgerSend": {
-    "message": "发送"
-  },
   "perpsStatusFilled": {
     "message": "已成交"
   },
@@ -2118,13 +2094,34 @@
     "message": "未成交"
   },
   "perpsStatusCanceled": {
-    "message": "已撤销"
+    "message": "已取消"
   },
   "perpsStatusRejected": {
     "message": "已拒绝"
   },
   "perpsStatusTriggered": {
     "message": "已触发"
+  },
+  "perpsStatusQueued": {
+    "message": "队列中"
+  },
+  "perpsOrderHistory": {
+    "message": "历史委托"
+  },
+  "perpsTransfers": {
+    "message": "存款和提款"
+  },
+  "perpsFundingHistory": {
+    "message": "资金费历史"
+  },
+  "perpsNoOrderHistory": {
+    "message": "暂无历史委托"
+  },
+  "perpsNoTransfers": {
+    "message": "暂无存款和提款记录"
+  },
+  "perpsNoFundingHistory": {
+    "message": "暂无资金费记录"
   },
   "perpsCancelOrder": {
     "message": "撤单"

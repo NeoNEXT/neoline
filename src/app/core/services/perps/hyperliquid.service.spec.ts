@@ -682,6 +682,29 @@ describe('HyperliquidService 成交历史', () => {
   });
 });
 
+describe('HyperliquidService 资金费历史', () => {
+  it('拉取 userFunding 全量历史并丢掉现货币种', () => {
+    const http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
+    const rows = ['ETH', 'xyz:NEO', '@107', 'PURR/USDC'].map((coin, i) => ({
+      time: i,
+      hash: `0x${i}`,
+      delta: { type: 'funding', coin, usdc: '0.01' },
+    }));
+    http.post.and.returnValue(of(rows) as any);
+    const service = new HyperliquidService(http, fakePerpsDataChannel(), writes());
+
+    service.getUserFunding('0xABC').subscribe((fundings) =>
+      expect(fundings.map((row) => row.delta.coin)).toEqual(['ETH', 'xyz:NEO'])
+    );
+
+    expect(http.post).toHaveBeenCalledWith(
+      jasmine.any(String),
+      { type: 'userFunding', user: '0xabc', startTime: 0 },
+      jasmine.any(Object)
+    );
+  });
+});
+
 describe('HyperliquidService CCTP 历史关联', () => {
   const user = '0x5be1a4c623a63498d78c08b8890a6e5dad6bf359';
   const update = {

@@ -1781,6 +1781,12 @@
   "perpsHistory": {
     "message": "アクティビティ"
   },
+  "perpsActivityToday": {
+    "message": "今日"
+  },
+  "perpsActivityYesterday": {
+    "message": "昨日"
+  },
   "perpsHistoryTitle": {
     "message": "無期限先物のアクティビティ"
   },
@@ -1792,12 +1798,6 @@
   },
   "perpsShort": {
     "message": "ショート"
-  },
-  "perpsOpenLong": {
-    "message": "ロングを建てる"
-  },
-  "perpsOpenShort": {
-    "message": "ショートを建てる"
   },
   "perpsEntry": {
     "message": "エントリー"
@@ -2087,30 +2087,6 @@
   "perpsFills": {
     "message": "約定履歴"
   },
-  "perpsOrderHistory": {
-    "message": "注文履歴"
-  },
-  "perpsTransfers": {
-    "message": "入出金"
-  },
-  "perpsNoOrderHistory": {
-    "message": "注文履歴はありません"
-  },
-  "perpsNoTransfers": {
-    "message": "入出金の記録はありません"
-  },
-  "perpsLedgerTransfer": {
-    "message": "振替"
-  },
-  "perpsLedgerDeposit": {
-    "message": "入金"
-  },
-  "perpsLedgerWithdraw": {
-    "message": "出金"
-  },
-  "perpsLedgerSend": {
-    "message": "送金"
-  },
   "perpsStatusFilled": {
     "message": "約定済み"
   },
@@ -2118,13 +2094,34 @@
     "message": "未約定"
   },
   "perpsStatusCanceled": {
-    "message": "取消済み"
+    "message": "キャンセル済み"
   },
   "perpsStatusRejected": {
-    "message": "拒否"
+    "message": "拒否済み"
   },
   "perpsStatusTriggered": {
-    "message": "トリガー済み"
+    "message": "発動済み"
+  },
+  "perpsStatusQueued": {
+    "message": "待機中"
+  },
+  "perpsOrderHistory": {
+    "message": "注文履歴"
+  },
+  "perpsTransfers": {
+    "message": "入出金"
+  },
+  "perpsFundingHistory": {
+    "message": "資金調達履歴"
+  },
+  "perpsNoOrderHistory": {
+    "message": "注文履歴はありません"
+  },
+  "perpsNoTransfers": {
+    "message": "入出金の記録はありません"
+  },
+  "perpsNoFundingHistory": {
+    "message": "資金調達の記録はありません"
   },
   "perpsCancelOrder": {
     "message": "取消"
