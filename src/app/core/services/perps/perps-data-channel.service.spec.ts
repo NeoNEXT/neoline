@@ -102,6 +102,18 @@ describe('PerpsDataChannel routing', () => {
     expect(second).not.toHaveBeenCalled();
   });
 
+  it('routes complete cross-DEX account snapshots only to their owner', () => {
+    const { channel, sockets } = build();
+    const first = jasmine.createSpy('first');
+    const second = jasmine.createSpy('second');
+    channel.subscribe({ type: 'allDexsClearinghouseState', user: '0xaaa' }).subscribe(first);
+    channel.subscribe({ type: 'allDexsClearinghouseState', user: '0xbbb' }).subscribe(second);
+    sockets[0].accept();
+    sockets[0].deliver({ channel: 'allDexsClearinghouseState', data: { user: '0xAAA', clearinghouseStates: [] } });
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).not.toHaveBeenCalled();
+  });
+
   it('routes clearinghouseState updates to the matching user only', () => {
     const { channel, sockets } = build();
     const first = jasmine.createSpy('first');

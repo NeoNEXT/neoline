@@ -487,26 +487,8 @@
       }
     }
 
-    .fee-sides {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      white-space: nowrap;
-
-      .side-label,
-      .separator {
-        font-style: normal;
-        color: var(--sub-title-color);
-      }
-
-      b {
-        font-weight: normal;
-
-        // A negative maker rate pays the account; it reads as income, not cost.
-        &.rebate {
-          color: var(--theme-color);
-        }
-      }
+    .rebate {
+      color: var(--theme-color);
     }
 
     .slippage-value {
@@ -585,6 +567,45 @@
         border-color: var(--line-color);
         color: var(--sub-title-color);
       }
+    }
+  }
+}
+
+.margin-mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 24px 8px;
+  font-size: 13px;
+  color: var(--title-color);
+
+  .mode-options {
+    display: flex;
+    gap: 6px;
+  }
+
+  button {
+    padding: 6px 14px;
+    border: 1px solid var(--line-color);
+    border-radius: 16px;
+    background: transparent;
+    color: var(--sub-title-color);
+    font: inherit;
+    cursor: pointer;
+
+    &.active {
+      background: var(--line-color);
+      color: var(--title-color);
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.5;
+    }
+
+    &.active:disabled {
+      opacity: 1;
     }
   }
 }

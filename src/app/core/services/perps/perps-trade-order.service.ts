@@ -10,6 +10,7 @@ import {
   PerpsExchangeResponse,
   PerpsOrderExecutionResult,
   PerpsPosition,
+  PerpsMarginMode,
   PerpsTradeOrderIntent,
   PERPS_MAX_SLIPPAGE_PERCENT,
   PERPS_MIN_SLIPPAGE_PERCENT,
@@ -28,7 +29,8 @@ interface PerpsOrderExchange {
     privateKey: string,
     assetId: number,
     leverage: number,
-    maxLeverage: number
+    maxLeverage: number,
+    marginMode: PerpsMarginMode
   ): Observable<PerpsExchangeResponse>;
 }
 
@@ -85,7 +87,8 @@ export class PerpsTradeOrderService {
               privateKey,
               intent.market.assetId,
               intent.leverage,
-              intent.market.maxLeverage
+              intent.market.maxLeverage,
+              intent.marginMode
             )
             .pipe(
               // 写入被拒绝意味着订单从未发出，调用方必须能够说出这一点。
@@ -133,6 +136,12 @@ export class PerpsTradeOrderService {
     }
     if (!['market', 'limit'].includes(intent.orderType)) {
       throw this.invalidIntent('Order has an invalid type');
+    }
+    if (!['cross', 'isolated'].includes(intent.marginMode)) {
+      throw this.invalidIntent('Order has an invalid margin mode');
+    }
+    if (this.setsLeverage(intent) && intent.marginMode === 'cross' && market.marginMode) {
+      throw this.invalidIntent('This market does not support cross margin');
     }
     if (
       !['open', 'increase', 'reduce', 'close', 'reverse'].includes(
@@ -223,7 +232,7 @@ export class PerpsTradeOrderService {
     if (intent.operation === 'close') {
       return held.toFixed();
     }
-    if (position.leverageType === 'cross') {
+    if (position.leverageType !== intent.marginMode) {
       throw this.positionChanged();
     }
     return held.plus(intent.requestedSizeExact).toFixed();

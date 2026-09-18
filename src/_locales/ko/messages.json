@@ -2177,11 +2177,23 @@
   "perpsAutoClose": {
     "message": "자동 청산"
   },
-  "perpsIsolatedOnly": {
-    "message": "증거금 모드: 격리 (NeoLine은 격리 주문만 지원합니다)"
+  "perpsMarginMode": {
+    "message": "증거금 모드"
   },
-  "perpsCrossPositionUnsupported": {
-    "message": "이 시장에 교차 증거금 포지션이 있습니다. NeoLine은 격리 주문만 지원하므로 포지션을 추가할 수 없습니다."
+  "perpsCrossMargin": {
+    "message": "교차"
+  },
+  "perpsIsolatedMargin": {
+    "message": "격리"
+  },
+  "perpsCrossMarginUnavailable": {
+    "message": "이 시장은 격리 증거금만 지원합니다."
+  },
+  "perpsMarginModeLocked": {
+    "message": "증거금 모드는 현재 포지션을 따릅니다. 모드를 변경하려면 포지션을 종료하세요."
+  },
+  "perpsCrossLiqPriceTip": {
+    "message": "다른 시장 가격이 변하지 않는다고 가정하고 공유 계좌 자산과 모든 교차 포지션의 유지 증거금으로 추정합니다. 향후 수수료와 펀딩비는 제외하며, 담보 데이터가 불완전하면 추정할 수 없습니다."
   },
   "perpsApplyLeverage": {
     "message": "포지션에 레버리지 적용"

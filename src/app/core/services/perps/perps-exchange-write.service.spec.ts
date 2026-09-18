@@ -184,7 +184,7 @@ describe('PerpsExchangeWriteService leverage and cancels', () => {
   });
 
   it('updates leverage as an independent action', fakeAsync(() => {
-    service.updateLeverage(PRIVATE_KEY, 3, 5, 20).subscribe();
+    service.updateLeverage(PRIVATE_KEY, 3, 5, 20, 'isolated').subscribe();
     flushMicrotasks();
 
     expect(http.post.calls.mostRecent().args[1].action).toEqual({
@@ -195,15 +195,15 @@ describe('PerpsExchangeWriteService leverage and cancels', () => {
     });
   }));
 
-  it('always writes leverage in isolated mode, clamped to the market maximum', fakeAsync(() => {
-    service.updateLeverage(PRIVATE_KEY, 7, 2, 3).subscribe();
+  it('writes cross margin and clamps leverage to the market maximum', fakeAsync(() => {
+    service.updateLeverage(PRIVATE_KEY, 7, 5, 3, 'cross').subscribe();
     flushMicrotasks();
 
     expect(http.post.calls.first().args[1].action).toEqual({
       type: 'updateLeverage',
       asset: 7,
-      isCross: false,
-      leverage: 2,
+      isCross: true,
+      leverage: 3,
     });
   }));
 
@@ -382,7 +382,7 @@ describe('PerpsExchangeWriteService write notifications', () => {
     service.wrote().subscribe(wrote);
 
     http.post.and.returnValue(of(exchangeOk) as any);
-    service.updateLeverage(PRIVATE_KEY, 3, 5, 20).subscribe();
+    service.updateLeverage(PRIVATE_KEY, 3, 5, 20, 'isolated').subscribe();
     flushMicrotasks();
     expect(wrote).toHaveBeenCalledTimes(1);
 

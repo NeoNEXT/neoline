@@ -37,6 +37,7 @@ const input = (overrides: Partial<PerpsOrderInput> = {}): PerpsOrderInput => ({
   orderType: 'market',
   amount: '',
   limitPrice: '',
+  marginMode: 'isolated',
   leverage: 1,
   slippagePercent: 3,
   activePercent: null,
@@ -118,6 +119,39 @@ const sides = (
  * 所以断言改从 `availableExact` 和 `percentBaseExact` 上读 —— 那才是页面看得见的东西。
  */
 describe('composeOrder 购买力', () => {
+  it('uses the matching cross capacity and preserves its directional size cap', () => {
+    const data = capacity('ETH', 100, '100', '2', 5);
+    data.leverage.type = 'cross';
+    const f = facts({ activeAssetData: data });
+    const composed = composeOrder(f, input({ amount: '100', leverage: 5, marginMode: 'cross' }));
+    expect(composed.submittable).toBeTrue();
+    expect(composed.availableExact).toBe('100');
+    expect(composed.percentBaseExact).toBe('200');
+    expect(composed.preview.marginExact).toBe('20');
+    expect(composed.preview.liquidationPxExact).toBeNull();
+    expect(reason(f, input({ amount: '300', leverage: 5, marginMode: 'cross' })))
+      .toBe('insufficient-margin');
+  });
+
+  it('does not reuse isolated capacity after switching to cross margin', () => {
+    const f = facts({
+      activeAssetData: capacity('ETH', 100, '1000', '100', 5),
+      account: { ...withPositions(), account: account({ availableBalanceExact: '20' }) },
+    });
+    const composed = composeOrder(f, input({ leverage: 5, marginMode: 'cross' }));
+    expect(composed.availableExact).toBe('20');
+    expect(composed.percentBaseExact).toBe('100');
+    expect(reason(f, input({ amount: '200', leverage: 5, marginMode: 'cross' })))
+      .toBe('insufficient-margin');
+  });
+
+  for (const marginMode of ['noCross', 'strictIsolated'] as const) {
+    it(`blocks cross margin on a ${marginMode} market`, () => {
+      const f = facts({ market: { status: 'ready', market: ethMarket({ marginMode }) } });
+      expect(reason(f, input({ marginMode: 'cross' }))).toBe('cross-margin-unavailable');
+      expect(reason(f, input({ marginMode: 'isolated' }))).toBeNull();
+    });
+  }
   it('keeps fallback collateral exact through Max amount and submitted size', () => {
     const f = facts({
       market: priced('ETH', 0.01, 4),
@@ -350,6 +384,22 @@ describe('composeOrder 购买力', () => {
  * 预览：保证金、手续费和数量，从 `composeOrder` 的 `preview` 上读。
  */
 describe('composeOrder 预览', () => {
+  it('estimates cross liquidation from account equity independently of selected leverage', () => {
+    const f = facts({
+      market: priced('ETH', 100, 4),
+      crossMarginAccount: { equityExact: '20', maintenanceMarginExact: '5', positions: [] },
+    });
+    const estimates = [2, 8, 20].map((leverage) => composeOrder(f, input({
+      amount: '100', leverage, marginMode: 'cross',
+    })).preview.liquidationPxExact);
+    expect(estimates[0]).not.toBeNull();
+    expect(estimates[1]).toBe(estimates[0]);
+    expect(estimates[2]).toBe(estimates[0]);
+    expect(composeOrder({ ...f, crossMarginAccount: null }, input({
+      amount: '100', leverage: 8, marginMode: 'cross',
+    })).preview.liquidationPxExact).toBeNull();
+  });
+
   const funded = (price: number, szDecimals = 4, builderRate = '0') =>
     facts({
       market: priced('ETH', price, szDecimals),
@@ -869,12 +919,13 @@ describe('composeOrder', () => {
     expect(composeOrder(f, input()).makerFeeIsRebate).toBeTrue();
   });
 
-  it('blocks increasing a cross-margin position', () => {
+  it('allows increasing a cross-margin position in the same margin mode', () => {
     const f = facts({
       market: priced('ETH', 100, 2),
       account: {
         availability: 'live',
         account: account({
+          availableBalanceExact: '100',
           positions: [
             ethPosition({
               sziExact: '1',
@@ -892,7 +943,12 @@ describe('composeOrder', () => {
       },
     });
 
-    expect(reason(f, input({ amount: '100' }))).toBe('cross-position');
+    const composed = composeOrder(f, input({ amount: '100', marginMode: 'cross' }));
+    expect(composed.submittable).toBeTrue();
+    expect(composed.intent.operation).toBe('increase');
+    expect(composed.intent.marginMode).toBe('cross');
+    expect(composed.preview.liquidationPxExact).toBeNull();
+    expect(reason(f, input({ amount: '100' }))).toBe('margin-mode-mismatch');
   });
 
   /**
@@ -1128,11 +1184,13 @@ describe('composeOrder', () => {
         assetId: 0,
         szDecimals: 2,
         maxLeverage: 20,
+        marginMode: null,
       },
       operation: 'open',
       side: 'long',
       referencePriceExact: '100',
       requestedSizeExact: '1',
+      marginMode: 'isolated',
       leverage: 5,
       orderType: 'market',
       maxSlippagePercent: 1.5,
@@ -1148,6 +1206,7 @@ describe('review baseline', () => {
     limitPrice: '',
     side: 'long',
     orderType: 'market',
+    marginMode: 'isolated',
     leverage: 5,
     slippagePercent: 3,
     mode: 'open',
@@ -1158,6 +1217,7 @@ describe('review baseline', () => {
     orderType: 'market',
     amount: '20',
     limitPrice: '',
+    marginMode: 'isolated',
     leverage: 5,
     slippagePercent: 3,
     activePercent: null,
@@ -1183,6 +1243,10 @@ describe('review baseline', () => {
     expect(
       intentUnchanged(baseline, { ...formInput, activePercent: 50 })
     ).toBeTrue();
+  });
+
+  it('requires a new review after changing the margin mode', () => {
+    expect(intentUnchanged(baseline, { ...formInput, marginMode: 'cross' })).toBeFalse();
   });
 
   it('holds while the market stays inside the agreed window', () => {

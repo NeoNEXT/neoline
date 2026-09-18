@@ -87,8 +87,8 @@ describe('PerpsOrderComponent summary rows', () => {
     value.amount = '200';
 
     expect(value.marginText).toBe('$20');
-    // 是手续费的金额，而不是过去缺字段时渲染出来的 `--`。
-    expect(value.feeText).toBe('0.045% ($0.09)');
+    // 输入金额后仍只展示费率。
+    expect(value.feeText).toBe('0.045%');
     expect(value.liquidationPriceText).toContain('$');
   });
 
@@ -104,14 +104,14 @@ describe('PerpsOrderComponent summary rows', () => {
     expect(value.liquidationPriceText).toBe('N/A');
   });
 
-  it('adds builder fees exactly before rounding the displayed fee amount', () => {
+  it('adds builder fees exactly while displaying only the total rate', () => {
     const value = component();
     value.facts = facts({
       feeRates: { takerRate: '0.0003', makerRate: '0.0001', builderRate: '0.00015' },
     });
     value.amount = '100';
     expect(value.preview.feeExact).toBe('0.045');
-    expect(value.feeText).toBe('0.045% ($0.05)');
+    expect(value.feeText).toBe('0.045%');
   });
 
   it('quotes the maker side too, for a limit order', () => {
@@ -123,8 +123,8 @@ describe('PerpsOrderComponent summary rows', () => {
     value.limitPrice = '2000';
 
     expect(value.quotesBothFeeSides).toBeTrue();
-    expect(value.makerFeeText).toBe('0.015% ($0.03)');
-    expect(value.feeText).toBe('0.045% ($0.09)');
+    expect(value.makerFeeText).toBe('0.015%');
+    expect(value.feeText).toBe('0.045%');
   });
 
   // 返佣是付给账户的钱。把它显示成 "$0.00" 等于抹掉成交实际返还的钱，
@@ -140,7 +140,7 @@ describe('PerpsOrderComponent summary rows', () => {
     value.limitPrice = '2000';
 
     expect(value.makerFeeIsRebate).toBeTrue();
-    expect(value.makerFeeText).toBe('-0.002% (-$<0.01)');
+    expect(value.makerFeeText).toBe('-0.002%');
   });
 
   // 两行报的都是「从账户里出去多少」，所以 NeoLine 抽的那份两边都算在内。
@@ -154,8 +154,8 @@ describe('PerpsOrderComponent summary rows', () => {
     value.orderType = 'limit';
     value.limitPrice = '2000';
 
-    expect(value.makerFeeText).toBe('0.06% ($0.12)');
-    expect(value.feeText).toBe('0.09% ($0.18)');
+    expect(value.makerFeeText).toBe('0.06%');
+    expect(value.feeText).toBe('0.09%');
   });
 
   /**
@@ -189,8 +189,8 @@ describe('PerpsOrderComponent summary rows', () => {
 
     expect(value.feeEstimateUnavailable).toBeFalse();
     expect(value.formattedTakerFeeRate).toBe('0.009%');
-    expect(value.makerFeeText).toBe('0.003% ($<0.01)');
-    expect(value.feeText).toBe('0.009% ($0.02)');
+    expect(value.makerFeeText).toBe('0.003%');
+    expect(value.feeText).toBe('0.009%');
   });
 
   /** 模块负责陈述条件；只有页面负责为它措辞。 */
@@ -262,7 +262,7 @@ describe('PerpsOrderComponent composition memo', () => {
 });
 
 describe('PerpsOrderComponent submission seam', () => {
-  it('passes the composed intent to the trade-order module', async () => {
+  it('passes the reviewed cross-margin intent to the trade-order module', async () => {
     const router = jasmine.createSpyObj('Router', ['navigateByUrl']);
     const global = jasmine.createSpyObj('GlobalService', ['snackBarTip']);
     const accountStates = jasmine.createSpyObj('PerpsAccountStateService', [
@@ -320,7 +320,7 @@ describe('PerpsOrderComponent submission seam', () => {
       activeAssetData: {
         user: '0xabc',
         coin: 'ETH',
-        leverage: { type: 'isolated', value: 5 },
+        leverage: { type: 'cross', value: 5 },
         maxTradeSzs: ['10', '10'],
         availableToTrade: ['100', '100'],
         markPxExact: '100',
@@ -328,6 +328,7 @@ describe('PerpsOrderComponent submission seam', () => {
       },
     });
     value.leverage = 5;
+    value.marginMode = 'cross';
     value.amount = '100';
     (value as any).wallet = { accounts: [{ extra: {} }] };
 
@@ -343,11 +344,13 @@ describe('PerpsOrderComponent submission seam', () => {
         assetId: 3,
         szDecimals: 2,
         maxLeverage: 20,
+        marginMode: null,
       },
       operation: 'open',
       side: 'long',
       referencePriceExact: '100',
       requestedSizeExact: '1',
+      marginMode: 'cross',
       leverage: 5,
       orderType: 'market',
       maxSlippagePercent: value.slippagePercent,
@@ -847,11 +850,12 @@ describe('PerpsOrderComponent asynchronous confirmation', () => {
 });
 
 
-describe('applying leverage to an existing isolated position', () => {
-  function setup() {
+describe('applying leverage to an existing position', () => {
+  function setup(marginMode: 'cross' | 'isolated' = 'isolated') {
     const value = component();
+    value.marginMode = marginMode;
     const state = (leverage: number) => ({ ...facts().account,
-      account: { positions: [ethPosition({ leverageType: 'isolated', leverage })] } as PerpsAccount,
+      account: { positions: [ethPosition({ leverageType: marginMode, leverage })] } as PerpsAccount,
     });
     value.facts = facts({ account: state(2) });
     value.leverage = 3;
@@ -870,10 +874,18 @@ describe('applying leverage to an existing isolated position', () => {
   it('writes 3x without an order and refreshes the position', async () => {
     const { value, writes, accounts } = setup();
     await value.applyLeverage();
-    expect(writes.updateLeverage).toHaveBeenCalledWith('key', 0, 3, 25);
+    expect(writes.updateLeverage).toHaveBeenCalledWith('key', 0, 3, 25, 'isolated');
     expect(accounts.refreshAccount).toHaveBeenCalledWith('0xabc', '');
     expect(value.position.leverage).toBe(3);
     expect(value.canApplyLeverage).toBeFalse();
+  });
+
+  it('updates a cross position without changing its margin mode', async () => {
+    const { value, writes } = setup('cross');
+    await value.applyLeverage();
+    expect(writes.updateLeverage).toHaveBeenCalledWith('key', 0, 3, 25, 'cross');
+    expect(value.position.leverageType).toBe('cross');
+    expect(value.position.leverage).toBe(3);
   });
 
   it('retains 3x and surfaces the venue margin error when decreasing to 2x fails', async () => {

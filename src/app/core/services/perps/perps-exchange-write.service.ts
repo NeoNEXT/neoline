@@ -9,6 +9,7 @@ import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import {
   HYPERLIQUID_API,
   PerpsExchangeResponse,
+  PerpsMarginMode,
   PerpsOrderExecutionResult,
   PERPS_BUILDER_ADDRESS,
   PERPS_BUILDER_FEE_TENTHS_BPS,
@@ -262,13 +263,14 @@ export class PerpsExchangeWriteService {
     privateKey: string,
     assetId: number,
     leverage: number,
-    maxLeverage: number
+    maxLeverage: number,
+    marginMode: PerpsMarginMode
   ): Observable<PerpsExchangeResponse> {
     const normalized = Math.max(1, Math.min(maxLeverage, Math.floor(leverage)));
     return this.signedL1Action(privateKey, {
       type: 'updateLeverage',
       asset: assetId,
-      isCross: false,
+      isCross: marginMode === 'cross',
       leverage: normalized,
     });
   }

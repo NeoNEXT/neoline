@@ -65,6 +65,7 @@ const CHANNELS: Record<string, ChannelSpec> = {
   },
   spotState: { identify: byUser },
   clearinghouseState: { dexScoped: true, identify: byUser },
+  allDexsClearinghouseState: { identify: byUser },
   openOrders: { dexScoped: true, identify: byUser },
   userFills: { identify: byUser },
   orderUpdates: { identify: byUser },

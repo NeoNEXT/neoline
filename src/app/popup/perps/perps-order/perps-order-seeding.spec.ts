@@ -26,6 +26,7 @@ const input = (overrides: Partial<PerpsOrderInput> = {}): PerpsOrderInput => ({
   orderType: 'market',
   amount: '',
   limitPrice: '',
+  marginMode: 'isolated',
   leverage: 1,
   slippagePercent: 3,
   activePercent: null,
@@ -58,6 +59,39 @@ const holding = (overrides = {}) =>
   } as PerpsAccount);
 
 const none = new Set<PerpsOrderUserSetField>();
+
+describe('seedForm 保证金模式', () => {
+  it('takes the venue mode when no position exists and the user has not chosen', () => {
+    const activeAssetData = { ...capacity(10), leverage: { type: 'cross' as const, value: 10 } };
+    expect(seedForm(facts({ activeAssetData }), input(), none, false).marginMode).toBe('cross');
+  });
+
+  it('keeps a user-selected mode across subsequent venue frames', () => {
+    const touched = new Set<PerpsOrderUserSetField>(['marginMode']);
+    const seed = seedForm(facts({ activeAssetData: capacity(10) }), input({ marginMode: 'cross' }), touched, false);
+    expect(seed.marginMode).toBeUndefined();
+  });
+
+  it('follows an existing cross position even if an earlier frame or choice used isolated', () => {
+    const f = facts({
+      account: { ...facts().account, account: holding({ leverageType: 'cross' }) },
+      activeAssetData: capacity(10),
+    });
+    const seeded = seedForm(f, input(), new Set(['marginMode']), false);
+    expect(seeded.marginMode).toBe('cross');
+    expect(seeded.leverage).toBe(20);
+    expect(seedForm({ ...f, activeAssetData: null }, input(), none, false).leverage).toBe(20);
+    expect(seedForm(f, input({ mode: 'close' }), none, false).marginMode).toBe('cross');
+    expect(seedForm(f, input(), none, true)).toEqual({});
+  });
+
+  for (const marginMode of ['noCross', 'strictIsolated'] as const) {
+    it(`uses isolated margin when market metadata reports ${marginMode}`, () => {
+      const f = facts({ market: { status: 'ready', market: ethMarket({ marginMode }) } });
+      expect(seedForm(f, input({ marginMode: 'cross' }), none, false).marginMode).toBe('isolated');
+    });
+  }
+});
 
 describe('seedForm 限价', () => {
   it('offers the mid as a starting limit price, quantised to the tick', () => {

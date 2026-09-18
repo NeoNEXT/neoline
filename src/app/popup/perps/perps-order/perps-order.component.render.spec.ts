@@ -4,7 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { BehaviorSubject, of } from 'rxjs';
-import { PerpsConnectionState } from '@popup/_lib/perps';
+import { PerpsConnectionState, PerpsCrossMarginAccount } from '@popup/_lib/perps';
 import { PerpsDataChannel } from '@/app/core/services/perps/perps-data-channel.service';
 
 import { ChromeService, EvmWalletService, GlobalService } from '@/app/core';
@@ -83,12 +83,14 @@ describe('PerpsOrderComponent 渲染与接线', () => {
   let queryParams: any;
   let connection: BehaviorSubject<PerpsConnectionState>;
   let markets: BehaviorSubject<typeof MARKET>;
+  let crossAccount: BehaviorSubject<PerpsCrossMarginAccount>;
 
   beforeEach(async () => {
     account = { positions: [] };
     queryParams = {};
     connection = new BehaviorSubject<PerpsConnectionState>('live');
     markets = new BehaviorSubject(MARKET);
+    crossAccount = new BehaviorSubject({ equityExact: '60', maintenanceMarginExact: '5', positions: [] });
     await TestBed.configureTestingModule({
       declarations: [
         PerpsOrderComponent,
@@ -123,6 +125,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
           provide: HyperliquidService,
           useValue: {
             watchActiveAssetData: () => of(ASSET_DATA),
+            watchCrossMarginAccount: () => crossAccount,
             getUserFeeRates: () =>
               of({ takerRate: '0.00045', makerRate: '0.00015' }),
           },
@@ -168,6 +171,61 @@ describe('PerpsOrderComponent 渲染与接线', () => {
     (fixture.nativeElement.querySelector(selector)?.textContent ?? '')
       .replace(/\s+/g, ' ')
       .trim();
+
+  describe('保证金模式', () => {
+    it('selects cross margin and carries it into the confirmation and order intent', () => {
+      account.availableBalanceExact = '1000';
+      fixture.detectChanges();
+      component.amount = '200';
+      const crossButton: HTMLButtonElement = fixture.nativeElement.querySelector('.mode-options button');
+      crossButton.click();
+      fixture.detectChanges();
+      expect(crossButton.getAttribute('aria-pressed')).toBe('true');
+      expect(component.composition.intent.marginMode).toBe('cross');
+      expect(component.liquidationPriceText).toBe('$1,479.59');
+      component.review();
+      fixture.detectChanges();
+      expect(text('.confirm-sheet .margin-mode-row .value')).toBe('perpsCrossMargin');
+      expect(text('.confirm-sheet')).toContain('$1,479.59');
+      crossAccount.next({ equityExact: '80', maintenanceMarginExact: '5', positions: [] });
+      fixture.detectChanges();
+      expect(component.liquidationPriceText).toBe('$1,275.51');
+      expect(text('.confirm-sheet')).toContain('$1,275.51');
+      expect(component.reviewing).toBeTrue();
+      component.setMarginMode('isolated');
+      fixture.detectChanges();
+      expect(component.reviewing).toBeFalse();
+      expect(component.composition.intent.marginMode).toBe('isolated');
+      fixture.destroy();
+      expect(crossAccount.observed).toBeFalse();
+    });
+
+    it('keeps a cross position in cross mode and permits increasing it', () => {
+      account = { availableBalanceExact: '1000', positions: [ethPosition({ leverageType: 'cross' })] };
+      fixture.detectChanges();
+      component.setSide('short');
+      component.amount = '200';
+      fixture.detectChanges();
+      expect(component.marginMode).toBe('cross');
+      expect(component.leverage).toBe(2);
+      expect(component.canSubmit).toBeTrue();
+      expect(text('.margin-mode-tip')).toBe('perpsMarginModeLocked');
+      const buttons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('.mode-options button'));
+      expect(buttons.every((button) => button.disabled)).toBeTrue();
+      buttons[1].click();
+      expect(component.marginMode).toBe('cross');
+    });
+
+    it('disables cross margin on an isolated-only market', () => {
+      markets.next({ ...MARKET, marginMode: 'noCross' });
+      fixture.detectChanges();
+      const crossButton: HTMLButtonElement = fixture.nativeElement.querySelector('.mode-options button');
+      expect(crossButton.disabled).toBeTrue();
+      expect(text('.margin-mode-tip')).toBe('perpsCrossMarginUnavailable');
+      crossButton.click();
+      expect(component.marginMode).toBe('isolated');
+    });
+  });
 
   describe('断流提示', () => {
     it('marks retained quotes stale and clears the warning on reconnect', () => {
@@ -358,6 +416,8 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       expect(component.side).toBe('long');
       expect(component.orderType).toBe('market');
       expect(fixture.nativeElement.querySelector('.edit-slippage').disabled).toBeTrue();
+      const modes: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('.mode-options button'));
+      expect(modes.every((button) => button.disabled)).toBeTrue();
     });
 
     it('disables the button while nothing can be submitted', () => {
@@ -390,8 +450,8 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       fixture.detectChanges();
     };
 
-    /** 面板只回答「按下去会发生什么」：方向、数量、价格、强平价，对齐 Hyperliquid 的确认框。 */
-    it('states the four things the button is about to do', () => {
+    /** 保证金模式也是用户签名前需要确认的交易条件。 */
+    it('states the direction, size, margin mode, price and liquidation estimate', () => {
       review();
 
       const labels = Array.from(
@@ -400,6 +460,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       expect(labels).toEqual([
         'perpsOrderDirection',
         'perpsOrderSize',
+        'perpsMarginMode',
         'perpsEntryPrice',
         'perpsEstimatedLiqPrice',
       ]);

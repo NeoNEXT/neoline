@@ -2,9 +2,11 @@ import BigNumber from 'bignumber.js';
 
 import {
   PerpsAccount,
+  PerpsCrossMarginAccount,
   PerpsAccountState,
   PerpsActiveAssetData,
   PerpsMarket,
+  PerpsMarginMode,
   PerpsOrderPreview,
   PerpsOrderSide,
   PerpsOrderType,
@@ -19,7 +21,7 @@ import {
   perpsSizeAtLot,
 } from '@popup/_lib/perps';
 import { PerpsExactValue } from '../perps.util';
-import { isolatedLiquidationPrice } from '@popup/_lib/perps-margin';
+import { crossLiquidationPrice, isolatedLiquidationPrice } from '@popup/_lib/perps-margin';
 
 /** 美元金额按分输入、也按分提交。 */
 const AMOUNT_DECIMALS = 2;
@@ -55,6 +57,8 @@ export interface PerpsOrderFacts {
   coin: string;
   market: PerpsOrderMarketFacts;
   account: PerpsAccountState<PerpsAccount>;
+  /** 全仓预估使用的完整抵押池；未收到快照或数据不足时不编造强平价。 */
+  crossMarginAccount?: PerpsCrossMarginAccount | null;
   /** 单资产容量；在 `activeAssetData` 到达之前为 null。 */
   activeAssetData: PerpsActiveAssetData | null;
   feeRates: PerpsOrderFeeRates;
@@ -75,6 +79,7 @@ export interface PerpsOrderInput {
   amount: string;
   limitPrice: string;
   leverage: number;
+  marginMode: PerpsMarginMode;
   slippagePercent: number;
   /** 由百分比按钮决定数量时置位，一旦手动输入就变回 null。 */
   activePercent: number | null;
@@ -90,7 +95,8 @@ export type PerpsOrderUnavailableCode =
   | 'account-unavailable'
   | 'market-missing'
   | 'market-error'
-  | 'cross-position'
+  | 'cross-margin-unavailable'
+  | 'margin-mode-mismatch'
   | 'holding-long'
   | 'holding-short'
   | 'no-position-to-close'
@@ -114,6 +120,7 @@ export interface PerpsReviewBaseline {
   side: PerpsOrderSide;
   orderType: PerpsOrderType;
   leverage: number;
+  marginMode: PerpsMarginMode;
   slippagePercent: number;
   mode: 'open' | 'close';
 }
@@ -179,10 +186,12 @@ export function composeOrder(
 ): PerpsOrderComposition {
   const market = facts.market.status === 'ready' ? facts.market.market : null;
   const account = facts.account.account;
+  // 容量属于交易场所当前模式；切换后的预览不能沿用另一种模式的按方向抵押品与上限。
+  const activeAssetData = facts.activeAssetData?.leverage.type === input.marginMode
+    ? facts.activeAssetData : null;
   const accountUnavailable = facts.account.availability === 'unavailable' ||
-    (input.mode !== 'close' && !facts.activeAssetData &&
+    (input.mode !== 'close' && !activeAssetData &&
       account?.abstractionMode === 'unknown');
-  const activeAssetData = facts.activeAssetData;
   const marketRates = marketFeeRates(facts.feeRates, market);
   // 估不出这个市场的费率时，内部算术退回账户费率；页面凭 `feeEstimateUnavailable` 不拿它报价。
   const feeRates = marketRates ?? facts.feeRates;
@@ -275,11 +284,13 @@ export function composeOrder(
   });
 
   const preview = composePreview({
+    crossMarginAccount: facts.crossMarginAccount,
     market,
     position,
     closeMode,
     hasAmount,
     leverage: input.leverage,
+    marginMode: input.marginMode,
     isLong,
     orderPriceExact,
     orderSizeExact,
@@ -294,6 +305,7 @@ export function composeOrder(
     account,
     position,
     closeMode,
+    marginMode: input.marginMode,
     isLong,
     orderType: input.orderType,
     slippagePercent: input.slippagePercent,
@@ -331,12 +343,14 @@ export function composeOrder(
               assetId: market.assetId,
               szDecimals: market.szDecimals,
               maxLeverage: market.maxLeverage,
+              marginMode: market.marginMode,
             },
             operation,
             side: input.side,
             referencePriceExact: orderPriceExact,
             requestedSizeExact: orderSizeExact,
             leverage: input.leverage,
+            marginMode: closeMode && position ? position.leverageType : input.marginMode,
             orderType: input.orderType,
             maxSlippagePercent: input.slippagePercent,
           }
@@ -408,6 +422,7 @@ export function intentUnchanged(
     baseline.side === input.side &&
     baseline.orderType === input.orderType &&
     baseline.leverage === input.leverage &&
+    baseline.marginMode === input.marginMode &&
     baseline.slippagePercent === input.slippagePercent &&
     baseline.mode === input.mode
   );
@@ -542,11 +557,13 @@ function marketFeeRates(
 
 /** 预览各行；在还没有东西可供报价时为 null。 */
 function composePreview(params: {
+  crossMarginAccount?: PerpsCrossMarginAccount | null;
   market: PerpsMarket | null;
   position: PerpsPosition | null;
   closeMode: boolean;
   hasAmount: boolean;
   leverage: number;
+  marginMode: PerpsMarginMode;
   isLong: boolean;
   orderPriceExact: string;
   orderSizeExact: string;
@@ -560,6 +577,7 @@ function composePreview(params: {
     closeMode,
     hasAmount,
     leverage,
+    marginMode,
     isLong,
     orderPriceExact,
     orderSizeExact,
@@ -591,6 +609,7 @@ function composePreview(params: {
     };
   }
   const preview = previewOrder({
+    crossMarginAccount: params.crossMarginAccount,
     market,
     executionPriceExact: orderPriceExact,
     // 用按最小变动单位向下取整后的名义价值，而不是输入的那个：保证金和手续费是按真正
@@ -598,6 +617,7 @@ function composePreview(params: {
     notionalExact: executableNotional,
     sizeExact: orderSizeExact,
     leverage,
+    marginMode,
     isLong,
     feeRate: takerRate,
     builderFeeRate: builderRate,
@@ -627,6 +647,7 @@ function orderUnavailable(params: {
   account: PerpsAccount | null;
   position: PerpsPosition | null;
   closeMode: boolean;
+  marginMode: PerpsMarginMode;
   isLong: boolean;
   orderType: PerpsOrderType;
   slippagePercent: number;
@@ -647,6 +668,7 @@ function orderUnavailable(params: {
     account,
     position,
     closeMode,
+    marginMode,
     isLong,
     orderType,
     slippagePercent,
@@ -676,9 +698,11 @@ function orderUnavailable(params: {
   if (marketStatus === 'error') {
     return reason('market-error');
   }
-  // NeoLine 只开逐仓订单，无法改动一个存续中的全仓仓位。
-  if (!closeMode && position?.leverageType === 'cross') {
-    return reason('cross-position');
+  if (!closeMode && marginMode === 'cross' && market?.marginMode) {
+    return reason('cross-margin-unavailable');
+  }
+  if (!closeMode && position && position.leverageType !== marginMode) {
+    return reason('margin-mode-mismatch');
   }
   if (closeMode && account && !position) {
     return reason('no-position-to-close');
@@ -1008,15 +1032,17 @@ function previewClosePosition(params: {
 
 /**
  * 数量与费用用成交参考价，初始保证金用标记价。
- * 强平预估按逐仓抵押品和分档维持保证金计算，未计未来手续费、资金费和成交滑点。
+ * 强平预估按所选模式的抵押品和分档维持保证金计算，未计未来手续费、资金费和成交滑点。
  */
 function previewOrder(params: {
+  crossMarginAccount?: PerpsCrossMarginAccount | null;
   market: PerpsMarket;
   /** 预期入场价；限价单绝不能使用当前的中间价。 */
   executionPriceExact?: BigNumber.Value | null;
   notionalExact: BigNumber.Value;
   sizeExact: string;
   leverage: number;
+  marginMode: PerpsMarginMode;
   isLong: boolean;
   /** 以小数表示的 taker 费率，例如 4.5 个基点写作 0.00045。 */
   feeRate: BigNumber.Value;
@@ -1031,6 +1057,7 @@ function previewOrder(params: {
     notionalExact,
     sizeExact,
     leverage,
+    marginMode,
     isLong,
     feeRate,
     builderFeeRate = 0,
@@ -1051,7 +1078,8 @@ function previewOrder(params: {
   let totalSize = size;
   let entryNotional = notional;
   let collateral = margin;
-  let canEstimate = hasPrice && !!margin;
+  // 全仓的强平取决于共享抵押品与其他仓位，不能用单仓逐仓公式估算。
+  let canEstimate = marginMode === 'isolated' && hasPrice && !!margin;
   if (position) {
     const heldSize = new BigNumber(position.sziExact).absoluteValue();
     const heldEntry = new BigNumber(position.entryPxExact ?? NaN);
@@ -1095,7 +1123,11 @@ function previewOrder(params: {
       .times(liquidationIsLong ? 1 : -1);
     collateral = BigNumber.maximum(collateral, initialMargin.minus(remainingPnl));
   }
-  const liquidationPxExact = canEstimate && size.isGreaterThan(0)
+  const liquidationPxExact = marginMode === 'cross'
+    ? crossLiquidationPrice(
+        params.crossMarginAccount, market.coin, size.times(isLong ? 1 : -1), price, mark, market.marginTiers
+      )
+    : canEstimate && size.isGreaterThan(0)
     ? isolatedLiquidationPrice(totalSize, entryNotional, collateral, liquidationIsLong, market.marginTiers)
     : null;
 

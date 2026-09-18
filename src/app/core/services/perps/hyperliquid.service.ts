@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import {
   Observable,
   concat,
+  merge,
   combineLatest,
   of,
   forkJoin,
@@ -13,7 +14,7 @@ import {
   toArray,
   timeout,
 } from 'rxjs';
-import { map, catchError, shareReplay, filter } from 'rxjs/operators';
+import { map, catchError, shareReplay, filter, takeUntil } from 'rxjs/operators';
 
 import {
   HYPERLIQUID_API,
@@ -21,6 +22,7 @@ import {
   PERPS_USDC_SYSTEM_ADDRESS,
   PerpsCctpHistoryTransfer,
   PerpsAccount,
+  PerpsCrossMarginAccount,
   PerpsActiveAssetData,
   PerpsAccountMode,
   PerpsAssetCtx,
@@ -43,6 +45,7 @@ import { environment } from '@/environments/environment';
 import { isPerpsActivity } from './perps-activity';
 import { cctpCollectedFee } from './perps-cctp-history';
 import { parsePerpsAccount } from './perps-account-state';
+import { crossMarginAccount, PerpsClearinghouseStates, validClearinghouseStates } from './perps-cross-margin';
 import { normalizeIds, parseProtocolJson } from './perps-protocol-json';
 import { PerpsDataChannel } from './perps-data-channel.service';
 import { PerpsExchangeWriteService } from './perps-exchange-write.service';
@@ -64,6 +67,9 @@ interface HyperliquidUserFees {
 
 @Injectable({ providedIn: 'root' })
 export class HyperliquidService {
+  private readonly collateralTokenCache = new Map<string, {
+    expiresAt: number; request: Observable<number | null>;
+  }>();
   private readonly isTestnet = resolvePerpsTestnet(environment.perpsNetwork);
 
 
@@ -393,6 +399,70 @@ export class HyperliquidService {
     );
     this.spotStateCache.set(user, request);
     return request;
+  }
+
+  /** 完整抵押池只为全仓预估订阅，跨 DEX 快照不能被本产品的市场白名单裁剪。 */
+  watchCrossMarginAccount(address: string, dex = ''): Observable<PerpsCrossMarginAccount | null> {
+    const user = address.toLowerCase();
+    return this.getAccountMode(user).pipe(switchMap((mode) => {
+      if (mode === 'default' || mode === 'disabled') {
+        const updates = this.channel.subscribe({ type: 'clearinghouseState', user, dex }).pipe(
+          map((data) => data?.clearinghouseState)
+        );
+        return merge(
+          this.post<any>({ type: 'clearinghouseState', user, dex }).pipe(
+            catchError(() => of(null)), takeUntil(updates)
+          ),
+          updates
+        ).pipe(map((state) => crossMarginAccount(mode, dex, [[dex, state]], null)));
+      }
+      // Portfolio Margin 还涉及多资产折扣和借贷，不能冒用统一账户的抵押池公式。
+      if (mode !== 'unifiedAccount') { return of(null); }
+      const spotUpdates = this.channel.subscribe({ type: 'spotState', user }).pipe(map((data) => data?.spotState));
+      return combineLatest([
+        this.channel.subscribe({ type: 'allDexsClearinghouseState', user }).pipe(
+          map((data) => data?.clearinghouseStates as PerpsClearinghouseStates)
+        ),
+        merge(
+          this.getSpotState(user, true).pipe(catchError(() => of(null)), takeUntil(spotUpdates)),
+          spotUpdates
+        ),
+      ]).pipe(switchMap(([states, spot]) => {
+        if (!validClearinghouseStates(states)) { return of(null); }
+        const dexes = new Set([dex]);
+        for (const [stateDex, state] of states) {
+          if (state?.assetPositions?.length || new BigNumber(state?.crossMaintenanceMarginUsed ?? NaN).isGreaterThan(0)) {
+            dexes.add(stateDex);
+          }
+        }
+        return forkJoin([...dexes].map((name) => this.getCollateralToken(name).pipe(
+          map((token) => [name, token] as const)
+        ))).pipe(map((entries) => crossMarginAccount(mode, dex, states, spot, Object.fromEntries(entries))));
+      }));
+    }));
+  }
+
+  /** 只读有仓位的 DEX 和目标 DEX 的抵押币，不遍历整个市场注册表。 */
+  private getCollateralToken(dex: string): Observable<number | null> {
+    const key = `${this.isTestnet}:${dex}`;
+    const cached = this.collateralTokenCache.get(key);
+    if (cached?.expiresAt > Date.now()) { return cached.request; }
+    const entry = { expiresAt: Date.now() + 30 * 60_000, request: null as Observable<number | null> };
+    entry.request = this.post<any>({ type: 'meta', dex }).pipe(
+      map((meta) => {
+        if (!Number.isSafeInteger(meta?.collateralToken) || meta.collateralToken < 0) {
+          throw new Error('Missing collateral token');
+        }
+        return meta.collateralToken as number;
+      }),
+      catchError(() => {
+        entry.expiresAt = Date.now() + 30_000;
+        return of(null);
+      }),
+      shareReplay({ bufferSize: 1, refCount: false })
+    );
+    this.collateralTokenCache.set(key, entry);
+    return entry.request;
   }
 
   /**

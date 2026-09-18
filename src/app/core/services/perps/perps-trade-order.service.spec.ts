@@ -27,7 +27,9 @@ const intent = (
     assetId: 3,
     szDecimals: 2,
     maxLeverage: 20,
+    marginMode: null,
   },
+  marginMode: 'isolated',
   operation: 'open',
   side: 'long',
   referencePriceExact: '100',
@@ -77,7 +79,7 @@ describe('PerpsTradeOrderService', () => {
       .submit(PRIVATE_KEY, intent())
       .subscribe((value) => (submission = value));
 
-    expect(exchange.updateLeverage).toHaveBeenCalledWith(PRIVATE_KEY, 3, 5, 20);
+    expect(exchange.updateLeverage).toHaveBeenCalledWith(PRIVATE_KEY, 3, 5, 20, 'isolated');
     expect(accounts.refreshAccount).not.toHaveBeenCalled();
     expect(exchange.submitOrder).toHaveBeenCalledTimes(1);
     const order = exchange.submitOrder.calls.mostRecent().args[1];
@@ -113,9 +115,47 @@ describe('PerpsTradeOrderService', () => {
       .submit(PRIVATE_KEY, intent({ leverage: 7 }))
       .subscribe((value) => (submission = value));
 
-    expect(exchange.updateLeverage).toHaveBeenCalledWith(PRIVATE_KEY, 3, 7, 20);
+    expect(exchange.updateLeverage).toHaveBeenCalledWith(PRIVATE_KEY, 3, 7, 20, 'isolated');
     expect(exchange.submitOrder).toHaveBeenCalledTimes(1);
     expect(submission.kind).toBe('order-submitted');
+  });
+
+  for (const orderType of ['market', 'limit'] as const) {
+    it(`applies cross margin before submitting a ${orderType} order`, () => {
+      service.submit(PRIVATE_KEY, intent({ marginMode: 'cross', orderType })).subscribe();
+      expect(exchange.updateLeverage).toHaveBeenCalledOnceWith(PRIVATE_KEY, 3, 5, 20, 'cross');
+      expect(exchange.updateLeverage.calls.first().invocationOrder)
+        .toBeLessThan(exchange.submitOrder.calls.first().invocationOrder);
+      const order = exchange.submitOrder.calls.first().args[1];
+      expect(order.reduceOnly).toBeFalse();
+      expect(order.timeInForce).toBe(orderType === 'market' ? 'Ioc' : 'Gtc');
+    });
+  }
+
+  for (const marginMode of ['noCross', 'strictIsolated'] as const) {
+    it(`rejects cross orders on a ${marginMode} market before signing`, () => {
+      const errors = jasmine.createSpy('errors');
+      service.submit(PRIVATE_KEY, intent({
+        marginMode: 'cross', market: { ...intent().market, marginMode },
+      })).subscribe({ error: errors });
+      expect(errors).toHaveBeenCalledWith(jasmine.objectContaining({ code: 'invalid-intent' }));
+      expect(exchange.updateLeverage).not.toHaveBeenCalled();
+      expect(exchange.submitOrder).not.toHaveBeenCalled();
+    });
+  }
+
+  it('does not submit an order when applying cross margin is rejected', () => {
+    exchange.updateLeverage.and.returnValue(throwError(() => new Error('Cannot change margin mode')));
+    const errors = jasmine.createSpy('errors');
+    service.submit(PRIVATE_KEY, intent({ marginMode: 'cross' })).subscribe({ error: errors });
+    expect(errors).toHaveBeenCalledWith(jasmine.objectContaining({ code: 'leverage-write' }));
+    expect(exchange.submitOrder).not.toHaveBeenCalled();
+  });
+
+  it('reduces a cross position without changing its leverage or margin mode', () => {
+    service.submit(PRIVATE_KEY, intent({ marginMode: 'cross', operation: 'reduce' })).subscribe();
+    expect(exchange.updateLeverage).not.toHaveBeenCalled();
+    expect(exchange.submitOrder.calls.first().args[1].reduceOnly).toBeTrue();
   });
 
   /** 写入失败不会留下任何订单：交易场所压根没见过订单。 */
@@ -320,7 +360,7 @@ describe('PerpsTradeOrderService', () => {
     expect(order.reduceOnly).toBeFalse();
   });
 
-  it('rejects a reverse when the refreshed position is cross-margin', () => {
+  it('rejects a reverse when the refreshed margin mode differs from the reviewed mode', () => {
     accounts.refreshAccount.and.returnValue(
       of({
         availability: 'live',

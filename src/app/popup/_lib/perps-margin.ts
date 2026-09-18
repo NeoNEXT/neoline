@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { PerpsMarginTier, PerpsMeta } from './perps';
+import { PerpsCrossMarginAccount, PerpsMarginTier, PerpsMeta } from './perps';
 
 /** 分档按 DEX 的 meta 解析；小于 50 的协议 ID 自带单档杠杆定义。 */
 export function resolveMarginTiers(
@@ -31,6 +31,62 @@ function validTiers(tiers: PerpsMarginTier[] | null): boolean {
         lower.isGreaterThan(tiers[index - 1].lowerBoundExact) &&
         tier.maxLeverage <= tiers[index - 1].maxLeverage);
   });
+}
+
+/** 对名义价值逐档累计维持保证金，等价于当前档费率乘名义价值再减分档扣减额。 */
+export function maintenanceMargin(notional: BigNumber, tiers: PerpsMarginTier[] | null): BigNumber | null {
+  if (!validTiers(tiers) || !notional.isFinite() || notional.isNegative()) { return null; }
+  let result = new BigNumber(0);
+  for (let index = 0; index < tiers.length; index++) {
+    const lower = new BigNumber(tiers[index].lowerBoundExact);
+    if (notional.isLessThanOrEqualTo(lower)) { break; }
+    const upper = tiers[index + 1]?.lowerBoundExact ?? notional;
+    result = result.plus(BigNumber.minimum(notional, upper).minus(lower)
+      .dividedBy(2 * tiers[index].maxLeverage));
+  }
+  return result;
+}
+
+/**
+ * 其他市场价格不变时，求成交后净仓位的全仓强平价。无需订单杠杆。
+ * 账户权益包含原仓位盈亏；只加新交易和标记价变化的增量，避免重复计入。
+ * E(x) = E(snapshot) + held * (x - snapshotMark) + signedOrder * (x - executionPrice)。
+ * 扣除其他仓位的维持保证金后，复用同一个分档方程求解目标仓位。
+ * https://hyperliquid.gitbook.io/hyperliquid-docs/trading/liquidations
+ */
+export function crossLiquidationPrice(
+  account: PerpsCrossMarginAccount | null | undefined,
+  coin: string,
+  signedOrderSize: BigNumber,
+  executionPrice: BigNumber,
+  markPrice: BigNumber,
+  tiers: PerpsMarginTier[] | null
+): string | null {
+  if (!account || !signedOrderSize.isFinite() || signedOrderSize.isZero() ||
+      !executionPrice.isFinite() || !executionPrice.isGreaterThan(0) ||
+      !markPrice.isFinite() || !markPrice.isGreaterThan(0)) { return null; }
+  const equity = new BigNumber(account.equityExact);
+  const required = new BigNumber(account.maintenanceMarginExact);
+  const held = account.positions.find((position) => position.coin === coin);
+  const heldSize = new BigNumber(held?.sziExact ?? 0);
+  const heldNotional = new BigNumber(held?.positionValueExact ?? 0);
+  const heldRequired = maintenanceMargin(heldNotional, tiers);
+  const netSize = heldSize.plus(signedOrderSize);
+  if (!equity.isFinite() || !required.isFinite() || required.isNegative() ||
+      !heldSize.isFinite() || !heldRequired || netSize.isZero()) { return null; }
+  const otherRequired = required.minus(heldRequired);
+  // 协议维持保证金按 USDC 精度返回；容许末位舍入，不容许用不完整快照低估其他仓位。
+  if (otherRequired.isLessThan('-0.000001')) { return null; }
+  const equityAtMark = equity
+    .plus(heldSize.times(markPrice).minus(heldNotional.times(heldSize.isNegative() ? -1 : 1)))
+    .plus(signedOrderSize.times(markPrice.minus(executionPrice)));
+  return isolatedLiquidationPrice(
+    netSize.absoluteValue(),
+    netSize.absoluteValue().times(markPrice),
+    equityAtMark.minus(BigNumber.maximum(0, otherRequired)),
+    netSize.isGreaterThan(0),
+    tiers
+  );
 }
 
 /**

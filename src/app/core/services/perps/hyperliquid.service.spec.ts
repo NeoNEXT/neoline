@@ -25,6 +25,58 @@ describe('HyperliquidService accounts and fees', () => {
     service = new HyperliquidService(http, channel, writes());
   });
 
+  it('does not let a late REST snapshot replace live cross equity', () => {
+    const rest = new Subject<any>();
+    http.post.and.callFake(((_url, body) => body.type === 'userAbstraction' ? of('default') : rest) as any);
+    const values = [];
+    const subscription = service.watchCrossMarginAccount('0xABC').subscribe((value) => values.push(value));
+    channel.push({ type: 'clearinghouseState', user: '0xabc', dex: '' }, { clearinghouseState: {
+      crossMarginSummary: { accountValue: '116' }, crossMaintenanceMarginUsed: '9', assetPositions: [],
+    } });
+    rest.next({ crossMarginSummary: { accountValue: '60' }, crossMaintenanceMarginUsed: '0', assetPositions: [] });
+    expect(values.map((value) => value.equityExact)).toEqual(['116']);
+    subscription.unsubscribe();
+  });
+
+  it('streams the complete unified collateral pool and caches DEX collateral metadata', () => {
+    http.post.and.callFake(((_url, body) => {
+      if (body.type === 'userAbstraction') { return of('unifiedAccount'); }
+      if (body.type === 'spotClearinghouseState') { return of({ balances: [{ token: 0, total: '136' }] }); }
+      if (body.type === 'meta') { return of({ collateralToken: body.dex === 'other' ? 1 : 0 }); }
+      throw new Error('Unexpected request');
+    }) as any);
+    const values = [];
+    const failed = jasmine.createSpy('failed');
+    const subscription = service.watchCrossMarginAccount('0xABC').subscribe({
+      next: (value) => values.push(value), error: failed,
+    });
+    const positions = (coin, type, marginUsed = '0') => [{ position: {
+      coin, szi: '1', positionValue: '100', leverage: { type }, marginUsed,
+    } }];
+    const snapshot = { clearinghouseStates: [
+      ['', { crossMaintenanceMarginUsed: '5', assetPositions: positions('ETH', 'cross') }],
+      ['outside-product', { crossMaintenanceMarginUsed: '0', assetPositions: positions('outside-product:X', 'isolated', '20') }],
+      ['other', { crossMaintenanceMarginUsed: '5', assetPositions: positions('other:X', 'cross') }],
+    ] };
+    const allDexs = { type: 'allDexsClearinghouseState', user: '0xabc' };
+    channel.push(allDexs, snapshot);
+    expect(values[0]).toEqual({
+      equityExact: '116', maintenanceMarginExact: '5',
+      positions: [{ coin: 'ETH', sziExact: '1', positionValueExact: '100' }],
+    });
+    channel.push({ type: 'spotState', user: '0xabc' }, { spotState: { balances: [{ token: 0, total: '140' }] } });
+    expect(values[1].equityExact).toBe('120');
+    channel.push(allDexs, { clearinghouseStates: [null] });
+    expect(values[2]).toBeNull();
+    channel.push(allDexs, snapshot);
+    expect(values[3].equityExact).toBe('120');
+    expect(failed).not.toHaveBeenCalled();
+    expect(http.post.calls.allArgs().filter((args) => (args[1] as any).type === 'meta').length).toBe(3);
+    subscription.unsubscribe();
+    channel.push(allDexs, snapshot);
+    expect(values.length).toBe(4);
+  });
+
   it('filters both spot coin formats from REST and live activity', () => {
     spyOnProperty(service, 'enabledDexes', 'get').and.returnValue(['', 'xyz']);
     // 现货的两种形状：canonical 对的真名，以及非 canonical 的 `@{index}`。
@@ -119,7 +171,7 @@ describe('HyperliquidService accounts and fees', () => {
         activeAssetData: null,
         feeRates: { ...rates, builderRate: '0' },
       }, {
-        mode: 'open', side: 'long', orderType: 'market', amount: '156.25',
+        mode: 'open', side: 'long', orderType: 'market', amount: '156.25', marginMode: 'isolated',
         limitPrice: '', leverage: 1, slippagePercent: 3, activePercent: null,
       });
       expect(composition.preview.feeExact).toBe('0.045');

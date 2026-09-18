@@ -162,6 +162,26 @@
 
   <!-- 杠杆滑块 -->
   <ng-container *ngIf="!closeMode">
+    <div class="margin-mode" role="group" [attr.aria-label]="'perpsMarginMode' | translate | async">
+      <span class="label">{{ "perpsMarginMode" | translate | async }}</span>
+      <div class="mode-options">
+        <button type="button" [class.active]="marginMode === 'cross'"
+          [attr.aria-pressed]="marginMode === 'cross'"
+          [disabled]="!canSelectMarginMode || !crossMarginAvailable"
+          (click)="setMarginMode('cross')">
+          {{ "perpsCrossMargin" | translate | async }}
+        </button>
+        <button type="button" [class.active]="marginMode === 'isolated'"
+          [attr.aria-pressed]="marginMode === 'isolated'"
+          [disabled]="!canSelectMarginMode"
+          (click)="setMarginMode('isolated')">
+          {{ "perpsIsolatedMargin" | translate | async }}
+        </button>
+      </div>
+    </div>
+    <p class="margin-mode-tip" *ngIf="position || (market && !crossMarginAvailable)">
+      {{ (position ? "perpsMarginModeLocked" : "perpsCrossMarginUnavailable") | translate | async }}
+    </p>
     <div class="leverage-head">
       <span class="label">{{ "perpsLeverage" | translate | async }}</span>
       <span class="max" *ngIf="market"
@@ -169,9 +189,6 @@
         {{ market.maxLeverage }}x</span
       >
     </div>
-    <p class="margin-mode-tip">
-      {{ "perpsIsolatedOnly" | translate | async }}
-    </p>
     <div class="range-control leverage-range">
       <input
         [disabled]="submitting || leverageUpdating"
@@ -217,7 +234,7 @@
         {{ "perpsLiqPrice" | translate | async }}
         <tooltip
           placement="topLeft"
-          [tip]="'perpsLiqPriceTip' | translate | async"
+          [tip]="(marginMode === 'cross' ? 'perpsCrossLiqPriceTip' : 'perpsLiqPriceTip') | translate | async"
         >
           <img src="assets/images/common/tooltip.svg" alt="" />
         </tooltip>
@@ -284,19 +301,9 @@
       }}</span>
       <span
         class="value"
-        *ngIf="!feeEstimateUnavailable && !quotesBothFeeSides"
-        >{{ feeText }}</span
+        *ngIf="!feeEstimateUnavailable"
       >
-      <!-- 挂在盘口上的限价单通常以 maker 成交，所以两侧费率都报出来。 -->
-      <span
-        class="value fee-sides"
-        *ngIf="!feeEstimateUnavailable && quotesBothFeeSides"
-      >
-        <i class="side-label">{{ "perpsMakerShort" | translate | async }}</i>
-        <b [class.rebate]="makerFeeIsRebate">{{ makerFeeText }}</b>
-        <i class="separator">/</i>
-        <i class="side-label">{{ "perpsTakerShort" | translate | async }}</i>
-        <b>{{ feeText }}</b>
+        {{ feeText }} / <span [class.rebate]="makerFeeIsRebate">{{ makerFeeText }}</span>
       </span>
     </div>
     <div class="row" *ngIf="orderType === 'market'">
@@ -358,7 +365,7 @@
 
   <!--
     签名之前的那一遍确认，用的是存取款那张面板，内容对齐 Hyperliquid 自家的确认框：
-    方向、数量、价格、预估强平价，四行。
+    方向、保证金模式、数量、价格、预估强平价。
 
     它**不是**表单的副本。金额、杠杆、保证金、费用、滑点都留在表单上 —— 用户刚刚在那里
     读过并按下了「检查订单」，而杠杆还印在下面那个按钮上。这一层要回答的只有「我按下去
@@ -386,6 +393,10 @@
       <div class="row">
         <span class="label">{{ "perpsOrderSize" | translate | async }}</span>
         <span class="value">{{ confirmSizeText }} {{ symbol }}</span>
+      </div>
+      <div class="row margin-mode-row">
+        <span class="label">{{ "perpsMarginMode" | translate | async }}</span>
+        <span class="value">{{ marginModeLabel | translate | async }}</span>
       </div>
       <div class="row">
         <span class="label">{{ "perpsEntryPrice" | translate | async }}</span>

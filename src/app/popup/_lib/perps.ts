@@ -624,7 +624,7 @@ export interface PerpsPosition {
   liquidationPxExact: string | null;
   /** 整数形式的杠杆设置；与价格不同，它作为 `number` 是精确的。 */
   leverage: number;
-  leverageType: 'cross' | 'isolated';
+  leverageType: PerpsMarginMode;
   marginUsedExact: string;
   isLong: boolean;
 }
@@ -634,7 +634,7 @@ export interface PerpsActiveAssetData {
   user: string;
   coin: string;
   leverage: {
-    type: 'cross' | 'isolated';
+    type: PerpsMarginMode;
     value: number;
     rawUsd?: number;
   };
@@ -682,6 +682,13 @@ export interface PerpsAccount {
   /** 现货 USDC 中被占作保证金的部分（它的 hold）；在统一账户下才有意义。 */
   spotUsdcHoldExact: string;
   positions: PerpsPosition[];
+}
+
+/** 下单预估所用的完整全仓抵押池；权益已排除逐仓占用，不能以可用余额替代。 */
+export interface PerpsCrossMarginAccount {
+  equityExact: string;
+  maintenanceMarginExact: string;
+  positions: Pick<PerpsPosition, 'coin' | 'sziExact' | 'positionValueExact'>[];
 }
 
 /**
@@ -855,6 +862,7 @@ export interface PerpsFundingUpdate {
 
 export type PerpsOrderSide = 'long' | 'short';
 export type PerpsOrderType = 'market' | 'limit';
+export type PerpsMarginMode = 'cross' | 'isolated';
 export type PerpsTradeIntent =
   | 'open'
   | 'increase'
@@ -872,7 +880,7 @@ export interface PerpsSignature {
 export interface PerpsTradeOrderIntent {
   market: Pick<
     PerpsMarket,
-    'key' | 'coin' | 'dex' | 'assetId' | 'szDecimals' | 'maxLeverage'
+    'key' | 'coin' | 'dex' | 'assetId' | 'szDecimals' | 'maxLeverage' | 'marginMode'
   >;
   operation: PerpsTradeIntent;
   side: PerpsOrderSide;
@@ -880,6 +888,7 @@ export interface PerpsTradeOrderIntent {
   referencePriceExact: string;
   /** 请求的基础数量；全平时忽略。 */
   requestedSizeExact: string;
+  marginMode: PerpsMarginMode;
   leverage: number;
   orderType: PerpsOrderType;
   /** 市价单允许的最大价格偏差，以百分比计，例如 1 表示 1%。 */

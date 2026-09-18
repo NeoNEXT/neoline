@@ -26,9 +26,6 @@
     <div class="card-margin" *ngIf="!accountLoadError">
       {{ "perpsAvailableMargin" | translate | async }}
       {{ availableMarginExact | perpsUsd }}
-      ·
-      {{ "perpsUsedMargin" | translate | async }}
-      {{ usedMarginExact | perpsUsd }}
     </div>
     <div class="card-spot" *ngIf="hasSeparateSpotUsdc">
       {{ "perpsSpotSeparate" | translate | async }}

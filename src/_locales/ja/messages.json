@@ -2177,11 +2177,23 @@
   "perpsAutoClose": {
     "message": "自動決済"
   },
-  "perpsIsolatedOnly": {
-    "message": "証拠金モード：分離（NeoLine は分離注文のみ対応）"
+  "perpsMarginMode": {
+    "message": "証拠金モード"
   },
-  "perpsCrossPositionUnsupported": {
-    "message": "この市場にはクロスマージンのポジションがあります。NeoLine は分離注文のみ対応しているため、追加注文はできません。"
+  "perpsCrossMargin": {
+    "message": "クロス"
+  },
+  "perpsIsolatedMargin": {
+    "message": "分離"
+  },
+  "perpsCrossMarginUnavailable": {
+    "message": "この市場は分離マージンのみ対応しています。"
+  },
+  "perpsMarginModeLocked": {
+    "message": "証拠金モードは現在のポジションに従います。切り替えるにはポジションを決済してください。"
+  },
+  "perpsCrossLiqPriceTip": {
+    "message": "共有口座資産と全クロスポジションの維持証拠金から推定し、他市場の価格は一定と仮定します。将来の手数料・資金調達料は含まず、担保データが不完全な場合は推定できません。"
   },
   "perpsApplyLeverage": {
     "message": "ポジションにレバレッジを適用"

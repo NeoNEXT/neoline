@@ -23,13 +23,14 @@ const DEFAULT_LEVERAGE = 2;
 /**
  * 用户亲手给过值的字段。
  *
- * 只有这四个有播种规则，所以也只有这四个需要被记住。启动参数不算 —— 路由里的 `side` 和
+ * 只有带播种规则的字段需要被记住。启动参数不算 —— 路由里的 `side` 和
  * 存储里的 `slippagePercent` 只读一次、没有帧、没有顺序问题，页面在装配时直接写进输入即可
  * （`slippagePercent` 因此根本不出现在这里：它没有播种规则，标记它会留下一个没人读的位）。
  */
 export type PerpsOrderUserSetField =
   | 'side'
   | 'leverage'
+  | 'marginMode'
   | 'limitPrice'
   | 'amount';
 
@@ -64,6 +65,15 @@ export function seedForm(
   const seed: Partial<PerpsOrderInput> = {};
   const closeMode = input.mode === 'close';
   const position = positionFor(facts);
+
+  // 已有仓位的模式优先；用户只能为尚未持仓的市场选择模式。
+  if (position) {
+    seed.marginMode = position.leverageType;
+  } else if (market.marginMode) {
+    seed.marginMode = 'isolated';
+  } else if (!touched.has('marginMode') && facts.activeAssetData) {
+    seed.marginMode = facts.activeAssetData.leverage.type;
+  }
 
   // 一次性：市价单所用的同一个参考价，已按这个市场能报出的价位量化过。
   if (!touched.has('limitPrice') && !input.limitPrice) {
@@ -133,9 +143,14 @@ function seededLeverage(
   if (closeMode) {
     return position ? position.leverage : null;
   }
-  const exchange = facts.activeAssetData?.leverage.value;
+  const activeLeverage = facts.activeAssetData?.leverage;
+  const exchange = !position || activeLeverage?.type === position.leverageType
+    ? activeLeverage?.value : null;
   if (exchange && exchange >= 1 && exchange <= market.maxLeverage) {
     return exchange;
+  }
+  if (position) {
+    return Math.min(position.leverage, market.maxLeverage);
   }
   return Math.min(DEFAULT_LEVERAGE, market.maxLeverage);
 }

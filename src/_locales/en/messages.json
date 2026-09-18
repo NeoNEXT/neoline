@@ -2177,11 +2177,23 @@
   "perpsAutoClose": {
     "message": "Auto-close"
   },
-  "perpsIsolatedOnly": {
-    "message": "Margin mode: Isolated (NeoLine supports isolated orders only)"
+  "perpsMarginMode": {
+    "message": "Margin mode"
   },
-  "perpsCrossPositionUnsupported": {
-    "message": "This market has an open cross-margin position. NeoLine cannot increase it because only isolated orders are supported."
+  "perpsCrossMargin": {
+    "message": "Cross"
+  },
+  "perpsIsolatedMargin": {
+    "message": "Isolated"
+  },
+  "perpsCrossMarginUnavailable": {
+    "message": "This market only supports isolated margin."
+  },
+  "perpsMarginModeLocked": {
+    "message": "Margin mode follows the existing position. Close the position before switching modes."
+  },
+  "perpsCrossLiqPriceTip": {
+    "message": "Estimated from shared account equity and all cross-position maintenance margin, assuming other market prices stay unchanged. Excludes future fees and funding; unavailable when collateral data is incomplete."
   },
   "perpsApplyLeverage": {
     "message": "Apply leverage to position"

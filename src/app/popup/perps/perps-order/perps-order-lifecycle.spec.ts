@@ -44,6 +44,7 @@ const baseline = (): PerpsReviewBaseline => ({
   limitPrice: '',
   side: 'long',
   orderType: 'market',
+  marginMode: 'isolated',
   leverage: 10,
   slippagePercent: 3,
   mode: 'open',

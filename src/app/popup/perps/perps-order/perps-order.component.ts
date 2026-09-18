@@ -23,6 +23,7 @@ import { STORAGE_NAME } from '@popup/_lib';
 import { PopupPerpsSlippageDialogComponent } from '@popup/_dialogs/perps-slippage/perps-slippage.dialog';
 import {
   PerpsMarket,
+  PerpsMarginMode,
   PerpsConnectionState,
   PerpsOrderPreview,
   PerpsOrderSide,
@@ -83,7 +84,8 @@ const UNAVAILABLE_MESSAGES: Record<PerpsOrderUnavailableCode, string> = {
   'account-unavailable': 'perpsLoadFailed',
   'market-missing': 'perpsMarketNotFound',
   'market-error': 'perpsLoadFailed',
-  'cross-position': 'perpsCrossPositionUnsupported',
+  'cross-margin-unavailable': 'perpsCrossMarginUnavailable',
+  'margin-mode-mismatch': 'perpsMarginModeLocked',
   'holding-long': 'perpsHoldingLongChooseExit',
   'holding-short': 'perpsHoldingShortChooseExit',
   'no-position-to-close': 'perpsNoPositionToClose',
@@ -107,6 +109,7 @@ function sameInput(a: PerpsOrderInput, b: PerpsOrderInput): boolean {
     a.amount === b.amount &&
     a.limitPrice === b.limitPrice &&
     a.leverage === b.leverage &&
+    a.marginMode === b.marginMode &&
     a.slippagePercent === b.slippagePercent &&
     a.activePercent === b.activePercent
   );
@@ -155,6 +158,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   limitPrice = '';
   amount = '';
   leverage = 1;
+  marginMode: PerpsMarginMode = 'isolated';
   leverageUpdating = false;
   slippagePercent = PERPS_DEFAULT_SLIPPAGE_PERCENT;
   activePercent: number = null;
@@ -172,6 +176,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   private accountStateSub: Unsubscribable;
   private marketsSub: Unsubscribable;
   private activeAssetDataSub: Unsubscribable;
+  private crossMarginSub: Unsubscribable;
   private userFeeSub: Unsubscribable;
   /**
    * 这一单走到哪一步了 —— 审核、提交、下落未明。页面自己的那道闸门整个在里面；
@@ -297,6 +302,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     this.accountStateSub?.unsubscribe();
     this.marketsSub?.unsubscribe();
     this.activeAssetDataSub?.unsubscribe();
+    this.crossMarginSub?.unsubscribe();
     this.userFeeSub?.unsubscribe();
     this.lifecycle.dispose();
   }
@@ -354,6 +360,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       this.reviewing || this.submitting
     );
     Object.assign(this, seed);
+    this.loadCrossMarginAccount();
   }
 
   /**
@@ -446,6 +453,16 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       });
   }
 
+  private loadCrossMarginAccount() {
+    if (this.crossMarginSub || !this.address || this.destroyed || this.closeMode || this.marginMode !== 'cross') {
+      return;
+    }
+    this.crossMarginSub = this.hyperliquid.watchCrossMarginAccount(this.address, this.dex).subscribe({
+      next: (crossMarginAccount) => this.patchFacts({ crossMarginAccount }),
+      error: () => this.patchFacts({ crossMarginAccount: null }),
+    });
+  }
+
   /** 在一次交易场所写入之后，刷新这同一条状态流。 */
   private refreshAccount() {
     if (this.address) {
@@ -504,6 +521,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       amount: this.amount,
       limitPrice: this.limitPrice,
       leverage: this.leverage,
+      marginMode: this.marginMode,
       slippagePercent: this.slippagePercent,
       activePercent: this.activePercent,
     };
@@ -627,7 +645,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return formatFeeRatePercent(this.composition.feeRates.builderRate);
   }
 
-  /** 费率始终显示；一旦订单有了数量，再加上它对这笔订单意味着多少钱。 */
+  /** 市价和限价均显示 Taker / Maker 总费率，不附带手续费金额。 */
   get feeText(): string {
     return this.feeSideText(this.composition.feeRates.takerRate);
   }
@@ -637,21 +655,11 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 一个费率，以及订单有了数量之后它折成多少美元。
-   *
-   * 两者都是总收费 —— Hyperliquid 的费率加上 NeoLine 的 builder 费用 —— 因为从账户里出去的
-   * 就是这个数。总额为负时保留符号：在返佣档位上成交会付钱给账户，把它压到 "$0.00" 等于
-   * 悄悄抹掉用户应得的钱。
+   * 两侧费率都包含 Hyperliquid 费率与 NeoLine builder 费用，返佣档位保留负号。
    */
   private feeSideText(rate: string): string {
     const total = new BigNumber(rate).plus(this.composition.feeRates.builderRate);
-    const formattedRate = formatFeeRatePercent(total);
-    const preview = this.preview;
-    if (!preview) {
-      return formattedRate;
-    }
-    const amount = new BigNumber(preview.notionalExact).times(total);
-    return `${formattedRate} (${formatUsd(amount.toFixed())})`;
+    return formatFeeRatePercent(total);
   }
 
   /**
@@ -736,8 +744,33 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     }
   }
 
+  get canSelectMarginMode(): boolean {
+    return !this.closeMode && !!this.market && !!this.facts.account.account &&
+      !this.position && !this.submitting && !this.leverageUpdating && !this.executionStatusUnknown;
+  }
+
+  get crossMarginAvailable(): boolean {
+    return !!this.market && !this.market.marginMode;
+  }
+
+  get marginModeLabel(): string {
+    return this.marginMode === 'cross' ? 'perpsCrossMargin' : 'perpsIsolatedMargin';
+  }
+
+  setMarginMode(mode: PerpsMarginMode) {
+    if (!this.canSelectMarginMode || (mode === 'cross' && !this.crossMarginAvailable)) {
+      return;
+    }
+    this.marginMode = mode;
+    this.loadCrossMarginAccount();
+    this.touched.add('marginMode');
+    this.lifecycle.edited();
+    this.repricePercent();
+  }
+
   get canApplyLeverage(): boolean {
-    return !this.closeMode && this.position?.leverageType === 'isolated' &&
+    return !this.closeMode && !!this.position &&
+      this.position.leverageType === this.marginMode &&
       this.position.leverage !== this.leverage;
   }
 
@@ -755,6 +788,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     const market = this.market;
     const previous = this.position.leverage;
     const leverage = this.leverage;
+    const marginMode = this.position.leverageType;
     this.lifecycle.edited();
     this.leverageUpdating = true;
     let applied = false;
@@ -766,7 +800,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         return;
       }
       await firstValueFrom(this.writes.updateLeverage(
-        privateKey, market.assetId, leverage, market.maxLeverage
+        privateKey, market.assetId, leverage, market.maxLeverage, marginMode
       ));
       applied = true;
       if (!this.destroyed) {
@@ -1006,6 +1040,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       side: this.side,
       orderType: this.orderType,
       leverage: this.leverage,
+      marginMode: this.marginMode,
       slippagePercent: this.slippagePercent,
       mode: this.closeMode ? 'close' : 'open',
     });

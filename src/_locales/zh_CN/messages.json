@@ -2177,11 +2177,23 @@
   "perpsAutoClose": {
     "message": "自动止盈止损"
   },
-  "perpsIsolatedOnly": {
-    "message": "保证金模式：逐仓（NeoLine 仅支持逐仓订单）"
+  "perpsMarginMode": {
+    "message": "保证金模式"
   },
-  "perpsCrossPositionUnsupported": {
-    "message": "该市场存在全仓持仓。NeoLine 仅支持逐仓订单，无法在此加仓。"
+  "perpsCrossMargin": {
+    "message": "全仓"
+  },
+  "perpsIsolatedMargin": {
+    "message": "逐仓"
+  },
+  "perpsCrossMarginUnavailable": {
+    "message": "该市场仅支持逐仓保证金。"
+  },
+  "perpsMarginModeLocked": {
+    "message": "保证金模式沿用当前持仓，平仓后可切换。"
+  },
+  "perpsCrossLiqPriceTip": {
+    "message": "根据共享账户权益及所有全仓持仓的维持保证金预估，假设其他市场价格不变。未计未来手续费和资金费；抵押品数据不完整时无法预估。"
   },
   "perpsApplyLeverage": {
     "message": "应用杠杆到当前仓位"
