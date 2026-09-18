@@ -54,6 +54,28 @@ describe('PerpsExchangeWriteService orders', () => {
     expect(lastAction().builder).toBeUndefined();
   }));
 
+  for (const rejected of [false, true]) {
+    it(`keeps the filled parent result when a protection child is ${rejected ? 'rejected' : 'accepted'}`, fakeAsync(() => {
+      http.post.and.returnValue(of({ status: 'ok', response: { type: 'order', data: { statuses: [
+        { filled: { totalSz: '1.25', avgPx: '100', oid: '1' } },
+        rejected ? { error: 'Invalid trigger price' } : { resting: { oid: '2' } },
+      ] } } }) as any);
+      let result;
+      service.submitOrder(PRIVATE_KEY, { ...ORDER, protection: [{
+        kind: 'tp', triggerPriceExact: '120', priceExact: '108', sizeExact: '1.25',
+        cloid: '0x00000000000000000000000000000002',
+      }] }).subscribe((value) => result = value);
+      flushMicrotasks();
+      expect(lastAction().grouping).toBe('normalTpsl');
+      expect(lastAction().orders[1]).toEqual({ a: 3, b: false, p: '108', s: '1.25', r: true,
+        t: { trigger: { isMarket: true, triggerPx: '120', tpsl: 'tp' } }, c: '0x00000000000000000000000000000002',
+      });
+      expect(result.status).toBe('filled');
+      expect(!!result.protectionError).toBe(rejected);
+      expect(http.post).toHaveBeenCalledTimes(1);
+    }));
+  }
+
   it('interprets partial fills through the adapter interface', fakeAsync(() => {
     http.post.and.returnValue(
       of({

@@ -1017,7 +1017,6 @@ describe('composeOrder', () => {
     expect(composed.operation).toBe('increase');
     expect(composed.availability).toBeNull();
     // 交易场所自己给出的数字会显示在估算值旁边。
-    expect(composed.showsCurrentLiquidationPrice).toBeTrue();
   });
 
   /**

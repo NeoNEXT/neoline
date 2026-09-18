@@ -172,30 +172,118 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       .replace(/\s+/g, ' ')
       .trim();
 
+  describe('止盈止损', () => {
+    it('reports an invalid trigger only on final submission, including price changes after review', async () => {
+      const notify = spyOn(TestBed.inject(GlobalService), 'snackBarTip');
+      fixture.detectChanges();
+      component.amount = '200';
+      component.setProtectionEnabled(true);
+      component.setProtectionPrice('tp', '1800');
+      fixture.detectChanges();
+      expect(notify).not.toHaveBeenCalled();
+      expect(fixture.nativeElement.querySelector('.error-tip')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.submit-wrap button').disabled).toBeFalse();
+      fixture.nativeElement.querySelector('.submit-wrap button').click();
+      expect(notify).not.toHaveBeenCalled();
+      expect(component.reviewing).toBeTrue();
+      fixture.detectChanges();
+      expect(text('.confirm-sheet')).toContain('$1800');
+      const submit = spyOn(TestBed.inject(PerpsTradeOrderService), 'submit');
+      await component.submit();
+      expect(notify).toHaveBeenCalledWith('perpsInvalidProtection');
+      expect(submit).not.toHaveBeenCalled();
+      component.setProtectionPrice('tp', '2200');
+      component.review();
+      expect(component.reviewing).toBeTrue();
+      // 审核后行情越过触发价，最终提交仍须校验，不签名或发单。
+      markets.next({ ...MARKET, markPxExact: '2300', midPxExact: '2300' });
+      await component.submit();
+      expect(notify).toHaveBeenCalledTimes(2);
+      expect(submit).not.toHaveBeenCalled();
+    });
+
+    it('uses the simplified market form and keeps protection optional', () => {
+      fixture.detectChanges();
+      component.amount = '200';
+      fixture.detectChanges();
+      expect(component.marginMode).toBe('isolated');
+      expect(component.orderType).toBe('market');
+      expect(fixture.nativeElement.querySelector('.order-type')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.margin-mode')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.slippage-value')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.protection-fields')).toBeNull();
+      fixture.nativeElement.querySelector('.protection-switch').click();
+      fixture.detectChanges();
+      expect(component.canSubmit).toBeTrue();
+      expect(component.composition.intent.protection).toBeUndefined();
+      expect(fixture.nativeElement.querySelector('.protection-tip')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.error-tip')).toBeNull();
+      expect(fixture.nativeElement.querySelectorAll('.protection-row').length).toBe(2);
+      const tp: HTMLInputElement = fixture.nativeElement.querySelector('.protection-price input');
+      tp.value = '2200';
+      tp.dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+      expect(component.canSubmit).toBeTrue();
+      expect(component.composition.intent.protection).toEqual({ takeProfitPriceExact: '2200' });
+      component.review();
+      fixture.detectChanges();
+      expect(text('.confirm-sheet')).toContain('$2200');
+      component.setProtectionPrice('sl', '1800');
+      expect(component.reviewing).toBeFalse();
+      component.setProtectionEnabled(false);
+      expect(component.composition.intent.protection).toBeUndefined();
+    });
+
+    it('links price, leveraged return and USDC for both directions', () => {
+      fixture.detectChanges();
+      component.amount = '200';
+      component.setProtectionEnabled(true);
+      component.setProtectionPrice('tp', '2200');
+      expect(component.protectionReturn('tp')).toBe('100');
+      component.setProtectionReturn('sl', '50');
+      component.finishProtectionReturn('sl');
+      expect(component.stopLossPrice).toBe('1900');
+      component.setSide('short');
+      expect(component.canSubmit).toBeTrue();
+      expect(component.composition.submittable).toBeFalse();
+      component.setProtectionPrice('tp', '1900');
+      component.setProtectionPrice('sl', '2100');
+      expect(component.canSubmit).toBeTrue();
+      component.setProtectionUnit('tp', 'USDC');
+      expect(component.protectionReturn('tp')).toBe('10');
+      component.setProtectionReturn('tp', '5');
+      expect(component.takeProfitPrice).toBe('1950');
+    });
+
+    it('does not attach protection when reducing or closing a position', () => {
+      queryParams = { close: '1' };
+      account = { positions: [ethPosition()] };
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.protection')).toBeNull();
+      component.setProtectionEnabled(true);
+      expect(component.protectionEnabled).toBeFalse();
+    });
+  });
+
   describe('保证金模式', () => {
     it('selects cross margin and carries it into the confirmation and order intent', () => {
       account.availableBalanceExact = '1000';
+      queryParams = { marginMode: 'cross' };
       fixture.detectChanges();
       component.amount = '200';
-      const crossButton: HTMLButtonElement = fixture.nativeElement.querySelector('.mode-options button');
-      crossButton.click();
       fixture.detectChanges();
-      expect(crossButton.getAttribute('aria-pressed')).toBe('true');
+      expect(fixture.nativeElement.querySelector('.mode-options')).toBeNull();
       expect(component.composition.intent.marginMode).toBe('cross');
       expect(component.liquidationPriceText).toBe('$1,479.59');
       component.review();
       fixture.detectChanges();
-      expect(text('.confirm-sheet .margin-mode-row .value')).toBe('perpsCrossMargin');
+      expect(component.composition.intent.marginMode).toBe('cross');
       expect(text('.confirm-sheet')).toContain('$1,479.59');
       crossAccount.next({ equityExact: '80', maintenanceMarginExact: '5', positions: [] });
       fixture.detectChanges();
       expect(component.liquidationPriceText).toBe('$1,275.51');
       expect(text('.confirm-sheet')).toContain('$1,275.51');
       expect(component.reviewing).toBeTrue();
-      component.setMarginMode('isolated');
-      fixture.detectChanges();
-      expect(component.reviewing).toBeFalse();
-      expect(component.composition.intent.marginMode).toBe('isolated');
       fixture.destroy();
       expect(crossAccount.observed).toBeFalse();
     });
@@ -209,20 +297,14 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       expect(component.marginMode).toBe('cross');
       expect(component.leverage).toBe(2);
       expect(component.canSubmit).toBeTrue();
-      expect(text('.margin-mode-tip')).toBe('perpsMarginModeLocked');
-      const buttons: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('.mode-options button'));
-      expect(buttons.every((button) => button.disabled)).toBeTrue();
-      buttons[1].click();
-      expect(component.marginMode).toBe('cross');
+      expect(fixture.nativeElement.querySelector('.mode-options')).toBeNull();
     });
 
     it('disables cross margin on an isolated-only market', () => {
+      queryParams = { marginMode: 'cross' };
       markets.next({ ...MARKET, marginMode: 'noCross' });
       fixture.detectChanges();
-      const crossButton: HTMLButtonElement = fixture.nativeElement.querySelector('.mode-options button');
-      expect(crossButton.disabled).toBeTrue();
-      expect(text('.margin-mode-tip')).toBe('perpsCrossMarginUnavailable');
-      crossButton.click();
+      expect(fixture.nativeElement.querySelector('.mode-options')).toBeNull();
       expect(component.marginMode).toBe('isolated');
     });
   });
@@ -412,12 +494,11 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       expect(inputs.length).toBeGreaterThan(0);
       expect(inputs.every((input) => input.disabled)).toBeTrue();
       fixture.nativeElement.querySelector('.side-toggle .option:last-child').click();
-      fixture.nativeElement.querySelector('.order-type .chip.plain').click();
+      expect(fixture.nativeElement.querySelector('.order-type')).toBeNull();
       expect(component.side).toBe('long');
       expect(component.orderType).toBe('market');
-      expect(fixture.nativeElement.querySelector('.edit-slippage').disabled).toBeTrue();
-      const modes: HTMLButtonElement[] = Array.from(fixture.nativeElement.querySelectorAll('.mode-options button'));
-      expect(modes.every((button) => button.disabled)).toBeTrue();
+      expect(fixture.nativeElement.querySelector('.edit-slippage')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.protection-switch').disabled).toBeTrue();
     });
 
     it('disables the button while nothing can be submitted', () => {
@@ -450,8 +531,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       fixture.detectChanges();
     };
 
-    /** 保证金模式也是用户签名前需要确认的交易条件。 */
-    it('states the direction, size, margin mode, price and liquidation estimate', () => {
+    it('states the direction, size, price and liquidation estimate', () => {
       review();
 
       const labels = Array.from(
@@ -460,7 +540,6 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       expect(labels).toEqual([
         'perpsOrderDirection',
         'perpsOrderSize',
-        'perpsMarginMode',
         'perpsEntryPrice',
         'perpsEstimatedLiqPrice',
       ]);
@@ -469,7 +548,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       // 200 USDC 在 $2,000 上是 0.1 ETH —— 交易场所收到的是这个数，而表单上没有它。
       expect(sheetRow('perpsOrderSize')).toBe('0.1 ETH');
       expect(sheetRow('perpsEntryPrice')).toBe(
-        `perpsMarketPriceValue · ${text('.order-header .price')}`
+        text('.order-header .price')
       );
       expect(sheetRow('perpsEstimatedLiqPrice')).toBe(
         component.liquidationPriceText

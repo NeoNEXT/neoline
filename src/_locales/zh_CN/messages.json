@@ -2311,5 +2311,29 @@
   },
   "perpsCheckOrderStatus": {
     "message": "重新查询"
+  },
+  "perpsTakeProfitStopLoss": {
+    "message": "止盈/止损"
+  },
+  "perpsTakeProfitPrice": {
+    "message": "止盈价格"
+  },
+  "perpsStopLossPrice": {
+    "message": "止损价格"
+  },
+  "perpsProtectionProfit": {
+    "message": "收益"
+  },
+  "perpsProtectionLoss": {
+    "message": "亏损"
+  },
+  "perpsProtectionUnit": {
+    "message": "收益/亏损单位"
+  },
+  "perpsInvalidProtection": {
+    "message": "请填写至少一个有效触发价：多单止盈价高于成交参考价、止损价低于成交参考价；空单相反。"
+  },
+  "perpsProtectionNotConfirmed": {
+    "message": "订单已处理，但止盈/止损未全部确认，请检查当前委托，勿重复开仓。"
   }
 }

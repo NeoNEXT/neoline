@@ -52,52 +52,16 @@
     </b>
   </div>
 
-  <div class="order-type">
-    <span
-      class="chip"
-      [class.active]="orderType === 'market'"
-      (click)="!submitting && setOrderType('market')"
-    >
-      {{ "perpsMarketOrder" | translate | async }}
-    </span>
-    <span
-      class="chip plain"
-      [class.active]="orderType === 'limit'"
-      (click)="!submitting && setOrderType('limit')"
-    >
-      {{ "perpsLimitOrder" | translate | async }}
-    </span>
-    <div class="account-summary" *ngIf="!closeMode">
-      <span class="available">
-        {{ "perpsAvailable" | translate | async }}
-        <b>{{ formatBalance(availableExact) }} USDC</b>
-      </span>
-      <span class="current-position" *ngIf="position">
-        {{ "perpsCurrentPosition" | translate | async }}：
-        <b [class.short]="!position.isLong">{{ formattedPositionSize }} {{ symbol }}</b>
-      </span>
+  <div class="account-summary" *ngIf="!closeMode">
+    <div class="available">
+      <span>{{ "perpsAvailable" | translate | async }}</span>
+      <b>{{ formatBalance(availableExact) }} USDC</b>
+    </div>
+    <div class="current-position">
+      <span>{{ "perpsCurrentPosition" | translate | async }}</span>
+      <b [class.short]="position && !position.isLong">{{ formattedPositionSize }} {{ symbol }}</b>
     </div>
   </div>
-
-  <!--
-    整块是一个 `label`，所以点这一行的任何地方都会聚焦到输入框 —— 输入框本身只有 130px 宽、
-    靠在右边，而它左边那一大片看起来同样可点。用原生 label 而不是 click 处理器：键盘、
-    读屏和禁用态都跟着一起对了。
-  -->
-  <label class="input-box" *ngIf="orderType === 'limit'">
-    <span class="label">{{ "perpsLimitPrice" | translate | async }}</span>
-    <span class="input-value">
-      <input
-        [disabled]="submitting || leverageUpdating"
-        type="text"
-        inputmode="decimal"
-        [value]="limitPrice"
-        (input)="onLimitPriceInput($any($event.target).value)"
-        (blur)="onLimitPriceBlur()"
-      />
-      <span class="unit">USDC</span>
-    </span>
-  </label>
 
   <!-- 金额 -->
   <label class="input-box">
@@ -162,26 +126,6 @@
 
   <!-- 杠杆滑块 -->
   <ng-container *ngIf="!closeMode">
-    <div class="margin-mode" role="group" [attr.aria-label]="'perpsMarginMode' | translate | async">
-      <span class="label">{{ "perpsMarginMode" | translate | async }}</span>
-      <div class="mode-options">
-        <button type="button" [class.active]="marginMode === 'cross'"
-          [attr.aria-pressed]="marginMode === 'cross'"
-          [disabled]="!canSelectMarginMode || !crossMarginAvailable"
-          (click)="setMarginMode('cross')">
-          {{ "perpsCrossMargin" | translate | async }}
-        </button>
-        <button type="button" [class.active]="marginMode === 'isolated'"
-          [attr.aria-pressed]="marginMode === 'isolated'"
-          [disabled]="!canSelectMarginMode"
-          (click)="setMarginMode('isolated')">
-          {{ "perpsIsolatedMargin" | translate | async }}
-        </button>
-      </div>
-    </div>
-    <p class="margin-mode-tip" *ngIf="position || (market && !crossMarginAvailable)">
-      {{ (position ? "perpsMarginModeLocked" : "perpsCrossMarginUnavailable") | translate | async }}
-    </p>
     <div class="leverage-head">
       <span class="label">{{ "perpsLeverage" | translate | async }}</span>
       <span class="max" *ngIf="market"
@@ -240,10 +184,6 @@
         </tooltip>
       </span>
       <span class="value">
-        <ng-container *ngIf="showsCurrentLiquidationPrice">
-          <i class="current">{{ currentLiquidationPriceText }}</i>
-          <i class="arrow">→</i>
-        </ng-container>
         {{ liquidationPriceText }}
       </span>
     </div>
@@ -306,30 +246,43 @@
         {{ feeText }} / <span [class.rebate]="makerFeeIsRebate">{{ makerFeeText }}</span>
       </span>
     </div>
-    <div class="row" *ngIf="orderType === 'market'">
-      <span class="label">
-        {{ "perpsMaxSlippage" | translate | async }}
-        <tooltip
-          placement="topLeft"
-          [tip]="'perpsSlippageTip' | translate | async"
-        >
-          <img src="assets/images/common/tooltip.svg" alt="" />
-        </tooltip>
-      </span>
-      <span class="slippage-value">
-        {{ formattedMaxSlippage }}
-        <button
-          type="button"
-          class="edit-slippage"
-          [disabled]="submitting || leverageUpdating"
-          (click)="openSlippageDialog()"
-          [attr.aria-label]="'perpsEditSlippage' | translate | async"
-        >
-          <img src="assets/images/common/edit.svg" alt="" />
-        </button>
-      </span>
-    </div>
   </div>
+
+  <section class="protection" *ngIf="!closeMode">
+    <div class="protection-head">
+      <span>{{ "perpsTakeProfitStopLoss" | translate | async }}</span>
+      <button type="button" class="protection-switch" role="switch"
+        [class.enabled]="protectionEnabled" [attr.aria-checked]="protectionEnabled"
+        [attr.aria-label]="'perpsTakeProfitStopLoss' | translate | async"
+        [disabled]="submitting || leverageUpdating || executionStatusUnknown"
+        (click)="setProtectionEnabled(!protectionEnabled)"><i></i></button>
+    </div>
+    <div class="protection-fields" *ngIf="protectionEnabled">
+      <div class="protection-row" *ngFor="let kind of ['tp', 'sl']">
+        <label class="protection-price">
+          <span>{{ (kind === 'tp' ? 'perpsTakeProfitPrice' : 'perpsStopLossPrice') | translate | async }}</span>
+          <input type="text" inputmode="decimal" [value]="kind === 'tp' ? takeProfitPrice : stopLossPrice"
+            [disabled]="submitting || leverageUpdating || executionStatusUnknown"
+            (input)="setProtectionPrice($any(kind), $any($event.target).value)"
+            (blur)="normalizeProtectionPrice($any(kind))" />
+        </label>
+        <div class="protection-return">
+          <label>
+            <span>{{ (kind === 'tp' ? 'perpsProtectionProfit' : 'perpsProtectionLoss') | translate | async }}</span>
+            <input type="text" inputmode="decimal" [value]="protectionReturn($any(kind))"
+              [disabled]="submitting || leverageUpdating || executionStatusUnknown"
+              (input)="setProtectionReturn($any(kind), $any($event.target).value)"
+              (blur)="finishProtectionReturn($any(kind))" />
+          </label>
+          <select [value]="protectionUnits[kind]" [attr.aria-label]="'perpsProtectionUnit' | translate | async"
+            [disabled]="submitting || leverageUpdating || executionStatusUnknown"
+            (change)="setProtectionUnit($any(kind), $any($event.target).value)">
+            <option value="%">%</option><option value="USDC">USDC</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- 一次只说一条原因：见 orderUnavailableReason。 -->
   <p class="error-tip" *ngIf="orderUnavailableReason">
@@ -394,16 +347,9 @@
         <span class="label">{{ "perpsOrderSize" | translate | async }}</span>
         <span class="value">{{ confirmSizeText }} {{ symbol }}</span>
       </div>
-      <div class="row margin-mode-row">
-        <span class="label">{{ "perpsMarginMode" | translate | async }}</span>
-        <span class="value">{{ marginModeLabel | translate | async }}</span>
-      </div>
       <div class="row">
         <span class="label">{{ "perpsEntryPrice" | translate | async }}</span>
         <span class="value">
-          <i class="price-kind" *ngIf="orderType === 'market'"
-            >{{ "perpsMarketPriceValue" | translate | async }} ·
-          </i>
           {{ confirmPriceText }}
         </span>
       </div>
@@ -414,13 +360,19 @@
           "perpsEstimatedLiqPrice" | translate | async
         }}</span>
         <span class="value">
-          <ng-container *ngIf="showsCurrentLiquidationPrice">
-            <i class="current">{{ currentLiquidationPriceText }}</i>
-            <i class="arrow">→</i>
-          </ng-container>
           {{ liquidationPriceText }}
         </span>
       </div>
+      <ng-container *ngIf="protectionEnabled">
+        <div class="row" *ngIf="takeProfitPrice">
+          <span class="label">{{ "perpsTakeProfitPrice" | translate | async }}</span>
+          <span class="value">${{ composition.intent?.protection?.takeProfitPriceExact || takeProfitPrice }}</span>
+        </div>
+        <div class="row" *ngIf="stopLossPrice">
+          <span class="label">{{ "perpsStopLossPrice" | translate | async }}</span>
+          <span class="value">${{ composition.intent?.protection?.stopLossPriceExact || stopLossPrice }}</span>
+        </div>
+      </ng-container>
       <p class="sheet-note">
         {{
           (orderType === "market"

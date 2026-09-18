@@ -2311,5 +2311,29 @@
   },
   "perpsCheckOrderStatus": {
     "message": "再確認"
+  },
+  "perpsTakeProfitStopLoss": {
+    "message": "利確 / 損切り"
+  },
+  "perpsTakeProfitPrice": {
+    "message": "利確価格"
+  },
+  "perpsStopLossPrice": {
+    "message": "損切価格"
+  },
+  "perpsProtectionProfit": {
+    "message": "利益"
+  },
+  "perpsProtectionLoss": {
+    "message": "損失"
+  },
+  "perpsProtectionUnit": {
+    "message": "損益の単位"
+  },
+  "perpsInvalidProtection": {
+    "message": "有効なトリガー価格を少なくとも1つ入力してください。ロングは利確を参考価格より高く、損切りを低く、ショートは逆に設定します。"
+  },
+  "perpsProtectionNotConfirmed": {
+    "message": "注文は処理されましたが、利確・損切りは未確認です。重複注文せず、未約定注文を確認してください。"
   }
 }

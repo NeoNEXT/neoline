@@ -71,8 +71,8 @@ export function seedForm(
     seed.marginMode = position.leverageType;
   } else if (market.marginMode) {
     seed.marginMode = 'isolated';
-  } else if (!touched.has('marginMode') && facts.activeAssetData) {
-    seed.marginMode = facts.activeAssetData.leverage.type;
+  } else if (!touched.has('marginMode')) {
+    seed.marginMode = 'isolated';
   }
 
   // 一次性：市价单所用的同一个参考价，已按这个市场能报出的价位量化过。

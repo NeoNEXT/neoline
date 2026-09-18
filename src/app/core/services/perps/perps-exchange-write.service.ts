@@ -218,15 +218,41 @@ export class PerpsExchangeWriteService {
           t: { limit: { tif: order.timeInForce } },
           c: order.cloid,
         },
+        ...(order.protection ?? []).map((child) => {
+          assertCloid(child.cloid);
+          if (order.reduceOnly || !['tp', 'sl'].includes(child.kind) ||
+              !new BigNumber(child.triggerPriceExact).isGreaterThan(0) ||
+              !new BigNumber(child.priceExact).isGreaterThan(0) ||
+              !new BigNumber(child.sizeExact).isGreaterThan(0)) {
+            throw new Error('Invalid Hyperliquid protection order');
+          }
+          return {
+            a: order.assetId, b: !order.isBuy,
+            p: this.floatToWire(child.priceExact), s: this.floatToWire(child.sizeExact), r: true,
+            t: { trigger: { isMarket: true, triggerPx: this.floatToWire(child.triggerPriceExact), tpsl: child.kind } },
+            c: child.cloid,
+          };
+        }),
       ],
-      grouping: 'na',
+      grouping: order.protection?.length ? 'normalTpsl' : 'na',
     });
     return this.ensureBuilderFeeApproved(privateKey).pipe(
       switchMap(() =>
         this.signedL1Action(privateKey, action, true).pipe(
-          map((response) =>
-            this.parseOrderExecution(response, order.sizeExact, order.cloid)
-          ),
+          map((response) => {
+            const result = this.parseOrderExecution(response, order.sizeExact, order.cloid);
+            if (order.protection?.length && ['filled', 'partial', 'resting'].includes(result.status)) {
+              const statuses: any[] = response.response?.data?.statuses ?? [];
+              const failed = order.protection.map((_, index) => statuses[index + 1])
+                .filter((status) => !status?.resting?.oid && !status?.filled?.oid &&
+                  status !== 'waitingForFill' && status !== 'waitingForTrigger');
+              if (failed.length || result.status === 'partial') {
+                result.protectionError = failed.map((status) => status?.error).filter(Boolean).join('; ') ||
+                  'TP/SL placement is not confirmed. Check open orders before placing another order.';
+              }
+            }
+            return result;
+          }),
           // 已签名的订单一旦发出，传输故障就证明不了「被拒绝」。
           // 保住 cloid 并就此停手：重试可能让风险敞口翻倍。
           catchError((error) =>

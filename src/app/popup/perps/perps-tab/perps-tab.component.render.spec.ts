@@ -162,21 +162,16 @@ describe('PerpsTabComponent 渲染与接线', () => {
       fixture.detectChanges();
 
       expect(text('.card-value')).toBe('$1,000');
-      expect(text('.card-margin')).toBe(
-        'perpsAvailableMargin $800 · perpsUsedMargin $200'
-      );
+      expect(text('.card-margin')).toBe('perpsAvailableMargin $800');
     });
 
-    // 一行里一半承认不知道、另一半报个 $0，读起来就是「你没占用保证金」—— 而这时候
-    // 我们其实什么都还不知道。
-    it('says it does not know yet on both halves of the margin row', () => {
+    // 还没加载完时用 --，别落成 $0，免得读成「可用保证金是零」。
+    it('says it does not know yet on the available-margin row', () => {
       account = null;
       availability = 'loading';
       fixture.detectChanges();
 
-      expect(text('.card-margin')).toBe(
-        'perpsAvailableMargin -- · perpsUsedMargin --'
-      );
+      expect(text('.card-margin')).toBe('perpsAvailableMargin --');
       expect(text('.card-margin')).not.toContain('$0');
     });
   });

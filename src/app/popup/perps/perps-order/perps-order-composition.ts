@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { protectionPrice, validProtection } from '@popup/_lib/perps-protection';
 
 import {
   PerpsAccount,
@@ -72,6 +73,9 @@ export interface PerpsOrderFacts {
  * 还不是正数小数的文本，直接读作「没有金额」。
  */
 export interface PerpsOrderInput {
+  protectionEnabled?: boolean;
+  takeProfitPrice?: string;
+  stopLossPrice?: string;
   /** close 是减少已有仓位；open 涵盖开仓和同向加仓。 */
   mode: 'open' | 'close';
   side: PerpsOrderSide;
@@ -92,6 +96,7 @@ export interface PerpsOrderInput {
  * 陈述的是规则，而不是钉住一个翻译 key。
  */
 export type PerpsOrderUnavailableCode =
+  | 'invalid-protection'
   | 'account-unavailable'
   | 'market-missing'
   | 'market-error'
@@ -113,6 +118,9 @@ export interface PerpsOrderUnavailable {
 
 /** 用户确认过的内容，由页面保存到他们按下提交的那一刻。 */
 export interface PerpsReviewBaseline {
+  protectionEnabled?: boolean;
+  takeProfitPrice?: string;
+  stopLossPrice?: string;
   /** 用户审核时屏幕上的成交参考价。 */
   priceExact: string;
   amount: string;
@@ -148,7 +156,6 @@ export interface PerpsOrderComposition {
   operation: PerpsTradeIntent;
   fullClose: boolean;
   increasesPosition: boolean;
-  showsCurrentLiquidationPrice: boolean;
   /** 该方向上的自由抵押品，取交易场所上报的值。 */
   availableExact: string | null;
   positionSizeExact: string;
@@ -299,7 +306,11 @@ export function composeOrder(
     builderRate,
   });
 
-  const availability = orderUnavailable({
+  const protection = input.protectionEnabled && (input.takeProfitPrice?.trim() || input.stopLossPrice?.trim()) ? {
+    ...(input.takeProfitPrice?.trim() ? { takeProfitPriceExact: protectionPrice(input.takeProfitPrice.trim(), szDecimals) ?? '' } : {}),
+    ...(input.stopLossPrice?.trim() ? { stopLossPriceExact: protectionPrice(input.stopLossPrice.trim(), szDecimals) ?? '' } : {}),
+  } : undefined;
+  let availability = orderUnavailable({
     accountUnavailable,
     marketStatus: facts.market.status,
     account,
@@ -320,6 +331,11 @@ export function composeOrder(
     fullClose,
     symbol,
   });
+
+  if (!availability && hasAmount && hasExecutionPrice && protection &&
+      (closeMode || !validProtection(protection, orderPriceExact, isLong, szDecimals))) {
+    availability = { code: 'invalid-protection', params: { min: PERPS_MIN_ORDER_NOTIONAL, symbol } };
+  }
 
   const submittable =
     facts.market.status === 'ready' &&
@@ -346,6 +362,7 @@ export function composeOrder(
               marginMode: market.marginMode,
             },
             operation,
+            ...(protection ? { protection } : {}),
             side: input.side,
             referencePriceExact: orderPriceExact,
             requestedSizeExact: orderSizeExact,
@@ -364,8 +381,6 @@ export function composeOrder(
     operation,
     fullClose,
     increasesPosition,
-    showsCurrentLiquidationPrice:
-      increasesPosition && !!position?.liquidationPxExact,
     availableExact,
     positionSizeExact,
     orderPriceExact,
@@ -423,6 +438,9 @@ export function intentUnchanged(
     baseline.orderType === input.orderType &&
     baseline.leverage === input.leverage &&
     baseline.marginMode === input.marginMode &&
+    !!baseline.protectionEnabled === !!input.protectionEnabled &&
+    (baseline.takeProfitPrice ?? '') === (input.takeProfitPrice ?? '') &&
+    (baseline.stopLossPrice ?? '') === (input.stopLossPrice ?? '') &&
     baseline.slippagePercent === input.slippagePercent &&
     baseline.mode === input.mode
   );

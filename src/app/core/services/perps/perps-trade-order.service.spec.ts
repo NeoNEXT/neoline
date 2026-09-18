@@ -96,6 +96,33 @@ describe('PerpsTradeOrderService', () => {
     expect((submission as any).result.cloid).toBe(order.cloid);
   });
 
+  it('attaches opposite reduce-only protection for the normalized opening size', () => {
+    service.submit(PRIVATE_KEY, intent({ protection: { takeProfitPriceExact: '120', stopLossPriceExact: '80' } })).subscribe();
+    const order = exchange.submitOrder.calls.mostRecent().args[1] as PerpsOrder;
+    expect(order.protection.map(({ cloid, ...child }) => child)).toEqual([
+      { kind: 'tp', triggerPriceExact: '120', priceExact: '108', sizeExact: '1.25' },
+      { kind: 'sl', triggerPriceExact: '80', priceExact: '72', sizeExact: '1.25' },
+    ]);
+    expect(new Set([order.cloid, ...order.protection.map((child) => child.cloid)]).size).toBe(3);
+  });
+
+  it('rejects invalid protection before any leverage or order write', () => {
+    const failed = jasmine.createSpy('failed');
+    service.submit(PRIVATE_KEY, intent({ protection: { stopLossPriceExact: '110' } })).subscribe({ error: failed });
+    expect(failed).toHaveBeenCalled();
+    expect(exchange.updateLeverage).not.toHaveBeenCalled();
+    expect(exchange.submitOrder).not.toHaveBeenCalled();
+  });
+
+  it('uses buy-side trigger bounds for a short entry and rejects protection on a close', () => {
+    service.submit(PRIVATE_KEY, intent({ side: 'short', protection: { takeProfitPriceExact: '80' } })).subscribe();
+    expect(exchange.submitOrder.calls.mostRecent().args[1].protection[0].priceExact).toBe('88');
+    const failed = jasmine.createSpy('failed');
+    service.submit(PRIVATE_KEY, intent({ operation: 'close', protection: { takeProfitPriceExact: '120' } })).subscribe({ error: failed });
+    expect(failed).toHaveBeenCalled();
+    expect(exchange.submitOrder).toHaveBeenCalledTimes(1);
+  });
+
   it('uses decimal magnitude when rounding a price just below a power of ten', () => {
     service.submit(PRIVATE_KEY, intent({
       orderType: 'limit', referencePriceExact: '9999.999999999999',

@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { firstValueFrom, Unsubscribable } from 'rxjs';
 import BigNumber from 'bignumber.js';
+import { protectionPrice } from '@popup/_lib/perps-protection';
 
 import { AppState } from '@/app/reduers';
 import {
@@ -81,6 +82,7 @@ const NOT_APPLICABLE = 'N/A';
  * 任何一个 spec。
  */
 const UNAVAILABLE_MESSAGES: Record<PerpsOrderUnavailableCode, string> = {
+  'invalid-protection': 'perpsInvalidProtection',
   'account-unavailable': 'perpsLoadFailed',
   'market-missing': 'perpsMarketNotFound',
   'market-error': 'perpsLoadFailed',
@@ -110,6 +112,9 @@ function sameInput(a: PerpsOrderInput, b: PerpsOrderInput): boolean {
     a.limitPrice === b.limitPrice &&
     a.leverage === b.leverage &&
     a.marginMode === b.marginMode &&
+    a.protectionEnabled === b.protectionEnabled &&
+    a.takeProfitPrice === b.takeProfitPrice &&
+    a.stopLossPrice === b.stopLossPrice &&
     a.slippagePercent === b.slippagePercent &&
     a.activePercent === b.activePercent
   );
@@ -159,6 +164,11 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   amount = '';
   leverage = 1;
   marginMode: PerpsMarginMode = 'isolated';
+  protectionEnabled = false;
+  takeProfitPrice = '';
+  stopLossPrice = '';
+  protectionUnits: Record<'tp' | 'sl', '%' | 'USDC'> = { tp: '%', sl: '%' };
+  private protectionReturnDraft: Partial<Record<'tp' | 'sl', string>> = {};
   leverageUpdating = false;
   slippagePercent = PERPS_DEFAULT_SLIPPAGE_PERCENT;
   activePercent: number = null;
@@ -201,6 +211,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   private lastFacts: PerpsOrderFacts = null;
   private lastInput: PerpsOrderInput = null;
   private pendingSizeExact: string = null;
+  private pendingProtection = false;
   private lastPendingSizeExact: string = null;
   /** 正在输入框里敲的文本；显示实时值时为 null。 */
   private percentDraft: string = null;
@@ -267,6 +278,10 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       },
     });
     this.closeMode = this.route.snapshot.queryParams.close === '1';
+    if (this.route.snapshot.queryParams.marginMode === 'cross') {
+      this.marginMode = 'cross';
+      this.touched.add('marginMode');
+    }
     const side = this.route.snapshot.queryParams.side;
     if (side === 'long' || side === 'short') {
       this.side = side;
@@ -378,7 +393,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     }
     // 从「下落未明」回到编辑态：交易场所终于给了答案。
     if (from.kind === 'unknown' && to.kind === 'composing') {
-      this.global.snackBarTip('perpsOrderStatusResolved');
+      this.global.snackBarTip(this.pendingProtection ? 'perpsProtectionNotConfirmed' : 'perpsOrderStatusResolved');
       this.refreshAccount();
       return;
     }
@@ -522,6 +537,9 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       limitPrice: this.limitPrice,
       leverage: this.leverage,
       marginMode: this.marginMode,
+      protectionEnabled: this.protectionEnabled,
+      takeProfitPrice: this.takeProfitPrice,
+      stopLossPrice: this.stopLossPrice,
       slippagePercent: this.slippagePercent,
       activePercent: this.activePercent,
     };
@@ -565,10 +583,6 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return this.composition.nearMarginLimit;
   }
 
-  get showsCurrentLiquidationPrice(): boolean {
-    return this.composition.showsCurrentLiquidationPrice;
-  }
-
   get feeEstimateUnavailable(): boolean {
     return this.composition.feeEstimateUnavailable;
   }
@@ -593,20 +607,6 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    */
   get liquidationPriceText(): string {
     const price = this.preview?.liquidationPxExact;
-    return price
-      ? `$${formatPrice(price, this.market?.szDecimals)}`
-      : NOT_APPLICABLE;
-  }
-
-  /**
-   * 已开仓位在交易场所侧的强平价，在加仓时显示在估算值旁边。
-   *
-   * 估算值是对输入做的算术；这个则是 Hyperliquid 当下所说的。把它们并排放置，才是加仓时
-   * 诚实的做法：用户能看到估算把真实数字往哪个方向推，而不是被塞给一个悄悄替换掉另一个的
-   * 数字。
-   */
-  get currentLiquidationPriceText(): string {
-    const price = this.position?.liquidationPxExact;
     return price
       ? `$${formatPrice(price, this.market?.szDecimals)}`
       : NOT_APPLICABLE;
@@ -669,6 +669,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    */
   get orderUnavailableReason(): string | null {
     const availability = this.composition.availability;
+    if (availability?.code === 'invalid-protection') { return null; }
     return availability ? UNAVAILABLE_MESSAGES[availability.code] : null;
   }
 
@@ -687,7 +688,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    */
   get canSubmit(): boolean {
     return (
-      !this.destroyed && !this.leverageUpdating && this.lifecycle.gateOpen && this.composition.submittable
+      !this.destroyed && !this.leverageUpdating && this.lifecycle.gateOpen &&
+      (this.composition.submittable || this.composition.availability?.code === 'invalid-protection')
     );
   }
 
@@ -744,28 +746,58 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     }
   }
 
-  get canSelectMarginMode(): boolean {
-    return !this.closeMode && !!this.market && !!this.facts.account.account &&
-      !this.position && !this.submitting && !this.leverageUpdating && !this.executionStatusUnknown;
-  }
-
-  get crossMarginAvailable(): boolean {
-    return !!this.market && !this.market.marginMode;
-  }
-
   get marginModeLabel(): string {
     return this.marginMode === 'cross' ? 'perpsCrossMargin' : 'perpsIsolatedMargin';
   }
 
-  setMarginMode(mode: PerpsMarginMode) {
-    if (!this.canSelectMarginMode || (mode === 'cross' && !this.crossMarginAvailable)) {
-      return;
-    }
-    this.marginMode = mode;
-    this.loadCrossMarginAccount();
-    this.touched.add('marginMode');
+  setProtectionEnabled(enabled: boolean) {
+    if (this.submitting || this.leverageUpdating || this.executionStatusUnknown || this.closeMode) { return; }
+    this.protectionEnabled = enabled;
     this.lifecycle.edited();
-    this.repricePercent();
+  }
+
+  setProtectionPrice(kind: 'tp' | 'sl', value: string) {
+    if (this.submitting || this.leverageUpdating || this.executionStatusUnknown) { return; }
+    if (kind === 'tp') { this.takeProfitPrice = value.trim(); } else { this.stopLossPrice = value.trim(); }
+    delete this.protectionReturnDraft[kind];
+    this.lifecycle.edited();
+  }
+
+  normalizeProtectionPrice(kind: 'tp' | 'sl') {
+    const value = kind === 'tp' ? this.takeProfitPrice : this.stopLossPrice;
+    this.setProtectionPrice(kind, protectionPrice(value, this.market?.szDecimals ?? 0) ?? value);
+  }
+
+  setProtectionUnit(kind: 'tp' | 'sl', unit: string) {
+    if (this.submitting || this.leverageUpdating || this.executionStatusUnknown || !['%', 'USDC'].includes(unit)) { return; }
+    this.protectionUnits[kind] = unit as '%' | 'USDC';
+    delete this.protectionReturnDraft[kind];
+  }
+
+  protectionReturn(kind: 'tp' | 'sl'): string {
+    if (this.protectionReturnDraft[kind] !== undefined) { return this.protectionReturnDraft[kind]; }
+    const price = new BigNumber((kind === 'tp' ? this.takeProfitPrice : this.stopLossPrice) || NaN);
+    const delta = price.minus(this.orderPriceExact).times((this.isLong ? 1 : -1) * (kind === 'tp' ? 1 : -1));
+    const value = this.protectionUnits[kind] === '%'
+      ? delta.div(new BigNumber(this.market?.markPxExact ?? NaN).div(this.leverage)).times(100)
+      : delta.times(this.composition.orderSizeExact);
+    return value.isFinite() ? value.decimalPlaces(2).toFixed() : '';
+  }
+
+  setProtectionReturn(kind: 'tp' | 'sl', value: string) {
+    if (this.submitting || this.leverageUpdating || this.executionStatusUnknown) { return; }
+    const number = /^\d+(?:\.\d*)?$/.test(value) ? new BigNumber(value) : new BigNumber(NaN);
+    const delta = this.protectionUnits[kind] === '%'
+      ? number.div(100).times(this.market?.markPxExact ?? NaN).div(this.leverage)
+      : number.div(this.composition.orderSizeExact);
+    const price = new BigNumber(this.orderPriceExact).plus(delta.times((this.isLong ? 1 : -1) * (kind === 'tp' ? 1 : -1)));
+    this.setProtectionPrice(kind, price.isFinite() && price.gt(0)
+      ? protectionPrice(price.toFixed(), this.market?.szDecimals ?? 0) ?? '0' : value.trim() ? '0' : '');
+    this.protectionReturnDraft[kind] = value;
+  }
+
+  finishProtectionReturn(kind: 'tp' | 'sl') {
+    delete this.protectionReturnDraft[kind];
   }
 
   get canApplyLeverage(): boolean {
@@ -1027,6 +1059,13 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     )}`;
   }
 
+  /** 输入和检查订单时不提示，最终提交时才报告触发价错误。 */
+  private reportInvalidProtection(): boolean {
+    if (this.composition.availability?.code !== 'invalid-protection') { return false; }
+    this.global.snackBarTip('perpsInvalidProtection');
+    return true;
+  }
+
   review() {
     if (!this.canSubmit) {
       return;
@@ -1034,6 +1073,9 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     // 即将展示给用户的那个价格，保存下来，好让提交时能判断行情此后是否已经
     // 偏离到超出他们同意的范围。
     this.lifecycle.review({
+      protectionEnabled: this.protectionEnabled,
+      takeProfitPrice: this.takeProfitPrice,
+      stopLossPrice: this.stopLossPrice,
       priceExact: this.orderPriceExact,
       amount: this.amount,
       limitPrice: this.limitPrice,
@@ -1069,6 +1111,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     if (!this.canSubmit || !this.lifecycle.reviewing) {
       return;
     }
+    if (this.reportInvalidProtection()) { return; }
     // 签不了名就先说签不了：这比先告诉用户价格变了更有用，而价格对一个根本无法签名的
     // 钱包来说是没有意义的信息。
     const walletExtra = this.wallet?.accounts[0]?.extra;
@@ -1087,6 +1130,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       referencePriceExact: this.lifecycle.baseline.priceExact,
     };
     this.pendingSizeExact = intent.requestedSizeExact;
+    this.pendingProtection = !!intent.protection;
     try {
       const password = await this.chrome.getPassword();
       if (this.destroyed) {
@@ -1100,6 +1144,11 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         return;
       }
       const checked = this.composition;
+      if (checked.availability?.code === 'invalid-protection') {
+        this.reportInvalidProtection();
+        this.lifecycle.settled();
+        return;
+      }
       const sameMarket = checked.intent && Object.keys(intent.market).every(
         (key) => checked.intent.market[key] === intent.market[key]
       );
@@ -1125,7 +1174,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
             rejected: 'perpsOrderRejected',
             unknown: 'perpsOrderUnknown',
           }[result.status];
-          this.global.snackBarTip(message, result.error);
+          this.global.snackBarTip(result.protectionError ? 'perpsProtectionNotConfirmed' : message,
+            result.protectionError || result.error);
           if (result.status === 'unknown') {
             this.lifecycle.unresolved(result.cloid);
             return;

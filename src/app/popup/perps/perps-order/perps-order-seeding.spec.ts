@@ -61,9 +61,9 @@ const holding = (overrides = {}) =>
 const none = new Set<PerpsOrderUserSetField>();
 
 describe('seedForm 保证金模式', () => {
-  it('takes the venue mode when no position exists and the user has not chosen', () => {
+  it('defaults an empty position to isolated even when venue capacity reports cross', () => {
     const activeAssetData = { ...capacity(10), leverage: { type: 'cross' as const, value: 10 } };
-    expect(seedForm(facts({ activeAssetData }), input(), none, false).marginMode).toBe('cross');
+    expect(seedForm(facts({ activeAssetData }), input(), none, false).marginMode).toBe('isolated');
   });
 
   it('keeps a user-selected mode across subsequent venue frames', () => {

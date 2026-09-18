@@ -99,53 +99,18 @@
   }
 }
 
-.order-type {
+.account-summary {
+  margin: 12px 32px 0;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 14px 24px 0;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--sub-title-color);
 
-  .chip {
-    font-size: 13px;
-    color: var(--sub-title-color);
-    border-radius: 16px;
-    padding: 6px 14px;
-    cursor: pointer;
-    &.active {
-      color: var(--title-color);
-      background: var(--line-color);
-    }
-    &.plain:not(.active) {
-      padding: 6px 8px;
-    }
-  }
-
-  .account-summary {
-    margin-left: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
-  }
-
-  .available,
-  .current-position {
-    font-size: 12px;
-    color: var(--sub-title-color);
-    margin-left: auto;
-    b {
-      font-weight: normal;
-      color: var(--title-color);
-    }
-  }
-
-  .current-position b {
-    color: var(--theme-color);
-
-    &.short {
-      color: var(--error-color);
-    }
-  }
+  > div { display: flex; justify-content: space-between; gap: 12px; }
+  b { color: var(--title-color); font-weight: normal; }
+  .current-position b { color: var(--theme-color); }
+  .current-position b.short { color: var(--error-color); }
 }
 
 .input-box {
@@ -473,53 +438,13 @@
     }
     .value {
       color: var(--title-color);
-
-      // The exchange's current liquidation price, shown beside the estimate
-      // while adding to a position.
-      .current,
-      .arrow {
-        font-style: normal;
-        color: var(--sub-title-color);
-      }
-
-      .arrow {
-        margin: 0 3px;
-      }
     }
 
     .rebate {
       color: var(--theme-color);
     }
 
-    .slippage-value {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      white-space: nowrap;
-      color: var(--title-color);
 
-      > i {
-        margin: 0 2px;
-        color: var(--sub-title-color);
-        font-style: normal;
-      }
-
-      .edit-slippage {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-
-        img {
-          margin-left: 4px;
-          width: 12px;
-          height: 12px;
-        }
-      }
-    }
   }
 }
 
@@ -569,51 +494,6 @@
       }
     }
   }
-}
-
-.margin-mode {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 18px 24px 8px;
-  font-size: 13px;
-  color: var(--title-color);
-
-  .mode-options {
-    display: flex;
-    gap: 6px;
-  }
-
-  button {
-    padding: 6px 14px;
-    border: 1px solid var(--line-color);
-    border-radius: 16px;
-    background: transparent;
-    color: var(--sub-title-color);
-    font: inherit;
-    cursor: pointer;
-
-    &.active {
-      background: var(--line-color);
-      color: var(--title-color);
-    }
-
-    &:disabled {
-      cursor: default;
-      opacity: 0.5;
-    }
-
-    &.active:disabled {
-      opacity: 1;
-    }
-  }
-}
-
-.margin-mode-tip {
-  margin: 0 24px 10px;
-  font-size: 12px;
-  color: var(--sub-title-color);
 }
 
 .submit-wrap {
@@ -703,15 +583,9 @@
           }
         }
 
-        .price-kind,
-        .current,
-        .arrow {
+        .price-kind {
           font-style: normal;
           color: var(--sub-title-color);
-        }
-
-        .arrow {
-          margin: 0 3px;
         }
       }
     }
@@ -780,4 +654,29 @@
     opacity: 0.5;
     cursor: default;
   }
+}
+
+.protection {
+  margin: 16px 22px 0;
+  color: var(--title-color);
+
+  .protection-head { display: flex; align-items: center; justify-content: space-between; font-size: 14px; }
+  .protection-switch {
+    width: 42px; height: 24px; padding: 3px; border: 0; border-radius: 20px;
+    background: var(--line-color); cursor: pointer;
+    i { display: block; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform 120ms; }
+    &.enabled { background: var(--theme-color); i { transform: translateX(18px); } }
+    &:disabled { opacity: 0.5; cursor: default; }
+  }
+  .protection-fields { padding-top: 12px; }
+  .protection-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .protection-price, .protection-return {
+    display: flex; align-items: center; min-width: 0; min-height: 40px;
+    padding: 8px; border: 1px solid var(--line-color); border-radius: 8px;
+    &:focus-within { border-color: var(--theme-color); }
+  }
+  label { display: flex; align-items: center; gap: 4px; min-width: 0; flex: 1; }
+  label span { flex-shrink: 0; font-size: 11px; color: var(--sub-title-color); }
+  input { width: 100%; min-width: 0; border: 0; padding: 0; outline: none; text-align: right; background: transparent; color: var(--title-color); font-size: 13px; }
+  select { max-width: 52px; border: 0; margin-left: 3px; padding: 0; background: var(--box-color); color: var(--title-color); font-size: 11px; }
 }

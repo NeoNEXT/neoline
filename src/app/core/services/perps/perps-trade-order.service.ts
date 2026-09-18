@@ -19,6 +19,7 @@ import {
 import { PerpsExchangeWriteService } from './perps-exchange-write.service';
 import { PerpsAccountStateService } from './perps-account-state.service';
 import { PerpsOrder, PerpsTradeOrderError } from './perps-trade-order';
+import { protectionPrice, validProtection } from '@popup/_lib/perps-protection';
 
 interface PerpsOrderExchange {
   submitOrder(
@@ -133,6 +134,11 @@ export class PerpsTradeOrderService {
     }
     if (!['long', 'short'].includes(intent.side)) {
       throw this.invalidIntent('Order has an invalid side');
+    }
+    if (intent.protection && (!this.setsLeverage(intent) || !validProtection(
+      intent.protection, intent.referencePriceExact, intent.side === 'long', market.szDecimals
+    ))) {
+      throw this.invalidIntent('Invalid take-profit or stop-loss price');
     }
     if (!['market', 'limit'].includes(intent.orderType)) {
       throw this.invalidIntent('Order has an invalid type');
@@ -281,6 +287,17 @@ export class PerpsTradeOrderService {
     }
     return {
       assetId: intent.market.assetId,
+      ...(intent.protection ? { protection: (['tp', 'sl'] as const).flatMap((kind) => {
+        const trigger = kind === 'tp' ? intent.protection.takeProfitPriceExact : intent.protection.stopLossPriceExact;
+        if (!trigger) { return []; }
+        // 市价保护单采用协议文档的 10% 价格边界；反手只保护新开数量。
+        const price = protectionPrice(new BigNumber(trigger).times(isBuy ? '0.9' : '1.1').toFixed(), intent.market.szDecimals);
+        if (!price) { throw this.invalidIntent('Protection price is below the market tick size'); }
+        return [{ kind, triggerPriceExact: trigger, priceExact: price,
+          sizeExact: new BigNumber(intent.requestedSizeExact).decimalPlaces(intent.market.szDecimals, BigNumber.ROUND_FLOOR).toFixed(),
+          cloid: ethers.hexlify(ethers.randomBytes(16)),
+        }];
+      }) } : {}),
       isBuy,
       priceExact,
       sizeExact,

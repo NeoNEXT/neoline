@@ -2311,5 +2311,29 @@
   },
   "perpsCheckOrderStatus": {
     "message": "다시 확인"
+  },
+  "perpsTakeProfitStopLoss": {
+    "message": "익절 / 손절"
+  },
+  "perpsTakeProfitPrice": {
+    "message": "익절 가격"
+  },
+  "perpsStopLossPrice": {
+    "message": "손절 가격"
+  },
+  "perpsProtectionProfit": {
+    "message": "수익"
+  },
+  "perpsProtectionLoss": {
+    "message": "손실"
+  },
+  "perpsProtectionUnit": {
+    "message": "손익 단위"
+  },
+  "perpsInvalidProtection": {
+    "message": "유효한 발동 가격을 하나 이상 입력하세요. 롱은 익절가를 기준가보다 높게, 손절가를 낮게 설정하며 숏은 반대입니다."
+  },
+  "perpsProtectionNotConfirmed": {
+    "message": "주문이 처리되었지만 익절/손절은 모두 확인되지 않았습니다. 중복 주문 전에 미체결 주문을 확인하세요."
   }
 }

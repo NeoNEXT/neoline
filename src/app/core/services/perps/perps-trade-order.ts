@@ -1,5 +1,6 @@
 /** 只在交易模块与交易场所适配器之间共享的内部订单。 */
 export interface PerpsOrder {
+  protection?: Array<{ kind: 'tp' | 'sl'; triggerPriceExact: string; priceExact: string; sizeExact: string; cloid: string }>;
   assetId: number;
   isBuy: boolean;
   priceExact: string;

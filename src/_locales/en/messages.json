@@ -2311,5 +2311,29 @@
   },
   "perpsCheckOrderStatus": {
     "message": "Check again"
+  },
+  "perpsTakeProfitStopLoss": {
+    "message": "Take profit / Stop loss"
+  },
+  "perpsTakeProfitPrice": {
+    "message": "TP price"
+  },
+  "perpsStopLossPrice": {
+    "message": "SL price"
+  },
+  "perpsProtectionProfit": {
+    "message": "Profit"
+  },
+  "perpsProtectionLoss": {
+    "message": "Loss"
+  },
+  "perpsProtectionUnit": {
+    "message": "Profit / loss unit"
+  },
+  "perpsInvalidProtection": {
+    "message": "Enter at least one valid trigger price: TP above and SL below the reference price for longs; the reverse for shorts."
+  },
+  "perpsProtectionNotConfirmed": {
+    "message": "Order processed, but TP/SL is not fully confirmed. Check open orders before opening another position."
   }
 }

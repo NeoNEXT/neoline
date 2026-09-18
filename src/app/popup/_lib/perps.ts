@@ -877,7 +877,13 @@ export interface PerpsSignature {
 }
 
 /** 推导一个协议订单所需的、用户已确认的那些事实。 */
+export interface PerpsOrderProtection {
+  takeProfitPriceExact?: string;
+  stopLossPriceExact?: string;
+}
+
 export interface PerpsTradeOrderIntent {
+  protection?: PerpsOrderProtection;
   market: Pick<
     PerpsMarket,
     'key' | 'coin' | 'dex' | 'assetId' | 'szDecimals' | 'maxLeverage' | 'marginMode'
@@ -920,6 +926,8 @@ export type PerpsOrderExecutionStatus =
   | 'unknown';
 
 export interface PerpsOrderExecutionResult {
+  /** 主单结果独立于保护委托，子单失败不能让用户误以为开仓失败而重复下单。 */
+  protectionError?: string;
   status: PerpsOrderExecutionStatus;
   cloid: string;
   orderId?: string;
