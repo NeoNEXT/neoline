@@ -1886,9 +1886,6 @@
   "perpsLiqPriceTip": {
     "message": "If the price reaches this level, your position will be liquidated and the entire margin may be lost. Higher leverage makes this more likely."
   },
-  "perpsEstimatedLiqPrice": {
-    "message": "Estimated liquidation price"
-  },
   "perpsMargin": {
     "message": "Margin"
   },
@@ -1933,12 +1930,6 @@
   },
   "perpsConfirmClose": {
     "message": "Close"
-  },
-  "perpsCloseLong": {
-    "message": "Close long"
-  },
-  "perpsCloseShort": {
-    "message": "Close short"
   },
   "perpsFundingTitle": {
     "message": "Perps funds"
@@ -2057,29 +2048,8 @@
   "perpsOracleTip": {
     "message": "The median of the external prices reported by validators, used to calculate the funding rate."
   },
-  "perpsReviewOrder": {
-    "message": "Review order"
-  },
-  "perpsConfirmOrderTitle": {
-    "message": "Confirm order"
-  },
-  "perpsOrderDirection": {
-    "message": "Direction"
-  },
-  "perpsOrderSize": {
-    "message": "Size"
-  },
-  "perpsEntryPrice": {
-    "message": "Entry price"
-  },
-  "perpsMarketPriceValue": {
-    "message": "Market"
-  },
-  "perpsConfirmMarketNote": {
-    "message": "A market order goes out immediately. The fill price comes from the exchange."
-  },
-  "perpsConfirmLimitNote": {
-    "message": "A limit order may not fill right away, or may fill only in part."
+  "perpsPlaceOrder": {
+    "message": "Place order"
   },
   "perpsOpenOrders": {
     "message": "Open orders"
@@ -2214,7 +2184,7 @@
     "message": "Market order was not filled. No retry was sent."
   },
   "perpsMarketChangedReviewAgain": {
-    "message": "The price moved beyond your max slippage. Nothing was sent — review the order again."
+    "message": "The market or order details changed before signing. No order was sent. Please place the order again."
   },
   "perpsFeeQuoteChangedReviewAgain": {
     "message": "The fee quote changed. Review it again before submitting."
@@ -2280,7 +2250,7 @@
     "message": "Max slippage"
   },
   "perpsPositionChangedReviewAgain": {
-    "message": "Your position changed before the order was signed. Review it again."
+    "message": "Your position changed before signing. No order was sent. Please place the order again."
   },
   "perpsMakerShort": {
     "message": "Maker"

@@ -1886,9 +1886,6 @@
   "perpsLiqPriceTip": {
     "message": "価格がこの水準に達すると、ポジションが強制決済され、証拠金をすべて失う可能性があります。レバレッジが高いほど、その可能性は高まります。"
   },
-  "perpsEstimatedLiqPrice": {
-    "message": "推定清算価格"
-  },
   "perpsMargin": {
     "message": "証拠金"
   },
@@ -1933,12 +1930,6 @@
   },
   "perpsConfirmClose": {
     "message": "決済"
-  },
-  "perpsCloseLong": {
-    "message": "ロングを決済"
-  },
-  "perpsCloseShort": {
-    "message": "ショートを決済"
   },
   "perpsFundingTitle": {
     "message": "無期限先物の資金"
@@ -2057,29 +2048,8 @@
   "perpsOracleTip": {
     "message": "バリデーターが報告する外部価格の中央値で、資金調達率の計算に使われます。"
   },
-  "perpsReviewOrder": {
-    "message": "注文を確認"
-  },
-  "perpsConfirmOrderTitle": {
-    "message": "注文の確認"
-  },
-  "perpsOrderDirection": {
-    "message": "方向"
-  },
-  "perpsOrderSize": {
-    "message": "数量"
-  },
-  "perpsEntryPrice": {
-    "message": "約定価格"
-  },
-  "perpsMarketPriceValue": {
-    "message": "成行"
-  },
-  "perpsConfirmMarketNote": {
-    "message": "成行注文は直ちに発注されます。約定価格は取引所の記録によります。"
-  },
-  "perpsConfirmLimitNote": {
-    "message": "指値注文はすぐに約定しないことや、一部のみ約定することがあります。"
+  "perpsPlaceOrder": {
+    "message": "注文する"
   },
   "perpsOpenOrders": {
     "message": "未約定注文"
@@ -2214,7 +2184,7 @@
     "message": "成行注文は約定しませんでした。自動再試行は行っていません。"
   },
   "perpsMarketChangedReviewAgain": {
-    "message": "価格が最大スリッページを超えて変動したため、注文は送信されませんでした。もう一度確認してください。"
+    "message": "署名前に市場または注文情報が変化しました。注文は送信されていません。再度注文してください。"
   },
   "perpsFeeQuoteChangedReviewAgain": {
     "message": "手数料の見積もりが変わりました。送信する前にもう一度確認してください。"
@@ -2280,7 +2250,7 @@
     "message": "最大スリッページ"
   },
   "perpsPositionChangedReviewAgain": {
-    "message": "署名前にポジションが変化しました。もう一度確認してください。"
+    "message": "署名前にポジションが変化しました。注文は送信されていません。再度注文してください。"
   },
   "perpsMakerShort": {
     "message": "メイカー"

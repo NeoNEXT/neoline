@@ -1,5 +1,5 @@
 import { Component, Input, Pipe, PipeTransform } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
@@ -143,12 +143,12 @@ describe('PerpsOrderComponent 渲染与接线', () => {
             refreshAccount: () => of(null),
           },
         },
-        { provide: PerpsTradeOrderService, useValue: { submit: () => of(null) } },
+        { provide: PerpsTradeOrderService, useValue: { submit: () => of({ result: { status: 'resting' } }) } },
         {
           provide: ChromeService,
-          useValue: { getStorage: () => of(null), setStorage: () => {} },
+          useValue: { getStorage: () => of(null), setStorage: () => {}, getPassword: () => Promise.resolve('password') },
         },
-        { provide: EvmWalletService, useValue: {} },
+        { provide: EvmWalletService, useValue: { getPrivateKey: () => Promise.resolve('private-key') } },
         { provide: MatDialog, useValue: { open: () => ({ afterClosed: () => of(null) }) } },
         {
           provide: PerpsMarketDatasetService,
@@ -173,8 +173,10 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       .trim();
 
   describe('止盈止损', () => {
-    it('reports an invalid trigger only on final submission, including price changes after review', async () => {
+    it('reports an invalid trigger only when clicking place order, without signing or sending', () => {
       const notify = spyOn(TestBed.inject(GlobalService), 'snackBarTip');
+      const submit = spyOn(TestBed.inject(PerpsTradeOrderService), 'submit');
+      const unlock = spyOn(TestBed.inject(ChromeService), 'getPassword');
       fixture.detectChanges();
       component.amount = '200';
       component.setProtectionEnabled(true);
@@ -184,22 +186,35 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       expect(fixture.nativeElement.querySelector('.error-tip')).toBeNull();
       expect(fixture.nativeElement.querySelector('.submit-wrap button').disabled).toBeFalse();
       fixture.nativeElement.querySelector('.submit-wrap button').click();
-      expect(notify).not.toHaveBeenCalled();
-      expect(component.reviewing).toBeTrue();
-      fixture.detectChanges();
-      expect(text('.confirm-sheet')).toContain('$1800');
-      const submit = spyOn(TestBed.inject(PerpsTradeOrderService), 'submit');
-      await component.submit();
       expect(notify).toHaveBeenCalledWith('perpsInvalidProtection');
       expect(submit).not.toHaveBeenCalled();
-      component.setProtectionPrice('tp', '2200');
-      component.review();
-      expect(component.reviewing).toBeTrue();
-      // 审核后行情越过触发价，最终提交仍须校验，不签名或发单。
-      markets.next({ ...MARKET, markPxExact: '2300', midPxExact: '2300' });
-      await component.submit();
-      expect(notify).toHaveBeenCalledTimes(2);
+      expect(unlock).not.toHaveBeenCalled();
+      expect(component.submitting).toBeFalse();
+    });
+
+    it('revalidates protection if the price crosses the trigger while unlocking', async () => {
+      const notify = spyOn(TestBed.inject(GlobalService), 'snackBarTip');
+      const submit = spyOn(TestBed.inject(PerpsTradeOrderService), 'submit');
+      fixture.detectChanges();
+      component.amount = '200';
+      component.setProtectionEnabled(true);
+      component.setProtectionPrice('tp', '2010');
+      const pending = component.submit();
+      markets.next({ ...MARKET, markPxExact: '2020', midPxExact: '2020' });
+      await pending;
+      expect(notify).toHaveBeenCalledWith('perpsInvalidProtection');
       expect(submit).not.toHaveBeenCalled();
+      expect(component.submitting).toBeFalse();
+    });
+
+    it('submits only the main order when protection is enabled but both prices are empty', async () => {
+      const submit = spyOn(TestBed.inject(PerpsTradeOrderService), 'submit').and.callThrough();
+      fixture.detectChanges();
+      component.amount = '200';
+      component.setProtectionEnabled(true);
+      await component.submit();
+      expect(submit).toHaveBeenCalledTimes(1);
+      expect(submit.calls.mostRecent().args[1].protection).toBeUndefined();
     });
 
     it('uses the simplified market form and keeps protection optional', () => {
@@ -225,11 +240,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       fixture.detectChanges();
       expect(component.canSubmit).toBeTrue();
       expect(component.composition.intent.protection).toEqual({ takeProfitPriceExact: '2200' });
-      component.review();
-      fixture.detectChanges();
-      expect(text('.confirm-sheet')).toContain('$2200');
       component.setProtectionPrice('sl', '1800');
-      expect(component.reviewing).toBeFalse();
       component.setProtectionEnabled(false);
       expect(component.composition.intent.protection).toBeUndefined();
     });
@@ -266,7 +277,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
   });
 
   describe('保证金模式', () => {
-    it('selects cross margin and carries it into the confirmation and order intent', () => {
+    it('selects cross margin and updates its estimate and order intent', () => {
       account.availableBalanceExact = '1000';
       queryParams = { marginMode: 'cross' };
       fixture.detectChanges();
@@ -275,15 +286,13 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       expect(fixture.nativeElement.querySelector('.mode-options')).toBeNull();
       expect(component.composition.intent.marginMode).toBe('cross');
       expect(component.liquidationPriceText).toBe('$1,479.59');
-      component.review();
       fixture.detectChanges();
       expect(component.composition.intent.marginMode).toBe('cross');
-      expect(text('.confirm-sheet')).toContain('$1,479.59');
+      expect(text('.summary')).toContain('$1,479.59');
       crossAccount.next({ equityExact: '80', maintenanceMarginExact: '5', positions: [] });
       fixture.detectChanges();
       expect(component.liquidationPriceText).toBe('$1,275.51');
-      expect(text('.confirm-sheet')).toContain('$1,275.51');
-      expect(component.reviewing).toBeTrue();
+      expect(text('.summary')).toContain('$1,275.51');
       fixture.destroy();
       expect(crossAccount.observed).toBeFalse();
     });
@@ -313,7 +322,6 @@ describe('PerpsOrderComponent 渲染与接线', () => {
     it('marks retained quotes stale and clears the warning on reconnect', () => {
       fixture.detectChanges();
       component.amount = '200';
-      component.review();
       const intent = component.composition.intent;
       const price = text('.order-header .price');
       expect(fixture.nativeElement.querySelector('.stale-banner')).toBeNull();
@@ -322,7 +330,6 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       fixture.detectChanges();
       expect(text('.stale-banner')).toBe('perpsFeedStale');
       expect(text('.order-header .price')).toBe(price);
-      expect(component.reviewing).toBeTrue();
       expect(component.composition.intent).toEqual(intent);
       expect(component.canSubmit).toBeTrue();
 
@@ -414,8 +421,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
     it('keeps the box out of reach while a submission is in flight', () => {
       fixture.detectChanges();
       component.amount = '200';
-      component.review();
-      (component as any).lifecycle.beginSubmit(true);
+      void component.submit();
       fixture.detectChanges();
 
       const box: HTMLElement =
@@ -463,29 +469,35 @@ describe('PerpsOrderComponent 渲染与接线', () => {
     });
   });
 
-  describe('审核与提交按钮', () => {
-    it('offers review first, and keeps offering it behind the sheet', () => {
+  describe('直接下单按钮', () => {
+    it('submits on one click with a plain label, no confirmation sheet, and no duplicate request', fakeAsync(() => {
+      const submit = spyOn(TestBed.inject(PerpsTradeOrderService), 'submit').and.callThrough();
       fixture.detectChanges();
       component.amount = '200';
       fixture.detectChanges();
-      expect(text('.submit-wrap button')).toContain('perpsReviewOrder');
-      expect(fixture.nativeElement.querySelector('.confirm-sheet')).toBeNull();
-
-      component.review();
+      const button: HTMLButtonElement = fixture.nativeElement.querySelector('.submit-wrap button');
+      expect(text('.submit-wrap button')).toBe('perpsPlaceOrder');
+      button.click();
       fixture.detectChanges();
-
-      // 页面上那个按钮不再是提交入口 —— 确认只发生在面板上。
-      expect(text('.submit-wrap button')).toContain('perpsReviewOrder');
-      expect(
-        fixture.nativeElement.querySelector('.confirm-sheet')
-      ).not.toBeNull();
-    });
+      expect(component.submitting).toBeTrue();
+      expect(button.disabled).toBeTrue();
+      expect(button.getAttribute('aria-busy')).toBe('true');
+      expect(fixture.nativeElement.querySelector('.confirm-sheet')).toBeNull();
+      button.click();
+      void component.submit();
+      flushMicrotasks();
+      fixture.detectChanges();
+      expect(submit).toHaveBeenCalledTimes(1);
+      expect(submit.calls.mostRecent().args[1].requestedSizeExact).toBe('0.1');
+      expect(component.submitting).toBeFalse();
+      expect(button.disabled).toBeFalse();
+      expect(fixture.nativeElement.querySelector('.confirm-sheet')).toBeNull();
+    }));
 
     it('locks editable controls while submitting', () => {
       fixture.detectChanges();
       component.amount = '200';
-      component.review();
-      (component as any).lifecycle.beginSubmit(true);
+      void component.submit();
       fixture.detectChanges();
 
       const inputs: HTMLInputElement[] = Array.from(
@@ -507,129 +519,6 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       const button: HTMLButtonElement =
         fixture.nativeElement.querySelector('.submit-wrap button');
       expect(button.disabled).toBeTrue();
-    });
-  });
-
-  describe('确认面板', () => {
-    /** 面板上的某一行读作什么，按它的标签取。 */
-    const sheetRow = (label: string): string => {
-      const rows: HTMLElement[] = Array.from(
-        fixture.nativeElement.querySelectorAll('.confirm-sheet .row')
-      );
-      const row = rows.find(
-        (item) => item.querySelector('.label').textContent.trim() === label
-      );
-      return (row?.querySelector('.value')?.textContent ?? '')
-        .replace(/\s+/g, ' ')
-        .trim();
-    };
-
-    const review = () => {
-      fixture.detectChanges();
-      component.amount = '200';
-      component.review();
-      fixture.detectChanges();
-    };
-
-    it('states the direction, size, price and liquidation estimate', () => {
-      review();
-
-      const labels = Array.from(
-        fixture.nativeElement.querySelectorAll('.confirm-sheet .row .label')
-      ).map((label: HTMLElement) => label.textContent.trim());
-      expect(labels).toEqual([
-        'perpsOrderDirection',
-        'perpsOrderSize',
-        'perpsEntryPrice',
-        'perpsEstimatedLiqPrice',
-      ]);
-
-      expect(sheetRow('perpsOrderDirection')).toBe('perpsLong');
-      // 200 USDC 在 $2,000 上是 0.1 ETH —— 交易场所收到的是这个数，而表单上没有它。
-      expect(sheetRow('perpsOrderSize')).toBe('0.1 ETH');
-      expect(sheetRow('perpsEntryPrice')).toBe(
-        text('.order-header .price')
-      );
-      expect(sheetRow('perpsEstimatedLiqPrice')).toBe(
-        component.liquidationPriceText
-      );
-      expect(text('.sheet-actions .primary')).toContain('perpsLong');
-    });
-
-    /**
-     * 金额、杠杆、保证金、费用、滑点留在表单上，不在面板上重复一遍：用户刚在那里读过
-     * 并按下了「检查订单」，杠杆还印在面板的按钮上。
-     */
-    it('does not repeat what the form already said', () => {
-      review();
-
-      ['perpsAmount', 'perpsLeverage', 'perpsMargin', 'perpsFee', 'perpsMaxSlippage'].forEach(
-        (label) => expect(sheetRow(label)).toBe('')
-      );
-      expect(text('.sheet-actions .primary')).toContain('10x');
-    });
-
-    it('asks approval for the size it will actually submit', () => {
-      fixture.detectChanges();
-      // $2,000 上买不到 0.10005 ETH 那么细的数量：lot 是 4 位小数。
-      component.amount = '200.1';
-      component.review();
-      fixture.detectChanges();
-
-      expect(sheetRow('perpsOrderSize')).toBe('0.1 ETH');
-    });
-
-    it('names the limit price instead of the market', () => {
-      fixture.detectChanges();
-      component.setOrderType('limit');
-      component.onLimitPriceInput('1900');
-      component.amount = '190';
-      component.review();
-      fixture.detectChanges();
-
-      expect(sheetRow('perpsEntryPrice')).toBe('$1,900');
-    });
-
-    it('takes the order back to the form when cancelled', () => {
-      review();
-
-      fixture.nativeElement.querySelector('.sheet-actions .ghost').click();
-      fixture.detectChanges();
-
-      expect(component.reviewing).toBeFalse();
-      expect(fixture.nativeElement.querySelector('.confirm-sheet')).toBeNull();
-    });
-
-    /**
-     * 撤掉面板会把用户丢回一张所有控件都禁用了的表单，而屏幕上没有任何东西说明他刚按下的
-     * 那一下发生了什么。
-     */
-    it('stays on screen while the submission is in flight', () => {
-      review();
-      (component as any).lifecycle.beginSubmit(true);
-      fixture.detectChanges();
-
-      expect(
-        fixture.nativeElement.querySelector('.confirm-sheet')
-      ).not.toBeNull();
-      expect(
-        fixture.nativeElement.querySelector('.sheet-actions .primary').disabled
-      ).toBeTrue();
-      expect(
-        fixture.nativeElement.querySelector('.sheet-actions .ghost').disabled
-      ).toBeTrue();
-    });
-
-    /** 按钮为什么按不下去，必须在按钮旁边读得到：表单下方那条原因被面板挡住了。 */
-    it('carries the blocking reason onto the sheet', () => {
-      review();
-      component.amount = '999999';
-      fixture.detectChanges();
-
-      expect(text('.confirm-sheet .error-tip')).toBe('perpsInsufficientMargin');
-      expect(
-        fixture.nativeElement.querySelector('.sheet-actions .primary').disabled
-      ).toBeTrue();
     });
   });
 

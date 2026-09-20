@@ -1886,9 +1886,6 @@
   "perpsLiqPriceTip": {
     "message": "가격이 이 수준에 도달하면 포지션이 강제 청산되어 증거금 전액을 잃을 수 있습니다. 레버리지가 높을수록 가능성이 커집니다."
   },
-  "perpsEstimatedLiqPrice": {
-    "message": "예상 청산가"
-  },
   "perpsMargin": {
     "message": "증거금"
   },
@@ -1933,12 +1930,6 @@
   },
   "perpsConfirmClose": {
     "message": "청산"
-  },
-  "perpsCloseLong": {
-    "message": "롱 포지션 청산"
-  },
-  "perpsCloseShort": {
-    "message": "숏 포지션 청산"
   },
   "perpsFundingTitle": {
     "message": "무기한 선물 자금"
@@ -2057,29 +2048,8 @@
   "perpsOracleTip": {
     "message": "검증자가 보고한 외부 가격의 중앙값으로, 펀딩 비율 계산에 사용됩니다."
   },
-  "perpsReviewOrder": {
-    "message": "주문 검토"
-  },
-  "perpsConfirmOrderTitle": {
-    "message": "주문 확인"
-  },
-  "perpsOrderDirection": {
-    "message": "방향"
-  },
-  "perpsOrderSize": {
-    "message": "수량"
-  },
-  "perpsEntryPrice": {
-    "message": "진입 가격"
-  },
-  "perpsMarketPriceValue": {
-    "message": "시장가"
-  },
-  "perpsConfirmMarketNote": {
-    "message": "시장가 주문은 즉시 전송됩니다. 체결가는 거래소 기록을 따릅니다."
-  },
-  "perpsConfirmLimitNote": {
-    "message": "지정가 주문은 즉시 체결되지 않거나 일부만 체결될 수 있습니다."
+  "perpsPlaceOrder": {
+    "message": "주문하기"
   },
   "perpsOpenOrders": {
     "message": "미체결 주문"
@@ -2214,7 +2184,7 @@
     "message": "시장가 주문이 체결되지 않았습니다. 자동 재시도하지 않았습니다."
   },
   "perpsMarketChangedReviewAgain": {
-    "message": "가격이 최대 슬리피지를 넘어 변동해 주문을 보내지 않았습니다. 다시 검토해 주세요."
+    "message": "서명 전에 시장 또는 주문 정보가 변경되었습니다. 주문은 전송되지 않았습니다. 다시 주문해 주세요."
   },
   "perpsFeeQuoteChangedReviewAgain": {
     "message": "수수료 견적이 변경되었습니다. 제출하기 전에 다시 확인하세요."
@@ -2280,7 +2250,7 @@
     "message": "최대 슬리피지"
   },
   "perpsPositionChangedReviewAgain": {
-    "message": "서명 전에 포지션이 변경되었습니다. 다시 검토해 주세요."
+    "message": "서명 전에 포지션이 변경되었습니다. 주문은 전송되지 않았습니다. 다시 주문해 주세요."
   },
   "perpsMakerShort": {
     "message": "메이커"

@@ -115,9 +115,9 @@ export class NotificationService {
     perpsOrderStatusResolved:
       'Order status was recovered. Account data has been refreshed.',
     perpsMarketChangedReviewAgain:
-      'The price moved beyond your max slippage. Nothing was sent — review the order again.',
+      'The market or order details changed before signing. No order was sent. Please place the order again.',
     perpsPositionChangedReviewAgain:
-      'Your position changed before the order was signed. Review it again.',
+      'Your position changed before signing. No order was sent. Please place the order again.',
     perpsDepositSubmitted: 'Deposit initiated. Waiting for USDC to arrive in your Hyperliquid account.',
     perpsDepositStillPending:
       'Deposit is on chain but not confirmed yet. It may still land — check the transaction before sending another.',
@@ -179,8 +179,8 @@ export class NotificationService {
     perpsLeverageUpdateFailed: '杠杆设置失败，订单未提交，请重试。',
     perpsOrderStatusResolved: '已恢复订单状态，并刷新账户数据。',
     perpsMarketChangedReviewAgain:
-      '价格变动已超过你设置的最大滑点，订单未发出，请重新审核。',
-    perpsPositionChangedReviewAgain: '签名前仓位已发生变化，请重新审核订单。',
+      '签名前行情或订单信息已变化，订单未发出，请重新下单。',
+    perpsPositionChangedReviewAgain: '签名前仓位已发生变化，订单未发出，请重新下单。',
     perpsDepositSubmitted: '存入已发起，等待 USDC 到达 Hyperliquid 账户。',
     perpsDepositStillPending:
       '存入已上链但尚未确认，仍可能成功。再次发送前请先查询该笔交易。',
@@ -243,9 +243,9 @@ export class NotificationService {
     perpsLeverageUpdateFailed: 'レバレッジを設定できなかったため、注文は送信されていません。再試行してください。',
     perpsOrderStatusResolved: '注文状態を復元し、口座データを更新しました。',
     perpsMarketChangedReviewAgain:
-      '価格が最大スリッページを超えて変動したため、注文は送信されませんでした。もう一度確認してください。',
+      '署名前に市場または注文情報が変化しました。注文は送信されていません。再度注文してください。',
     perpsPositionChangedReviewAgain:
-      '署名前にポジションが変化しました。もう一度確認してください。',
+      '署名前にポジションが変化しました。注文は送信されていません。再度注文してください。',
     perpsDepositSubmitted: '入金を開始しました。Hyperliquid アカウントへの USDC の反映をお待ちください。',
     perpsDepositStillPending:
       '入金はチェーンに送信済みですが未確認です。成立する可能性があるため、再送前に取引を確認してください。',
@@ -311,9 +311,9 @@ export class NotificationService {
     perpsLeverageUpdateFailed: '레버리지를 설정하지 못해 주문이 제출되지 않았습니다. 다시 시도해 주세요.',
     perpsOrderStatusResolved: '주문 상태를 복구하고 계정 데이터를 갱신했습니다.',
     perpsMarketChangedReviewAgain:
-      '가격이 최대 슬리피지를 넘어 변동해 주문을 보내지 않았습니다. 다시 검토해 주세요.',
+      '서명 전에 시장 또는 주문 정보가 변경되었습니다. 주문은 전송되지 않았습니다. 다시 주문해 주세요.',
     perpsPositionChangedReviewAgain:
-      '서명 전에 포지션이 변경되었습니다. 다시 검토해 주세요.',
+      '서명 전에 포지션이 변경되었습니다. 주문은 전송되지 않았습니다. 다시 주문해 주세요.',
     perpsDepositSubmitted: '입금을 시작했습니다. USDC가 Hyperliquid 계정에 도착할 때까지 기다려 주세요.',
     perpsDepositStillPending:
       '입금이 체인에 전송되었으나 아직 확인되지 않았습니다. 성사될 수 있으니 재전송 전에 거래를 확인하세요.',

@@ -332,7 +332,6 @@ describe('PerpsOrderComponent submission seam', () => {
     value.amount = '100';
     (value as any).wallet = { accounts: [{ extra: {} }] };
 
-    value.review();
     await value.submit();
 
     const submitted = tradeOrders.submit.calls.mostRecent().args[1];
@@ -365,110 +364,18 @@ describe('PerpsOrderComponent submission seam', () => {
 });
 
 
-/**
- * 审核态，架在一条持续推送的行情订阅之上。
- *
- * `watchActiveAssetData` 是 REST 播种 + `activeAssetData` 频道的实时订阅，所以「帧到达」
- * 在这张页面上是常态而不是边界情况。这里断言的是那条帧触发的路径不碰审核态 —— 它归
- * 提交生命周期管，等那个模块落地后这些用例跟着搬过去。
- */
-describe('PerpsOrderComponent review under live frames', () => {
-  /** 同一个市场，容量换成交易场所此刻上报的那个。 */
-  const capacity = (availableToTrade: string) =>
-    facts({
-      activeAssetData: {
-        user: '0xabc',
-        coin: 'ETH',
-        leverage: { type: 'isolated', value: 10 },
-        maxTradeSzs: ['10', '10'],
-        availableToTrade: [availableToTrade, availableToTrade],
-        markPxExact: '2000',
-        markPx: 2000,
-      },
-    });
-
-  /** 一张已经按 50% 定好金额、并且通过了审核的表单。 */
-  const reviewed = (): PerpsOrderComponent => {
-    const value = component();
-    value.facts = capacity('1000');
-    value.leverage = 10;
-    value.setPercent(50);
-    value.review();
-    return value;
-  };
-
-  it('holds the review when a frame repricing the percentage arrives', () => {
-    const value = reviewed();
-    expect(value.reviewing).toBeTrue();
-    expect(value.amount).toBe('5000');
-
-    // 购买力掉了一半，随后一帧到达。
-    value.facts = capacity('500');
-    (value as any).repricePercent();
-
-    // 用户批准的是屏幕上那个美元数，所以它必须原样留着 —— 而审核态必须活下来：
-    // CTA 绑的是 `reviewing ? submit() : review()`，掉回编辑态会让下一次点击变成重新审核。
-    expect(value.reviewing).toBeTrue();
-    expect(value.amount).toBe('5000');
-  });
-
+describe('PerpsOrderComponent live capacity', () => {
   it('reprices the percentage while the user is still composing', () => {
     const value = component();
-    value.facts = capacity('1000');
+    const initial = facts();
+    value.facts = initial;
     value.leverage = 10;
     value.setPercent(50);
     expect(value.amount).toBe('5000');
-
-    value.facts = capacity('500');
+    value.facts = facts({ activeAssetData: {
+      ...initial.activeAssetData, availableToTrade: ['500', '500'],
+    } });
     (value as any).repricePercent();
-
-    // 还没进入审核态，50% 就该跟着当前购买力走。
-    expect(value.amount).toBe('2500');
-  });
-
-  /**
-   * 上面三条断言的是那两条路各自的行为。这一条断言的是**接线** —— 也就是缺陷本身：
-   * 订阅回调过去调的是 `setPercent`，而它会作废审核。行为对了但接线还连在旧方法上，
-   * 用户照样会被行情帧退回编辑态，所以这条必须从订阅那一端进去。
-   */
-  it('holds the review across a user-fee response', () => {
-    const hyperliquid = {
-      getUserFeeRates: () => of({ takerRate: '0.0003', makerRate: '0.0001' }),
-    } as any;
-    const value = new PerpsOrderComponent(
-      null,
-      null,
-      null,
-      null,
-      hyperliquid,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      { builderAddress: '' } as any,
-      { watchConnectionState: () => of('live') } as any
-    );
-    value.facts = capacity('1000');
-    value.leverage = 10;
-    value.setPercent(50);
-    value.review();
-    (value as any).address = '0xabc';
-
-    (value as any).loadUserFeeRates();
-
-    expect(value.reviewing).toBeTrue();
-    expect(value.amount).toBe('5000');
-  });
-
-  it('still discards the review when the user moves the percentage', () => {
-    const value = reviewed();
-
-    value.setPercent(25);
-
-    // 冻结只针对帧。用户自己改了金额，就该重新审核他改出来的东西。
-    expect(value.reviewing).toBeFalse();
     expect(value.amount).toBe('2500');
   });
 });
@@ -549,7 +456,6 @@ describe('PerpsOrderComponent 离开页面之后', () => {
     value.amount = '100';
     (value as any).wallet = { accounts: [{ extra: {} }] };
 
-    value.review();
     await value.submit();
 
     // 订单确实发出去了 —— 被掐掉的话，它的下落就再也没人知道。
@@ -641,7 +547,6 @@ describe('PerpsOrderComponent 提示文案', () => {
     value.leverage = 5;
     value.amount = '100';
 
-    value.review();
     await value.submit();
     value.ngOnDestroy();
 
@@ -675,7 +580,7 @@ describe('PerpsOrderComponent 提示文案', () => {
 });
 
 
-describe('PerpsOrderComponent asynchronous confirmation', () => {
+describe('PerpsOrderComponent asynchronous submission', () => {
   let value: PerpsOrderComponent;
   let unlock: (key: string) => void;
   let trades: jasmine.Spy;
@@ -716,13 +621,12 @@ describe('PerpsOrderComponent asynchronous confirmation', () => {
     value.ngOnInit();
     value.amount = '100';
     value.leverage = 10;
-    value.review();
   });
 
   afterEach(() => value.ngOnDestroy());
 
-  it('keeps the reviewed reference price and submitted size while unlocking', async () => {
-    // 价格在审核窗口内变化，不应再以新价格扩大 IOC 边界。
+  it('keeps the click-time reference price and submitted size while unlocking', async () => {
+    // 以点击下单时的价格固定 IOC 边界，解锁期间不随行情变化。
     value.facts = facts({ market: {
       status: 'ready', market: ethMarket({ midPxExact: '2020', szDecimals: 4 }),
     } });
@@ -736,7 +640,7 @@ describe('PerpsOrderComponent asynchronous confirmation', () => {
     await pending;
     expect(trades).toHaveBeenCalledTimes(1);
     const intent = trades.calls.mostRecent().args[1];
-    expect(intent.referencePriceExact).toBe('2000');
+    expect(intent.referencePriceExact).toBe('2020');
     expect(intent.requestedSizeExact).toBe(confirmedSize);
   });
 
@@ -748,7 +652,7 @@ describe('PerpsOrderComponent asynchronous confirmation', () => {
     updated.activeAssetData.maxTradeSzs = ['0.0495', '0.0495'];
     value.facts = updated;
     // 新行情可买 0.049 ETH，但待发送的是 0.05 ETH，已经超过新容量。
-    expect(value.confirmSizeText).toBe('0.05');
+    expect(value.composition.orderSizeExact).toBe('0.05');
     unlock('private-key');
     await pending;
     expect(trades).not.toHaveBeenCalled();
@@ -762,7 +666,7 @@ describe('PerpsOrderComponent asynchronous confirmation', () => {
     (updated.market as any).market.midPxExact = '1960';
     updated.activeAssetData.maxTradeSzs = ['0.0505', '0.0505'];
     value.facts = updated;
-    expect(value.confirmSizeText).toBe('0.05');
+    expect(value.composition.orderSizeExact).toBe('0.05');
     unlock('private-key');
     await pending;
     expect(trades).toHaveBeenCalledTimes(1);
@@ -782,7 +686,6 @@ describe('PerpsOrderComponent asynchronous confirmation', () => {
 
   it('does not seed or reprice inputs during unlock', async () => {
     value.setPercent(50);
-    value.review();
     const amount = value.amount;
     const leverage = value.leverage;
     const pending = value.submit();

@@ -897,18 +897,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     this.amount = amountForPercent(this.composition, this.activePercent);
   }
 
-  /**
-   * 帧到达时，按当前购买力重算百分比所对应的金额。
-   *
-   * 审核和提交期间什么都不做。屏幕上那个美元数正是用户批准的东西，背着他重算等于改掉他批准的
-   * 输入 —— 而按 ADR-0006，页面保存的基线就是「用户输入 + 审核价」。
-   * `activeAssetData` 是一条实时订阅，所以过去这里每来一帧就静默作废一次审核：用户点完
-   * 百分比再点审核，下一帧就把他退回编辑态，而 CTA 绑的是 `reviewing ? submit() : review()`，
-   * 于是那一下点击换来的是重新审核，不是下单。
-   *
-   * 容量在审核期间下跌的风险已经有人管：`composeOrder` 会给出 `insufficient-margin`，
-   * 提交按钮自己就禁用并说明原因，不需要在这里抢先改数字。
-   */
+  /** 行情更新时重算百分比金额；提交期间保留用户点击下单时的金额。 */
   private repricePercent() {
     if (
       this.reviewing || this.submitting || this.closeMode || this.activePercent === null
@@ -1020,58 +1009,15 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       });
   }
 
-  /**
-   * 确认面板上那笔单叫什么 —— 面板顶上的方向那一行，和底下那个按钮，用的是同一个读数。
-   *
-   * 两处说同一件事却各算各的，正是一个按钮写着「做多」而上面那行写着「做空」的来路。
-   */
-  get confirmLabel(): string {
-    if (this.closeMode) {
-      return this.position?.isLong ? 'perpsCloseLong' : 'perpsCloseShort';
-    }
-    return this.isLong ? 'perpsLong' : 'perpsShort';
-  }
-
-  /**
-   * 确认面板在不在屏幕上。
-   *
-   * 提交期间它留着不走：用户按下确认之后，那笔单要么还在路上，要么已经有了结果，而把面板
-   * 撤掉会把他丢回一张所有控件都禁用了的表单，没有任何东西说明刚才那一下发生了什么。
-   */
-  get confirming(): boolean {
-    return this.reviewing || this.submitting;
-  }
-
-  /** 交易场所收到的是币数量，而表单收的是名义价值；被签名的那个数只在确认面板上出现。 */
-  get confirmSizeText(): string {
-    const preview = this.preview;
-    return preview
-      ? formatSize(preview.sizeExact, this.market?.szDecimals)
-      : NOT_APPLICABLE;
-  }
-
-  /** 这一单的成交参考价：市价单是中间价，限价单是用户规范化后的限价。 */
-  get confirmPriceText(): string {
-    return `$${formatPrice(
-      this.orderPriceExact,
-      this.market?.szDecimals,
-      this.orderType === 'market'
-    )}`;
-  }
-
-  /** 输入和检查订单时不提示，最终提交时才报告触发价错误。 */
+  /** 输入时不提示，点击下单时才报告触发价错误。 */
   private reportInvalidProtection(): boolean {
     if (this.composition.availability?.code !== 'invalid-protection') { return false; }
     this.global.snackBarTip('perpsInvalidProtection');
     return true;
   }
 
-  review() {
-    if (!this.canSubmit) {
-      return;
-    }
-    // 即将展示给用户的那个价格，保存下来，好让提交时能判断行情此后是否已经
-    // 偏离到超出他们同意的范围。
+  /** 固定点击下单时的输入和参考价，供异步解锁后的复核使用。 */
+  private captureSubmissionBaseline() {
     this.lifecycle.review({
       protectionEnabled: this.protectionEnabled,
       takeProfitPrice: this.takeProfitPrice,
@@ -1097,18 +1043,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     );
   }
 
-  /**
-   * 用户在确认面板上改了主意。
-   *
-   * 走的是编辑作废那条路：这次审核没了，页面回到表单，而基线跟着一起丢掉 —— 它存在的意义
-   * 是回答「这还是他批准的那一笔吗」，一笔他刚刚收回批准的单没有这个问题。
-   */
-  cancelReview() {
-    this.lifecycle.edited();
-  }
-
   async submit() {
-    if (!this.canSubmit || !this.lifecycle.reviewing) {
+    if (!this.canSubmit) {
       return;
     }
     if (this.reportInvalidProtection()) { return; }
@@ -1119,11 +1055,12 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       this.global.snackBarTip('perpsSigningUnavailable');
       return;
     }
+    this.captureSubmissionBaseline();
     if (!this.lifecycle.beginSubmit(this.stillApproved)) {
       this.global.snackBarTip('perpsMarketChangedReviewAgain');
       return;
     }
-    // 固定此次点击的意图和签名钱包。IOC 的价格边界只从审核价计算一次。
+    // 固定此次点击的意图和签名钱包。IOC 的价格边界只从此次点击的参考价计算一次。
     const wallet = this.wallet;
     const intent = {
       ...this.composition.intent,

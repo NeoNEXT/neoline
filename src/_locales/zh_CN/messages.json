@@ -1886,9 +1886,6 @@
   "perpsLiqPriceTip": {
     "message": "若价格达到该点位，您的仓位将被强制平仓并导致保证金全部损失。杠杆越高，这种情况发生的可能性越大。"
   },
-  "perpsEstimatedLiqPrice": {
-    "message": "预估强平价格"
-  },
   "perpsMargin": {
     "message": "保证金"
   },
@@ -1933,12 +1930,6 @@
   },
   "perpsConfirmClose": {
     "message": "平仓"
-  },
-  "perpsCloseLong": {
-    "message": "平多"
-  },
-  "perpsCloseShort": {
-    "message": "平空"
   },
   "perpsFundingTitle": {
     "message": "合约账户资金"
@@ -2057,29 +2048,8 @@
   "perpsOracleTip": {
     "message": "由验证器报告的外部价格中位数，用于计算资金费率。"
   },
-  "perpsReviewOrder": {
-    "message": "检查订单"
-  },
-  "perpsConfirmOrderTitle": {
-    "message": "确认订单"
-  },
-  "perpsOrderDirection": {
-    "message": "方向"
-  },
-  "perpsOrderSize": {
-    "message": "数量"
-  },
-  "perpsEntryPrice": {
-    "message": "入场价"
-  },
-  "perpsMarketPriceValue": {
-    "message": "市价"
-  },
-  "perpsConfirmMarketNote": {
-    "message": "市价单立即发出，成交价以交易场所为准。"
-  },
-  "perpsConfirmLimitNote": {
-    "message": "限价单可能不会立即成交，也可能只成交一部分。"
+  "perpsPlaceOrder": {
+    "message": "下单"
   },
   "perpsOpenOrders": {
     "message": "当前委托"
@@ -2214,7 +2184,7 @@
     "message": "市价单未成交，未自动重试。"
   },
   "perpsMarketChangedReviewAgain": {
-    "message": "价格变动已超过你设置的最大滑点，订单未发出，请重新审核。"
+    "message": "签名前行情或订单信息已变化，订单未发出，请重新下单。"
   },
   "perpsFeeQuoteChangedReviewAgain": {
     "message": "费用报价已变化。提交前请重新确认。"
@@ -2280,7 +2250,7 @@
     "message": "最大滑点"
   },
   "perpsPositionChangedReviewAgain": {
-    "message": "签名前仓位已发生变化，请重新审核订单。"
+    "message": "签名前仓位已发生变化，订单未发出，请重新下单。"
   },
   "perpsMakerShort": {
     "message": "Maker"
