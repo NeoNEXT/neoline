@@ -44,7 +44,54 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   isReady = false;
   status: LedgerStatus = LedgerStatuses.DISCONNECTED;
   savedAddressesObj = {};
-  hasInstallOneKeyBridge = true;
+  oneKeyDetecting = true;
+  oneKeyAuthorized = false;
+  oneKeyUsbConnected = false;
+  oneKeyConnecting = false;
+  oneKeyError = '';
+  private destroyed = false;
+
+  get oneKeySupported() {
+    return this.oneKeyService.supportsWebUsb;
+  }
+
+  async connectOneKey() {
+    if (!this.oneKeySupported) {
+      this.oneKeyDetecting = false;
+      return;
+    }
+    if (this.destroyed || this.oneKeyConnecting || this.oneKeyAuthorized) return;
+    this.oneKeyConnecting = true;
+    this.oneKeyError = '';
+    try {
+      const device = await this.oneKeyService.requestDevice();
+      if (!device || this.destroyed) return;
+      this.oneKeyUsbConnected = true;
+      const res = await this.oneKeyService.getDeviceStatus();
+      if (this.destroyed) return;
+      if (res.success === false) throw new Error(res.payload.error);
+      if (!res.payload.length) throw new Error('OneKey device unavailable');
+      const state = await this.oneKeyService.getPassphraseState();
+      if (this.destroyed) return;
+      if (state.success === false) throw new Error(state.payload.error);
+      this.oneKeyAuthorized = true;
+      this.isReady = true;
+      this.fetchAccounts(this.accountPage);
+    } catch (error) {
+      if (this.destroyed) return;
+      this.oneKeyAuthorized = false;
+      if (
+        error?.name !== 'NotFoundError' &&
+        error?.name !== 'SecurityError' &&
+        !/device locked|pin cancelled|pin invalid/i.test(error?.message || '')
+      ) {
+        this.oneKeyError = 'oneKeyConnectionFailed';
+      }
+    } finally {
+      this.oneKeyConnecting = false;
+      this.oneKeyDetecting = false;
+    }
+  }
 
   selectedAccount;
   selectedIndex;
@@ -81,6 +128,8 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
     if (this.device === 'QRCode') {
       this.isReady = true;
       this.accounts = this.getQrCodeAccounts(1);
+    } else if (this.device === 'OneKey') {
+      void this.connectOneKey();
     } else {
       this.getLedgerStatus();
       this.getStatusInterval = interval(5000).subscribe(() => {
@@ -91,6 +140,8 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
+    if (this.device === 'OneKey') this.oneKeyService.cancel();
     this.accountSub?.unsubscribe();
     this.getStatusInterval?.unsubscribe();
   }
@@ -173,23 +224,6 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
         }
       });
     }
-    if (this.device === 'OneKey') {
-      this.oneKeyService.getDeviceStatus().then((res) => {
-        if (!res.success && 'code' in res.payload && res.payload.code === 808) {
-          this.hasInstallOneKeyBridge = false;
-        }
-        if (res.success && res.payload.length > 0) {
-          this.hasInstallOneKeyBridge = true;
-          this.getStatusInterval?.unsubscribe();
-          this.oneKeyService.getPassphraseState().then((state) => {
-            if (state.success && this.accounts.length === 0) {
-              this.isReady = true;
-              this.fetchAccounts(1);
-            }
-          });
-        }
-      });
-    }
   }
 
   private fetchAccounts(index: number) {
@@ -219,7 +253,12 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
           this.accounts = accounts;
           this.isLoadingAccount = false;
         })
-        .catch(() => {
+        .catch((error) => {
+          this.isReady = false;
+          this.oneKeyAuthorized = false;
+          if (!/device locked|pin cancelled|pin invalid/i.test(error?.message || '')) {
+            this.oneKeyError = 'oneKeyConnectionFailed';
+          }
           this.isLoadingAccount = false;
         });
     }

@@ -1,0 +1,40 @@
+section.main {
+  max-width: 480px;
+  margin: 80px auto;
+  padding: 0 24px;
+  text-align: center;
+
+  .title {
+    font-size: 22px;
+    color: var(--title-color);
+  }
+
+  .tip {
+    margin-top: 16px;
+    color: var(--tip-color);
+    line-height: 1.4;
+
+    .link {
+      color: var(--theme-color);
+      cursor: pointer;
+      white-space: nowrap;
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    &.success {
+      color: var(--theme-color);
+    }
+
+    &.error {
+      color: var(--warn-color);
+    }
+  }
+
+  button.confirm {
+    margin-top: 24px;
+    min-width: 220px;
+    padding: 0 20px;
+  }
+}

@@ -3,12 +3,14 @@ import { NgModule } from '@angular/core';
 
 import { PopupWalletGuard } from '@app/core';
 import { LedgerComponent } from './ledger.component';
+import { OneKeyConnectComponent } from './onekey-connect/onekey-connect.component';
 
-/**
- * Mounted lazily at `ledger` by AppRoutingModule, so the path is empty here.
- * The URL is unchanged.
- */
+// Mounted lazily at `ledger` by AppRoutingModule.
 const routes: Routes = [
+  {
+    path: 'onekey-connect',
+    component: OneKeyConnectComponent,
+  },
   {
     path: '',
     component: LedgerComponent,

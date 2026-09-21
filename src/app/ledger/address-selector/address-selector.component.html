@@ -24,16 +24,17 @@
     </p>
     <p class="note reconnect">{{ "reconnectLedger" | translate | async }}</p>
   </ng-container>
-  <ng-container *ngIf="device === 'OneKey'">
-    <p class="note" *ngIf="hasInstallOneKeyBridge">
-      {{ "connectOneKey" | translate | async }}
+  <ng-container *ngIf="device === 'OneKey' && !isReady">
+    <p class="note">
+      {{ (oneKeySupported ? (oneKeyUsbConnected ? 'oneKeyUnlockDevice' : 'oneKeyUsbConnectTip') : 'oneKeyWebUsbUnsupported') | translate | async }}<a
+        *ngIf="oneKeySupported && !oneKeyUsbConnected"
+        class="link"
+        href="https://help.onekey.so/en/articles/13183743-hardware-wallet-cannot-connect-to-onekey-app-troubleshooting"
+        target="_blank"
+        rel="noopener noreferrer"
+        >{{ 'oneKeyUsbConnectIssue' | translate | async }}</a>
     </p>
-    <p class="note" *ngIf="!hasInstallOneKeyBridge">
-      {{ "installOneKeyBridgeTip" | translate | async }}
-      <span class="link" (click)="jumbToWeb('oneKeyDownload')">{{
-        "installOneKeyBridge" | translate | async
-      }}</span>
-    </p>
+    <p class="note" *ngIf="oneKeyError">{{ oneKeyError | translate | async }}</p>
   </ng-container>
 </div>
 <div class="content address" *ngIf="isReady">
