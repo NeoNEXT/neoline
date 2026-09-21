@@ -1607,15 +1607,6 @@
   "connectOneKey": {
     "message": "OneKey 기기를 연결하고 잠금을 해제하세요"
   },
-  "installOneKeyBridgeTip": {
-    "message": "OneKey Bridge 앱을 여세요. 하드웨어 기기를 연결하기 전에 OneKey Bridge 데스크톱 앱을 다운로드하고 실행하세요. NeoLine은 하드웨어 지갑과 통신하기 위해 이 앱이 필요합니다."
-  },
-  "installOneKeyBridgeShortTip": {
-    "message": "OneKey Bridge 데스크톱 앱을 다운로드하고 실행하세요."
-  },
-  "installOneKeyBridge": {
-    "message": "OneKey Bridge 설치"
-  },
   "selectHardware": {
     "message": "NeoLine과 함께 사용할 하드웨어 지갑을 선택하세요."
   },
@@ -2305,5 +2296,23 @@
   },
   "perpsProtectionNotConfirmed": {
     "message": "주문이 처리되었지만 익절/손절은 모두 확인되지 않았습니다. 중복 주문 전에 미체결 주문을 확인하세요."
+  },
+  "oneKeyUsbConnectTip": {
+    "message": "OneKey를 연결하고 잠금을 해제한 후 브라우저의 기기 목록에서 선택하세요. "
+  },
+  "oneKeyUsbConnectIssue": {
+    "message": "기기 연결에 문제가 있나요?"
+  },
+  "oneKeyUnlockDevice": {
+    "message": "OneKey 기기에서 화면 잠금을 해제하세요."
+  },
+  "oneKeyWebUsbUnsupported": {
+    "message": "이 브라우저는 USB 연결을 지원하지 않습니다. 데스크톱 Chrome 또는 Edge를 사용하세요."
+  },
+  "oneKeyConnectionFailed": {
+    "message": "OneKey에 연결할 수 없습니다. 다른 지갑 앱을 닫고 기기를 다시 연결한 후 재시도하세요."
+  },
+  "oneKeyUsbAuthorized": {
+    "message": "원래 페이지로 돌아가 작업을 계속하세요. 이 탭은 닫아도 됩니다."
   }
 }

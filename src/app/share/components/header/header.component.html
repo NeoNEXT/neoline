@@ -24,7 +24,7 @@
         [network]="currentNetwork"
       ></chain-logo>
       <span>{{ currentNetwork.name }}</span>
-      <img theme src="assets/images/common/triangle-fill.svg" />
+      <img *ngIf="getShowMenu()" theme src="assets/images/common/triangle-fill.svg" />
     </button>
     <img
       *ngIf="currentUrl !== '/ledger' && getShowMenu()"

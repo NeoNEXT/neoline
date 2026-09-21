@@ -4,15 +4,21 @@
 >
   <div class="content">
     <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
-    <p class="tip" *ngIf="hasInstallOneKeyBridge && loadingMsg">
+    <p class="tip" *ngIf="loadingMsg && (currentWallet.accounts[0].extra?.device !== 'OneKey' || oneKeyAuthorized)">
       {{ loadingMsg | translate | async }}
     </p>
-    <p class="tip" *ngIf="!hasInstallOneKeyBridge">
-      {{ "installOneKeyBridgeShortTip" | translate | async }}
-      <span class="link" (click)="toInstallOneKeyBridge()">{{
-        "installOneKeyBridge" | translate | async
-      }}</span>
-    </p>
+    <ng-container *ngIf="currentWallet.accounts[0].extra?.device === 'OneKey' && !oneKeyAuthorized">
+      <p class="tip">
+        {{ (oneKeySupported ? (oneKeyUsbConnected ? 'oneKeyUnlockDevice' : 'oneKeyUsbConnectTip') : 'oneKeyWebUsbUnsupported') | translate | async }}<a
+          *ngIf="oneKeySupported && !oneKeyUsbConnected"
+          class="link"
+          href="https://help.onekey.so/en/articles/13183743-hardware-wallet-cannot-connect-to-onekey-app-troubleshooting"
+          target="_blank"
+          rel="noopener noreferrer"
+          >{{ 'oneKeyUsbConnectIssue' | translate | async }}</a>
+      </p>
+      <p class="tip" *ngIf="oneKeyError">{{ oneKeyError | translate | async }}</p>
+    </ng-container>
     <button class="cancel pop-ups" (click)="cancelLedgerSign()">
       {{ "cancel" | translate | async }}
     </button>

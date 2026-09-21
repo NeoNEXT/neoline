@@ -12,7 +12,7 @@ import {
   LedgerStatuses,
   Wallet3,
 } from '@/app/popup/_lib';
-import { LedgerService, OneKeyService, SettingState } from '@/app/core';
+import { LedgerService, OneKeyService } from '@/app/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { interval } from 'rxjs';
 import { ETH_EOA_SIGN_METHODS } from '@/models/evm';
@@ -35,12 +35,51 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
 
   loadingMsg = '';
   getStatusInterval;
-  hasInstallOneKeyBridge = true;
+  oneKeyDetecting = true;
+  oneKeyAuthorized = false;
+  oneKeyUsbConnected = false;
+  oneKeyConnecting = false;
+  oneKeyError = '';
+  private destroyed = false;
+
+  get oneKeySupported() {
+    return this.oneKeyService.supportsWebUsb;
+  }
+
+  async connectOneKey() {
+    if (!this.oneKeySupported) {
+      this.oneKeyDetecting = false;
+      return;
+    }
+    if (this.destroyed || this.oneKeyConnecting || this.oneKeyAuthorized) return;
+    this.oneKeyConnecting = true;
+    this.oneKeyError = '';
+    try {
+      const device = await this.oneKeyService.requestDevice();
+      if (!device || this.destroyed) return;
+      this.oneKeyUsbConnected = true;
+      this.oneKeyDetecting = false;
+      await this.handleOneKey();
+    } catch (error) {
+      if (this.destroyed) return;
+      this.oneKeyAuthorized = false;
+      this.loadingMsg = 'connectOneKeyDevice';
+      if (
+        error?.name !== 'NotFoundError' &&
+        error?.name !== 'SecurityError' &&
+        !/device locked|pin cancelled|pin invalid/i.test(error?.message || '')
+      ) {
+        this.oneKeyError = 'oneKeyConnectionFailed';
+      }
+    } finally {
+      this.oneKeyConnecting = false;
+      this.oneKeyDetecting = false;
+    }
+  }
 
   constructor(
     private ledger: LedgerService,
     private oneKeyService: OneKeyService,
-    private setting: SettingState,
     private dialog: MatDialog
   ) {}
 
@@ -66,29 +105,32 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
         this.currentWallet.accounts[0].extra?.device === 'OneKey'
           ? 'connectOneKeyDevice'
           : 'connectLedgerDevice';
-      this.getLedgerStatus();
-      this.getStatusInterval = interval(5000).subscribe(() => {
-        this.getLedgerStatus();
-      });
+      if (this.currentWallet.accounts[0].extra?.device === 'OneKey') {
+        void this.connectOneKey();
+      } else {
+        this.handleLedger();
+        this.getStatusInterval = interval(5000).subscribe(() => {
+          this.handleLedger();
+        });
+      }
     }
   }
 
   ngOnDestroy(): void {
+    this.destroyed = true;
+    if (this.currentWallet?.accounts[0].extra?.device === 'OneKey') {
+      this.oneKeyService.cancel();
+    }
     this.getStatusInterval?.unsubscribe();
   }
 
   cancelLedgerSign() {
+    this.destroyed = true;
+    if (this.currentWallet?.accounts[0].extra?.device === 'OneKey') {
+      this.oneKeyService.cancel();
+    }
     this.backWithSignedTx.emit();
     this.getStatusInterval?.unsubscribe();
-  }
-
-  private getLedgerStatus() {
-    if (this.currentWallet.accounts[0].extra?.device !== 'OneKey') {
-      this.handleLedger();
-    }
-    if (this.currentWallet.accounts[0].extra?.device === 'OneKey') {
-      this.handleOneKey();
-    }
   }
 
   private handleLedger() {
@@ -141,53 +183,44 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
       }
     });
   }
-  private handleOneKey() {
-    this.oneKeyService.getDeviceStatus().then((res) => {
-      if (!res.success && 'code' in res.payload && res.payload.code === 808) {
-        this.hasInstallOneKeyBridge = false;
-      }
-      if (res.success && res.payload.length > 0) {
-        this.hasInstallOneKeyBridge = true;
-        this.getStatusInterval?.unsubscribe();
-        this.oneKeyService.getPassphraseState().then((state) => {
-          if (state.success) {
-            this.loadingMsg = this.signMethod
-              ? 'signOneKeyMessage'
-              : 'signOneKeyTransaction';
-            (this.signMethod
-              ? this.signMethod === ETH_EOA_SIGN_METHODS.PersonalSign
-                ? this.oneKeyService.signEvmPersonalMessage(
-                    this.unsignedData,
-                    this.currentWallet as EvmWalletJSON
-                  )
-                : this.oneKeyService.signEvmTypedData(
-                    this.unsignedData,
-                    this.currentWallet as EvmWalletJSON
-                  )
-              : this.oneKeyService.signTransaction({
-                  wallet: this.currentWallet as Wallet3 | EvmWalletJSON,
-                  unsignedTx: this.unsignedTx,
-                  chainType: this.chainType,
-                  magicNumber: this.magicNumber,
-                  signOnly: this.signOnly,
-                })
+  private async handleOneKey() {
+    const res = await this.oneKeyService.getDeviceStatus();
+    if (this.destroyed) return;
+    if (res.success === false) throw new Error(res.payload.error);
+    if (!res.payload.length) throw new Error('OneKey device unavailable');
+    const state = await this.oneKeyService.getPassphraseState();
+    if (this.destroyed) return;
+    if (state.success === false) throw new Error(state.payload.error);
+    this.oneKeyAuthorized = true;
+    this.loadingMsg = this.signMethod
+      ? 'signOneKeyMessage'
+      : 'signOneKeyTransaction';
+    try {
+      const tx = await (this.signMethod
+        ? this.signMethod === ETH_EOA_SIGN_METHODS.PersonalSign
+          ? this.oneKeyService.signEvmPersonalMessage(
+              this.unsignedData,
+              this.currentWallet as EvmWalletJSON
             )
-              .then((tx) => {
-                this.loadingMsg = '';
-                this.backWithSignedTx.emit(tx);
-              })
-              .catch((error) => {
-                this.loadingMsg = '';
-                this.backWithSignedTx.emit();
-                this.oneKeyService.handleOneKeyError(error);
-              });
-          }
-        });
-      }
-    });
-  }
-
-  toInstallOneKeyBridge() {
-    this.setting.toWeb('oneKeyDownload');
+          : this.oneKeyService.signEvmTypedData(
+              this.unsignedData,
+              this.currentWallet as EvmWalletJSON
+            )
+        : this.oneKeyService.signTransaction({
+            wallet: this.currentWallet as Wallet3 | EvmWalletJSON,
+            unsignedTx: this.unsignedTx,
+            chainType: this.chainType,
+            magicNumber: this.magicNumber,
+            signOnly: this.signOnly,
+          }));
+      if (this.destroyed) return;
+      this.loadingMsg = '';
+      this.backWithSignedTx.emit(tx);
+    } catch (error) {
+      if (this.destroyed) return;
+      this.loadingMsg = '';
+      this.backWithSignedTx.emit();
+      this.oneKeyService.handleOneKeyError(error);
+    }
   }
 }

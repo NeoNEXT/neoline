@@ -1607,15 +1607,6 @@
   "connectOneKey": {
     "message": "OneKeyデバイスを接続し、ロックを解除してください"
   },
-  "installOneKeyBridgeTip": {
-    "message": "OneKey Bridgeアプリを開いてください。ハードウェアデバイスを接続する前に、OneKey Bridgeデスクトップアプリをダウンロードして起動してください。NeoLineはこれを使用してハードウェアウォレットと通信します。"
-  },
-  "installOneKeyBridgeShortTip": {
-    "message": "OneKey Bridgeデスクトップアプリをダウンロードして起動してください。"
-  },
-  "installOneKeyBridge": {
-    "message": "OneKey Bridgeをインストール"
-  },
   "selectHardware": {
     "message": "NeoLineで使用したいハードウェアウォレットを選択してください。"
   },
@@ -2305,5 +2296,23 @@
   },
   "perpsProtectionNotConfirmed": {
     "message": "注文は処理されましたが、利確・損切りは未確認です。重複注文せず、未約定注文を確認してください。"
+  },
+  "oneKeyUsbConnectTip": {
+    "message": "OneKeyを接続してロックを解除し、ブラウザのデバイス選択画面で選択してください。"
+  },
+  "oneKeyUsbConnectIssue": {
+    "message": "デバイスの接続に問題がありますか？"
+  },
+  "oneKeyUnlockDevice": {
+    "message": "OneKey デバイスの画面ロックを解除してください。"
+  },
+  "oneKeyWebUsbUnsupported": {
+    "message": "このブラウザはUSB接続に対応していません。デスクトップ版ChromeまたはEdgeをご利用ください。"
+  },
+  "oneKeyConnectionFailed": {
+    "message": "OneKeyに接続できません。他のウォレットアプリを閉じ、デバイスを接続し直して再試行してください。"
+  },
+  "oneKeyUsbAuthorized": {
+    "message": "元のページに戻って操作を続けてください。このタブは閉じて構いません。"
   }
 }

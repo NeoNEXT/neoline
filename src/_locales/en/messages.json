@@ -1607,15 +1607,6 @@
   "connectOneKey": {
     "message": "Please connect and unlock your OneKey device"
   },
-  "installOneKeyBridgeTip": {
-    "message": "Open OneKey Bridge app. Please download and open OneKey Bridge desktop app before connecting your hardware device. NeoLine needs it to communicate with your hardware wallet."
-  },
-  "installOneKeyBridgeShortTip": {
-    "message": "Please download and open OneKey Bridge desktop app."
-  },
-  "installOneKeyBridge": {
-    "message": "Install OneKey Bridge"
-  },
   "selectHardware": {
     "message": "Select a hardware wallet you would like to use with NeoLine."
   },
@@ -2305,5 +2296,23 @@
   },
   "perpsProtectionNotConfirmed": {
     "message": "Order processed, but TP/SL is not fully confirmed. Check open orders before opening another position."
+  },
+  "oneKeyUsbConnectTip": {
+    "message": "Connect and unlock your OneKey, then select it in the browser device picker. "
+  },
+  "oneKeyUsbConnectIssue": {
+    "message": "Having trouble connecting your device?"
+  },
+  "oneKeyUnlockDevice": {
+    "message": "Unlock the screen on your OneKey device."
+  },
+  "oneKeyWebUsbUnsupported": {
+    "message": "This browser does not support USB connections. Please use desktop Chrome or Edge."
+  },
+  "oneKeyConnectionFailed": {
+    "message": "Unable to connect to OneKey. Close other wallet apps, reconnect the device, and try again."
+  },
+  "oneKeyUsbAuthorized": {
+    "message": "Return to the original page to continue. You can close this tab."
   }
 }

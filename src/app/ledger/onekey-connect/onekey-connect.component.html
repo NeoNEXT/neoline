@@ -1,0 +1,29 @@
+<app-header></app-header>
+<section class="main">
+  <p class="title">{{ "connectOneKeyDevice" | translate | async }}</p>
+  <p class="tip" *ngIf="!authorized">
+    {{
+      (oneKeySupported ? "oneKeyUsbConnectTip" : "oneKeyWebUsbUnsupported")
+        | translate
+        | async
+    }}<a
+      *ngIf="oneKeySupported"
+      class="link"
+      href="https://help.onekey.so/en/articles/13183743-hardware-wallet-cannot-connect-to-onekey-app-troubleshooting"
+      target="_blank"
+      rel="noopener noreferrer"
+      >{{ "oneKeyUsbConnectIssue" | translate | async }}</a>
+  </p>
+  <p class="tip success" *ngIf="authorized">
+    {{ "oneKeyUsbAuthorized" | translate | async }}
+  </p>
+  <p class="tip error" *ngIf="error">{{ error | translate | async }}</p>
+  <button
+    class="confirm"
+    *ngIf="oneKeySupported && !authorized"
+    (click)="connect()"
+    [disabled]="connecting"
+  >
+    {{ "connect" | translate | async }}
+  </button>
+</section>

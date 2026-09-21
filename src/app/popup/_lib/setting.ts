@@ -138,7 +138,6 @@ export type LinkType =
   | 'bridgeTutorial'
   | 'manageAsset'
   | 'manageTx'
-  | 'oneKeyDownload'
   | 'getHelp'
   | 'addSwitchNetwork'
   | 'companyWebsite'
@@ -162,10 +161,6 @@ export const LINKS: Record<LinkType, Record<langType, string>> = {
     en: 'https://tutorial.neoline.io/hardware-wallet/ledger-hardware-wallet',
     zh_CN:
       'https://tutorial.neoline.io/cn/ying-jian-qian-bao/ledgerhardwarewallet',
-  },
-  oneKeyDownload: {
-    en: 'https://onekey.so/download/',
-    zh_CN: 'https://onekey.so/zh_CN/download/',
   },
   bridgeTutorial: {
     en: 'https://tutorial.neoline.io/create-and-manage-neo-x-wallet/how-to-bridge-gas-using-the-neoline-chrome-extension',

@@ -137,6 +137,7 @@ $network-list: (
       .link {
         color: var(--theme-color);
         cursor: pointer;
+        white-space: nowrap;
       }
     }
     button {

@@ -1607,15 +1607,6 @@
   "connectOneKey": {
     "message": "请连接并解锁您的 OneKey 设备"
   },
-  "installOneKeyBridgeTip": {
-    "message": "需要启动 OneKey Bridge。连接硬件设备前，请下载并启动 OneKey Bridge，NeoLine 才能与硬件通信。"
-  },
-  "installOneKeyBridgeShortTip": {
-    "message": "请下载并启动 OneKey Bridge。"
-  },
-  "installOneKeyBridge": {
-    "message": "安装 OneKey Bridge"
-  },
   "selectHardware": {
     "message": "选择希望用于 NeoLine 的硬件钱包。"
   },
@@ -2305,5 +2296,23 @@
   },
   "perpsProtectionNotConfirmed": {
     "message": "订单已处理，但止盈/止损未全部确认，请检查当前委托，勿重复开仓。"
+  },
+  "oneKeyUsbConnectTip": {
+    "message": "连接并解锁 OneKey，然后在浏览器弹出的设备列表中选择设备。"
+  },
+  "oneKeyUsbConnectIssue": {
+    "message": "设备连接有问题吗？"
+  },
+  "oneKeyUnlockDevice": {
+    "message": "请在 OneKey 设备上解锁屏幕。"
+  },
+  "oneKeyWebUsbUnsupported": {
+    "message": "当前浏览器不支持 USB 连接，请使用电脑端 Chrome。"
+  },
+  "oneKeyConnectionFailed": {
+    "message": "无法连接 OneKey，请关闭其他钱包应用，重新插入设备后重试。"
+  },
+  "oneKeyUsbAuthorized": {
+    "message": "请回到原页面继续操作，当前标签页可关闭。"
   }
 }
