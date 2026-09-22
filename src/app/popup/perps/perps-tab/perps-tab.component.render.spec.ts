@@ -140,10 +140,15 @@ describe('PerpsTabComponent 渲染与接线', () => {
   afterEach(() => fixture.destroy());
 
   const card = () => fixture.debugElement.query(By.css('.position-card'));
-  const button = (selector: string): HTMLButtonElement =>
-    fixture.nativeElement.querySelector(`.position-actions button.${selector}`);
   const text = (selector: string): string =>
     (fixture.nativeElement.querySelector(selector)?.textContent ?? '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  const boxValue = (index: number): string =>
+    (
+      fixture.nativeElement.querySelectorAll('.price-box .value')[index]
+        ?.textContent ?? ''
+    )
       .replace(/\s+/g, ' ')
       .trim();
 
@@ -187,39 +192,26 @@ describe('PerpsTabComponent 渲染与接线', () => {
       expect(text('.position-pnl')).toBe('+$0.34 +3.5%');
     });
 
-    // 卡片主体不导航：操作全在两个按钮上。绑一个组件没有的方法，点下去就是运行时 TypeError。
-    it('leaves the card body itself without a click handler', () => {
+    it('routes to the market page by its protocol coin when the card is clicked', () => {
       fixture.detectChanges();
 
-      expect(card().listeners.map((listener) => listener.name)).not.toContain(
+      expect(card().listeners.map((listener) => listener.name)).toContain(
         'click'
       );
 
       card().nativeElement.click();
       fixture.detectChanges();
 
-      expect(navigateByUrl).not.toHaveBeenCalled();
-    });
-
-    // 加仓沿用仓位的方向，并且走协议币种 —— HIP-3 上 `neol:IWM` 和 `IWM` 是两个市场。
-    it('routes adding to the position by its protocol coin', () => {
-      fixture.detectChanges();
-
-      button('plain').click();
-
       expect(navigateByUrl).toHaveBeenCalledWith(
-        '/popup/perps/order/neol:IWM?side=short'
+        '/popup/perps/market/neol:IWM'
       );
     });
 
-    it('routes closing the position by its protocol coin', () => {
+    it('does not keep add or close buttons on the card', () => {
       fixture.detectChanges();
 
-      button('danger').click();
-
-      expect(navigateByUrl).toHaveBeenCalledWith(
-        '/popup/perps/order/neol:IWM?close=1'
-      );
+      expect(fixture.nativeElement.querySelector('.position-actions')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.position-card button')).toBeNull();
     });
 
     it('keeps its cards off the screen while the account has no positions', () => {
@@ -227,6 +219,13 @@ describe('PerpsTabComponent 渲染与接线', () => {
       fixture.detectChanges();
 
       expect(fixture.nativeElement.querySelector('.position-card')).toBeNull();
+    });
+
+    it('shows a missing liquidation price as a gap rather than a dollar amount', () => {
+      account.positions = [{ ...HIP3_POSITION, liquidationPxExact: null }];
+      fixture.detectChanges();
+
+      expect(boxValue(1)).toBe('--');
     });
   });
 
@@ -268,16 +267,17 @@ describe('PerpsTabComponent 渲染与接线', () => {
   });
 
   describe('市场接线', () => {
-    // 数量的精度归市场管，而市场是从 tab 自己那条行情订阅上来的 —— 不再由内嵌列表转发。
-    it('takes the precision for position sizes from its own market feed', () => {
+    // 市场价格来自 tab 自己那条行情订阅 —— 行情还没到时不能报一个这个市场从未印过的价格。
+    it('takes the market price from its own market feed', () => {
       fixture.detectChanges();
-      // 快照还没到，精度只能由数量级决定。
-      expect(text('.position-meta')).toContain('1.23 IWM');
+      expect(boxValue(0)).toBe('--');
+      expect(boxValue(1)).toBe('$99,829');
 
       deliverMarkets();
 
       expect(component.markets).toEqual(MARKETS);
-      expect(text('.position-meta')).toContain('1.2346 IWM');
+      expect(boxValue(0)).toBe('$100');
+      expect(boxValue(1)).toBe('$99,829');
     });
   });
 });

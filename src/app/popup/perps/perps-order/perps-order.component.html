@@ -9,7 +9,15 @@
       />
     </svg>
     <perps-coin-logo [symbol]="symbol" [coin]="coin"></perps-coin-logo>
-    <div class="pair">{{ symbol }}</div>
+    <div class="pair">
+      <ng-container *ngIf="addMode">{{
+        "perpsAddCoin" | translate: { symbol: symbol } | async
+      }}</ng-container>
+      <ng-container *ngIf="closeMode">{{
+        "perpsCloseCoin" | translate: { symbol: symbol } | async
+      }}</ng-container>
+      <ng-container *ngIf="!addMode && !closeMode">{{ symbol }}</ng-container>
+    </div>
     <span class="price">${{ formatPrice(market?.midPxExact, market?.szDecimals, true) }}</span>
     <span
       class="change"
@@ -25,7 +33,7 @@
   </div>
 
   <!-- 做多 / 做空 -->
-  <div class="side-toggle" *ngIf="!closeMode">
+  <div class="side-toggle" *ngIf="!closeMode && !addMode">
     <div
       class="option"
       [class.active-long]="isLong"
@@ -42,7 +50,7 @@
     </div>
   </div>
 
-  <div class="close-position" *ngIf="closeMode && position">
+  <div class="close-position" *ngIf="(closeMode || addMode) && position">
     <span>{{ "perpsMyPosition" | translate | async }}</span>
     <b [class.short]="!position.isLong">
       {{
@@ -57,7 +65,7 @@
       <span>{{ "perpsAvailable" | translate | async }}</span>
       <b>{{ formatBalance(availableExact) }} USDC</b>
     </div>
-    <div class="current-position">
+    <div class="current-position" *ngIf="!addMode">
       <span>{{ "perpsCurrentPosition" | translate | async }}</span>
       <b [class.short]="position && !position.isLong">{{ formattedPositionSize }} {{ symbol }}</b>
     </div>
@@ -65,7 +73,11 @@
 
   <!-- 金额 -->
   <label class="input-box">
-    <span class="label">{{ "perpsAmount" | translate | async }}</span>
+    <span class="label">{{
+      (addMode ? "perpsAddAmount" : closeMode ? "perpsCloseableAmount" : "perpsAmount")
+        | translate
+        | async
+    }}</span>
     <span class="input-value">
       <input
         [disabled]="submitting || leverageUpdating"
@@ -92,7 +104,9 @@
         step="1"
         [value]="amountSliderPercent"
         (input)="setPercent(+$any($event.target).value)"
-        [attr.aria-label]="'perpsAmount' | translate | async"
+        [attr.aria-label]="
+          (addMode ? 'perpsAddAmount' : closeMode ? 'perpsCloseableAmount' : 'perpsAmount') | translate | async
+        "
       />
       <span class="range-dots" aria-hidden="true">
         <i
@@ -115,7 +129,9 @@
         (input)="onPercentInput($any($event.target).value)"
         (blur)="onPercentBlur()"
         (keydown.enter)="$any($event.target).blur()"
-        [attr.aria-label]="'perpsAmount' | translate | async"
+        [attr.aria-label]="
+          (addMode ? 'perpsAddAmount' : closeMode ? 'perpsCloseableAmount' : 'perpsAmount') | translate | async
+        "
       />
       <span>%</span>
     </label>
@@ -125,7 +141,7 @@
   </p>
 
   <!-- 杠杆滑块 -->
-  <ng-container *ngIf="!closeMode">
+  <ng-container *ngIf="!closeMode && !addMode">
     <div class="leverage-head">
       <span class="label">{{ "perpsLeverage" | translate | async }}</span>
       <span class="max" *ngIf="market"
@@ -187,25 +203,33 @@
         {{ liquidationPriceText }}
       </span>
     </div>
-    <div class="row">
+    <div class="row" *ngIf="!closeMode">
       <span class="label">
-        {{
-          (closeMode ? "perpsReleasedMargin" : "perpsMargin")
-            | translate
-            | async
-        }}
+        {{ "perpsMargin" | translate | async }}
         <tooltip
           placement="topLeft"
-          [tip]="
-            (closeMode ? 'perpsReleasedMarginTip' : 'perpsMarginTip')
-              | translate
-              | async
-          "
+          [tip]="'perpsMarginTip' | translate | async"
         >
           <img src="assets/images/common/tooltip.svg" alt="" />
         </tooltip>
       </span>
       <span class="value">{{ marginText }}</span>
+    </div>
+    <div class="row" *ngIf="closeMode">
+      <span class="label">
+        {{ "perpsClosePnl" | translate | async }}
+        <tooltip
+          placement="topLeft"
+          [tip]="'perpsClosePnlTip' | translate | async"
+        >
+          <img src="assets/images/common/tooltip.svg" alt="" />
+        </tooltip>
+      </span>
+      <span
+        class="value"
+        [class.positive]="closePnlPositive"
+        [class.negative]="preview?.closePnlExact | perpsNegative"
+      >{{ closePnlText }}</span>
     </div>
     <div class="row">
       <span class="label">
@@ -243,8 +267,20 @@
         class="value"
         *ngIf="!feeEstimateUnavailable"
       >
-        {{ feeText }} / <span [class.rebate]="makerFeeIsRebate">{{ makerFeeText }}</span>
+        {{ feeText }}<ng-container *ngIf="quotesBothFeeSides"> / <span [class.rebate]="makerFeeIsRebate">{{ makerFeeText }}</span></ng-container>
       </span>
+    </div>
+    <div class="row" *ngIf="closeMode">
+      <span class="label">
+        {{ "perpsEstimatedReceive" | translate | async }}
+        <tooltip
+          placement="topLeft"
+          [tip]="'perpsEstimatedReceiveTip' | translate | async"
+        >
+          <img src="assets/images/common/tooltip.svg" alt="" />
+        </tooltip>
+      </span>
+      <span class="value">{{ receiveText }}</span>
     </div>
   </div>
 
@@ -274,11 +310,25 @@
               (input)="setProtectionReturn($any(kind), $any($event.target).value)"
               (blur)="finishProtectionReturn($any(kind))" />
           </label>
-          <select [value]="protectionUnits[kind]" [attr.aria-label]="'perpsProtectionUnit' | translate | async"
-            [disabled]="submitting || leverageUpdating || executionStatusUnknown"
-            (change)="setProtectionUnit($any(kind), $any($event.target).value)">
-            <option value="%">%</option><option value="USDC">USDC</option>
-          </select>
+          <div class="select-unit" [class.open]="protectionUnitMenu === kind">
+            <span class="unit"
+              [class.disabled]="submitting || leverageUpdating || executionStatusUnknown"
+              [attr.aria-label]="'perpsProtectionUnit' | translate | async"
+              (click)="toggleProtectionUnitMenu($any(kind))">
+              {{ protectionUnits[kind] }}
+              <img theme src="assets/images/common/triangle-fill.svg" alt="" />
+            </span>
+            <section class="pop-ups-veil" *ngIf="protectionUnitMenu === kind"
+              (click)="protectionUnitMenu = null"></section>
+            <ul class="pop-ups-menu" *ngIf="protectionUnitMenu === kind"
+              (click)="protectionUnitMenu = null">
+              <li *ngFor="let unit of protectionUnitOptions"
+                [class.active]="protectionUnits[kind] === unit"
+                (click)="setProtectionUnit($any(kind), unit)">
+                {{ unit }}
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -316,7 +366,11 @@
       [attr.aria-busy]="submitting"
       (click)="submit()"
     >
-      {{ "perpsPlaceOrder" | translate | async }}
+      {{
+        (addMode ? "perpsAddPosition" : closeMode ? "perpsClose" : "perpsPlaceOrder")
+          | translate
+          | async
+      }}
     </button>
   </div>
 </div>

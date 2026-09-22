@@ -60,4 +60,24 @@ describe('Perps account mode balances', () => {
       expect(aggregate.availableBalanceExact).toBe('960');
     });
   });
+
+  it('keeps cumulative funding since open on the position', () => {
+    const value = parsePerpsAccount(
+      {
+        ...clearinghouse,
+        assetPositions: [
+          {
+            position: {
+              coin: 'ETH',
+              szi: '1',
+              cumFunding: { sinceOpen: '-0.12' },
+            },
+          },
+        ],
+      },
+      spot,
+      'disabled'
+    );
+    expect(value.positions[0].fundingSinceOpenExact).toBe('-0.12');
+  });
 });

@@ -43,6 +43,7 @@ import {
   formatPrice,
   formatSignedPercent,
   formatSize,
+  formatSignedUsd,
   formatUsd,
 } from '../perps.util';
 import {
@@ -150,6 +151,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
 
   /** 平仓模式是减少已有仓位，而不是新开一个。 */
   closeMode = false;
+  /** 加仓沿用持仓方向和杠杆，表单不再提供这两项。 */
+  addMode = false;
 
   side: PerpsOrderSide = 'long';
   orderType: PerpsOrderType = 'market';
@@ -167,7 +170,9 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   protectionEnabled = false;
   takeProfitPrice = '';
   stopLossPrice = '';
-  protectionUnits: Record<'tp' | 'sl', '%' | 'USDC'> = { tp: '%', sl: '%' };
+  protectionUnits: Record<'tp' | 'sl', '%' | '$'> = { tp: '%', sl: '%' };
+  protectionUnitMenu: 'tp' | 'sl' | null = null;
+  readonly protectionUnitOptions: Array<'%' | '$'> = ['%', '$'];
   private protectionReturnDraft: Partial<Record<'tp' | 'sl', string>> = {};
   leverageUpdating = false;
   slippagePercent = PERPS_DEFAULT_SLIPPAGE_PERCENT;
@@ -278,6 +283,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       },
     });
     this.closeMode = this.route.snapshot.queryParams.close === '1';
+    this.addMode = !this.closeMode && this.route.snapshot.queryParams.add === '1';
     if (this.route.snapshot.queryParams.marginMode === 'cross') {
       this.marginMode = 'cross';
       this.touched.add('marginMode');
@@ -375,6 +381,19 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       this.reviewing || this.submitting
     );
     Object.assign(this, seed);
+    if (
+      this.addMode &&
+      this.position &&
+      !this.reviewing &&
+      !this.submitting
+    ) {
+      if (!this.touched.has('side')) {
+        this.side = this.position.isLong ? 'long' : 'short';
+      }
+      if (!this.touched.has('leverage')) {
+        this.leverage = this.position.leverage;
+      }
+    }
     this.loadCrossMarginAccount();
   }
 
@@ -617,6 +636,23 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       ? formatUsd(this.preview.marginExact) : NOT_APPLICABLE;
   }
 
+  /** 平仓盈亏带正负号；还没有可报价的平仓时读作 N/A。 */
+  get closePnlText(): string {
+    return this.preview?.closePnlExact != null
+      ? formatSignedUsd(this.preview.closePnlExact) : NOT_APPLICABLE;
+  }
+
+  get closePnlPositive(): boolean {
+    return this.preview?.closePnlExact != null &&
+      new BigNumber(this.preview.closePnlExact).isGreaterThan(0);
+  }
+
+  /** 预计回到账户的金额：释放的初始保证金 + 这笔平仓盈亏 − 费用。 */
+  get receiveText(): string {
+    return this.preview?.receiveExact != null
+      ? formatUsd(this.preview.receiveExact) : NOT_APPLICABLE;
+  }
+
   /** 同一个数量按市场最小变动单位精度呈现，用于显示。 */
   get formattedPositionSize(): string {
     return formatSize(
@@ -645,7 +681,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return formatFeeRatePercent(this.composition.feeRates.builderRate);
   }
 
-  /** 市价和限价均显示 Taker / Maker 总费率，不附带手续费金额。 */
+  /** 市价单只报 Taker 总费率；限价才把 Maker 一并列出。不附带手续费金额。 */
   get feeText(): string {
     return this.feeSideText(this.composition.feeRates.takerRate);
   }
@@ -712,7 +748,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   //#endregion
 
   setSide(side: PerpsOrderSide) {
-    if (this.closeMode) {
+    if (this.closeMode || this.addMode) {
       return;
     }
     this.side = side;
@@ -730,7 +766,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   setLeverage(leverage: number) {
-    if (this.leverageUpdating || this.submitting) {
+    if (this.leverageUpdating || this.submitting || this.addMode) {
       return;
     }
     const max = this.market?.maxLeverage || 1;
@@ -768,28 +804,45 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     this.setProtectionPrice(kind, protectionPrice(value, this.market?.szDecimals ?? 0) ?? value);
   }
 
+  toggleProtectionUnitMenu(kind: 'tp' | 'sl') {
+    if (this.submitting || this.leverageUpdating || this.executionStatusUnknown) { return; }
+    this.protectionUnitMenu = this.protectionUnitMenu === kind ? null : kind;
+  }
+
   setProtectionUnit(kind: 'tp' | 'sl', unit: string) {
-    if (this.submitting || this.leverageUpdating || this.executionStatusUnknown || !['%', 'USDC'].includes(unit)) { return; }
-    this.protectionUnits[kind] = unit as '%' | 'USDC';
+    if (this.submitting || this.leverageUpdating || this.executionStatusUnknown || !['%', '$'].includes(unit)) { return; }
+    this.protectionUnits[kind] = unit as '%' | '$';
+    this.protectionUnitMenu = null;
     delete this.protectionReturnDraft[kind];
+  }
+
+  /**
+   * `$` 盈亏按这笔订单的数量计；还没填金额时，用当前仓位数量预览对应的 USDC。
+   */
+  private protectionSizeExact(): BigNumber {
+    const orderSize = new BigNumber(this.composition.orderSizeExact || 0);
+    if (orderSize.gt(0)) { return orderSize; }
+    return new BigNumber(this.position?.sziExact ?? 0).absoluteValue();
   }
 
   protectionReturn(kind: 'tp' | 'sl'): string {
     if (this.protectionReturnDraft[kind] !== undefined) { return this.protectionReturnDraft[kind]; }
     const price = new BigNumber((kind === 'tp' ? this.takeProfitPrice : this.stopLossPrice) || NaN);
     const delta = price.minus(this.orderPriceExact).times((this.isLong ? 1 : -1) * (kind === 'tp' ? 1 : -1));
+    const size = this.protectionSizeExact();
     const value = this.protectionUnits[kind] === '%'
       ? delta.div(new BigNumber(this.market?.markPxExact ?? NaN).div(this.leverage)).times(100)
-      : delta.times(this.composition.orderSizeExact);
+      : size.gt(0) ? delta.times(size) : new BigNumber(NaN);
     return value.isFinite() ? value.decimalPlaces(2).toFixed() : '';
   }
 
   setProtectionReturn(kind: 'tp' | 'sl', value: string) {
     if (this.submitting || this.leverageUpdating || this.executionStatusUnknown) { return; }
     const number = /^\d+(?:\.\d*)?$/.test(value) ? new BigNumber(value) : new BigNumber(NaN);
+    const size = this.protectionSizeExact();
     const delta = this.protectionUnits[kind] === '%'
       ? number.div(100).times(this.market?.markPxExact ?? NaN).div(this.leverage)
-      : number.div(this.composition.orderSizeExact);
+      : number.div(size);
     const price = new BigNumber(this.orderPriceExact).plus(delta.times((this.isLong ? 1 : -1) * (kind === 'tp' ? 1 : -1)));
     this.setProtectionPrice(kind, price.isFinite() && price.gt(0)
       ? protectionPrice(price.toFixed(), this.market?.szDecimals ?? 0) ?? '0' : value.trim() ? '0' : '');

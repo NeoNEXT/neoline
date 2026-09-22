@@ -615,6 +615,60 @@ describe('composeOrder 预览', () => {
     expect(preview.builderFeeExact).toBe('0.0085005');
     expect(preview.feeExact).toBe('0.017001');
   });
+
+  it('quotes close pnl at the fill price and receive after collateral and fee', () => {
+    const composed = composeOrder(
+      facts({
+        market: priced('ETH', 1889, 4),
+        account: withPositions(ethPosition({ positionValueExact: '18.895' })),
+      }),
+      input({ mode: 'close', side: 'long', amount: '18.89', activePercent: 100 })
+    );
+
+    // 空头：(1921.5 − 1889) × 0.01。全仓保证金不含那笔未实现盈亏。
+    expect(composed.preview.closePnlExact).toBe('0.325');
+    // 9.44 + 0.325 − 0.0085005
+    expect(composed.preview.receiveExact).toBe('9.7564995');
+  });
+
+  it('strips mark pnl out of isolated margin before adding the fill pnl', () => {
+    const composed = composeOrder(
+      facts({
+        market: priced('ETH', 110, 2),
+        account: withPositions(ethPosition({
+          sziExact: '10',
+          entryPxExact: '100',
+          positionValueExact: '1100',
+          unrealizedPnlExact: '100',
+          marginUsedExact: '600',
+          leverage: 2,
+          leverageType: 'isolated',
+          isLong: true,
+        })),
+      }),
+      input({ mode: 'close', side: 'short', amount: '1100', activePercent: 100 })
+    );
+
+    // (110 − 100) × 10。抵押品是 600 − 100，手续费是 1100 × 0.00045。
+    expect(composed.preview.closePnlExact).toBe('100');
+    expect(composed.preview.receiveExact).toBe('599.505');
+  });
+
+  it('does not invent close pnl or receive without an entry price', () => {
+    const composed = composeOrder(
+      facts({
+        market: priced('ETH', 1889, 4),
+        account: withPositions(ethPosition({
+          positionValueExact: '18.895',
+          entryPxExact: 'NaN',
+        })),
+      }),
+      input({ mode: 'close', side: 'long', amount: '18.89', activePercent: 100 })
+    );
+
+    expect(composed.preview.closePnlExact).toBeNull();
+    expect(composed.preview.receiveExact).toBeNull();
+  });
 });
 
 /**

@@ -1796,11 +1796,41 @@
   "perpsLiq": {
     "message": "清算"
   },
+  "perpsMarketPrice": {
+    "message": "市場価格"
+  },
+  "perpsLiqPriceShort": {
+    "message": "清算価格"
+  },
+  "perpsUnrealizedPnl": {
+    "message": "未実現損益"
+  },
+  "perpsQuantity": {
+    "message": "数量"
+  },
+  "perpsPositionValue": {
+    "message": "ポジション価値"
+  },
+  "perpsEntryPrice": {
+    "message": "エントリー価格"
+  },
+  "perpsPositionFunding": {
+    "message": "資金費"
+  },
   "perpsAddPosition": {
     "message": "追加"
   },
+  "perpsAddCoin": {
+    "message": "{{symbol}}を追加"
+  },
+  "perpsAddAmount": {
+    "message": "追加金額"
+  },
   "perpsClose": {
     "message": "決済"
+  },
+  "perpsCloseCoin": {
+    "message": "{{symbol}}を決済"
   },
   "perpsFundPrompt": {
     "message": "無期限先物口座に入金すると取引を開始できます。"
@@ -1862,6 +1892,9 @@
   "perpsAmount": {
     "message": "金額"
   },
+  "perpsCloseableAmount": {
+    "message": "決済可能額"
+  },
   "perpsMax": {
     "message": "すべて"
   },
@@ -1888,6 +1921,18 @@
   },
   "perpsReleasedMarginTip": {
     "message": "ポジションの縮小または決済後に返却される推定担保額です。"
+  },
+  "perpsClosePnl": {
+    "message": "損益"
+  },
+  "perpsClosePnlTip": {
+    "message": "今回の決済数量と約定価格から見積もった損益です。"
+  },
+  "perpsEstimatedReceive": {
+    "message": "受取予定"
+  },
+  "perpsEstimatedReceiveTip": {
+    "message": "受取予定額です。解放される証拠金に損益を加え、手数料を差し引きます。"
   },
   "perpsFee": {
     "message": "手数料"

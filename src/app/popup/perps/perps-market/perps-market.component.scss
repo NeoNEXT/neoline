@@ -198,7 +198,9 @@
 .perps-market.feed-stale {
   .price-block .price,
   .price-block .change,
-  .stats-card .value {
+  .stats-card .value,
+  .position-panel .pnl .value,
+  .position-panel .cell .value {
     opacity: 0.45;
   }
 }
@@ -322,6 +324,107 @@
   font-family: NeverMind-Medium;
   font-size: 15px;
   color: var(--title-color);
+}
+
+.position-panel {
+  margin: 0 22px;
+  background: var(--box-color);
+  border-radius: 8px;
+  padding: 16px;
+
+  .position-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    perps-coin-logo {
+      width: 36px;
+      height: 36px;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .identity {
+      flex: 1;
+      min-width: 0;
+
+      .coin {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: NeverMind-DemiBold;
+        font-size: 16px;
+        color: var(--important-title-color);
+        line-height: 1.2;
+      }
+    }
+
+    .side-chip {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--theme-color);
+      background: rgba(6, 204, 171, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      &.short {
+        color: var(--error-color);
+        background: rgba(250, 85, 85, 0.1);
+      }
+    }
+
+    .pnl {
+      flex-shrink: 0;
+      text-align: right;
+      color: var(--theme-color);
+      &.negative {
+        color: var(--error-color);
+      }
+      .label {
+        display: block;
+        font-size: 11px;
+        color: var(--sub-title-color);
+        line-height: 1.3;
+      }
+      .value {
+        display: block;
+        margin-top: 4px;
+        font-family: NeverMind-DemiBold;
+        font-size: 16px;
+        line-height: 1.2;
+        .percent { font-size: 13px; }
+      }
+    }
+  }
+
+  .position-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px 10px;
+    margin-top: 16px;
+  }
+
+  .cell {
+    min-width: 0;
+
+    &:nth-child(3n) {
+      text-align: right;
+    }
+
+    .label {
+      font-size: 11px;
+      color: var(--sub-title-color);
+      line-height: 1.3;
+    }
+    .value {
+      margin-top: 4px;
+      font-family: NeverMind-Medium;
+      font-size: 13px;
+      color: var(--title-color);
+      line-height: 1.35;
+      word-break: break-all;
+    }
+  }
 }
 
 .stats-card {

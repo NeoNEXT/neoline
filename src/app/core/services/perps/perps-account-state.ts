@@ -104,6 +104,7 @@ export function parsePerpsAccount(
         leverage: Number(position.leverage?.value ?? 1),
         leverageType: position.leverage?.type ?? 'cross',
         marginUsedExact: toFiniteDecimal(position.marginUsed),
+        fundingSinceOpenExact: toFiniteDecimal(position.cumFunding?.sinceOpen),
       } as PerpsPosition;
     });
 

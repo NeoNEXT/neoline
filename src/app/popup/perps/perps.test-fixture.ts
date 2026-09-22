@@ -84,6 +84,7 @@ export function ethPosition(
     leverage: 2,
     leverageType: 'cross',
     marginUsedExact: '9.44',
+    fundingSinceOpenExact: '0',
     isLong: false,
     ...overrides,
   };

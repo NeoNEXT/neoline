@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output, Pipe, PipeTransform } from '@an
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Store } from '@ngrx/store';
 import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 
 import { ChromeService } from '@/app/core';
@@ -9,9 +10,10 @@ import { PerpsCandleDatasetService } from '@/app/core/services/perps/perps-candl
 import { PerpsCandleDatasetState } from '@/app/core/services/perps/perps-candle-dataset';
 import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
+import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
 import { PerpsMarket } from '@popup/_lib/perps';
 import { PERPS_FORMAT_PIPES } from '../perps-format.pipe';
-import { ethMarket } from '../perps.test-fixture';
+import { ethMarket, ethPosition } from '../perps.test-fixture';
 import { PerpsMarketComponent } from './perps-market.component';
 
 /**
@@ -71,6 +73,8 @@ describe('PerpsMarketComponent 渲染', () => {
   /** 每个用例自己决定这次读取的答复：一直沉默、一个市场，或者一次失败。 */
   let detail: () => any;
   let watchMarketDetail: jasmine.Spy;
+  let accountState: BehaviorSubject<any>;
+  let navigateByUrl: jasmine.Spy;
 
   beforeEach(async () => {
     params = new BehaviorSubject<any>({ coin: 'ETH' });
@@ -78,6 +82,12 @@ describe('PerpsMarketComponent 渲染', () => {
     watchMarketDetail = jasmine
       .createSpy('watchMarketDetail')
       .and.callFake(() => detail());
+    accountState = new BehaviorSubject({
+      availability: 'live',
+      account: { positions: [] },
+      updatedAt: 1,
+    });
+    navigateByUrl = jasmine.createSpy('navigateByUrl');
 
     await TestBed.configureTestingModule({
       declarations: [
@@ -92,7 +102,7 @@ describe('PerpsMarketComponent 渲染', () => {
       imports: [FormsModule],
       providers: [
         { provide: ActivatedRoute, useValue: { params } },
-        { provide: Router, useValue: { navigateByUrl: () => undefined } },
+        { provide: Router, useValue: { navigateByUrl } },
         {
           provide: ChromeService,
           useValue: {
@@ -112,6 +122,17 @@ describe('PerpsMarketComponent 渲染', () => {
           useValue: { watchConnectionState: () => of('live') },
         },
         { provide: PerpsMarketDatasetService, useValue: { watchMarketDetail } },
+        {
+          provide: Store,
+          useValue: {
+            select: () =>
+              of({ currentWallet: { accounts: [{ address: '0xabc' }] } }),
+          },
+        },
+        {
+          provide: PerpsAccountStateService,
+          useValue: { watchAggregatedAccount: () => accountState },
+        },
       ],
     }).compileComponents();
 
@@ -187,5 +208,110 @@ describe('PerpsMarketComponent 渲染', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.interval-menu')).toBeNull();
+  });
+
+  it('keeps the long/short entry when this market is not held', () => {
+    detail = () => of(ethMarket());
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.position-panel')).toBeNull();
+    expect(text('.trade-actions')).toContain('perpsLong');
+    expect(text('.trade-actions')).toContain('perpsShort');
+    expect(fixture.nativeElement.querySelectorAll('.trade-actions button').length).toBe(
+      2
+    );
+  });
+
+  it('shows the position module and turns the bottom entry into add/close', () => {
+    accountState.next({
+      availability: 'live',
+      account: {
+        positions: [
+          ethPosition({
+            isLong: true,
+            leverage: 8,
+            sziExact: '0.0238',
+            positionValueExact: '63.57',
+            entryPxExact: '2669',
+            unrealizedPnlExact: '0.05',
+            returnOnEquityExact: '0.035',
+            marginUsedExact: '7.95',
+            fundingSinceOpenExact: '0',
+            liquidationPxExact: '2379.189847',
+          }),
+        ],
+      },
+      updatedAt: 1,
+    });
+    detail = () => of(ethMarket({ szDecimals: 4 }));
+    fixture.detectChanges();
+
+    expect(text('.position-panel .coin')).toContain('ETH');
+    expect(text('.position-panel .pnl .value')).toBe('+$0.05 +3.5%');
+    expect(text('.position-grid')).toContain('0.0238 ETH');
+    expect(fixture.nativeElement.querySelector('.position-actions')).toBeNull();
+    expect(text('.trade-actions')).toContain('perpsAddPosition');
+    expect(text('.trade-actions')).toContain('perpsClose');
+    expect(text('.trade-actions')).not.toContain('perpsLong');
+  });
+
+  it('shows funding paid since open as a negative dollar amount', () => {
+    accountState.next({
+      availability: 'live',
+      account: {
+        positions: [ethPosition({ fundingSinceOpenExact: '0.03' })],
+      },
+      updatedAt: 1,
+    });
+    detail = () => of(ethMarket());
+    fixture.detectChanges();
+
+    expect(text('.position-grid')).toContain('-$0.03');
+  });
+
+  it('shows funding received since open as a positive dollar amount', () => {
+    accountState.next({
+      availability: 'live',
+      account: {
+        positions: [ethPosition({ fundingSinceOpenExact: '-0.03' })],
+      },
+      updatedAt: 1,
+    });
+    detail = () => of(ethMarket());
+    fixture.detectChanges();
+
+    const grid = text('.position-grid');
+    expect(grid).toContain('$0.03');
+    expect(grid).not.toContain('-$0.03');
+  });
+
+  it('routes add and close from the bottom entry by protocol coin', () => {
+    accountState.next({
+      availability: 'live',
+      account: {
+        positions: [
+          ethPosition({
+            coin: 'neol:IWM',
+            symbol: 'IWM',
+            isLong: false,
+          }),
+        ],
+      },
+      updatedAt: 1,
+    });
+    params.next({ coin: 'neol:IWM' });
+    detail = () => of(ethMarket({ coin: 'neol:IWM', symbol: 'IWM' }));
+    fixture.detectChanges();
+
+    fixture.nativeElement.querySelector('.trade-actions .long').click();
+    expect(navigateByUrl).toHaveBeenCalledWith(
+      '/popup/perps/order/neol:IWM?add=1'
+    );
+
+    navigateByUrl.calls.reset();
+    fixture.nativeElement.querySelector('.trade-actions .short').click();
+    expect(navigateByUrl).toHaveBeenCalledWith(
+      '/popup/perps/order/neol:IWM?close=1'
+    );
   });
 });

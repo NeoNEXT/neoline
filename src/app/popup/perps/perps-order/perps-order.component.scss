@@ -1,3 +1,5 @@
+@import "src/styles/pop-ups-menu.scss";
+
 .perps-order {
   min-height: 100vh;
   background: var(--body-background-color);
@@ -438,6 +440,12 @@
     }
     .value {
       color: var(--title-color);
+      &.positive {
+        color: var(--theme-color);
+      }
+      &.negative {
+        color: var(--error-color);
+      }
     }
 
     .rebate {
@@ -570,5 +578,31 @@
   label { display: flex; align-items: center; gap: 4px; min-width: 0; flex: 1; }
   label span { flex-shrink: 0; font-size: 11px; color: var(--sub-title-color); }
   input { width: 100%; min-width: 0; border: 0; padding: 0; outline: none; text-align: right; background: transparent; color: var(--title-color); font-size: 13px; }
-  select { max-width: 52px; border: 0; margin-left: 3px; padding: 0; background: var(--box-color); color: var(--title-color); font-size: 11px; }
+  .select-unit {
+    position: relative;
+    flex-shrink: 0;
+    margin-left: 4px;
+    &.open { z-index: 2; }
+    .unit {
+      display: flex;
+      align-items: center;
+      width: fit-content;
+      height: 22px;
+      padding: 0 6px;
+      gap: 4px;
+      border: 0.5px solid #cfdfe5;
+      border-radius: 24px;
+      font-size: 12px;
+      color: var(--title-color);
+      cursor: pointer;
+      img { width: 8px; }
+      &.disabled { opacity: 0.5; cursor: default; }
+    }
+    .pop-ups-menu {
+      position: absolute;
+      right: 0;
+      width: 96px;
+      li { font-size: 14px; }
+    }
+  }
 }

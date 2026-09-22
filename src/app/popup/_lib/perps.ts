@@ -626,6 +626,8 @@ export interface PerpsPosition {
   leverage: number;
   leverageType: PerpsMarginMode;
   marginUsedExact: string;
+  /** 开仓以来累计资金费；正数为付出。 */
+  fundingSinceOpenExact: string;
   isLong: boolean;
 }
 
@@ -956,6 +958,10 @@ export interface PerpsOrderPreview {
   notionalExact: string;
   /** 本单所需初始保证金；缺少标记价格时为 null。平仓时为预估释放额。 */
   marginExact: string | null;
+  /** 平仓按成交价估算的盈亏。开仓，或入场价、成交价缺失时为 null。 */
+  closePnlExact?: string | null;
+  /** 平仓后预计回到账户的金额：释放的初始保证金 + 盈亏 − 费用。开仓或估不出时为 null。 */
+  receiveExact?: string | null;
   /** 以该币种基础单位计的数量。 */
   sizeExact: string;
   /**

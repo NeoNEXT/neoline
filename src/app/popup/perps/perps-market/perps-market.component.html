@@ -158,6 +158,78 @@
       </div>
     </div>
 
+    <ng-container *ngIf="position">
+      <div class="section-title">{{ "perpsPositions" | translate | async }}</div>
+      <div class="position-panel">
+        <div class="position-head">
+          <perps-coin-logo
+            [symbol]="position.symbol"
+            [coin]="position.coin"
+          ></perps-coin-logo>
+          <div class="identity">
+            <div class="coin">
+              {{ position.symbol }}
+              <span class="dex-badge" *ngIf="position.dex">{{ position.dex }}</span>
+            </div>
+            <span class="side-chip" [class.short]="!position.isLong">
+              {{
+                (position.isLong ? "perpsLong" : "perpsShort") | translate | async
+              }}
+              · {{ position.leverage }}x
+            </span>
+          </div>
+          <div
+            class="pnl"
+            [class.negative]="position.unrealizedPnlExact | perpsNegative"
+          >
+            <span class="label">{{ "perpsUnrealizedPnl" | translate | async }}</span>
+            <span class="value">
+              {{ position.unrealizedPnlExact | perpsSignedUsd }}
+              <span class="percent">{{
+                position.returnOnEquityExact | perpsReturnOnEquity: 1
+              }}</span>
+            </span>
+          </div>
+        </div>
+        <div class="position-grid">
+          <div class="cell">
+            <div class="label">{{ "perpsQuantity" | translate | async }}</div>
+            <div class="value">
+              {{ position.sziExact | perpsPositionSize: market?.szDecimals }}
+              {{ position.symbol }}
+            </div>
+          </div>
+          <div class="cell">
+            <div class="label">{{ "perpsPositionValue" | translate | async }}</div>
+            <div class="value">{{ position.positionValueExact | perpsUsd }}</div>
+          </div>
+          <div class="cell">
+            <div class="label">{{ "perpsEntryPrice" | translate | async }}</div>
+            <div class="value">
+              ${{ position.entryPxExact | perpsPrice: market?.szDecimals }}
+            </div>
+          </div>
+          <div class="cell">
+            <div class="label">{{ "perpsPositionFunding" | translate | async }}</div>
+            <div class="value">{{ positionFundingText }}</div>
+          </div>
+          <div class="cell">
+            <div class="label">{{ "perpsLiqPrice" | translate | async }}</div>
+            <div class="value">
+              <ng-container *ngIf="position.liquidationPxExact; else liqMissing">
+                ${{ position.liquidationPxExact | perpsPrice: market?.szDecimals }}
+              </ng-container>
+              <ng-template #liqMissing>{{ missingDisplay }}</ng-template>
+            </div>
+          </div>
+          <div class="cell">
+            <div class="label">{{ "perpsMargin" | translate | async }}</div>
+            <div class="value">{{ position.marginUsedExact | perpsUsd }}</div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
     <!-- 统计数据。取数失败时整块连同标题一起收掉：一个底下什么都没有的小标题，
          是在承诺一些这一页此刻并不掌握的数字 -->
     <ng-container *ngIf="market || isLoading">
@@ -234,11 +306,21 @@
       {{ orderBlockedKey | translate | async }}
     </p>
     <div class="trade-actions">
-      <button class="long" [disabled]="!canOrder" (click)="toOrder('long')">
-        {{ "perpsLong" | translate | async }}
+      <button
+        class="long"
+        [disabled]="!canOrder"
+        (click)="position ? addToPosition() : toOrder('long')"
+      >
+        {{
+          (position ? "perpsAddPosition" : "perpsLong") | translate | async
+        }}
       </button>
-      <button class="short" [disabled]="!canOrder" (click)="toOrder('short')">
-        {{ "perpsShort" | translate | async }}
+      <button
+        class="short"
+        [disabled]="!canOrder"
+        (click)="position ? closePosition() : toOrder('short')"
+      >
+        {{ (position ? "perpsClose" : "perpsShort") | translate | async }}
       </button>
     </div>
   </ng-container>

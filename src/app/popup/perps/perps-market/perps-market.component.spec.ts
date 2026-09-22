@@ -6,7 +6,7 @@ import { PerpsMarket } from '@popup/_lib/perps';
 import { PerpsCandleDatasetState } from '@/app/core/services/perps/perps-candle-dataset';
 
 import { PerpsMarketComponent } from './perps-market.component';
-import { ethCandle, ethMarket } from '../perps.test-fixture';
+import { ethCandle, ethMarket, ethPosition } from '../perps.test-fixture';
 
 // 中间价略高于标记价格，当日下跌 1.28%：标题栏必须把两者区分开，
 // 并按这个市场自己的精度报出涨跌。
@@ -246,6 +246,56 @@ describe('PerpsMarketComponent trade entry', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith(
       '/popup/perps/order/xyz:SNDK?side=short'
     );
+  });
+
+  it('picks the position that belongs to this market coin', () => {
+    const component = ready();
+    component.account = {
+      positions: [
+        ethPosition({ coin: 'BTC', symbol: 'BTC' }),
+        ethPosition({ coin: 'ETH', sziExact: '0.5', isLong: true }),
+      ],
+    } as any;
+
+    expect(component.position.coin).toBe('ETH');
+    expect(component.position.isLong).toBeTrue();
+  });
+
+  it('routes adding and closing through the held position coin', () => {
+    const router = jasmine.createSpyObj('Router', ['navigateByUrl']);
+    const component = ready({ coin: 'neol:IWM' }, router);
+    component.account = {
+      positions: [
+        ethPosition({
+          coin: 'neol:IWM',
+          symbol: 'IWM',
+          isLong: false,
+        }),
+      ],
+    } as any;
+
+    component.addToPosition();
+    expect(router.navigateByUrl).toHaveBeenCalledWith(
+      '/popup/perps/order/neol:IWM?add=1'
+    );
+
+    router.navigateByUrl.calls.reset();
+    component.closePosition();
+    expect(router.navigateByUrl).toHaveBeenCalledWith(
+      '/popup/perps/order/neol:IWM?close=1'
+    );
+  });
+
+  it('does not navigate add or close while the entry is closed', () => {
+    const router = jasmine.createSpyObj('Router', ['navigateByUrl']);
+    const component = ready({}, router);
+    component.connectionState = 'stale';
+    component.account = { positions: [ethPosition({ isLong: true })] } as any;
+
+    component.addToPosition();
+    component.closePosition();
+
+    expect(router.navigateByUrl).not.toHaveBeenCalled();
   });
 });
 

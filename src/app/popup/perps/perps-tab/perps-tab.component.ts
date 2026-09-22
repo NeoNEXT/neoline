@@ -15,7 +15,11 @@ import {
   PerpsMarket,
   PerpsPosition,
 } from '@popup/_lib/perps';
-import { findMarketByKey, formatPositionSize } from '../perps.util';
+import {
+  findMarketByKey,
+  isQuotablePrice,
+  MISSING_DISPLAY,
+} from '../perps.util';
 
 /**
  * 首页上的永续合约 tab：账户摘要、持仓和市场列表。
@@ -32,8 +36,9 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   accountAvailability: PerpsAccountAvailability = 'loading';
 
   account: PerpsAggregatedAccount;
-  /** 只用来按各仓位自己市场的精度格式化数量，与「过期」横幅共用同一条订阅。 */
+  /** 只用来按各仓位自己市场的精度格式化价格，与「过期」横幅共用同一条订阅。 */
   markets: PerpsMarket[] = [];
+  readonly missingDisplay = MISSING_DISPLAY;
 
   /** 数据源健康度，以横幅呈现，并把所有报价值调暗。 */
   connectionState: PerpsConnectionState = 'connecting';
@@ -208,24 +213,31 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 所有账户模式都会上报仓位，包括账户级数字并不上报的组合保证金账户。在那里把仓位藏
-   * 起来，等于连它们上面的平仓按钮一起藏了 —— 而平仓恰恰是绝不能取决于「我们能不能给
-   * 这个账户估值」的那个动作。
+   * 所有账户模式都会上报仓位，包括账户级数字并不上报的组合保证金账户。把仓位藏起来，
+   * 等于连进市场页离场的路一起藏了 —— 而离场恰恰是绝不能取决于「我们能不能给这个
+   * 账户估值」的那个动作。
    */
   get hasPositions(): boolean {
     return (this.account?.positions?.length || 0) > 0;
   }
 
   /**
-   * 按仓位所属市场的最小变动单位精度格式化的仓位数量。按市场主键定位，而不是按符号：
-   * 同一个符号可能同时存在于标准永续 DEX 和某个 HIP-3 DEX 上，且精度不同。市场与账户
-   * 是分开到达的，所以遇到未知市场时退回按数量级取精度，而不是什么都不显示。
+   * 仓位卡上的「市场价格」：盘口中间价，没有双边盘口时用标记价格。
+   *
+   * 两个都报不出来时为 `null`，卡片写 `--`，绝不报 `$0`。判据是 `isQuotablePrice`：
+   * `markPxExact` 缺失时是 `'0'`，而 `'0'` 在 JS 里是真值。
    */
-  positionSize(position: PerpsPosition): string {
-    return formatPositionSize(
-      position.sziExact,
-      this.marketFor(position)?.szDecimals
-    );
+  positionMarketPrice(position: PerpsPosition): string | null {
+    const market = this.marketFor(position);
+    if (isQuotablePrice(market?.midPxExact)) {
+      return market.midPxExact;
+    }
+    return isQuotablePrice(market?.markPxExact) ? market.markPxExact : null;
+  }
+
+  /** 报的是中间价时，格式化要多留一位小数。 */
+  usingMidPrice(position: PerpsPosition): boolean {
+    return isQuotablePrice(this.marketFor(position)?.midPxExact);
   }
 
   toMarkets() {
@@ -240,15 +252,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl('/popup/perps/history');
   }
 
-  addToPosition(position: PerpsPosition) {
-    this.router.navigateByUrl(
-      `/popup/perps/order/${position.coin}?side=${
-        position.isLong ? 'long' : 'short'
-      }`
-    );
-  }
-
-  closePosition(position: PerpsPosition) {
-    this.router.navigateByUrl(`/popup/perps/order/${position.coin}?close=1`);
+  toMarket(position: PerpsPosition) {
+    this.router.navigateByUrl(`/popup/perps/market/${position.coin}`);
   }
 }

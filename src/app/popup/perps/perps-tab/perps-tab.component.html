@@ -53,7 +53,11 @@
       >
     </div>
     <div class="positions">
-      <div class="position-card" *ngFor="let position of account.positions">
+      <div
+        class="position-card"
+        *ngFor="let position of account.positions"
+        (click)="toMarket(position)"
+      >
         <div class="position-head">
           <perps-coin-logo
             [symbol]="position.symbol"
@@ -74,32 +78,39 @@
             position.returnOnEquityExact | perpsReturnOnEquity: 1
           }}</span>
         </div>
-        <div class="position-meta">
-          {{
-            position.sziExact
-              | perpsPositionSize: (markets | perpsSzDecimals: position.key)
-          }}
-          {{ position.symbol }} · {{ "perpsEntry" | translate | async }}
-          {{
-            position.entryPxExact
-              | perpsPrice: (markets | perpsSzDecimals: position.key)
-          }}
-          · {{ "perpsLiq" | translate | async }}
-          <ng-container *ngIf="position.liquidationPxExact">{{
-            position.liquidationPxExact
-              | perpsPrice: (markets | perpsSzDecimals: position.key)
-          }}</ng-container>
-          <ng-container *ngIf="!position.liquidationPxExact">{{
-            "perpsNoLiquidationPrice" | translate | async
-          }}</ng-container>
-        </div>
-        <div class="position-actions">
-          <button class="plain" (click)="addToPosition(position)">
-            {{ "perpsAddPosition" | translate | async }}
-          </button>
-          <button class="danger" (click)="closePosition(position)">
-            {{ "perpsClose" | translate | async }}
-          </button>
+        <div class="position-prices">
+          <div class="price-box">
+            <div class="label">{{ "perpsMarketPrice" | translate | async }}</div>
+            <div class="value">
+              <ng-container
+                *ngIf="positionMarketPrice(position) as price; else marketPxMissing"
+              >
+                ${{
+                  price
+                    | perpsPrice
+                      : (markets | perpsSzDecimals: position.key)
+                      : usingMidPrice(position)
+                }}
+              </ng-container>
+              <ng-template #marketPxMissing>{{ missingDisplay }}</ng-template>
+            </div>
+          </div>
+          <div class="price-box">
+            <div class="label">
+              {{ "perpsLiqPriceShort" | translate | async }}
+            </div>
+            <div class="value">
+              <ng-container
+                *ngIf="position.liquidationPxExact; else liqPxMissing"
+              >
+                ${{
+                  position.liquidationPxExact
+                    | perpsPrice: (markets | perpsSzDecimals: position.key)
+                }}
+              </ng-container>
+              <ng-template #liqPxMissing>{{ missingDisplay }}</ng-template>
+            </div>
+          </div>
         </div>
       </div>
     </div>

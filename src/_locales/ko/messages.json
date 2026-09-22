@@ -1796,11 +1796,41 @@
   "perpsLiq": {
     "message": "청산"
   },
+  "perpsMarketPrice": {
+    "message": "시장 가격"
+  },
+  "perpsLiqPriceShort": {
+    "message": "청산가"
+  },
+  "perpsUnrealizedPnl": {
+    "message": "미실현 손익"
+  },
+  "perpsQuantity": {
+    "message": "수량"
+  },
+  "perpsPositionValue": {
+    "message": "포지션 가치"
+  },
+  "perpsEntryPrice": {
+    "message": "진입가"
+  },
+  "perpsPositionFunding": {
+    "message": "펀딩비"
+  },
   "perpsAddPosition": {
     "message": "추가"
   },
+  "perpsAddCoin": {
+    "message": "{{symbol}} 추가"
+  },
+  "perpsAddAmount": {
+    "message": "추가 금액"
+  },
   "perpsClose": {
     "message": "청산"
+  },
+  "perpsCloseCoin": {
+    "message": "{{symbol}} 청산"
   },
   "perpsFundPrompt": {
     "message": "무기한 선물 계좌에 입금하면 거래를 시작할 수 있습니다."
@@ -1862,6 +1892,9 @@
   "perpsAmount": {
     "message": "금액"
   },
+  "perpsCloseableAmount": {
+    "message": "청산 가능 금액"
+  },
   "perpsMax": {
     "message": "전체"
   },
@@ -1888,6 +1921,18 @@
   },
   "perpsReleasedMarginTip": {
     "message": "포지션을 축소하거나 청산한 뒤 반환될 것으로 예상되는 담보금입니다."
+  },
+  "perpsClosePnl": {
+    "message": "손익"
+  },
+  "perpsClosePnlTip": {
+    "message": "이번 청산 수량과 체결가로 추정한 손익입니다."
+  },
+  "perpsEstimatedReceive": {
+    "message": "예상 수령"
+  },
+  "perpsEstimatedReceiveTip": {
+    "message": "예상 수령액입니다. 반환되는 증거금에 손익을 더하고 수수료를 뺍니다."
   },
   "perpsFee": {
     "message": "수수료"

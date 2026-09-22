@@ -79,4 +79,20 @@ describe('PerpsTabComponent', () => {
 
     expect(value.globalActionsDisabled).toBeTrue();
   });
+
+  it('quotes a position market price from the mid, then the mark', () => {
+    const value = component();
+    const position = { key: 'hl:ETH' } as any;
+
+    value.markets = [ethMarket({ midPxExact: '101.5', markPxExact: '100' })];
+    expect(value.positionMarketPrice(position)).toBe('101.5');
+    expect(value.usingMidPrice(position)).toBeTrue();
+
+    value.markets = [ethMarket({ midPxExact: null, markPxExact: '100' })];
+    expect(value.positionMarketPrice(position)).toBe('100');
+    expect(value.usingMidPrice(position)).toBeFalse();
+
+    value.markets = [ethMarket({ midPxExact: null, markPxExact: '0' })];
+    expect(value.positionMarketPrice(position)).toBeNull();
+  });
 });

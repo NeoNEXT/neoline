@@ -304,6 +304,7 @@ export function composeOrder(
     executableNotional,
     takerRate,
     builderRate,
+    quoteReceive: marketRates !== null,
   });
 
   const protection = input.protectionEnabled && (input.takeProfitPrice?.trim() || input.stopLossPrice?.trim()) ? {
@@ -588,6 +589,7 @@ function composePreview(params: {
   executableNotional: BigNumber;
   takerRate: string;
   builderRate: string;
+  quoteReceive: boolean;
 }): PerpsOrderPreview | null {
   const {
     market,
@@ -615,9 +617,12 @@ function composePreview(params: {
       builderFeeRate: builderRate,
     });
     return {
-      // 成交额与费用按成交参考价估算；释放保证金仍按持仓比例。
+      // 成交额、盈亏与费用按成交参考价估算；释放保证金仍按持仓比例。
       notionalExact: closePreview.closedValueExact,
       marginExact: closePreview.releasedMarginExact,
+      closePnlExact: closePreview.closePnlExact,
+      // 费率估不出时不报「预计收到」：那一行要把费用扣掉，而这笔费用并不知道。
+      receiveExact: params.quoteReceive ? closePreview.receiveExact : null,
       feeExact: closePreview.feeExact,
       protocolFeeExact: closePreview.protocolFeeExact,
       builderFeeExact: closePreview.builderFeeExact,
@@ -1010,6 +1015,8 @@ function previewClosePosition(params: {
   sizeExact: string;
   closedValueExact: string;
   releasedMarginExact: string;
+  closePnlExact: string | null;
+  receiveExact: string | null;
   feeExact: string;
   protocolFeeExact: string;
   builderFeeExact: string;
@@ -1024,6 +1031,8 @@ function previewClosePosition(params: {
       sizeExact: '0',
       closedValueExact: '0',
       releasedMarginExact: '0',
+      closePnlExact: null,
+      receiveExact: null,
       feeExact: '0',
       protocolFeeExact: '0',
       builderFeeExact: '0',
@@ -1032,17 +1041,35 @@ function previewClosePosition(params: {
   // 数量在到这里之前已经收在持仓以内，但仓位随时可能在下一帧变小，
   // 而一个大于 1 的比例会报出比账户实际拥有的还多的保证金和手续费。
   const fraction = BigNumber.minimum(1, size.dividedBy(positionSize));
-  const closedValue = BigNumber.minimum(size, positionSize).times(executionPriceExact);
+  const closedSize = BigNumber.minimum(size, positionSize);
+  const executionPrice = new BigNumber(executionPriceExact);
+  const closedValue = closedSize.times(executionPrice);
   const protocolFee = closedValue.times(feeRate || 0);
   const builderFee = closedValue.times(builderFeeRate || 0);
+  const fee = protocolFee.plus(builderFee);
+  const releasedMargin = new BigNumber(position.marginUsedExact ?? 0)
+    .absoluteValue()
+    .times(fraction);
+  const entry = new BigNumber(position.entryPxExact ?? NaN);
+  const closePnl = executionPrice.isFinite() && executionPrice.isGreaterThan(0) && entry.isFinite()
+    ? closedSize.times(executionPrice.minus(entry)).times(position.isLong ? 1 : -1)
+    : null;
+  // 逐仓的 marginUsed 已含标记价上的未实现盈亏，先扣掉它才是锁住的初始保证金。
+  // 全仓的 marginUsed 就是初始保证金，盈亏在账户权益里，不在这一项里。
+  const markPnl = new BigNumber(position.unrealizedPnlExact ?? NaN);
+  const collateral = position.leverageType === 'isolated'
+    ? (markPnl.isFinite() ? releasedMargin.minus(markPnl.times(fraction)) : null)
+    : releasedMargin;
+  const receive = closePnl && collateral?.isFinite()
+    ? collateral.plus(closePnl).minus(fee)
+    : null;
   return {
     sizeExact: size.toFixed(),
     closedValueExact: closedValue.toFixed(),
-    releasedMarginExact: new BigNumber(position.marginUsedExact ?? 0)
-      .absoluteValue()
-      .times(fraction)
-      .toFixed(),
-    feeExact: protocolFee.plus(builderFee).toFixed(),
+    releasedMarginExact: releasedMargin.toFixed(),
+    closePnlExact: closePnl?.toFixed() ?? null,
+    receiveExact: receive?.isFinite() ? receive.toFixed() : null,
+    feeExact: fee.toFixed(),
     protocolFeeExact: protocolFee.toFixed(),
     builderFeeExact: builderFee.toFixed(),
   };

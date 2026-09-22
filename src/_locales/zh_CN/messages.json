@@ -1796,11 +1796,41 @@
   "perpsLiq": {
     "message": "强平"
   },
+  "perpsMarketPrice": {
+    "message": "市场价格"
+  },
+  "perpsLiqPriceShort": {
+    "message": "强平价格"
+  },
+  "perpsUnrealizedPnl": {
+    "message": "未实现盈亏"
+  },
+  "perpsQuantity": {
+    "message": "数量"
+  },
+  "perpsPositionValue": {
+    "message": "仓位价值"
+  },
+  "perpsEntryPrice": {
+    "message": "入场价格"
+  },
+  "perpsPositionFunding": {
+    "message": "资金费"
+  },
   "perpsAddPosition": {
     "message": "加仓"
   },
+  "perpsAddCoin": {
+    "message": "加仓{{symbol}}"
+  },
+  "perpsAddAmount": {
+    "message": "加仓金额"
+  },
   "perpsClose": {
     "message": "平仓"
+  },
+  "perpsCloseCoin": {
+    "message": "平仓{{symbol}}"
   },
   "perpsFundPrompt": {
     "message": "向永续合约账户存入资金即可开始交易。"
@@ -1862,6 +1892,9 @@
   "perpsAmount": {
     "message": "金额"
   },
+  "perpsCloseableAmount": {
+    "message": "可平金额"
+  },
   "perpsMax": {
     "message": "全部"
   },
@@ -1888,6 +1921,18 @@
   },
   "perpsReleasedMarginTip": {
     "message": "减仓或平仓后预计返还的抵押资金。"
+  },
+  "perpsClosePnl": {
+    "message": "盈亏"
+  },
+  "perpsClosePnlTip": {
+    "message": "按本次平仓数量和成交价估算的盈亏收益。"
+  },
+  "perpsEstimatedReceive": {
+    "message": "预计收到"
+  },
+  "perpsEstimatedReceiveTip": {
+    "message": "预计收到的金额：释放的初始保证金加上这笔盈亏，再扣掉费用。"
   },
   "perpsFee": {
     "message": "费用"

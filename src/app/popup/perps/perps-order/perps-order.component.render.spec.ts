@@ -1,5 +1,6 @@
 import { Component, Input, Pipe, PipeTransform } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
@@ -245,6 +246,25 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       expect(component.composition.intent.protection).toBeUndefined();
     });
 
+    it('opens the existing pop-ups menu to switch % and $', () => {
+      fixture.detectChanges();
+      fixture.nativeElement.querySelector('.protection-switch').click();
+      fixture.detectChanges();
+      const trigger: HTMLElement = fixture.nativeElement.querySelector('.select-unit .unit');
+      expect(text('.select-unit .unit')).toContain('%');
+      expect(fixture.nativeElement.querySelector('.pop-ups-menu')).toBeNull();
+      trigger.click();
+      fixture.detectChanges();
+      const items: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.pop-ups-menu li');
+      expect(items.length).toBe(2);
+      expect(items[1].textContent.trim()).toBe('$');
+      items[1].click();
+      fixture.detectChanges();
+      expect(component.protectionUnits.tp).toBe('$');
+      expect(fixture.nativeElement.querySelector('.pop-ups-menu')).toBeNull();
+      expect(text('.select-unit .unit')).toContain('$');
+    });
+
     it('links price, leveraged return and USDC for both directions', () => {
       fixture.detectChanges();
       component.amount = '200';
@@ -260,10 +280,29 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       component.setProtectionPrice('tp', '1900');
       component.setProtectionPrice('sl', '2100');
       expect(component.canSubmit).toBeTrue();
-      component.setProtectionUnit('tp', 'USDC');
+      component.setProtectionUnit('tp', '$');
       expect(component.protectionReturn('tp')).toBe('10');
       component.setProtectionReturn('tp', '5');
       expect(component.takeProfitPrice).toBe('1950');
+    });
+
+    it('computes $ PnL from the trigger price once an amount is set', () => {
+      fixture.detectChanges();
+      component.amount = '200';
+      component.setProtectionEnabled(true);
+      component.setProtectionUnit('sl', '$');
+      component.setProtectionPrice('sl', '1800');
+      expect(component.protectionReturn('sl')).toBe('20');
+    });
+
+    it('previews $ PnL from the current position when amount is empty', () => {
+      account = { positions: [ethPosition({ isLong: false, sziExact: '-0.01' })] };
+      fixture.detectChanges();
+      component.setSide('short');
+      component.setProtectionEnabled(true);
+      component.setProtectionUnit('sl', '$');
+      component.setProtectionPrice('sl', '2100');
+      expect(component.protectionReturn('sl')).toBe('1');
     });
 
     it('does not attach protection when reducing or closing a position', () => {
@@ -398,6 +437,52 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       expect(component.side).toBe('short');
       expect(component.leverage).toBe(20);
       expect(component.amount).toBe('480.13');
+      expect(text('.pair')).toBe('perpsCloseCoin');
+      expect(text('.input-box .label')).toBe('perpsCloseableAmount');
+      expect(text('.submit-wrap button')).toBe('perpsClose');
+      expect(text('.summary')).toContain('perpsClosePnl');
+      expect(text('.summary')).toContain('perpsEstimatedReceive');
+      expect(text('.summary')).not.toContain('perpsReleasedMargin');
+      const tips = fixture.debugElement
+        .queryAll(By.css('.summary tooltip'))
+        .map((node) => node.componentInstance.tip);
+      expect(tips).toContain('perpsClosePnlTip');
+      expect(tips).toContain('perpsEstimatedReceiveTip');
+    });
+
+    it('seeds an add form on the held side without a side toggle or leverage control', () => {
+      queryParams = { add: '1' };
+      account = {
+        positions: [
+          ethPosition({
+            coin: 'ETH',
+            isLong: true,
+            leverage: 20,
+            positionValueExact: '480.125',
+          }),
+        ],
+      };
+
+      fixture.detectChanges();
+
+      expect(component.side).toBe('long');
+      expect(component.leverage).toBe(20);
+      expect(component.amount).toBe('');
+      expect(fixture.nativeElement.querySelector('.side-toggle')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.leverage-head')).toBeNull();
+      expect(text('.pair')).toBe('perpsAddCoin');
+      expect(text('.input-box .label')).toBe('perpsAddAmount');
+      expect(text('.submit-wrap button')).toBe('perpsAddPosition');
+      expect(text('.close-position')).toContain('perpsMyPosition');
+      expect(text('.close-position')).toContain('perpsLong');
+      expect(fixture.nativeElement.querySelector('.current-position')).toBeNull();
+      const positionBox = fixture.nativeElement.querySelector('.close-position');
+      const available = fixture.nativeElement.querySelector('.available');
+      expect(available).not.toBeNull();
+      expect(
+        positionBox.compareDocumentPosition(available) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
     });
   });
 
@@ -447,6 +532,8 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       const summary = text('.summary');
       expect(summary).not.toContain('N/A');
       expect(summary).toContain('$20');
+      expect(summary).toContain('0.045%');
+      expect(summary).not.toContain('0.015%');
     });
   });
 

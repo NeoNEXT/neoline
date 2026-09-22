@@ -1796,11 +1796,41 @@
   "perpsLiq": {
     "message": "Liq."
   },
+  "perpsMarketPrice": {
+    "message": "Market Price"
+  },
+  "perpsLiqPriceShort": {
+    "message": "Liq. Price"
+  },
+  "perpsUnrealizedPnl": {
+    "message": "Unrealized PnL"
+  },
+  "perpsQuantity": {
+    "message": "Size"
+  },
+  "perpsPositionValue": {
+    "message": "Position value"
+  },
+  "perpsEntryPrice": {
+    "message": "Entry price"
+  },
+  "perpsPositionFunding": {
+    "message": "Funding"
+  },
   "perpsAddPosition": {
     "message": "Add"
   },
+  "perpsAddCoin": {
+    "message": "Add {{symbol}}"
+  },
+  "perpsAddAmount": {
+    "message": "Add amount"
+  },
   "perpsClose": {
     "message": "Close"
+  },
+  "perpsCloseCoin": {
+    "message": "Close {{symbol}}"
   },
   "perpsFundPrompt": {
     "message": "Fund your perps account to start trading."
@@ -1862,6 +1892,9 @@
   "perpsAmount": {
     "message": "Amount"
   },
+  "perpsCloseableAmount": {
+    "message": "Closeable amount"
+  },
   "perpsMax": {
     "message": "Max"
   },
@@ -1888,6 +1921,18 @@
   },
   "perpsReleasedMarginTip": {
     "message": "The estimated collateral returned after this position is reduced or closed."
+  },
+  "perpsClosePnl": {
+    "message": "PnL"
+  },
+  "perpsClosePnlTip": {
+    "message": "Estimated profit or loss for this close, at the fill price."
+  },
+  "perpsEstimatedReceive": {
+    "message": "Receive"
+  },
+  "perpsEstimatedReceiveTip": {
+    "message": "Estimated amount received: released margin plus this PnL, minus the fee."
   },
   "perpsFee": {
     "message": "Fee"

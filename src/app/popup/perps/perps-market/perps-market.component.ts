@@ -6,13 +6,18 @@ import {
   HostListener,
   OnDestroy,
   OnInit,
+  Optional,
   ViewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Store } from '@ngrx/store';
 import { asyncScheduler, Subscription, Unsubscribable } from 'rxjs';
 import { tap, throttleTime } from 'rxjs/operators';
+import BigNumber from 'bignumber.js';
 
 import { ChromeService } from '@/app/core';
+import { AppState } from '@/app/reduers';
+import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
 import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
 import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import {
@@ -22,10 +27,12 @@ import {
 import { PerpsCandleDatasetService } from '@/app/core/services/perps/perps-candle-dataset.service';
 import { STORAGE_NAME } from '@popup/_lib';
 import {
+  PerpsAggregatedAccount,
   PerpsCandle,
   PerpsCandleInterval,
   PerpsConnectionState,
   PerpsMarket,
+  PerpsPosition,
   isCandleInterval,
   PERPS_CANDLE_INTERVAL_LABELS,
   PERPS_HOME_URL,
@@ -33,6 +40,7 @@ import {
 import {
   chartPriceDecimals,
   formatFundingPercent,
+  formatUsd,
   isQuotablePrice,
   MISSING_DISPLAY,
   pad2,
@@ -97,6 +105,10 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   /** 首帧到达之前，占位统计卡片的骨架行。 */
   readonly statsSkeletonRows = [0, 1, 2, 3];
 
+  /** 当前地址在这个市场上的仓位；没有时整块仓位模块不出现。 */
+  account: PerpsAggregatedAccount;
+  private address: string;
+
   /**
    * 切换器的搜索框，一存在就抢焦点。
    *
@@ -124,6 +136,8 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   /** 数据集上一次说的是什么，好让「种类的变化」永远不被压住。 */
   private datasetAvailability: PerpsCandleAvailability = 'loading';
   private countdownTimer: any;
+  private accountSub: Unsubscribable;
+  private accountStateSub: Unsubscribable;
 
   constructor(
     private route: ActivatedRoute,
@@ -132,7 +146,9 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     private candleDatasets: PerpsCandleDatasetService,
     private cdr: ChangeDetectorRef,
     private channel: PerpsDataChannel,
-    private markets$: PerpsMarketDatasetService
+    private markets$: PerpsMarketDatasetService,
+    @Optional() private accountStates?: PerpsAccountStateService,
+    @Optional() private store?: Store<AppState>
   ) {}
 
   ngOnInit() {
@@ -154,6 +170,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     );
     this.tickCountdown();
     this.countdownTimer = setInterval(() => this.tickCountdown(), 1000);
+    this.watchWallet();
   }
 
   /**
@@ -186,6 +203,8 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     this.marketsSub?.unsubscribe();
     this.connectionSub?.unsubscribe();
     this.intervalSub?.unsubscribe();
+    this.accountSub?.unsubscribe();
+    this.accountStateSub?.unsubscribe();
     this.unwatchDataset();
     clearInterval(this.countdownTimer);
   }
@@ -307,6 +326,21 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
    */
   get hasChange(): boolean {
     return this.displayChangePercent !== null;
+  }
+
+  /**
+   * 这个市场上的仓位。按协议币种匹配，HIP-3 上 `neol:IWM` 和 `IWM` 不是同一个市场。
+   */
+  get position(): PerpsPosition | undefined {
+    return this.account?.positions?.find((item) => item.coin === this.coin);
+  }
+
+  /**
+   * 仓位上的资金费。协议 `sinceOpen` 正数是付出，取反后付出显示为 `-$0.03`。
+   */
+  get positionFundingText(): string {
+    const value = new BigNumber(this.position?.fundingSinceOpenExact ?? NaN);
+    return value.isFinite() ? formatUsd(value.negated()) : this.missingDisplay;
   }
 
   /** 资金费按小时报价；按 Hyperliquid 自家界面的方式显示。 */
@@ -520,6 +554,37 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
 
   //#endregion
 
+  /**
+   * 仓位随地址走，不随币种走：换市场只是换过滤器，不必重新问账户。
+   */
+  private watchWallet() {
+    if (!this.store || !this.accountStates) {
+      return;
+    }
+    this.accountSub = this.store.select('account').subscribe((state) => {
+      const address = state.currentWallet?.accounts[0]?.address;
+      if (address && address !== this.address) {
+        this.address = address;
+        this.account = undefined;
+        this.watchAccountState(address);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private watchAccountState(address: string) {
+    this.accountStateSub?.unsubscribe();
+    this.accountStateSub = this.accountStates
+      ?.watchAggregatedAccount(address)
+      .subscribe((state) => {
+        if (address !== this.address) {
+          return;
+        }
+        this.account = state.account ?? undefined;
+        this.cdr.markForCheck();
+      });
+  }
+
   learnBasics() {
     if (chrome.tabs) {
       chrome.tabs.create({ url: PERPS_BASICS_URL });
@@ -537,5 +602,21 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
       return;
     }
     this.router.navigateByUrl(`/popup/perps/order/${this.coin}?side=${side}`);
+  }
+
+  addToPosition() {
+    const position = this.position;
+    if (!this.canOrder || !position) {
+      return;
+    }
+    this.router.navigateByUrl(`/popup/perps/order/${position.coin}?add=1`);
+  }
+
+  closePosition() {
+    const position = this.position;
+    if (!this.canOrder || !position) {
+      return;
+    }
+    this.router.navigateByUrl(`/popup/perps/order/${position.coin}?close=1`);
   }
 }
