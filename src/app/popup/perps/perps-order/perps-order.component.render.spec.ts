@@ -174,7 +174,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       .trim();
 
   describe('止盈止损', () => {
-    it('reports an invalid trigger only when clicking place order, without signing or sending', () => {
+    it('shows an error and blocks submit when profit or loss is negative', () => {
       const notify = spyOn(TestBed.inject(GlobalService), 'snackBarTip');
       const submit = spyOn(TestBed.inject(PerpsTradeOrderService), 'submit');
       const unlock = spyOn(TestBed.inject(ChromeService), 'getPassword');
@@ -183,14 +183,21 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       component.setProtectionEnabled(true);
       component.setProtectionPrice('tp', '1800');
       fixture.detectChanges();
-      expect(notify).not.toHaveBeenCalled();
-      expect(fixture.nativeElement.querySelector('.error-tip')).toBeNull();
-      expect(fixture.nativeElement.querySelector('.submit-wrap button').disabled).toBeFalse();
+      expect(component.protectionReturn('tp').startsWith('-')).toBeTrue();
+      expect(text('.error-tip')).toBe('perpsInvalidProtection');
+      expect(fixture.nativeElement.querySelector('.submit-wrap button').disabled).toBeTrue();
       fixture.nativeElement.querySelector('.submit-wrap button').click();
-      expect(notify).toHaveBeenCalledWith('perpsInvalidProtection');
+      expect(notify).not.toHaveBeenCalled();
       expect(submit).not.toHaveBeenCalled();
       expect(unlock).not.toHaveBeenCalled();
       expect(component.submitting).toBeFalse();
+
+      component.setProtectionPrice('tp', '2200');
+      component.setProtectionReturn('sl', '-1');
+      fixture.detectChanges();
+      expect(component.protectionReturn('sl').startsWith('-')).toBeTrue();
+      expect(text('.error-tip')).toBe('perpsInvalidProtection');
+      expect(fixture.nativeElement.querySelector('.submit-wrap button').disabled).toBeTrue();
     });
 
     it('revalidates protection if the price crosses the trigger while unlocking', async () => {
@@ -275,7 +282,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       component.finishProtectionReturn('sl');
       expect(component.stopLossPrice).toBe('1900');
       component.setSide('short');
-      expect(component.canSubmit).toBeTrue();
+      expect(component.canSubmit).toBeFalse();
       expect(component.composition.submittable).toBeFalse();
       component.setProtectionPrice('tp', '1900');
       component.setProtectionPrice('sl', '2100');

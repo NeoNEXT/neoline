@@ -700,7 +700,6 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    */
   get orderUnavailableReason(): string | null {
     const availability = this.composition.availability;
-    if (availability?.code === 'invalid-protection') { return null; }
     return availability ? UNAVAILABLE_MESSAGES[availability.code] : null;
   }
 
@@ -720,7 +719,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   get canSubmit(): boolean {
     return (
       !this.destroyed && !this.leverageUpdating && this.lifecycle.gateOpen &&
-      (this.composition.submittable || this.composition.availability?.code === 'invalid-protection')
+      this.composition.submittable
     );
   }
 
@@ -1057,7 +1056,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       });
   }
 
-  /** 输入时不提示，点击下单时才报告触发价错误。 */
+  /** 解锁期间参考价穿过触发价时，表单已经不在眼前，仍用提示条说明保护单无效。 */
   private reportInvalidProtection(): boolean {
     if (this.composition.availability?.code !== 'invalid-protection') { return false; }
     this.global.snackBarTip('perpsInvalidProtection');
@@ -1095,7 +1094,6 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     if (!this.canSubmit) {
       return;
     }
-    if (this.reportInvalidProtection()) { return; }
     // 签不了名就先说签不了：这比先告诉用户价格变了更有用，而价格对一个根本无法签名的
     // 钱包来说是没有意义的信息。
     const walletExtra = this.wallet?.accounts[0]?.extra;

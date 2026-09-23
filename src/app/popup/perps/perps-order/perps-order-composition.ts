@@ -324,7 +324,7 @@ export function composeOrder(
     symbol,
   });
 
-  if (!availability && hasAmount && hasExecutionPrice && protection &&
+  if (!availability && hasExecutionPrice && protection &&
       (closeMode || !validProtection(protection, orderPriceExact, isLong, szDecimals))) {
     availability = { code: 'invalid-protection', params: { min: PERPS_MIN_ORDER_NOTIONAL, symbol } };
   }
