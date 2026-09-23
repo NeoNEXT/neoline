@@ -2276,9 +2276,6 @@
   "perpsReverseToShort": {
     "message": "Reverse to Short"
   },
-  "perpsNearMarginLimit": {
-    "message": "This amount sits at the top of your buying power and may be rejected if margin moves."
-  },
   "confirm": {
     "message": "Confirm"
   },

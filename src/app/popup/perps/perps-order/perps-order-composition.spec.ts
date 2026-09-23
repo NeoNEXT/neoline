@@ -161,9 +161,9 @@ describe('composeOrder 购买力', () => {
       },
     });
     const amount = amountForPercent(composeOrder(f, input()), 100);
-    expect(amount).toBe('994999999999.99');
+    expect(amount).toBe('999999999999.99');
     expect(composeOrder(f, input({ amount })).intent?.requestedSizeExact)
-      .toBe('99499999999999');
+      .toBe('99999999999999');
   });
 
   it('keeps position value exact when calculating a partial close percentage', () => {
@@ -859,8 +859,8 @@ describe('composeOrder', () => {
 
     const amount = amountForPercent(composeOrder(f, at100), 100);
 
-    // 最大值会在按手量化之前，先扣掉那笔已确认的 0.5% 预留。
-    expect(Number(amount)).toBeLessThanOrEqual(37.706814);
+    // 100% 是按手取整后的购买力，再向下取到分：37.706814 → 37.7。
+    expect(amount).toBe('37.7');
     expect(reason(f, { ...at100, amount })).toBeNull();
     expect(composeOrder(f, { ...at100, amount }).submittable).toBeTrue();
   });

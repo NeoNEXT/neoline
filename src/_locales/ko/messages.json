@@ -2276,9 +2276,6 @@
   "perpsReverseToShort": {
     "message": "숏으로 반전"
   },
-  "perpsNearMarginLimit": {
-    "message": "이 금액은 사용 가능한 매수 여력의 상한에 있어 증거금이 변동하면 거래소에서 거부될 수 있습니다."
-  },
   "confirm": {
     "message": "확인"
   },

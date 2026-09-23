@@ -2276,9 +2276,6 @@
   "perpsReverseToShort": {
     "message": "反手做空"
   },
-  "perpsNearMarginLimit": {
-    "message": "该金额已到可用购买力的顶端，保证金变动时可能被交易场所拒绝。"
-  },
   "confirm": {
     "message": "确认"
   },

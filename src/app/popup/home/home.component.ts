@@ -37,7 +37,7 @@ export class PopupHomeComponent implements OnInit {
   private accountSub: Unsubscribable;
   /**
    * The tab named in the URL on arrival, captured before the account
-   * subscription runs — that subscription resets the tab, and the reset now
+   * subscription runs — a non-NeoX account resets the tab, and that reset
    * clears the parameter it would otherwise be read from.
    */
   private readonly arrivingTab: string;
@@ -75,14 +75,18 @@ export class PopupHomeComponent implements OnInit {
       this.allWallet = (state.neo3WalletArr as any)
         .concat(state.neo2WalletArr)
         .concat(state.neoXWalletArr);
-      this.setTab('asset');
+      // Perps only exists on NeoX. Leaving that chain returns home to assets;
+      // another NeoX address keeps the open tab and the perps page reads it.
+      if (this.chainType !== 'NeoX') {
+        this.setTab('asset');
+      }
     });
   }
 
   ngOnInit(): void {
-    // Coming back from a perps sub-page: reopen the tab the user left from,
-    // instead of dropping them on assets and making them find perps again.
-    if (this.arrivingTab === 'perps') {
+    // Coming back from a perps sub-page on NeoX: reopen the tab the user left
+    // from. A non-NeoX account has no perps tab, so that return stays on assets.
+    if (this.arrivingTab === 'perps' && this.chainType === 'NeoX') {
       this.showPerps();
     }
     this.mirrorTabToUrl = true;

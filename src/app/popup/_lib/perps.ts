@@ -168,8 +168,6 @@ export const PERPS_DEPOSIT_CONFIG: {
 export const PERPS_MIN_DEPOSIT = 5;
 /** 低于这个名义价值，Hyperliquid 会拒绝普通订单和部分平仓订单。 */
 export const PERPS_MIN_ORDER_NOTIONAL = 10;
-/** 仅当用户选择 Max / 100% 时才施加的安全预留。 */
-export const PERPS_MAX_ORDER_BUFFER_FRACTION = 0.005;
 
 /** Hyperliquid 的永续价格最多六位小数，再减去 `szDecimals`。 */
 export const PERPS_PRICE_MAX_DECIMALS = 6;
@@ -696,8 +694,8 @@ export interface PerpsCrossMarginAccount {
 /**
  * 首页所展示的账户：每个数字一行，由每个 DEX 各一份快照汇总而成。
  *
- * 求和只是展示上的便利。这些总额背后的资金池是各自独立计算保证金和强平的，这也正是保证金率
- * 不做求和的原因 —— 一个离强平只差一跳的池子，会消失在一个看起来很健康的总数里。
+ * 求和只是展示上的便利。这些总额背后的资金池是各自独立计算保证金和强平的，
+ * 一个离强平只差一跳的池子，会消失在一个看起来很健康的总数里。
  */
 export interface PerpsAggregatedAccount {
   unified: boolean;

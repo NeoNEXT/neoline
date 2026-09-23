@@ -598,10 +598,6 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return this.composition.leverageSliderPercent;
   }
 
-  get nearMarginLimit(): boolean {
-    return this.composition.nearMarginLimit;
-  }
-
   get feeEstimateUnavailable(): boolean {
     return this.composition.feeEstimateUnavailable;
   }

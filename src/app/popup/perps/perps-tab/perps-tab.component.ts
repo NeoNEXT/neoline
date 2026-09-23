@@ -146,16 +146,6 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 已占用的起始保证金，由永续清算所上报。
-   *
-   * 账户还没到之前它是未知的，于是和同一行里的可用保证金一样返回 `null` —— 否则那行会
-   * 读作「可用 -- · 已用 $0」，一半承认不知道，另一半却装作权威。
-   */
-  get usedMarginExact(): string | null {
-    return this.account?.totalMarginUsedExact ?? null;
-  }
-
-  /**
    * 有某个 DEX 没有上报，所以这些总额只覆盖了账户的一部分。数字继续留在屏幕上 ——
    * 对那些确实上报了的池子来说它们是真的 —— 但绝不能把它们当成全貌来呈现。
    */

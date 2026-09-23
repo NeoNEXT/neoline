@@ -2276,9 +2276,6 @@
   "perpsReverseToShort": {
     "message": "ショートへ反転"
   },
-  "perpsNearMarginLimit": {
-    "message": "この金額は利用可能な購買力の上限にあり、証拠金が変動すると拒否される場合があります。"
-  },
   "confirm": {
     "message": "確認"
   },

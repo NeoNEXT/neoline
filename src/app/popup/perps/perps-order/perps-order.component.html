@@ -136,9 +136,6 @@
       <span>%</span>
     </label>
   </div>
-  <p class="risk-tip" *ngIf="nearMarginLimit">
-    {{ "perpsNearMarginLimit" | translate | async }}
-  </p>
 
   <!-- 杠杆滑块 -->
   <ng-container *ngIf="!closeMode && !addMode">

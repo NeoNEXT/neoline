@@ -14,7 +14,6 @@ import {
   PerpsPosition,
   PerpsTradeIntent,
   PerpsTradeOrderIntent,
-  PERPS_MAX_ORDER_BUFFER_FRACTION,
   PERPS_MAX_SLIPPAGE_PERCENT,
   PERPS_MIN_ORDER_NOTIONAL,
   PERPS_MIN_SLIPPAGE_PERCENT,
@@ -161,13 +160,10 @@ export interface PerpsOrderComposition {
   positionSizeExact: string;
   orderPriceExact: string;
   orderSizeExact: string;
-  /** 百分比按钮所度量的名义价值基数。 */
+  /** 百分比按钮所度量的名义价值基数。开仓时 100% 落在这里。 */
   percentBaseExact: string;
-  /** 开仓时 100% 瞄准的目标：购买力减去那笔已确认的预留。 */
-  bufferedMaxNotionalExact: string;
   amountSliderPercent: number;
   leverageSliderPercent: number;
-  nearMarginLimit: boolean;
   /**
    * 这个市场上实际收取的费率，页面报出的每一个费率和手续费都取自这里。
    * `feeEstimateUnavailable` 时它只是账户费率，页面不拿它报价。
@@ -284,11 +280,6 @@ export function composeOrder(
     maxOrderNotional,
     orderPriceExact,
   });
-  const bufferedMax = bufferedMaxNotional({
-    market,
-    maxOrderNotional,
-    orderPriceExact,
-  });
 
   const preview = composePreview({
     crossMarginAccount: facts.crossMarginAccount,
@@ -387,7 +378,6 @@ export function composeOrder(
     orderPriceExact,
     orderSizeExact,
     percentBaseExact: percentBase.toFixed(),
-    bufferedMaxNotionalExact: bufferedMax.toFixed(),
     amountSliderPercent:
       input.activePercent !== null
         ? input.activePercent
@@ -404,13 +394,6 @@ export function composeOrder(
       input.leverage,
       market?.maxLeverage
     ),
-    // 购买力的最后一丝余量：在审核与成交之间，账户被行情反向跳动一下，
-    // 这笔订单就过不了保证金检查。
-    nearMarginLimit:
-      !closeMode &&
-      !!market &&
-      amountExact.isGreaterThan(bufferedMax) &&
-      amountExact.isLessThanOrEqualTo(maxOrderNotional),
     feeRates,
     // 读不到部署方倍数的 HIP-3 市场，照报账户费率等于把一个明知不对的数字摆到屏幕上，
     // 所以这一行改为如实说明。它不拦订单：手续费并不改变订单本身。
@@ -802,31 +785,6 @@ function percentBaseFor(params: {
     : maxOrderNotional;
 }
 
-/**
- * 扣掉那笔已确认预留后的购买力，并重新按最小变动单位量化。
- *
- * 100% 瞄准的是这里而不是原始最大值：账户数字会随标记价格在点击与成交之间浮动，而一笔正好
- * 卡在上限的订单，只要行情反向跳动一下就过不了保证金检查。
- */
-function bufferedMaxNotional(params: {
-  market: PerpsMarket | null;
-  maxOrderNotional: BigNumber;
-  orderPriceExact: string;
-}): BigNumber {
-  const { market, maxOrderNotional, orderPriceExact } = params;
-  if (!market) {
-    return new BigNumber(0);
-  }
-  const buffered = maxOrderNotional.times(
-    new BigNumber(1).minus(PERPS_MAX_ORDER_BUFFER_FRACTION)
-  );
-  const size = perpsSizeAtLot(
-    buffered.dividedBy(orderPriceExact),
-    market.szDecimals
-  );
-  return new BigNumber(size).times(orderPriceExact);
-}
-
 function leverageSliderPercent(leverage: number, maxLeverage?: number): number {
   const max = maxLeverage || 1;
   return max === 1 ? 100 : ((leverage - 1) / (max - 1)) * 100;
@@ -844,11 +802,11 @@ export function amountForPercent(
   percent: number
 ): string {
   const clamped = Math.max(0, Math.min(100, Number(percent) || 0));
-  const amount =
-    clamped === 100 && !composition.closeMode
-      ? new BigNumber(composition.bufferedMaxNotionalExact)
-      : new BigNumber(composition.percentBaseExact).times(clamped).dividedBy(100);
-  return amount.decimalPlaces(AMOUNT_DECIMALS, BigNumber.ROUND_FLOOR).toFixed();
+  return new BigNumber(composition.percentBaseExact)
+    .times(clamped)
+    .dividedBy(100)
+    .decimalPlaces(AMOUNT_DECIMALS, BigNumber.ROUND_FLOOR)
+    .toFixed();
 }
 
 //#region 订单算术

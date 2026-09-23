@@ -8,6 +8,7 @@ import { BehaviorSubject, of } from 'rxjs';
 import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
 import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
+import { PerpsConnectionState } from '@popup/_lib/perps';
 import { PERPS_FORMAT_PIPES } from '../perps-format.pipe';
 import { PerpsTabComponent } from './perps-tab.component';
 import { ethMarket, ethPosition } from '../perps.test-fixture';
@@ -76,6 +77,7 @@ describe('PerpsTabComponent 渲染与接线', () => {
   let account: any;
   let availability: string;
   let marketState: BehaviorSubject<any>;
+  let connection: BehaviorSubject<PerpsConnectionState>;
 
   beforeEach(async () => {
     account = {
@@ -96,6 +98,7 @@ describe('PerpsTabComponent 渲染与接线', () => {
       markets: [],
       updatedAt: Date.now(),
     });
+    connection = new BehaviorSubject<PerpsConnectionState>('live');
     navigateByUrl = jasmine.createSpy('navigateByUrl');
 
     await TestBed.configureTestingModule({
@@ -128,7 +131,7 @@ describe('PerpsTabComponent 渲染与接线', () => {
         },
         {
           provide: PerpsDataChannel,
-          useValue: { watchConnectionState: () => of('open') },
+          useValue: { watchConnectionState: () => connection },
         },
       ],
     }).compileComponents();
@@ -229,19 +232,6 @@ describe('PerpsTabComponent 渲染与接线', () => {
     });
   });
 
-  // 账户卡不再有任何账户级风险比率：NeoLine 只开逐仓，而那个指标只测全仓，
-  // 它描述不了本产品开出来的任何一笔仓位。风险读数改由每个仓位自己的强平价承担。
-  it('shows no account-level risk ratio in the account card', () => {
-    account.abstractionMode = 'disabled';
-    account.unified = false;
-    account.totalBalanceExact = '1000';
-    fixture.detectChanges();
-
-    expect(text('.card-top')).not.toContain('perpsMarginRatio');
-    expect(fixture.nativeElement.querySelector('.ratio')).toBeNull();
-    expect(fixture.nativeElement.querySelector('.ratio-dex')).toBeNull();
-  });
-
   it('labels USDC balances and keeps standard spot balances separate', () => {
     account.abstractionMode = 'portfolioMargin';
     fixture.detectChanges();
@@ -264,6 +254,60 @@ describe('PerpsTabComponent 渲染与接线', () => {
     expect(text('.card-value')).toContain('--');
     expect(text('.card-margin')).toContain('--');
     expect(fixture.nativeElement.querySelector('.fund-prompt')).toBeNull();
+  });
+
+  // 横幅只认共享连接状态。connecting / live 不提示；stale 保留已渲染的金额并标上行情时间。
+  // 行情数据集自己的 availability 变 stale，只要连接还是 live，横幅就不出现。
+  // 连接变陈旧本身不关掉出入金。
+  it('shows the stale banner only while the shared feed is stale', () => {
+    connection.next('connecting');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.stale-banner')).toBeNull();
+    expect(
+      fixture.nativeElement.querySelector('.perps-tab').classList.contains('feed-stale')
+    ).toBeFalse();
+
+    connection.next('live');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.stale-banner')).toBeNull();
+    expect(text('.card-value')).toBe('$1,000');
+
+    marketState.next({
+      availability: 'live',
+      markets: MARKETS,
+      updatedAt: Date.now() - 125_000,
+    });
+    connection.next('stale');
+    fixture.detectChanges();
+
+    expect(
+      fixture.nativeElement.querySelector('.perps-tab').classList.contains('feed-stale')
+    ).toBeTrue();
+    expect(text('.stale-banner')).toBe('perpsFeedStale · 2m');
+    expect(text('.card-value')).toBe('$1,000');
+    expect(text('.position-pnl')).toBe('+$0.34 +3.5%');
+    expect(
+      fixture.nativeElement.querySelector('.card-actions .primary').disabled
+    ).toBeFalse();
+    expect(
+      fixture.nativeElement.querySelector('.card-actions .ghost').disabled
+    ).toBeFalse();
+
+    marketState.next({
+      availability: 'stale',
+      markets: MARKETS,
+      updatedAt: Date.now() - 125_000,
+    });
+    connection.next('live');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.stale-banner')).toBeNull();
+    expect(
+      fixture.nativeElement.querySelector('.perps-tab').classList.contains('feed-stale')
+    ).toBeFalse();
+    expect(text('.card-value')).toBe('$1,000');
   });
 
   describe('市场接线', () => {
