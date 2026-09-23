@@ -5,26 +5,31 @@ import {
   PerpsAccountMode,
   PerpsAggregatedAccount,
   PerpsPosition,
+  perpsFiniteDecimal,
 } from '@popup/_lib/perps';
-
-const toFiniteDecimal = (value: any): string => {
-  const parsed = new BigNumber(value ?? 0);
-  return parsed.isFinite() ? (parsed.isZero() ? '0' : parsed.toFixed()) : '0';
-};
 
 const isUnifiedMode = (mode: PerpsAccountMode): boolean =>
   mode === 'unifiedAccount' || mode === 'portfolioMargin';
 
 const parseSpotUsdc = (spot: any) => {
-  const balance = (spot?.balances || []).find(
+  // 快照成功但列表里没有 USDC，是一笔权威的零。快照本身缺失，或行内字段非法，才是未知。
+  if (!spot || !Array.isArray(spot.balances)) {
+    return { totalExact: null, holdExact: null, freeExact: null };
+  }
+  const balance = spot.balances.find(
     (item) => item.coin === 'USDC' || item.token === 0
   );
-  const totalExact = toFiniteDecimal(balance?.total);
-  const holdExact = toFiniteDecimal(balance?.hold);
-  const freeExact = BigNumber.maximum(
-    0,
-    new BigNumber(totalExact).minus(holdExact)
-  ).toFixed();
+  if (!balance) {
+    return { totalExact: '0', holdExact: '0', freeExact: '0' };
+  }
+  const totalExact = perpsFiniteDecimal(balance.total);
+  const holdExact = perpsFiniteDecimal(balance.hold);
+  const freeExact = totalExact === null || holdExact === null
+    ? null
+    : BigNumber.maximum(
+      0,
+      new BigNumber(totalExact).minus(holdExact)
+    ).toFixed();
   return { totalExact, holdExact, freeExact };
 };
 
@@ -74,12 +79,12 @@ export function parsePerpsAccount(
 
   const positions: PerpsPosition[] = (response.assetPositions || [])
     .map((item) => item.position)
-    .filter(
-      (position) =>
-        position && !new BigNumber(toFiniteDecimal(position.szi)).isZero()
-    )
+    .filter((position) => {
+      const sziExact = perpsFiniteDecimal(position?.szi);
+      return position && sziExact !== null && !new BigNumber(sziExact).isZero();
+    })
     .map((position) => {
-      const sziExact = toFiniteDecimal(position.szi);
+      const sziExact = perpsFiniteDecimal(position.szi);
       const protocolCoin = String(position.coin);
       const separator = protocolCoin.indexOf(':');
       const positionDex =
@@ -93,22 +98,19 @@ export function parsePerpsAccount(
         symbol,
         sziExact,
         isLong: new BigNumber(sziExact).isGreaterThan(0),
-        entryPxExact: toFiniteDecimal(position.entryPx),
-        positionValueExact: toFiniteDecimal(position.positionValue),
-        unrealizedPnlExact: toFiniteDecimal(position.unrealizedPnl),
-        returnOnEquityExact: toFiniteDecimal(position.returnOnEquity),
-        liquidationPxExact:
-          position.liquidationPx === null
-            ? null
-            : toFiniteDecimal(position.liquidationPx),
+        entryPxExact: perpsFiniteDecimal(position.entryPx),
+        positionValueExact: perpsFiniteDecimal(position.positionValue),
+        unrealizedPnlExact: perpsFiniteDecimal(position.unrealizedPnl),
+        returnOnEquityExact: perpsFiniteDecimal(position.returnOnEquity),
+        liquidationPxExact: perpsFiniteDecimal(position.liquidationPx),
         leverage: Number(position.leverage?.value ?? 1),
         leverageType: position.leverage?.type ?? 'cross',
-        marginUsedExact: toFiniteDecimal(position.marginUsed),
-        fundingSinceOpenExact: toFiniteDecimal(position.cumFunding?.sinceOpen),
+        marginUsedExact: perpsFiniteDecimal(position.marginUsed),
+        fundingSinceOpenExact: perpsFiniteDecimal(position.cumFunding?.sinceOpen),
       } as PerpsPosition;
     });
 
-  const perDexAccountValueExact = toFiniteDecimal(
+  const perDexAccountValueExact = perpsFiniteDecimal(
     response.marginSummary.accountValue
   );
   const accountValueExact = unified
@@ -116,7 +118,7 @@ export function parsePerpsAccount(
       ? '0'
       : spotUsdcExact
     : perDexAccountValueExact;
-  const withdrawableExact = toFiniteDecimal(response.withdrawable);
+  const withdrawableExact = perpsFiniteDecimal(response.withdrawable);
   const availableBalanceExact = unified
     ? dex
       ? '0'
@@ -128,10 +130,10 @@ export function parsePerpsAccount(
     dex,
     accountValueExact: modeKnown ? accountValueExact : null,
     totalBalanceExact: modeKnown ? accountValueExact : null,
-    totalMarginUsedExact: toFiniteDecimal(
+    totalMarginUsedExact: perpsFiniteDecimal(
       response.marginSummary.totalMarginUsed
     ),
-    totalNtlPosExact: toFiniteDecimal(response.marginSummary.totalNtlPos),
+    totalNtlPosExact: perpsFiniteDecimal(response.marginSummary.totalNtlPos),
     withdrawableExact: modeKnown ? withdrawableExact : null,
     availableBalanceExact: modeKnown ? availableBalanceExact : null,
     spotUsdcExact,
@@ -218,7 +220,8 @@ export function aggregatePerpsAccounts(
         new BigNumber(0)
       )
       .toFixed();
-  const freeSpotExact = canonical
+  const freeSpotExact = canonical?.spotUsdcExact != null &&
+    canonical.spotUsdcHoldExact != null
     ? BigNumber.maximum(
         0,
         new BigNumber(canonical.spotUsdcExact).minus(
@@ -240,8 +243,8 @@ export function aggregatePerpsAccounts(
         ? canonical.spotUsdcExact
         : sumKnown((account) => account.totalBalanceExact)
       : null,
-    totalMarginUsedExact: sum((account) => account.totalMarginUsedExact),
-    totalNtlPosExact: sum((account) => account.totalNtlPosExact),
+    totalMarginUsedExact: sumKnown((account) => account.totalMarginUsedExact),
+    totalNtlPosExact: sumKnown((account) => account.totalNtlPosExact),
     withdrawableExact: modeKnown
       ? unified
         ? freeSpotExact

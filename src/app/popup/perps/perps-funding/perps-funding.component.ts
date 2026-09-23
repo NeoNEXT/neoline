@@ -35,7 +35,7 @@ import {
   PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS,
   PERPS_WALLET_BALANCE_POLL_MS,
 } from '@popup/_lib/perps';
-import { clampDecimals, formatBalance, formatUsd } from '../perps.util';
+import { clampDecimals, formatBalance, formatUsd, MISSING_DISPLAY } from '../perps.util';
 
 type FundingTab = 'deposit' | 'withdraw';
 
@@ -121,6 +121,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
 
   formatUsd = formatUsd;
   formatBalance = formatBalance;
+  readonly missingDisplay = MISSING_DISPLAY;
 
   private address: string;
   private wallet: EvmWalletJSON;
@@ -353,8 +354,11 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     if (!account.unified) {
       return account.withdrawableExact ?? null;
     }
-    const free = new BigNumber(account.spotUsdcExact ?? 0).minus(
-      account.spotUsdcHoldExact ?? 0
+    if (account.spotUsdcExact == null || account.spotUsdcHoldExact == null) {
+      return null;
+    }
+    const free = new BigNumber(account.spotUsdcExact).minus(
+      account.spotUsdcHoldExact
     );
     if (!free.isFinite()) {
       return null;

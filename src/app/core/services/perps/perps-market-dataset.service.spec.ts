@@ -11,6 +11,7 @@ import {
 } from './perps-market-dataset.service';
 import {
   PerpsMarketDatasetState,
+  marketContextFields,
   mergeDexAssetContexts,
 } from './perps-market-dataset';
 
@@ -1055,5 +1056,20 @@ describe('market margin table propagation', () => {
     expect(seen[1].markPxExact).toBe('102');
     expect(seen[1].marginTiers[1].lowerBoundExact).toBe('9007199254740993.1');
     sub.unsubscribe();
+  });
+
+  it('keeps a zero volume and leaves a missing or illegal mark empty', () => {
+    const present = marketContextFields(ctx('100', '0') as any);
+    expect(present.markPxExact).toBe('0');
+    expect(present.dayVolumeExact).toBe('1000');
+
+    const broken = marketContextFields({
+      ...ctx('100', 'nope'),
+      dayNtlVlm: undefined,
+      openInterest: '10',
+    } as any);
+    expect(broken.markPxExact).toBeNull();
+    expect(broken.dayVolumeExact).toBeNull();
+    expect(broken.openInterestExact).toBeNull();
   });
 });

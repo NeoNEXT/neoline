@@ -10,8 +10,8 @@ import BigNumber from 'bignumber.js';
  */
 export type PerpsExactValue = BigNumber.Value | null | undefined;
 
-/** 在数值确实缺失的地方显示它，这样它永远不会被读成零。 */
-export const MISSING_DISPLAY = '--';
+/** 在数值缺失或非法的地方显示它，这样它永远不会被读成零。 */
+export const MISSING_DISPLAY = 'N/A';
 
 /**
  * 按市场主键定位，而不是按符号：同一个符号可能同时存在于标准永续 DEX 和某个 HIP-3 DEX
@@ -41,7 +41,7 @@ export function findMarketByCoin(
 /**
  * 协议小数的正负判断 —— 模板里用 `< 0` 做不到这件事。
  *
- * 缺失的值没有正负：`--` 不会被涂成红色。
+ * 缺失的值没有正负：`N/A` 不会被涂成红色。
  */
 export function isNegativeExact(value: PerpsExactValue): boolean {
   return !isMissing(value) && new BigNumber(value).isLessThan(0);
@@ -50,9 +50,8 @@ export function isNegativeExact(value: PerpsExactValue): boolean {
 /**
  * 这个值能不能当成一个价格报出去：既没有缺失，也不是零或负数。
  *
- * 必须按数值判断，而不是真值判断。`perpsFiniteDecimal` 在字段缺失或解析不出时返回 `'0'`，
- * 而 `'0'` 在 JS 里是真值 —— 让它当价格用出去，界面就会报出一个这个市场从未印过的 `$0`，
- * 那是在替市场做一个它从未做过的价格陈述。零不是「便宜」，它是「我们不知道」。
+ * 必须按数值判断，而不是真值判断。缺失和非法值是 `null`，明确的 `'0'` 在 JS 里仍是真值。
+ * 让它当价格用出去，界面就会报出一个这个市场从未印过的 `$0`。
  */
 export function isQuotablePrice(value: PerpsExactValue): boolean {
   return !isMissing(value) && new BigNumber(value).isGreaterThan(0);
@@ -360,7 +359,10 @@ export function formatSize(
   size: PerpsExactValue,
   szDecimals?: number
 ): string {
-  const value = new BigNumber(size || 0);
+  if (isMissing(size)) {
+    return MISSING_DISPLAY;
+  }
+  const value = new BigNumber(size);
   if (!value.isFinite() || value.isZero()) {
     return '0';
   }
@@ -439,7 +441,10 @@ export function formatPositionSize(
   size: PerpsExactValue,
   szDecimals?: number
 ): string {
-  return formatSize(new BigNumber(size || 0).absoluteValue(), szDecimals);
+  if (isMissing(size)) {
+    return MISSING_DISPLAY;
+  }
+  return formatSize(new BigNumber(size).absoluteValue(), szDecimals);
 }
 
 /** 权益回报率以小数形式到达；标签上显示成百分比。 */

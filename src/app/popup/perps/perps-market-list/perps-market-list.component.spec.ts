@@ -72,7 +72,7 @@ describe('PerpsMarketListComponent', () => {
 
   it('reports no price rather than a zero the market never printed', () => {
     const value = component();
-    // `perpsFiniteDecimal` 在 `markPx` 缺失或解析不出时返回 `'0'`，而 `'0'` 是真值。
+    // 明确的 `'0'` 在 JS 里是真值，不能把它当成这个市场印出来的价格。
     const broken = market({
       key: 'hl:BROKEN',
       coin: 'BROKEN',

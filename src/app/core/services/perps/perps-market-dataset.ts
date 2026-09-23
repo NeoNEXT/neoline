@@ -67,9 +67,9 @@ export function marketContextFields(
   const prevDayPxExact = perpsFiniteDecimal(ctx.prevDayPx);
   const dayVolumeExact = perpsFiniteDecimal(ctx.dayNtlVlm);
   const openInterestSizeExact = perpsFiniteDecimal(ctx.openInterest);
-  const openInterestExact = new BigNumber(openInterestSizeExact)
-    .times(markPxExact)
-    .toFixed();
+  const openInterestExact = openInterestSizeExact !== null && markPxExact !== null
+    ? new BigNumber(openInterestSizeExact).times(markPxExact).toFixed()
+    : null;
   const fundingExact = perpsFiniteDecimal(ctx.funding);
   const changeAmount =
     midPxExact && new BigNumber(prevDayPxExact).isGreaterThan(0)

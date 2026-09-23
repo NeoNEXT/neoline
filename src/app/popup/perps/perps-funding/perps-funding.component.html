@@ -46,7 +46,10 @@
         {{ "perpsWithdrawable" | translate | async }}
         <!-- 用组件对它的读数，而不是原始账户字段：无论统一账户有多少资金，
              它永续侧的 `withdrawable` 都是 0。 -->
-        ${{ formatBalance(withdrawableExact) }}
+        <ng-container *ngIf="withdrawableExact != null; else withdrawableMissing">
+          ${{ formatBalance(withdrawableExact) }}
+        </ng-container>
+        <ng-template #withdrawableMissing>{{ missingDisplay }}</ng-template>
       </ng-container>
       <span class="retry" *ngIf="showRetry" (click)="reload()">
         {{ "perpsRetry" | translate | async }}
@@ -101,7 +104,7 @@
   </p>
 
   <!-- 只有提现侧在表单上报数。存入的两笔费用都要等确认页才知道 —— 网络费需要一份签过名的
-       授权才估得出来，跨链费与它同时敲定 —— 而一个永远读作 `--` 的行不如不放。
+       授权才估得出来，跨链费与它同时敲定 —— 而一个永远读作 `N/A` 的行不如不放。
        到账时间两侧都不再有：见 P3-5，那一行曾经是个没有任何事实支撑的硬编码文案。 -->
   <div class="detail-rows" *ngIf="isWithdraw">
       <div class="row">

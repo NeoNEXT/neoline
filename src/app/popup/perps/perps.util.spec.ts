@@ -31,7 +31,7 @@ describe('perps sign test', () => {
   });
 
   it('gives a missing value no sign at all', () => {
-    // `--` 是「没有数字」，不是一个恰好在下跌的数字。
+    // `N/A` 是「没有数字」，不是一个恰好在下跌的数字。
     expect(isNegativeExact(null)).toBeFalse();
     expect(isNegativeExact(undefined)).toBeFalse();
     expect(isNegativeExact('')).toBeFalse();
@@ -177,8 +177,9 @@ describe('perps utilities', () => {
   });
 
   it('shows nothing rather than zero for an absent price', () => {
-    expect(formatPrice(null)).toBe('--');
-    expect(formatPrice(undefined)).toBe('--');
+    expect(formatPrice(null)).toBe('N/A');
+    expect(formatPrice(undefined)).toBe('N/A');
+    expect(formatPrice('nope')).toBe('N/A');
   });
 
   it('reports the decimals the chart axis should use', () => {
@@ -252,7 +253,7 @@ describe('perps utilities', () => {
     expect(formatCompactUsd('90500')).toBe('$90.5K');
     expect(formatCompactUsd('474.810476')).toBe('$474.81');
     expect(formatCompactUsd('0')).toBe('$0');
-    expect(formatCompactUsd(null)).toBe('--');
+    expect(formatCompactUsd(null)).toBe('N/A');
   });
 
   it('sizes positions at the market lot precision', () => {

@@ -96,7 +96,7 @@ describe('PerpsMarketComponent live price', () => {
 
   it('reports no price rather than a zero the market never printed', () => {
     const component = build();
-    // `perpsFiniteDecimal` 在 `markPx` 缺失或解析不出时返回 `'0'`，而 `'0'` 是真值。
+    // 明确的 `'0'` 在 JS 里是真值，不能把它当成这个市场印出来的价格。
     component.market = { ...market, midPxExact: null, markPxExact: '0' };
 
     expect(component.displayPrice).toBeNull();
@@ -139,7 +139,7 @@ describe('PerpsMarketComponent live price', () => {
   it('reads an absent funding rate as absent', () => {
     const component = build();
 
-    expect(component.fundingPercent).toBe('--');
+    expect(component.fundingPercent).toBe('N/A');
   });
 });
 

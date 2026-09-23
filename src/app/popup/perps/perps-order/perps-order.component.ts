@@ -71,8 +71,7 @@ const MAKER_FEE_RATE = '0.00015';
 const AMOUNT_DECIMALS = 2;
 
 /**
- * 还没输入金额时摘要行的读数，与 Hyperliquid 自家下单表单一致。它不同于 `--`：本界面用
- * `--` 表示数据源欠着一个值却还没给出；而这里还什么都不欠。
+ * 还没输入金额时摘要行读作 N/A。数据源没给出的数值也读作 N/A，不会被写成零。
  */
 const NOT_APPLICABLE = 'N/A';
 

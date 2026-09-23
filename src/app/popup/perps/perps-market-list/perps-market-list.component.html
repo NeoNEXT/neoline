@@ -87,7 +87,7 @@
         <div class="volume">{{ formatCompactUsd(market.dayVolumeExact) }}</div>
       </div>
       <div class="market-price">
-        <!-- 报不出价格时连货币符号一起去掉：`$--` 里的那个 $ 仍在断言我们有一个金额 -->
+        <!-- 报不出价格时连货币符号一起去掉：`$N/A` 里的那个 $ 仍在断言我们有一个金额 -->
         <div class="price">
           <ng-container *ngIf="listPrice(market) as price; else priceMissing">
             ${{ formatPrice(price, market.szDecimals, !usingMarkPrice(market)) }}

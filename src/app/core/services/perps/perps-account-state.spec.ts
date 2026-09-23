@@ -80,4 +80,63 @@ describe('Perps account mode balances', () => {
     );
     expect(value.positions[0].fundingSinceOpenExact).toBe('-0.12');
   });
+
+  it('keeps a real zero and leaves missing or illegal numbers empty', () => {
+    const value = parsePerpsAccount(
+      {
+        marginSummary: {
+          accountValue: '0',
+          totalMarginUsed: 'nope',
+          totalNtlPos: '',
+        },
+        withdrawable: '0',
+        assetPositions: [
+          {
+            position: {
+              coin: 'ETH',
+              szi: '1',
+              entryPx: undefined,
+              unrealizedPnl: '0',
+              liquidationPx: 'not-a-price',
+            },
+          },
+          { position: { coin: 'ZERO', szi: '0', unrealizedPnl: '5' } },
+          { position: { coin: 'MISSING', szi: null, unrealizedPnl: '5' } },
+        ],
+      },
+      { balances: [{ coin: 'USDC', total: '10', hold: 'bad' }] },
+      'disabled'
+    );
+
+    expect(value.totalBalanceExact).toBe('0');
+    expect(value.withdrawableExact).toBe('0');
+    expect(value.totalMarginUsedExact).toBeNull();
+    expect(value.totalNtlPosExact).toBeNull();
+    expect(value.spotUsdcExact).toBe('10');
+    expect(value.spotUsdcHoldExact).toBeNull();
+    expect(value.positions.length).toBe(1);
+    expect(value.positions[0].unrealizedPnlExact).toBe('0');
+    expect(value.positions[0].entryPxExact).toBeNull();
+    expect(value.positions[0].liquidationPxExact).toBeNull();
+
+    const explicitNull = parsePerpsAccount(
+      {
+        ...clearinghouse,
+        assetPositions: [{ position: { coin: 'ETH', szi: '1', liquidationPx: null } }],
+      },
+      spot,
+      'disabled'
+    );
+    expect(explicitNull.positions[0].liquidationPxExact).toBeNull();
+
+    const zeroLiq = parsePerpsAccount(
+      {
+        ...clearinghouse,
+        assetPositions: [{ position: { coin: 'ETH', szi: '1', liquidationPx: '0' } }],
+      },
+      spot,
+      'disabled'
+    );
+    expect(zeroLiq.positions[0].liquidationPxExact).toBe('0');
+  });
 });

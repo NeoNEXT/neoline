@@ -173,13 +173,13 @@ describe('PerpsTabComponent 渲染与接线', () => {
       expect(text('.card-margin')).toBe('perpsAvailableMargin $800');
     });
 
-    // 还没加载完时用 --，别落成 $0，免得读成「可用保证金是零」。
+    // 还没加载完时用 N/A，别落成 $0，免得读成「可用保证金是零」。
     it('says it does not know yet on the available-margin row', () => {
       account = null;
       availability = 'loading';
       fixture.detectChanges();
 
-      expect(text('.card-margin')).toBe('perpsAvailableMargin --');
+      expect(text('.card-margin')).toBe('perpsAvailableMargin N/A');
       expect(text('.card-margin')).not.toContain('$0');
     });
   });
@@ -228,7 +228,7 @@ describe('PerpsTabComponent 渲染与接线', () => {
       account.positions = [{ ...HIP3_POSITION, liquidationPxExact: null }];
       fixture.detectChanges();
 
-      expect(boxValue(1)).toBe('--');
+      expect(boxValue(1)).toBe('N/A');
     });
   });
 
@@ -251,8 +251,8 @@ describe('PerpsTabComponent 渲染与接线', () => {
     account.availableBalanceExact = null;
     account.positions = [];
     fixture.detectChanges();
-    expect(text('.card-value')).toContain('--');
-    expect(text('.card-margin')).toContain('--');
+    expect(text('.card-value')).toContain('N/A');
+    expect(text('.card-margin')).toContain('N/A');
     expect(fixture.nativeElement.querySelector('.fund-prompt')).toBeNull();
   });
 
@@ -314,7 +314,7 @@ describe('PerpsTabComponent 渲染与接线', () => {
     // 市场价格来自 tab 自己那条行情订阅 —— 行情还没到时不能报一个这个市场从未印过的价格。
     it('takes the market price from its own market feed', () => {
       fixture.detectChanges();
-      expect(boxValue(0)).toBe('--');
+      expect(boxValue(0)).toBe('N/A');
       expect(boxValue(1)).toBe('$99,829');
 
       deliverMarkets();

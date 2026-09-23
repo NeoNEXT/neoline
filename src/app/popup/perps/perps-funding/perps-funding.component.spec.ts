@@ -190,7 +190,8 @@ describe('PerpsFundingComponent balance line', () => {
     component.account = null;
     fixture.detectChanges();
 
-    expect(balanceLine()).toContain('$--');
+    expect(balanceLine()).toContain('N/A');
+    expect(balanceLine()).not.toContain('$N/A');
   });
 });
 

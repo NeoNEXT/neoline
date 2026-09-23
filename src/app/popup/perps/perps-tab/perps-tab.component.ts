@@ -214,7 +214,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   /**
    * 仓位卡上的「市场价格」：盘口中间价，没有双边盘口时用标记价格。
    *
-   * 两个都报不出来时为 `null`，卡片写 `--`，绝不报 `$0`。判据是 `isQuotablePrice`：
+   * 两个都报不出来时为 `null`，卡片写 `N/A`，绝不报 `$0`。判据是 `isQuotablePrice`：
    * `markPxExact` 缺失时是 `'0'`，而 `'0'` 在 JS 里是真值。
    */
   positionMarketPrice(position: PerpsPosition): string | null {

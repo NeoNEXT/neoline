@@ -15,14 +15,20 @@ export type PerpsNetwork = 'mainnet' | 'testnet';
  * 测试网只是开发用的便利，所以无论环境文件怎么配，生产构建一律走主网。
  */
 /**
- * 把 API 返回的值强制成一个有限的协议精度十进制字符串。
+ * 把 API 返回的值收成协议精度的十进制字符串。
  *
- * 对任何可能回流进签名的东西，保持交易场所自己的十进制文本原样不动；对交易场所省略掉的
- * 字段，返回 '0' 而不是 NaN（ADR-0001）。
+ * 缺失（`null`、`undefined`、空串）和非法值（NaN、Infinity、非数字）返回 `null`。
+ * 明确的零仍是 `'0'`，不能和缺失显示成同一个事实。
  */
-export function perpsFiniteDecimal(value: any): string {
-  const parsed = new BigNumber(value ?? 0);
-  return parsed.isFinite() ? (parsed.isZero() ? '0' : parsed.toFixed()) : '0';
+export function perpsFiniteDecimal(value: any): string | null {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+  const parsed = new BigNumber(value);
+  if (!parsed.isFinite()) {
+    return null;
+  }
+  return parsed.isZero() ? '0' : parsed.toFixed();
 }
 
 export function resolvePerpsTestnet(
@@ -618,7 +624,7 @@ export interface PerpsPosition {
   unrealizedPnlExact: string;
   /** 以小数表示的权益回报率，例如 `"0.142"` */
   returnOnEquityExact: string;
-  /** 对于任何价格都不会被强平的仓位为 `null`。 */
+  /** 协议没给出强平价，或该字段缺失、非法时为 `null`。明确的 `'0'` 仍是零。 */
   liquidationPxExact: string | null;
   /** 整数形式的杠杆设置；与价格不同，它作为 `number` 是精确的。 */
   leverage: number;

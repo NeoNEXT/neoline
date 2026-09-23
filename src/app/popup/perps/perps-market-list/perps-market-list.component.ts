@@ -315,8 +315,8 @@ export class PerpsMarketListComponent implements OnInit, OnChanges, OnDestroy {
    * 可交易市场的原因。
    *
    * 两个价格都报不出来时为 `null`，这一行就不报价。判据是 `isQuotablePrice` 而不是真值：
-   * `markPxExact` 走的是 `perpsFiniteDecimal`，字段缺失时它给的是 `'0'`，而那在 JS 里
-   * 是真值 —— 放过去这一行就写着 `$0`，一个这个市场从未印过的价格。
+   * 缺失和非法价格是 `null`，明确的 `'0'` 在 JS 里仍是真值。放过去这一行就写着 `$0`，
+   * 一个这个市场从未印过的价格。
    */
   listPrice(market: PerpsMarket): string | null {
     if (isQuotablePrice(market.midPxExact)) {

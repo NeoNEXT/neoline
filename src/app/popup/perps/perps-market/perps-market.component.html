@@ -83,7 +83,7 @@
 
     <!-- 大字价格 -->
     <div class="price-block" *ngIf="market">
-      <!-- 报不出价格时连货币符号一起去掉：`$--` 里的那个 $ 仍在断言我们有一个金额 -->
+      <!-- 报不出价格时连货币符号一起去掉：`$N/A` 里的那个 $ 仍在断言我们有一个金额 -->
       <span class="price" *ngIf="hasPrice; else priceMissing"
         >${{ displayPrice | perpsPrice: market.szDecimals:usingMid }}</span
       >
@@ -206,7 +206,10 @@
           <div class="cell">
             <div class="label">{{ "perpsEntryPrice" | translate | async }}</div>
             <div class="value">
-              ${{ position.entryPxExact | perpsPrice: market?.szDecimals }}
+              <ng-container *ngIf="position.entryPxExact; else entryMissing">
+                ${{ position.entryPxExact | perpsPrice: market?.szDecimals }}
+              </ng-container>
+              <ng-template #entryMissing>{{ missingDisplay }}</ng-template>
             </div>
           </div>
           <div class="cell">
