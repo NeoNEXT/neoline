@@ -1,6 +1,8 @@
 # perps-tab 页面行为与证据
 
-整理日期：2026-09-23。代码基线：`261d928d` 及整理时的工作区内容；工作区已有下单页等未提交改动，本文描述当前实现，不等同于已发布版本。
+整理日期：2026-09-23。代码基线：`261d928d` 及整理时的工作区内容；工作区已有下单页等未提交改动，本文记录原始整理时的实现，不等同于已发布版本。
+
+文档入口：[Perps 功能地图与共享术语][feature-map]。2026-09-24 归并文档；协议来源的核对日期与结论、测试执行记录、待执行验收分别见第 7 节。
 
 `perps-tab` 是钱包首页的永续合约 Tab，负责账户摘要、持仓卡片、行情列表和页面跳转。它本身不接收交易参数、不签名、不下单，也不直接执行出入金。下文涉及交易的内容会注明所属的后续页面。
 
@@ -97,6 +99,8 @@ flowchart TD
 ### 3.1 本页金额与持仓
 
 所有 `*Exact` 金额/数量/价格使用十进制字符串和 `BigNumber` 运算；格式化发生在展示层。`null` 表示未知，已确认的 `'0'` 表示零，两者不可互换。
+
+首页选择提供跨 DEX 的只读概览，便于查看产品覆盖范围内的账户和仓位；这不合并底层资金池，也不扩大可交易容量。每个仓位始终保留所属 DEX，缺失来源显式标为不完整；聚合金额必须先确定账户模式，不能把标准账户求和规则用于共享余额。
 
 | 字段/规则 | 来源、计算与单位 |
 | --- | --- |
@@ -214,7 +218,7 @@ flowchart TD
 
 **新鲜度边界：** stale 横幅使用共享连接状态，而非每个账户/DEX 的独立帧年龄。`lastUpdatedLabel` 来源是市场数据集最近快照/帧的客户端时间，不是账户更新时间或成交确认时间；该 getter 自身没有逐秒计时器。一次行情请求失败但仍保留旧列表时，也不能仅凭没有 stale 横幅就认定所有行情都是最新的。
 
-架构依据：[共享快照/帧仲裁 ADR][dataset-adr]；实现依据：[数据集][dataset]、[数据通道][channel]、[行情服务][market-service]。协议规定订阅及 ping/pong 形式；本实现的 30/10 秒参数是客户端策略。[官方 WS 订阅][protocol-ws]、[官方心跳说明][protocol-heartbeat]
+架构依据：[共享快照/帧约定][data-contract]；实现依据：[数据集][dataset]、[数据通道][channel]、[行情服务][market-service]。协议规定订阅及 ping/pong 形式；本实现的 30/10 秒参数是客户端策略。[官方 WS 订阅][protocol-ws]、[官方心跳说明][protocol-heartbeat]
 
 ## 7. 正确性怎么证明？
 
@@ -231,6 +235,18 @@ flowchart TD
 | [Tick and lot size][protocol-precision] | 下单价格、数量精度与整数价格例外 |
 | [Exchange endpoint][protocol-exchange] | 订单逐项结果、IOC/GTC、cloid、builder 费率单位 |
 | [Fees][protocol-fees] | maker/taker、返佣和 HIP-3 费率修正公式 |
+
+2026-09-24 重新读取以下官方正文，并与当前账户解析和行情数据集代码核对：
+
+| 官方资料 | 核对结论与本页边界 |
+| --- | --- |
+| [Spot info][protocol-spot]、[Account abstraction modes][protocol-modes] | 统一账户与组合保证金的余额、冻结金额从 `spotClearinghouseState` 读取，响应包含 `total/hold`。第 3.1 节的 `max(0, total-hold)` 是本地 USDC 展示口径，不能据此断言完整购买力或最大可提额 |
+| [Portfolio margin][protocol-portfolio] | 组合保证金覆盖同一账户的现货余额与跨 DEX 全仓仓位，并涉及合格抵押品、借款及维持保证金。仅展示 USDC 不能代表完整组合风险 |
+| [Liquidations][protocol-liquidations] | 强平使用 mark price；仓位强平价仍可能随资金费和其他全仓仓位盈亏变化。不能把展示值当作固定成交价 |
+| [Entry price and pnl][protocol-pnl] | 未实现盈亏按方向、mark 与入场价之差及仓位数量计算；入场价和盈亏是展示指标，不能替代保证金与成交账本 |
+| [WebSocket subscriptions][protocol-ws] | `WsAllDexsAssetCtxs.ctxs` 已明确为 `Array<[string, Array<PerpsAssetCtx>]>`，与本地 `[dex, ctxs][]` 解析一致。数据集按 DEX 名匹配；文档没有承诺 DEX 排序或该频道的固定推送频率 |
+
+上述结论核对的是协议正文与本地实现；第 7.3 节的网络验收仍需保存账户响应、原始行情帧及对应页面结果。
 
 ### 7.2 已有测试与本次执行结果
 
@@ -322,7 +338,7 @@ npm run test:ci -- \
 [exchange-test]: ../../../core/services/perps/perps-exchange-write.service.spec.ts
 [funding-ts]: ../perps-funding/perps-funding.component.ts
 [funding-test]: ../perps-funding/perps-funding.component.spec.ts
-[dataset-adr]: ../../../../../docs/adr/0008-shared-dataset-snapshot-frame-arbiter.md
+[data-contract]: ../perps-feature-map.zh-CN.md#shared-data
 [protocol-info]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals
 [protocol-modes]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/account-abstraction-modes
 [protocol-ws]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions
@@ -330,3 +346,9 @@ npm run test:ci -- \
 [protocol-precision]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/tick-and-lot-size
 [protocol-exchange]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint
 [protocol-fees]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees
+
+[feature-map]: ../perps-feature-map.zh-CN.md#shared-contracts
+[protocol-spot]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot
+[protocol-portfolio]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/portfolio-margin
+[protocol-liquidations]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/liquidations
+[protocol-pnl]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/entry-price-and-pnl

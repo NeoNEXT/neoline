@@ -1,6 +1,8 @@
 # perps-order 页面行为与证据
 
-整理日期：2026-09-23。代码基线：`261d928d` 及整理时的工作区内容，包含尚未提交的下单页改动。本文描述当前实现，不等同于已发布版本；领域术语见 [CONTEXT.md][context]。
+整理日期：2026-09-23。代码基线：`261d928d` 及整理时的工作区内容，包含尚未提交的下单页改动。本文记录原始整理时的实现，不等同于已发布版本。
+
+文档入口：[Perps 功能地图与共享术语][feature-map]。2026-09-24 归并文档；协议来源的核对日期与结论、测试执行记录、待执行验收分别见第 7 节。
 
 本页负责单个永续市场的开仓、加仓、减仓/全平，以及已有仓位的独立杠杆调整。当前模板是简化市价表单，点击一次按钮即开始提交；内部仍保留审核基线、限价及全仓计算能力。以下将“页面能操作什么”“底层支持什么”和“尚未验证什么”分开说明。
 
@@ -44,7 +46,7 @@
 | 滑点设置 | 默认 3%，会读取保存值；对话框方法仍存在，但模板没有打开入口 |
 | 全仓 | 可通过 `?marginMode=cross` 或已有全仓仓位进入；模板没有保证金模式选择器。无仓位默认逐仓，仅逐仓市场会将初值设为逐仓 |
 | 显式 reverse 意图 | 提交服务支持“平掉旧仓再开指定新仓”的 `reverse`；当前 `composeOrder()` 不生成该意图。普通反向订单只发送输入数量 |
-| 确认面板 | 旧 CONTEXT 有描述，当前模板与测试明确为一次点击直接提交；`reviewing` 仅作为内部短暂状态保留 |
+| 确认面板 | 当前模板与测试明确为一次点击直接提交，没有第二次确认面板；`reviewing` 仅作为内部短暂状态保留 |
 
 ## 2. 数据如何流动？
 
@@ -63,6 +65,8 @@
 | 金额、杠杆、TP/SL | 组件输入处理方法 | 更新 `PerpsOrderInput`，触发重新计算，必要时使审核基线失效 |
 
 `patchFacts()` 每次创建新事实对象；`seedForm()` 只为尚未由用户接管的字段填初值或跟随值；`composeOrder(facts, input, pendingSizeExact)` 同时输出预览、不可提交原因和交易意图。模板读取这些结果，不自行构造协议订单。
+
+表单播种与缺省值不同：播种根据已有事实填值，缺省值只在没有相应事实时使用。杠杆、未编辑的平仓方向和金额可跟随事实；底层限价仅在空值时播种一次，避免行情覆盖正在编辑的价格。用户给定字段不再由播种改写；路由方向和已保存滑点属于一次性启动输入。
 
 证据：[组件][component]、[表单播种][seeding]、[订单编排][composition]、[Hyperliquid 读取服务][hyperliquid]、[市场服务][market-service]、[账户服务][account-service]。
 
@@ -280,7 +284,7 @@ TP/SL 是随这笔父单提交的固定数量子单，不等同于为整个已�
 
 本页没有固定周期余额轮询。仅 unknown 结果按 cloid 有限查询；账户失败重试、市场初始读取重试与 WS 重连是不同机制。重连时间、客户端收到帧的时间和交易完成时间也不能互相替代。
 
-设计依据：[协议精度 ADR][adr-precision]、[审核价格基线 ADR][adr-review]、[交易提交边界 ADR][adr-submit]。这些文档帮助解释设计，但若与当前模板冲突，应结合当前代码及渲染测试核对。
+设计依据：[协议精度约定][precision-contract]、[提交基线约定][submission-baseline]、[交易提交边界][trade-contract]。这些约定解释模块职责，具体可见行为与提交条件须结合当前代码及渲染测试核对。
 
 ## 7. 正确性怎么证明？
 
@@ -300,6 +304,19 @@ TP/SL 是随这笔父单提交的固定数量子单，不等同于为整个已�
 | [WebSocket subscriptions][p-ws]、[Timeouts and heartbeats][p-heartbeat] | 实时频道及 ping/pong 约定 |
 
 协议文档证明外部约定，单元测试证明给定输入下的本地行为，真实测试网请求才可以证明联调。仅能本地恢复出正确签名者不足以证明服务端会接受签名，官方 Signing 文档明确要求核对实际编码。
+
+2026-09-28 在线核对以下官方正文与 SDK 源码；SDK 引用固定到提交 `2fdb18f9517675ea03695a0962bd19eece9c83f0`：
+
+| 来源 | 核对结论与本地实现 |
+| --- | --- |
+| [SDK exchange.py][p-sdk-exchange] | 未显式传价时，市价辅助函数取 mid、按买卖方向加入滑点，再构造 IOC 限价单；全平先读取对应 DEX 仓位，取 `abs(szi)` 并设置 reduce-only。对应本地第 2.2、3.1 节的订单构造 |
+| [SDK signing.py][p-sdk-signing] | L1 action 对 msgpack 编码、8 字节大端 nonce 与 vault 标记等内容取哈希，再签 `Exchange` 域的 `Agent`；用户签名使用独立的 `HyperliquidSignTransaction` 域。本地签名实现采用无 vault 的 L1 路径；端点是否接受仍由真实响应验证 |
+| [错误响应][p-errors] | 文档列出最低 10 美元名义额和 reduce-only 增仓拒绝；批量请求既可能返回逐项错误，也可能在预校验阶段整体拒绝。文档未给出所有小额全平的接受条件，客户端跳过最低额预检不等于服务端豁免 |
+| [Nonce 与 API wallets][p-nonces] | nonce 按签名者跟踪，保留最高 100 个，要求未使用过且高于集合最小值，并位于区块毫秒时间 `T` 的 `(T-2天, T+1天)` 窗口。本地分配器只防止同实例重复，不能协调其他窗口或客户端 |
+| [Builder codes][p-builder] | 用户主钱包授权 builder 最高费率；订单字段 `f` 以十分之一个 bp 计，10 对应 1 bp。当前本地主网、测试网 builder 地址均为空，第 3.5 节配置不会产生实际 builder 费用 |
+| [HIP-3 deployer actions][p-hip3]、[Fees][p-fees] | 部署方通过 `scale/growthMode` 配置费用，与订单 builder 费用分开。官方计算包含部署方倍数、growth、推荐折扣和 aligned quote 调整；本地第 3.5 节已覆盖前三项，尚未计 aligned quote 调整 |
+
+方向容量的索引和单位、小额全平的交易所接受条件仍需真实样本，见 O15–O16；单个账户或市场的实际费率需同时保存账户费率、市场配置与成交响应。
 
 ### 7.2 已有测试与本次执行结果
 
@@ -355,17 +372,20 @@ npm run test:ci -- \
 | O12 结果未知 | 模拟 POST 已被接受但客户端收到 0/5xx 或畸形响应；再模拟查询有订单/四次无结果 | 原 cloid 被查询，无新 order；有结果后刷新；耗尽仍禁用下单，再查一次沿用原 cloid |
 | O13 断线/退出 | 已加载时停止 pong，再恢复；在提交后离开或切换钱包 | stale 提示与重连；旧回调不导航、未知查询停止。已交服务的写入仍可能完成，去历史/账户确认 |
 | O14 模型保留分支 | 运行对应测试或通过测试夹具设置 limit/GTC、显式 reverse；不要求用户点击不存在的控件 | 限价规范化及 GTC 生效；显式 reverse 使用最新旧仓+目标新仓数量，与 O4 普通反向单区分 |
+| O15 方向容量的真实口径 | 测试网保存两方向 activeAssetData、市场价格、仓位、模式和杠杆，并与对应订单答复核对 | 验证索引 0/1、availableToTrade 的抵押品单位及 maxTradeSzs 的数量单位；改变杠杆时不能仅凭替身或类型定义认定容量缩放正确 |
+| O16 小额退出 | 用测试网夹具覆盖名义额低于 10 USD 的 IOC/GTC 全平与部分平仓，保存逐项答复及刷新后仓位 | 区分客户端预检与交易所实际接受条件；当前 UI 无 GTC 入口，不写成人工可点击流程；部分平仓被本地拦截时单独记录该阶段，不将其冒充交易所拒绝 |
+
+O15–O16 承接旧官方依据笔记的未验证条件，本次未执行；它们不改变现有本地提交规则。
 
 ### 7.4 证据边界与维护注意
 
-1. **旧页面描述不能当成当前 UI。** 本目录 CONTEXT 的确认面板、部分注释中的“审核时第二次确认”已与模板不同；当前渲染测试明确验证一次点击和无确认面板。限价、滑点及模式方法仍存在，不等于有可见入口。
+1. **内部审核状态不等于确认 UI。** `reviewing` 和部分注释中的“审核时第二次确认”不能解释为现有确认面板；当前渲染测试明确验证一次点击和无确认面板。限价、滑点及模式方法仍存在，不等于有可见入口。
 2. **只冻结承诺过的输入和点击参考价。** 费用、余额、风险池继续变化；全平以最新完整仓位为准。解锁后校验通过，不代表后续杠杆/授权网络等待期间全部事实仍保持不变。
 3. **结果未知的恢复是有限且进程内的。** cloid 和查询状态未持久化；关闭页面后不会自动续查。查询只确认父单可被交易场所查到，不确认其一定成交或 TP/SL 已生效。
 4. **预估不等于风险引擎。** 可用金额回退、个人费率兜底、缺失强平价、Portfolio Margin 不支持完整全仓估值都有明确范围；测试通过不能扩展这些范围。
 5. **模式异常尚需真实场景核对。** 加仓依赖进入时的仓位播种；如果仓位随后消失，当前 addMode 没有独立“无仓可加”阻断。应在联调中记录实际意图，不把标题“加仓”当成服务端保证。
-6. **359 项不是测试网验收。** 本次没有真实验签、成交、保护触发、浏览器关闭后恢复或硬件钱包测试记录。O1–O14 为待执行方案。
+6. **359 项不是测试网验收。** 本次没有真实验签、成交、保护触发、浏览器关闭后恢复或硬件钱包测试记录。O1–O16 为待执行方案。
 
-[context]: ./CONTEXT.md
 [component]: ./perps-order.component.ts
 [html]: ./perps-order.component.html
 [component-test]: ./perps-order.component.spec.ts
@@ -404,9 +424,9 @@ npm run test:ci -- \
 [nonce-test]: ../../../core/services/perps/perps-nonce.spec.ts
 [protocol-json]: ../../../core/services/perps/perps-protocol-json.ts
 [fetch-failure]: ../../../core/services/perps/perps-fetch-failure.ts
-[adr-precision]: ../../../../../docs/adr/0001-protocol-precision-only-domain-model.md
-[adr-review]: ../../../../../docs/adr/0005-client-side-review-price-freeze.md
-[adr-submit]: ../../../../../docs/adr/0006-thin-client-trade-submission.md
+[precision-contract]: ../perps-feature-map.zh-CN.md#shared-market
+[submission-baseline]: ../perps-feature-map.zh-CN.md#shared-trade
+[trade-contract]: ../perps-feature-map.zh-CN.md#shared-trade
 [p-info]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals
 [p-modes]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/account-abstraction-modes
 [p-precision]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/tick-and-lot-size
@@ -419,3 +439,11 @@ npm run test:ci -- \
 [p-tpsl]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/take-profit-and-stop-loss-orders-tp-sl
 [p-ws]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions
 [p-heartbeat]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/timeouts-and-heartbeats
+
+[feature-map]: ../perps-feature-map.zh-CN.md#shared-contracts
+[p-sdk-exchange]: https://github.com/hyperliquid-dex/hyperliquid-python-sdk/blob/2fdb18f9517675ea03695a0962bd19eece9c83f0/hyperliquid/exchange.py
+[p-sdk-signing]: https://github.com/hyperliquid-dex/hyperliquid-python-sdk/blob/2fdb18f9517675ea03695a0962bd19eece9c83f0/hyperliquid/utils/signing.py
+[p-errors]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/error-responses
+[p-nonces]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/nonces-and-api-wallets
+[p-builder]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/builder-codes
+[p-hip3]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/hip-3-deployer-actions

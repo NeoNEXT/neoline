@@ -46,7 +46,7 @@
         {{ "perpsWithdrawable" | translate | async }}
         <!-- 用组件对它的读数，而不是原始账户字段：无论统一账户有多少资金，
              它永续侧的 `withdrawable` 都是 0。 -->
-        <ng-container *ngIf="withdrawableExact != null; else withdrawableMissing">
+        <ng-container *ngIf="withdrawableExact !== null; else withdrawableMissing">
           ${{ formatBalance(withdrawableExact) }}
         </ng-container>
         <ng-template #withdrawableMissing>{{ missingDisplay }}</ng-template>

@@ -1,6 +1,8 @@
 # perps market/:coin 页面行为与证据
 
-整理日期：2026-09-23。代码基线：`205e192f` 及整理时的工作区内容。对应路由为 `/popup/perps/market/:coin`，组件目录为 `perps-market`；不是独立的 `perps-markets` 搜索页，也不是 `perps-coin-logo` 图标组件。领域术语见 [CONTEXT.md][context]。
+整理日期：2026-09-23。代码基线：`205e192f` 及整理时的工作区内容。对应路由为 `/popup/perps/market/:coin`，组件目录为 `perps-market`；不是独立的 `perps-markets` 搜索页，也不是 `perps-coin-logo` 图标组件。
+
+文档入口：[Perps 功能地图与共享术语][feature-map]。2026-09-24 归并文档；协议来源的核对日期与结论、测试执行记录、待执行验收分别见第 7 节。
 
 本页展示单个市场的价格、K 线、统计和当前钱包的对应仓位，并提供下单入口。页面自身不签名、不提交订单、不修改杠杆或保证金；唯一持久化的页面偏好是 K 线周期。本文区分当前代码行为、已有测试、协议依据和仍待执行的验收。
 
@@ -74,7 +76,7 @@ flowchart TD
 
 读取端点由构建配置选择：仅非 production 且 perpsNetwork=testnet 时使用测试网，生产构建固定主网；不是随钱包中 NeoX 网络选择切换。当前启用标准 DEX `''` 和 xyz。协议 JSON 先经 `parseProtocolJson` 读取，业务小数保留精确值。
 
-证据：[行情服务][market-service]、[行情适配][market-model]、[K 线服务][candle-service]、[读取服务][hyperliquid]、[账户服务][account-service]、[数据通道][channel]、[频道身份][channel-identity]、[配置][model]、[精度约定][adr-precision]。
+证据：[行情服务][market-service]、[行情适配][market-model]、[K 线服务][candle-service]、[读取服务][hyperliquid]、[账户服务][account-service]、[数据通道][channel]、[频道身份][channel-identity]、[配置][model]、[精度约定][precision-contract]。
 
 ### 2.2 单市场读取与切换器不能混用
 
@@ -97,6 +99,17 @@ flowchart TD
 官方只承诺最近 5000 根 K 线可用。代码把它换算成周期时间范围；月线按 30 天估请求范围，实际柱边界仍取服务端 t/T。稀疏市场不一定每周期都有柱，因此该时间推算不构成“完整遍历最近 5000 根实际成交柱”的证明。[Candle snapshot 协议][p-info]
 
 证据：[K 线数据集服务][candle-service]、[窗口与合并函数][candle-model]、[共享仲裁核心][dataset]、[图表左边缘判断][chart]。
+
+<a id="market-data-decisions"></a>
+
+### 2.4 行情与图表的数据取舍
+
+- **详情独立订阅单市场行情。** 避免为了一个市场的更新重建全市场数组；切换菜单仍使用列表数据集。两条流到达时间不同，列表与详情短暂显示不同报价不直接说明市场身份串错，核对时应同时保存各自的 coin 与帧。
+- **K 线订阅先于快照完成建立。** 初始读取期间照常缓冲并回放，避免等待 REST 后才订阅而漏掉中间更新；快照、历史和实时帧按第 2.3 节的规则合并。同一 key 的请求共享，旧 key 的迟到结果只更新自己的数据集，不回填当前图表。
+- **快照请求在跨周期范围合并。** 连点周期会产生多个不同 key，仅在单个 key 内限流无法减少这类请求；服务使用共享的 300ms 窗口，首个请求立即发出，窗口中保留最后一个仍被观察的 key。该窗口是客户端策略，不是交易所限流额度。
+- **UTC 数据、局部增量绘制。** 保留原始时间戳便于同协议数据对齐，本地时区只用于标签。尾柱增量更新、历史前插后保持可视窗口，是为了避免每次行情变化都重置缩放；大批更新、历史修正及恢复超界仍可重建，不能解释为数据集无条件只增不减。
+
+实现依据：[单市场服务][market-service]、[K 线服务][candle-service]、[数据集核心][dataset]、[图表组件][chart]。这些取舍承接页面级决策记录，具体恢复与失败边界见第 5、6 节。
 
 ## 3. 核心规则是什么？
 
@@ -145,6 +158,8 @@ flowchart TD
 ### 3.3 图表数据与视口
 
 K 线 o/h/l/c 为价格，v 为基础资产成交量。量柱显示 `v×c` 的美元估算，先用 BigNumber 相乘再转图表 number；这不是逐笔 `Σ成交价×成交量`，不能用它精确对账 24h dayNtlVlm。[WebSocket Candle 字段][p-ws]
+
+周期使用区分大小写的协议标识，`1m` 为分钟、`1M` 为月，不能统一转小写。
 
 时间坐标为 `floor(t/1000)` 的 UTC 秒，不平移原始时间；刻度和十字光标文本使用本机时区。月线仍使用服务端真实开始时间，不能把 30 天窗口估计当成月线长度。
 
@@ -217,11 +232,11 @@ K 线 o/h/l/c 为价格，v 为基础资产成交量。量柱显示 `v×c` 的�
 | 订阅回收 | 频道最后观察者离开后延迟 500ms 退订；数据集仍有在途快照或历史 keepAlive 时暂留，工作结束且无人观察才释放 |
 | 轮询范围 | 组件每秒倒计时不是行情轮询；没有固定间隔 REST 行情/K 线轮询，更新依赖帧、用户动作和重连 |
 
-详情的 activeAssetCtx 不经过共享快照仲裁器；K 线、列表和账户才使用它。不能把 ADR 中“统一快照与帧”的规则扩展为详情也在首次请求期间缓存了每一帧。
+详情的 activeAssetCtx 不经过共享快照仲裁器；K 线、列表和账户才使用它。不能把共享数据集中“统一快照与帧”的规则扩展为详情也在首次请求期间缓存了每一帧。
 
 页面退订不等于底层所有 HTTP 已取消：数据集服务拥有在途工作，注册表也使用缓存共享请求。当前 info 读取缺显式 timeout，长期不返回的请求可能延迟共享条目的回收。
 
-证据：[详情组件][component]、[共享核心][dataset]、[K 线服务][candle-service]、[数据通道][channel]、[图表][chart]、[共享仲裁 ADR][adr-dataset]。
+证据：[详情组件][component]、[共享核心][dataset]、[K 线服务][candle-service]、[数据通道][channel]、[图表][chart]、[共享数据更新约定][data-contract]。
 
 ## 7. 正确性怎么证明？
 
@@ -237,9 +252,19 @@ K 线 o/h/l/c 为价格，v 为基础资产成交量。量柱显示 `v×c` 的�
 | [Asset IDs][p-assets] | 标准与 HIP-3 资产编号、协议 coin 标识区别 |
 | [Tick and lot size][p-precision] | 订单精度约束；本页显示精度仍要单独用本地函数测试 |
 | [Funding][p-funding] | 小时结算、费率方向和预言机名义价值口径；不能把本机倒计时当已结算凭据 |
-| [精度 ADR][adr-precision]、[数据集 ADR][adr-dataset] | 仓库的字符串数值、快照与帧仲裁约定；实际行为需同时核对实现和测试 |
+| [精度约定][precision-contract]、[数据集约定][data-contract] | 仓库的字符串数值、快照与帧仲裁约定；实际行为需同时核对实现和测试 |
 
 最小验收证据应同时包含：构建网络、完整 coin、请求及订阅参数、原始响应/帧、对应计算结果和页面截图。K 线另需 t/interval、断线前后快照以及视口范围；仓位需钱包地址和完整账户响应。只看代码、只看价格动了或只看测试通过，都不能证明没有串币、错单位或遗漏恢复数据。
+
+2026-09-28 在线核对以下官方正文与 SDK 源码；SDK 引用固定到提交 `2fdb18f9517675ea03695a0962bd19eece9c83f0`：
+
+| 来源 | 核对结论与本地实现 |
+| --- | --- |
+| [官方 SDK candle OpenAPI][p-sdk-candle] | 请求包含 `coin/interval/startTime/endTime`，响应为含 `t/T`、OHLCV 的数组，价格及成交量字段声明为字符串。本地快照读取沿用这些字段 |
+| [官方 SDK WebSocket 路由][p-sdk-ws]、[WS 文档][p-ws] | 文档将订阅数据列为 `Candle[]`，固定版本 SDK 按单个 `data.s/data.i` 寻址；本地通道兼容单对象与数组，拆分后按 coin/interval 路由。文档明确 `t/T` 为毫秒、`v` 为基础资产量，因此图表 `v×c` 是名义成交额估算。对应实现和测试见[频道身份][channel-identity]及[通道测试][channel-test] |
+| [请求与订阅限流][p-limits] | 文档给出的 REST 上限为每 IP 每分钟 1200 权重；`candleSnapshot` 基础权重为 20，另按返回的每 60 条增加权重。本地共享请求与 300ms 配给用于减少重复快照，不等于覆盖所有请求的全局限流器 |
+
+共享订阅、快照缓冲和恢复顺序见第 2.3、2.4 节。网络验收需保留实际原始帧，检查上述两种 candle 载荷的路由与回放；稀疏市场空窗口和月线估算的边界见第 7.4 节。
 
 ### 7.2 已有测试与本次结果
 
@@ -307,7 +332,6 @@ npm run test:ci -- \
 7. **界面价格和结算含义不同。** 头部 mid、标记估值、预言机结算以及 K 线 close 各有用途；v×c 是图表名义量估算。prevDayPx 和 sinceOpen 的具体口径仍需真实外部对照。
 8. **证明范围有限。** 本次 329 项是现有定向单元/模板测试；M1–M14 为待执行方案，不代表已完成浏览器实测、实时行情对账或下单成功验证。
 
-[context]: ./CONTEXT.md
 [component]: ./perps-market.component.ts
 [html]: ./perps-market.component.html
 [component-test]: ./perps-market.component.spec.ts
@@ -346,11 +370,16 @@ npm run test:ci -- \
 [channel-identity]: ../../../core/services/perps/perps-channel-identity.ts
 [channel-test]: ../../../core/services/perps/perps-data-channel.service.spec.ts
 [fetch-failure]: ../../../core/services/perps/perps-fetch-failure.ts
-[adr-precision]: ../../../../../docs/adr/0001-protocol-precision-only-domain-model.md
-[adr-dataset]: ../../../../../docs/adr/0008-shared-dataset-snapshot-frame-arbiter.md
+[precision-contract]: ../perps-feature-map.zh-CN.md#shared-market
+[data-contract]: ../perps-feature-map.zh-CN.md#shared-data
 [p-info]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint#candle-snapshot
 [p-perps]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals
 [p-ws]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions
 [p-assets]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/asset-ids
 [p-precision]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/tick-and-lot-size
 [p-funding]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/funding
+
+[feature-map]: ../perps-feature-map.zh-CN.md#shared-contracts
+[p-sdk-candle]: https://github.com/hyperliquid-dex/hyperliquid-python-sdk/blob/2fdb18f9517675ea03695a0962bd19eece9c83f0/api/info/candle.yaml
+[p-sdk-ws]: https://github.com/hyperliquid-dex/hyperliquid-python-sdk/blob/2fdb18f9517675ea03695a0962bd19eece9c83f0/hyperliquid/websocket_manager.py
+[p-limits]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/rate-limits-and-user-limits

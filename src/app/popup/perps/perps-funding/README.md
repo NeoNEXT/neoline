@@ -1,6 +1,8 @@
 # perps-funding 页面行为与证据
 
-整理日期：2026-09-23。代码基线：`205e192f` 及整理时的工作区内容。本文描述当前实现；领域术语见 [CONTEXT.md][context]，其中尚未落地的追踪概念另在第 7.4 节说明。
+整理日期：2026-09-23。代码基线：`205e192f` 及整理时的工作区内容。本文记录原始整理时的实现；未实现的追踪能力另在第 7.4 节说明。
+
+文档入口：[Perps 功能地图与共享术语][feature-map]。2026-09-24 归并文档；协议来源的核对日期与结论、测试执行记录、待执行验收分别见第 7 节。
 
 本页处理同一钱包地址的 USDC 入金和提现。入金由用户在 Arbitrum 上发起 CCTP 交易，提现由 Hyperliquid 接受签名操作后继续跨链。两条路径都包含确认面板，但签名、费用、等待结果和刷新方式不同；“已发起”“源链确认”和“最终到账”不能互相替代。
 
@@ -49,9 +51,21 @@
 | HyperEVM chainId / CCTP domain | 999 / 19 | 998 / 19 |
 | 入金 HyperCore destinationDex | 0，标准永续余额入口 | 0，标准永续余额入口 |
 
-`resolvePerpsTestnet()` 仅在非 production 且 perpsNetwork=testnet 时使用测试网；生产构建固定走主网。整理时本地 `environment.ts` 的工作区配置为 mainnet。选择 NeoX 测试网络本身不会改变这里的 Hyperliquid/CCTP 网络。
+`resolvePerpsTestnet()` 仅在非 production 且 perpsNetwork=testnet 时使用测试网；生产构建固定走主网。开发网络以仓库 `src/environments/environment.ts` 的实际值为准（2026-09-24 核对为 testnet）。选择 NeoX 测试网络本身不会改变这里的 Hyperliquid/CCTP 网络。
 
 具体 USDC、CctpExtension、CctpForwarder、CoreDepositWallet 和 RPC 地址以 [配置常量][model] 为准。当前走用户自行广播的 CctpExtension，不是另一个需要 relayer 的 CctpExtensionV2；部署角色及地址可与 [Circle 地址表][p-addresses] 核对。
+
+<a id="funding-decisions"></a>
+
+### 1.2 资金路径的选择与理由
+
+| 选择 | 理由与边界 |
+| --- | --- |
+| 只走 Arbitrum 原生 USDC 的 CCTP 路径 | 入金和提现不保留 Bridge2、`withdraw3` 或多链回退，避免维护多套费用、签名和到账语义。代价是该通道故障时客户端没有备用路径；失败或未知结果按原路径呈现，不静默切换通道 |
+| 入金用 EIP-3009 授权和 CctpExtension | 用户先签 USDC 授权，再广播一笔源链交易，由合约完成收款与 burn；不拆成单独 approve、burn 两笔交易，也不引入 NeoLine relayer。固定合约与目标参数的身份见第 1.1、3.4 节 |
+| 提款额度与 sourceDex 按同一账户模式口径确定 | `sendToEvmWithData` 的签名 payload 明确包含资金来源：标准账户用 `''`，统一/组合保证金的 USDC 路径用 `spot`。不能照搬其他提现接口的余额策略，或省略这个分支让服务端猜测；模式未知时不能确定可提来源 |
+
+这些选择由[资金组件][component]、[入金链服务][deposit-chain]和[提现写服务][exchange]落实。它们不证明每次提交都取得最新账户模式；缓存与异步变化的限制仍见第 6、7.4 节。目标链异常后 HyperCore 扣款是否恢复仍须测试网证据，不能据“目标链回滚”直接显示“已退款”。
 
 ## 2. 数据如何流动？
 
@@ -171,7 +185,7 @@ flowchart TD
 
 界面预览只减本服务读到的通道费，未从交易所历史账本读取这笔未来提现的实际附加费用。最终净到账应由账本和目的链回执确认。不能依据当前示例值，把费用写死或宣称报价覆盖未来所有实际扣费。[Circle 提现费用说明][p-withdraw]
 
-证据：[报价服务][fee-service]、[组件费用比较][component]、[仓库历史费用研究][fee-research]。
+证据：[报价服务][fee-service]、[组件费用比较][component]、[历史页回执匹配规则][history-doc]。
 
 ### 3.4 授权、目标与重试中的不变量
 
@@ -262,7 +276,7 @@ POST `/exchange` 没有显式 timeout。通用响应解析拒绝顶层 err 和�
 
 入金 trackDeposit 完成后只检查配置和地址是否仍匹配，没有额外 destroyed 标记；离开但地址未变时仍可能继续提示和刷新。销毁后已在途余额/提现报价读取也不全由生命周期守卫拦截。页面离开不等于撤回已广播资金移动。
 
-证据：[组件][component]、[账户状态服务][account-service]、[共享数据集][dataset]、[读取服务][hyperliquid]、[数据通道][channel]、[写操作架构约定][adr-write]。
+证据：[组件][component]、[账户状态服务][account-service]、[共享数据集][dataset]、[读取服务][hyperliquid]、[数据通道][channel]、[写操作架构约定][write-contract]。
 
 ## 7. 正确性怎么证明？
 
@@ -277,7 +291,7 @@ POST `/exchange` 没有显式 timeout。通用响应解析拒绝顶层 err 和�
 | [Circle 合约地址][p-addresses] | 主网/测试网 CctpExtension、CctpForwarder、CoreDepositWallet 身份；与 V2 sponsored 路径区分 |
 | [CoreDepositWallet 接口][p-core-wallet] | HyperCore 入账入口和 destinationDex 语义；当前该说明页未完整列出本地所读费用 getter，不能据此宣称已核验其实时值 |
 | [Hyperliquid 账户模式][p-modes] | 标准账户与统一/组合保证金账户的余额来源差别；不把单 DEX 余额当聚合可提值 |
-| [仓库费用研究][fee-research] | 2026-09-07 的历史回执核对记录；仅是既有证据，不是本次实时费率或提现到账保证 |
+| [历史页 CCTP 证据边界][history-doc] | 说明代码如何关联提现 nonce、索引和目的链回执；仅覆盖匹配到的历史记录，不能证明未来实时费率或每笔提现到账 |
 
 最小证明链：入金需授权域/金额、源链签名交易与成功回执、目标 mint/转发事件、HyperCore 对应账本；提现需签名 action、交易所答复、源账户扣款账本、目的链 mint 和接收余额。单元测试通过、源链成功或余额增长中的任意一个都不能单独证明整条跨链路径正确。
 
@@ -336,19 +350,22 @@ npm run test:ci -- \
 | F12 提现异常 | 明确 nonce 拒绝、余额拒绝、0/5xx、畸形响应及长时间无答复 | nonce 业务拒绝最多一次重签；其他确定拒绝与未知区分；未知不自动重发，但记录当前允许人工再次提交的范围 |
 | F13 生命周期与串号 | 源余额/报价/解锁延迟时切钱包、切页签、取消、销毁；使旧提现确认请求后返回 | 验收目标为旧地址/旧确认不影响新操作；当前提现异步隔离和准备完成后的钱包绑定未完整实现，须记录实际签名者/收款方，不能算已通过 |
 | F14 最终到账 | 测试网完整执行两方向，关联源链/交易所账本和目的链回执 | 按同一笔交易证据核对实际扣款、全部费用、接收地址与到账金额；余额变化本身不足以证明归因 |
+| F15 提现不足额与资金回补 | 用测试网夹具覆盖提现额低于通道费、或目标链执行失败的场景，关联原签名 action、HyperCore 账本及目的链结果 | 区分发送前拒绝、源账户实际扣款、目标失败与后续回补；没有关联回补证据就保持结果未确认，不显示已退款；根据实测再评估两倍报价下限 |
+| F16 激活费账本 | 在测试网首次资金路径中记录是否收取激活/新账户费用，保存实际 `delta.type`、金额字段、费用字段及对应操作 | 对照报价、扣款和到账，不把费用名相似当作同一笔扣费；若存在独立账本行，按[历史页 H14][history-doc]核对显示；未观察到记录不等于协议永不收费 |
+
+F15–F16 承接旧迁移方案中未完成的验收项，本次未执行。F15 的异常参数通过测试夹具构造，不要求产品 UI 绕过现有金额校验；在取得真实证据前不据此放宽下限。
 
 ### 7.4 实现边界与待补证据
 
-1. **CONTEXT 中的概念不全是当前功能。** 本页未持久化公开追踪记录，未实现 Tracking Not Saved、Credit Unattributed 或跨重启 Pending Deposit 列表。当前只有内存授权和一次源链回执等待；不能写成完整资金追踪系统。
+1. **资金追踪能力有明确边界。** 本页未持久化公开追踪记录，未实现广播后追踪记录保存失败提示、无法唯一归因的入账标记或跨重启待入账列表。当前只有内存授权和一次源链回执等待；不能写成完整资金追踪系统。
 2. **入金准备会先签授权。** 最终确认前不广播，不等于不签任何东西。现有“提交前刷新失败不签名”测试主要证明该次 submit 不再调用私钥/写服务，不能否认先前 prepareDeposit 已生成授权。
 3. **钱包与生命周期隔离不完整。** 读取有地址/配置检查，入金准备有序号，但地址变化未统一清空已完成的确认与授权；最终提交没有贯穿所有 await 的钱包基线。提现路径尤缺少销毁/地址复核，入金 stillPrepared 也未显式比较 authorization.from 与当前钱包，需专门联调。
 4. **提现确认没有入金准备同等的代次保护。** 表单 loadWithdrawQuote 有 seq，prepareWithdraw 只检查 confirming/isWithdraw；取消后重开时旧成功/失败仍可能影响新确认。两种报价方法的保护不能混为一谈。
 5. **提交前刷新不一定代表取得新事实。** 数据集可能合并已有在途请求，断线读取失败可保留旧 account，账户模式还有独立缓存；组件未逐项验证这些新鲜度条件。
 6. **估算与最低额仍需边界验收。** ETH 估算发送时重取但不比较展示值；ETH 未知、入金报价吞掉金额、长时间确认导致授权过期，以及报价异常值没有完整 UI 阻断。两倍提现下限只能作为产品缓冲，不能证明未来扣费上限或回滚退款。
 7. **未知结果处理没有全局防重保证。** 提现 unknown 后解除 submitting 且保留金额，入金广播后也解除 submitting；当前只避免同一次发送自动生成另一笔意图，不跨窗口协调，不持久化，也不自动判断最终到账。
-8. **本地测试不替代部署证据。** 本次未验证费用 getter 的实时值/所有异常数值、真实签名被服务端接受、目标链异常后资金回补、完整跨链到账或所有账户模式的真实可提限制。F1–F14 均为待执行方案。
+8. **本地测试不替代部署证据。** 本次未验证费用 getter 的实时值/所有异常数值、真实签名被服务端接受、目标链异常后资金回补、完整跨链到账或所有账户模式的真实可提限制。F1–F16 均为待执行方案。
 
-[context]: ./CONTEXT.md
 [component]: ./perps-funding.component.ts
 [html]: ./perps-funding.component.html
 [component-test]: ./perps-funding.component.spec.ts
@@ -383,10 +400,11 @@ npm run test:ci -- \
 [dataset]: ../../../core/services/perps/perps-dataset.ts
 [dataset-test]: ../../../core/services/perps/perps-dataset.spec.ts
 [channel]: ../../../core/services/perps/perps-data-channel.service.ts
-[adr-write]: ../../../../../docs/adr/0003-no-background-trade-executor.md
-[fee-research]: ../../../../../docs/research/hyperliquid-cctp-withdrawal-fee-2026-09-07.md
+[write-contract]: ../perps-feature-map.zh-CN.md#shared-trade
 [p-deposit]: https://developers.circle.com/cctp/howtos/transfer-usdc-from-arbitrum-to-hypercore
 [p-withdraw]: https://developers.circle.com/cctp/howtos/withdraw-usdc-from-hypercore-to-evm
 [p-addresses]: https://developers.circle.com/cctp/references/hypercore-contract-addresses
 [p-core-wallet]: https://developers.circle.com/cctp/references/coredepositwallet-contract-interface
 [p-modes]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/account-abstraction-modes
+
+[feature-map]: ../perps-feature-map.zh-CN.md#shared-contracts

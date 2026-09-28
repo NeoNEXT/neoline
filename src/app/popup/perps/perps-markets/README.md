@@ -2,6 +2,8 @@
 
 整理日期：2026-09-23。代码基线：`205e192f` 及整理时的工作区内容。本文对应 `/popup/perps/markets` 独立市场搜索页，包含其共用的 `perps-market-list` 和行情数据集；单市场详情另见 [market/:coin 文档][detail-doc]。
 
+文档入口：[Perps 功能地图与共享术语][feature-map]。2026-09-24 归并文档；协议来源的核对日期与结论、测试执行记录、待执行验收分别见第 7 节。
+
 本页用于搜索、比较和选择本产品已启用的永续市场。搜索、排序和“加载更多”都在已有数据上执行，不是按关键词查询交易所或向服务器翻页。页面不读取账户余额，不签名，不提交订单，也不保存搜索或排序偏好。
 
 | 要理解的问题 | 需要拿到的证据 | 本文对应内容 |
@@ -209,7 +211,7 @@ flowchart TD
 
 没有固定周期的 REST 全市场轮询。用户长期停留且连接健康时，新上架、下架或杠杆调整可能要等新的集合读取才体现；仅刷新价格不能发现这些静态事实。updatedAt 是整个数据集的客户端更新时间，也不能证明每个 DEX、每个市场的字段都同样新鲜。
 
-证据：[行情服务][market-service]、[共享核心][dataset]、[数据通道][channel]、[列表组件][list]、[读取缓存][hyperliquid]、[共享仲裁 ADR][adr-dataset]。
+证据：[行情服务][market-service]、[共享核心][dataset]、[数据通道][channel]、[列表组件][list]、[读取缓存][hyperliquid]、[共享数据更新约定][data-contract]。
 
 ## 7. 正确性怎么证明？
 
@@ -223,7 +225,7 @@ flowchart TD
 | [WebSocket subscriptions][p-ws] | allDexsAssetCtxs 的聚合格式；不承诺代码注释中的历史实测推送频率 |
 | [Asset IDs][p-assets] | 标准与 HIP-3 编号及完整协议 coin；不能使用列表排名代替资产编号 |
 | [Tick and lot size][p-precision] | 交易精度约束；列表价格格式与可提交订单价格仍须分开验证 |
-| [精度 ADR][adr-precision]、[仲裁 ADR][adr-dataset] | 本仓库字符串数值及快照/帧更新约定；需结合实际实现和测试 |
+| [精度约定][precision-contract]、[数据更新约定][data-contract] | 本仓库字符串数值及快照/帧更新约定；需结合实际实现和测试 |
 
 最小证明链应保存构建网络、启用 DEX、注册表和各 DEX 元数据响应、至少一帧聚合行情、原始 coin/key/index、关键词和排序条件、屏幕行序与数值。需同时证明“匹配的是正确资产”“数值和单位正确”“集合是否完整”；只看到价格变化不能证明三者都成立。
 
@@ -317,9 +319,11 @@ npm run lint
 [channel-test]: ../../../core/services/perps/perps-data-channel.service.spec.ts
 [protocol-json]: ../../../core/services/perps/perps-protocol-json.ts
 [locale]: ../../../../_locales/zh_CN/messages.json
-[adr-precision]: ../../../../../docs/adr/0001-protocol-precision-only-domain-model.md
-[adr-dataset]: ../../../../../docs/adr/0008-shared-dataset-snapshot-frame-arbiter.md
+[precision-contract]: ../perps-feature-map.zh-CN.md#shared-market
+[data-contract]: ../perps-feature-map.zh-CN.md#shared-data
 [p-perps]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/perpetuals
 [p-ws]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions
 [p-assets]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/asset-ids
 [p-precision]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/tick-and-lot-size
+
+[feature-map]: ../perps-feature-map.zh-CN.md#shared-contracts

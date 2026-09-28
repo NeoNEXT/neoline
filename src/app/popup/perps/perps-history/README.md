@@ -1,6 +1,8 @@
 # perps-history 页面行为与证据
 
-整理日期：2026-09-23。代码基线：`261d928d` 及整理时的工作区内容，包含尚未提交的改动。本文描述当前实现，不等同于已发布版本。
+整理日期：2026-09-23。代码基线：`261d928d` 及整理时的工作区内容，包含尚未提交的改动。本文记录原始整理时的实现，不等同于已发布版本。
+
+文档入口：[Perps 功能地图与共享术语][feature-map]。2026-09-24 归并文档；协议来源的核对日期与结论、测试执行记录、待执行验收分别见第 7 节。
 
 本页展示当前委托、历史成交、历史委托、资金费、存款和提款五类活动，并提供单笔撤单。查看记录不签名；撤单需要解锁并签署 Hyperliquid 操作。页面不负责开仓、调杠杆或执行出入金。
 
@@ -325,6 +327,9 @@ npm run test:ci -- \
 | H11 断线及首屏失败 | 停止 pong、恢复网络；分别让首屏和归档 HTTP 失败/长时间不返回 | 通道重连重订阅；本页没有 stale 提示和重连 REST；失败页签可再次选择重试，首屏通常需重进；记录无限等待边界 |
 | H12 CCTP 证据 | 构造匹配/不匹配 nonce、失败回执、多事件、超时和普通转账 | 只有唯一成功匹配才附 cctpFeeExact，原协议金额/费不被覆盖；失败保留账本；当前 UI 不宣称目的链到账 |
 | H13 切换地址与离开 | 地址 A 请求延迟，切 B 后依次返回；在 getPassword/getPrivateKey 等待中切钱包或销毁 | 验收目标是旧结果不写新地址、未发送操作不使用变化后的钱包；当前代码未完整实现此隔离，必须记录实际签名者、请求和回调，不能以现有测试通过代替 |
+| H14 激活费与未知账本类型 | 使用[资金页 F16][funding-doc]采集的实际账本行，记录 `delta.type`、币种、金额及费用字段，再以替身重放到历史页 | 核对标题、金额、正负号与费用归属；未知类型不得伪装成普通提现，缺金额不得补零。若尚未取得真实样本，只能证明替身分支，不能宣称激活费账本已验收 |
+
+H14 承接旧资金迁移方案的账本核对项，本次未采集样本或执行验收。它不预设激活费必然以独立账本行出现。
 
 ### 7.4 证据边界与维护注意
 
@@ -334,7 +339,7 @@ npm run test:ci -- \
 4. **切换钱包的隔离尚不完整。** `load()` 没有取消旧 requestSubs 或立即停止旧 liveSubs；回调没有地址/请求代次核对。旧请求或帧可能写入新地址页面；地址清空时也没有单独清理分支。现有销毁测试未覆盖这一问题。
 5. **撤单异步过程没有冻结钱包和销毁检查。** 市场在解锁前取得，但 `getPassword()` 后从当时的 `this.wallet` 取私钥；撤单订阅未加入 requestSubs。切钱包/销毁后仍可能继续发送或处理结果，不能照搬下单页的保护描述。
 6. **成功响应与缓存失效仍有核验缺口。** 撤单只排除显式 error，未严格验证逐项 success；历史请求在途时取消成功删除 loaded 标记，迟到的旧响应仍可再次将其标记 loaded。需要针对响应结构和竞争时序补充证据。
-7. **232 项仅为本地测试结果。** 本次未证明真实签名验收、断网后撤单结果恢复、跨钱包安全隔离、完整历史分页或目的链到账；H1–H13 是待执行方案。
+7. **232 项仅为本地测试结果。** 本次未证明真实签名验收、断网后撤单结果恢复、跨钱包安全隔离、完整历史分页或目的链到账；H1–H14 是待执行方案。
 
 [component]: ./perps-history.component.ts
 [html]: ./perps-history.component.html
@@ -372,3 +377,6 @@ npm run test:ci -- \
 [p-ws]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions
 [p-heartbeat]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/timeouts-and-heartbeats
 [p-circle]: https://developers.circle.com/cctp/howtos/withdraw-usdc-from-hypercore-to-evm
+
+[feature-map]: ../perps-feature-map.zh-CN.md#shared-contracts
+[funding-doc]: ../perps-funding/README.md#73-可复现验收方案本次未执行
