@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { fakeAsync, tick } from '@angular/core/testing';
-import { of, Subject, throwError } from 'rxjs';
+import { Observable, of, Subject, throwError } from 'rxjs';
 
 import { ethers } from 'ethers';
 import { PERPS_DEPOSIT_CONFIG, PerpsUserFeeRates } from '@popup/_lib/perps';
@@ -517,6 +517,78 @@ describe('HyperliquidService accounts and fees', () => {
       done();
     });
   });
+
+  const assetCapacity = (available: string) => ({
+    user: '0xabc', coin: 'ETH', leverage: { type: 'isolated', value: 2 },
+    maxTradeSzs: ['10', '10'], availableToTrade: [available, available],
+    markPx: '100',
+  });
+
+  it('receives capacity frames while the initial REST request is pending', () => {
+    const rest = new Subject<any>();
+    http.post.and.returnValue(rest as any);
+    const seen = [];
+    const subscription = service.watchActiveAssetData('0xABC', 'ETH')
+      .subscribe((data) => seen.push(data.availableToTrade[0]));
+
+    channel.push({ type: 'activeAssetData', user: '0xabc', coin: 'ETH' }, assetCapacity('20'));
+    expect(seen).toEqual(['20']);
+    expect(rest.observed).toBeFalse();
+    rest.next(assetCapacity('100'));
+    rest.complete();
+    expect(seen).toEqual(['20']);
+    subscription.unsubscribe();
+  });
+
+  it('keeps streaming capacity after the REST snapshot completes', () => {
+    http.post.and.returnValue(of(assetCapacity('100')) as any);
+    const seen = [];
+    const subscription = service.watchActiveAssetData('0xabc', 'ETH')
+      .subscribe((data) => seen.push(data.availableToTrade[0]));
+
+    channel.push({ type: 'activeAssetData', user: '0xabc', coin: 'ETH' }, assetCapacity('0'));
+    expect(seen).toEqual(['100', '0']);
+    subscription.unsubscribe();
+  });
+
+  it('ignores malformed capacity frames without cancelling the REST baseline', () => {
+    const rest = new Subject<any>();
+    http.post.and.returnValue(rest as any);
+    const seen = [];
+    const subscription = service.watchActiveAssetData('0xabc', 'ETH')
+      .subscribe((data) => seen.push(data.availableToTrade[0]));
+
+    channel.push({ type: 'activeAssetData', user: '0xabc', coin: 'ETH' }, {
+      ...assetCapacity('20'), maxTradeSzs: ['10'],
+    });
+    expect(rest.observed).toBeTrue();
+    expect(seen).toEqual([]);
+    rest.next(assetCapacity('100'));
+    rest.complete();
+    expect(seen).toEqual(['100']);
+    subscription.unsubscribe();
+  });
+
+  it('does not publish a capacity response for another market', () => {
+    http.post.and.returnValue(of({ ...assetCapacity('100'), coin: 'BTC' }) as any);
+    let result;
+    service.getActiveAssetData('0xabc', 'ETH').subscribe((data) => result = data);
+    expect(result).toBeNull();
+  });
+
+  it('times out the capacity snapshot without closing the live stream', fakeAsync(() => {
+    const cancelled = jasmine.createSpy('cancelled');
+    http.post.and.returnValue(new Observable(() => cancelled) as any);
+    const seen = [];
+    const subscription = service.watchActiveAssetData('0xabc', 'ETH')
+      .subscribe((data) => seen.push(data.availableToTrade[0]));
+
+    tick(10000);
+    expect(cancelled).toHaveBeenCalledTimes(1);
+    channel.push({ type: 'activeAssetData', user: '0xabc', coin: 'ETH' }, assetCapacity('40'));
+    expect(seen).toEqual(['40']);
+    subscription.unsubscribe();
+  }));
 
   it('shares repeated account snapshots for the same user', () => {
     mockAccountRequests('unifiedAccount', '0.96');

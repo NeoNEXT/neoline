@@ -4,8 +4,8 @@ import { By } from '@angular/platform-browser';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { BehaviorSubject, of } from 'rxjs';
-import { PerpsConnectionState, PerpsCrossMarginAccount } from '@popup/_lib/perps';
+import { BehaviorSubject, of, Subject } from 'rxjs';
+import { PerpsActiveAssetData, PerpsConnectionState, PerpsCrossMarginAccount } from '@popup/_lib/perps';
 import { PerpsDataChannel } from '@/app/core/services/perps/perps-data-channel.service';
 
 import { ChromeService, EvmWalletService, GlobalService } from '@/app/core';
@@ -65,7 +65,7 @@ const MARKET = ethMarket({
   prevDayPxExact: '2000',
 });
 
-const ASSET_DATA = {
+const ASSET_DATA: PerpsActiveAssetData = {
   user: '0xabc',
   coin: 'ETH',
   leverage: { type: 'isolated' as const, value: 10 },
@@ -323,6 +323,40 @@ describe('PerpsOrderComponent 渲染与接线', () => {
   });
 
   describe('保证金模式', () => {
+    it('sets isolated margin and checks fresh capacity within one submit click', fakeAsync(() => {
+      const key = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
+      const signer = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+      spyOn(TestBed.inject(HyperliquidService), 'watchActiveAssetData').and.returnValue(of({
+        ...ASSET_DATA, leverage: { type: 'cross', value: 10 },
+      }));
+      spyOn(TestBed.inject(EvmWalletService), 'getPrivateKey').and.returnValue(Promise.resolve(key));
+      const refreshed = new Subject<any>();
+      const capacityData = { getActiveAssetData: jasmine.createSpy().and.returnValue(refreshed) };
+      const exchange = {
+        updateLeverage: jasmine.createSpy().and.returnValue(of({ status: 'ok' })),
+        submitOrder: jasmine.createSpy().and.returnValue(of({ status: 'resting' })),
+      };
+      const realOrders = new PerpsTradeOrderService(
+        exchange as any, TestBed.inject(PerpsAccountStateService), capacityData as any
+      );
+      spyOn(TestBed.inject(PerpsTradeOrderService), 'submit')
+        .and.callFake((privateKey, intent) => realOrders.submit(privateKey, intent));
+      fixture.detectChanges();
+      component.amount = '200';
+      fixture.detectChanges();
+      expect(text('.account-summary')).toContain('N/A');
+      expect(fixture.nativeElement.querySelector('.error-tip')).toBeNull();
+      fixture.nativeElement.querySelector('.submit-wrap button').click();
+      flushMicrotasks();
+      expect(exchange.updateLeverage).toHaveBeenCalledOnceWith(key, 0, 10, 25, 'isolated');
+      expect(capacityData.getActiveAssetData).toHaveBeenCalledOnceWith(signer, 'ETH');
+      expect(exchange.submitOrder).not.toHaveBeenCalled();
+      refreshed.next({ ...ASSET_DATA, user: signer });
+      refreshed.complete();
+      expect(exchange.submitOrder).toHaveBeenCalledTimes(1);
+      expect(exchange.submitOrder.calls.first().args[1].sizeExact).toBe('0.1');
+    }));
+
     it('selects cross margin and updates its estimate and order intent', () => {
       account.availableBalanceExact = '1000';
       queryParams = { marginMode: 'cross' };
@@ -345,6 +379,9 @@ describe('PerpsOrderComponent 渲染与接线', () => {
 
     it('keeps a cross position in cross mode and permits increasing it', () => {
       account = { availableBalanceExact: '1000', positions: [ethPosition({ leverageType: 'cross' })] };
+      spyOn(TestBed.inject(HyperliquidService), 'watchActiveAssetData').and.returnValue(of({
+        ...ASSET_DATA, leverage: { type: 'cross', value: 2 },
+      }));
       fixture.detectChanges();
       component.setSide('short');
       component.amount = '200';

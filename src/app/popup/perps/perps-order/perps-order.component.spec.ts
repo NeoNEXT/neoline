@@ -365,6 +365,21 @@ describe('PerpsOrderComponent submission seam', () => {
 
 
 describe('PerpsOrderComponent live capacity', () => {
+  it('allows mode preparation in the submit flow while keeping missing capacity blocked', () => {
+    const value = component();
+    value.facts = facts({ activeAssetData: {
+      ...facts().activeAssetData, leverage: { type: 'cross', value: 5 },
+    } });
+    value.leverage = 5;
+    value.amount = '100';
+    expect(value.canSubmit).toBeTrue();
+    expect(value.availableExact).toBeNull();
+    expect(value.orderUnavailableReason).toBeNull();
+    value.facts = facts({ activeAssetData: null });
+    expect(value.canSubmit).toBeFalse();
+    expect(value.orderUnavailableReason).toBe('perpsLoadFailed');
+  });
+
   it('reprices the percentage while the user is still composing', () => {
     const value = component();
     const initial = facts();

@@ -84,6 +84,7 @@ const NOT_APPLICABLE = 'N/A';
 const UNAVAILABLE_MESSAGES: Record<PerpsOrderUnavailableCode, string> = {
   'invalid-protection': 'perpsInvalidProtection',
   'account-unavailable': 'perpsLoadFailed',
+  'capacity-unavailable': 'perpsLoadFailed',
   'market-missing': 'perpsMarketNotFound',
   'market-error': 'perpsLoadFailed',
   'cross-margin-unavailable': 'perpsCrossMarginUnavailable',
@@ -699,6 +700,9 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    * 由模块决定适用哪个条件，这里把它变成文案；见 {@link UNAVAILABLE_MESSAGES}。
    */
   get orderUnavailableReason(): string | null {
+    if (this.composition.preparable) {
+      return null;
+    }
     const availability = this.composition.availability;
     return availability ? UNAVAILABLE_MESSAGES[availability.code] : null;
   }
@@ -719,7 +723,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   get canSubmit(): boolean {
     return (
       !this.destroyed && !this.leverageUpdating && this.lifecycle.gateOpen &&
-      this.composition.submittable
+      (this.composition.submittable || this.composition.preparable)
     );
   }
 
@@ -1135,7 +1139,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       const sameMarket = checked.intent && Object.keys(intent.market).every(
         (key) => checked.intent.market[key] === intent.market[key]
       );
-      if (!this.stillApproved || !checked.submittable || !sameMarket ||
+      if (!this.stillApproved || !(checked.submittable || checked.preparable) || !sameMarket ||
           checked.intent.operation !== intent.operation) {
         this.lifecycle.settled();
         this.global.snackBarTip('perpsMarketChangedReviewAgain');
@@ -1174,6 +1178,11 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
           }
           this.lifecycle.settled();
           if (error instanceof PerpsTradeOrderError) {
+            if (error.code === 'capacity-unavailable' || error.code === 'insufficient-margin') {
+              this.global.snackBarTip(UNAVAILABLE_MESSAGES[error.code]);
+              this.loadActiveAssetData();
+              return;
+            }
             if (error.code === 'position-changed') {
               this.global.snackBarTip('perpsPositionChangedReviewAgain');
               return;

@@ -12,6 +12,8 @@ export interface PerpsOrder {
 }
 
 export type PerpsTradeOrderErrorCode =
+  | 'capacity-unavailable'
+  | 'insufficient-margin'
   | 'invalid-intent'
   | 'position-changed'
   | 'account-unavailable'

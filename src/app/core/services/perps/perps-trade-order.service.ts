@@ -7,6 +7,7 @@ import { map, switchMap } from 'rxjs/operators';
 import {
   PerpsAccount,
   PerpsAccountState,
+  PerpsActiveAssetData,
   PerpsExchangeResponse,
   PerpsOrderExecutionResult,
   PerpsPosition,
@@ -18,6 +19,7 @@ import {
 } from '@popup/_lib/perps';
 import { PerpsExchangeWriteService } from './perps-exchange-write.service';
 import { PerpsAccountStateService } from './perps-account-state.service';
+import { HyperliquidService } from './hyperliquid.service';
 import { PerpsOrder, PerpsTradeOrderError } from './perps-trade-order';
 import { protectionPrice, validProtection } from '@popup/_lib/perps-protection';
 
@@ -60,7 +62,8 @@ export class PerpsTradeOrderService {
 
   constructor(
     writes: PerpsExchangeWriteService,
-    accountStates: PerpsAccountStateService
+    accountStates: PerpsAccountStateService,
+    private readonly capacityData: HyperliquidService
   ) {
     this.exchange = writes;
     this.accounts = accountStates;
@@ -101,11 +104,38 @@ export class PerpsTradeOrderService {
                   error?.message || 'Leverage update was rejected'
                 );
               }),
-              switchMap(submit)
+              // 模式和杠杆写入后重新查询；写入前的容量不代表这笔订单可用的容量。
+              switchMap(() => this.capacityData.getActiveAssetData(address, intent.market.coin)),
+              switchMap((capacity) => {
+                this.validateCapacity(address, intent, order.sizeExact, capacity);
+                return submit();
+              })
             );
         })
       );
     });
+  }
+
+  private validateCapacity(
+    address: string,
+    intent: PerpsTradeOrderIntent,
+    sizeExact: string,
+    capacity: PerpsActiveAssetData | null
+  ) {
+    const sideIndex = intent.side === 'long' ? 0 : 1;
+    const available = new BigNumber(capacity?.availableToTrade?.[sideIndex] ?? NaN);
+    const maxSize = new BigNumber(capacity?.maxTradeSzs?.[sideIndex] ?? NaN);
+    if (!capacity || capacity.user.toLowerCase() !== address.toLowerCase() ||
+        capacity.coin !== intent.market.coin || capacity.leverage.type !== intent.marginMode ||
+        capacity.leverage.value !== intent.leverage || !available.isFinite() || available.isNegative() ||
+        !maxSize.isFinite() || maxSize.isNegative()) {
+      throw new PerpsTradeOrderError('capacity-unavailable', 'Updated trading capacity is unavailable');
+    }
+    const size = new BigNumber(sizeExact);
+    const notional = size.times(intent.referencePriceExact);
+    if (size.gt(maxSize) || notional.gt(available.times(intent.leverage))) {
+      throw new PerpsTradeOrderError('insufficient-margin', 'Updated trading capacity is insufficient');
+    }
   }
 
   private validateIntent(intent: PerpsTradeOrderIntent) {
@@ -187,9 +217,7 @@ export class PerpsTradeOrderService {
   /**
    * 这个订单在下单之前是否要把杠杆写到交易场所。
    *
-   * 杠杆是订单参数，不是客户端跟踪的账户设置：用户选定的值会在使用它的那笔订单之前
-   * 立即写入，因此不存在交易场所侧的设置与表单不一致的时间窗口。若改成与缓存的当前值
-   * 比较，反而会把这个窗口重新引入。
+   * 普通单先写入用户选定的模式和杠杆，再读取新容量验证；不能只根据页面缓存推断设置已生效。
    *
    * reduce-only 的离场是例外。它的杠杆就是仓位自己的杠杆 —— 平仓模式下表单也不提供这个
    * 控件 —— 所以这次写入设置的是本来就已生效的值，却依然可能失败：`updateLeverage` 受限

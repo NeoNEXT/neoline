@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 
 import {
   PerpsAccount,
@@ -48,7 +48,15 @@ const account = (
 describe('PerpsTradeOrderService', () => {
   let exchange: jasmine.SpyObj<any>;
   let accounts: jasmine.SpyObj<any>;
+  let capacities: jasmine.SpyObj<any>;
   let service: PerpsTradeOrderService;
+
+  const capacity = (overrides = {}) => ({
+    user: ADDRESS, coin: 'ETH', leverage: { type: 'isolated', value: 5 },
+    availableToTrade: ['1000000000000000000000000', '1000000000000000000000000'],
+    maxTradeSzs: ['1000000000000000000000000', '1000000000000000000000000'],
+    ...overrides,
+  });
 
   beforeEach(() => {
     exchange = jasmine.createSpyObj('PerpsOrderExchange', [
@@ -69,8 +77,46 @@ describe('PerpsTradeOrderService', () => {
     accounts = jasmine.createSpyObj('PerpsOrderAccounts', [
       'refreshAccount',
     ]);
-    service = new PerpsTradeOrderService(exchange, accounts);
+    capacities = jasmine.createSpyObj('PerpsOrderCapacity', ['getActiveAssetData']);
+    capacities.getActiveAssetData.and.callFake((_address, coin) => {
+      const args = exchange.updateLeverage.calls.mostRecent().args;
+      return of(capacity({ coin, leverage: { type: args[4], value: args[2] } }));
+    });
+    service = new PerpsTradeOrderService(exchange, accounts, capacities);
   });
+
+  it('waits for a fresh capacity response after applying margin mode and leverage', () => {
+    const modeWrite = new Subject<any>();
+    const refreshed = new Subject<any>();
+    exchange.updateLeverage.and.returnValue(modeWrite);
+    capacities.getActiveAssetData.and.returnValue(refreshed);
+    service.submit(PRIVATE_KEY, intent()).subscribe();
+    expect(capacities.getActiveAssetData).not.toHaveBeenCalled();
+    expect(exchange.submitOrder).not.toHaveBeenCalled();
+    modeWrite.next({ status: 'ok' });
+    modeWrite.complete();
+    expect(capacities.getActiveAssetData).toHaveBeenCalledOnceWith(ADDRESS, 'ETH');
+    expect(exchange.submitOrder).not.toHaveBeenCalled();
+    refreshed.next(capacity());
+    refreshed.complete();
+    expect(exchange.submitOrder).toHaveBeenCalledTimes(1);
+  });
+
+  for (const [description, data, code] of [
+    ['missing', null, 'capacity-unavailable'],
+    ['wrong mode', capacity({ leverage: { type: 'cross', value: 5 } }), 'capacity-unavailable'],
+    ['old leverage', capacity({ leverage: { type: 'isolated', value: 2 } }), 'capacity-unavailable'],
+    ['zero', capacity({ maxTradeSzs: ['0', '100'] }), 'insufficient-margin'],
+    ['insufficient collateral', capacity({ availableToTrade: ['1', '100'] }), 'insufficient-margin'],
+  ]) {
+    it(`does not send an opening order with ${description} capacity after the setting update`, () => {
+      capacities.getActiveAssetData.and.returnValue(of(data));
+      const failed = jasmine.createSpy('failed');
+      service.submit(PRIVATE_KEY, intent()).subscribe({ error: failed });
+      expect(failed).toHaveBeenCalledWith(jasmine.objectContaining({ code }));
+      expect(exchange.submitOrder).not.toHaveBeenCalled();
+    });
+  }
 
   it('turns an opening intent into one normalized IOC order', () => {
     let submission: PerpsTradeSubmission;

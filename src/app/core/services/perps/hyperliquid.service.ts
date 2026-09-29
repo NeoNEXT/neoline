@@ -3,7 +3,7 @@ import BigNumber from 'bignumber.js';
 import { HttpClient } from '@angular/common/http';
 import {
   Observable,
-  concat,
+  defer,
   merge,
   combineLatest,
   of,
@@ -85,6 +85,7 @@ export class HyperliquidService {
   private readonly accountModeCacheMs = 30 * 60 * 1000;
   private readonly dexRegistryCacheMs = 6 * 60 * 60 * 1000;
   private readonly userFeeCacheMs = 5 * 60 * 1000;
+  private readonly activeAssetTimeoutMs = 10000;
   private dexRegistryCache: {
     expiresAt: number;
     request: Observable<any[]>;
@@ -323,33 +324,47 @@ export class HyperliquidService {
       user: address.toLowerCase(),
       coin,
     }).pipe(
-      map((data) => this.parseActiveAssetData(data)),
+      timeout(this.activeAssetTimeoutMs),
+      map((data) => this.parseActiveAssetData(data, address.toLowerCase(), coin)),
       catchError(() => of(null))
     );
   }
 
   /**
-   * 先用 REST 为下单表单播种，再通过 Hyperliquid 对应的 websocket 订阅，
-   * 让它与账户/市场的变化保持一致。
+   * 立即订阅容量更新，同时读取 REST 基准；第一帧有效更新到达后取消旧快照，
+   * 避免慢请求阻塞订阅或迟到的快照覆盖新容量。
    */
   watchActiveAssetData(
     address: string,
     coin: string
   ): Observable<PerpsActiveAssetData> {
     const user = address.toLowerCase();
-    return concat(
-      this.getActiveAssetData(user, coin),
-      this.channel.subscribe({ type: 'activeAssetData', user, coin }).pipe(
-        map((data) => this.parseActiveAssetData(data))
-      )
-    ).pipe(filter((data) => !!data));
+    return defer(() => {
+      const updates = this.channel.subscribe({ type: 'activeAssetData', user, coin }).pipe(
+        map((data) => this.parseActiveAssetData(data, user, coin)),
+        filter((data) => !!data),
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+      return merge(
+        updates,
+        this.getActiveAssetData(user, coin).pipe(takeUntil(updates))
+      ).pipe(filter((data) => !!data));
+    });
   }
 
-  private parseActiveAssetData(data: any): PerpsActiveAssetData {
+  private parseActiveAssetData(data: any, user: string, coin: string): PerpsActiveAssetData {
+    const validPair = (values: unknown): boolean =>
+      Array.isArray(values) && values.length === 2 && values.every((value) => {
+        const exact = perpsFiniteDecimal(value);
+        return exact !== null && !new BigNumber(exact).isNegative();
+      });
     if (
       !data ||
-      !Array.isArray(data.maxTradeSzs) ||
-      !Array.isArray(data.availableToTrade)
+      typeof data.user !== 'string' || data.user.toLowerCase() !== user || data.coin !== coin ||
+      !['cross', 'isolated'].includes(data.leverage?.type) ||
+      !Number.isInteger(data.leverage?.value) || data.leverage.value < 1 ||
+      !validPair(data.maxTradeSzs) ||
+      !validPair(data.availableToTrade)
     ) {
       return null;
     }

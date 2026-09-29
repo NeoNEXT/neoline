@@ -119,6 +119,39 @@ const sides = (
  * 所以断言改从 `availableExact` 和 `percentBaseExact` 上读 —— 那才是页面看得见的东西。
  */
 describe('composeOrder 购买力', () => {
+  for (const mode of ['default', 'disabled', 'unifiedAccount', 'portfolioMargin', 'dexAbstraction', 'unknown'] as const) {
+    it(`does not substitute account balance for missing ${mode} capacity`, () => {
+      const f = facts({
+        account: { ...withPositions(), account: account({
+          abstractionMode: mode, availableBalanceExact: '100',
+        }) },
+      });
+      const order = input({ amount: '50', leverage: 2 });
+      const missing = composeOrder(f, order);
+      expect(missing.availableExact).toBeNull();
+      expect(missing.percentBaseExact).toBe('0');
+      expect(missing.submittable).toBeFalse();
+      expect(missing.intent).toBeNull();
+      expect(missing.availability?.code).toBe('capacity-unavailable');
+
+      f.activeAssetData = capacity('ETH', 100, '0', '0', 2);
+      expect(composeOrder(f, order).availableExact).toBe('0');
+      expect(reason(f, order)).toBe('insufficient-margin');
+
+      f.activeAssetData = capacity('ETH', 100, '100', '2', 2);
+      expect(composeOrder(f, order).submittable).toBeTrue();
+    });
+  }
+
+  it('allows reduce-only closing without opening capacity', () => {
+    const f = facts({ account: withPositions(ethPosition({
+      sziExact: '1', positionValueExact: '100', isLong: true,
+    })) });
+    const composed = composeOrder(f, input({ mode: 'close', side: 'short', amount: '50' }));
+    expect(composed.submittable).toBeTrue();
+    expect(composed.intent.operation).toBe('reduce');
+  });
+
   it('uses the matching cross capacity and preserves its directional size cap', () => {
     const data = capacity('ETH', 100, '100', '2', 5);
     data.leverage.type = 'cross';
@@ -139,10 +172,26 @@ describe('composeOrder 购买力', () => {
       account: { ...withPositions(), account: account({ availableBalanceExact: '20' }) },
     });
     const composed = composeOrder(f, input({ leverage: 5, marginMode: 'cross' }));
-    expect(composed.availableExact).toBe('20');
-    expect(composed.percentBaseExact).toBe('100');
+    expect(composed.availableExact).toBeNull();
+    expect(composed.percentBaseExact).toBe('0');
     expect(reason(f, input({ amount: '200', leverage: 5, marginMode: 'cross' })))
-      .toBe('insufficient-margin');
+      .toBe('capacity-unavailable');
+  });
+
+  it('can prepare a new isolated order when the venue is still cross, without quoting cross capacity', () => {
+    const f = facts({ activeAssetData: {
+      ...capacity('ETH', 100, '1000', '100', 5), leverage: { type: 'cross', value: 5 },
+    } });
+    const prepared = composeOrder(f, input({ amount: '100', leverage: 5 }));
+    expect(prepared.preparable).toBeTrue();
+    expect(prepared.submittable).toBeFalse();
+    expect(prepared.availableExact).toBeNull();
+    expect(prepared.intent?.marginMode).toBe('isolated');
+    expect(prepared.intent?.requestedSizeExact).toBe('1');
+    expect(composeOrder(f, input({ amount: '1' })).preparable).toBeFalse();
+    expect(composeOrder(f, input({ amount: '100', protectionEnabled: true,
+      takeProfitPrice: '90',
+    })).preparable).toBeFalse();
   });
 
   for (const marginMode of ['noCross', 'strictIsolated'] as const) {
@@ -152,9 +201,10 @@ describe('composeOrder 购买力', () => {
       expect(reason(f, input({ marginMode: 'isolated' }))).toBeNull();
     });
   }
-  it('keeps fallback collateral exact through Max amount and submitted size', () => {
+  it('keeps venue collateral exact through Max amount and submitted size', () => {
     const f = facts({
       market: priced('ETH', 0.01, 4),
+      activeAssetData: capacity('ETH', 0.01, '999999999999.999999', '100000000000000', 1),
       account: {
         ...withPositions(),
         account: account({ availableBalanceExact: '999999999999.999999' }),
@@ -216,13 +266,13 @@ describe('composeOrder 购买力', () => {
           account: account({
             abstractionMode: mode,
             availableBalanceExact: mode === 'unknown' ? null : '1',
-            positions: [ethPosition({ sziExact: '1', isLong: true })],
+            positions: [ethPosition({ sziExact: '1', isLong: true, leverageType: 'isolated' })],
           }),
         },
       });
       if (mode === 'unknown') {
         expect(composeOrder(f, input({ amount: '20' })).availableExact).toBeNull();
-        expect(reason(f, input({ amount: '20' }))).toBe('account-unavailable');
+        expect(reason(f, input({ amount: '20' }))).toBe('capacity-unavailable');
         expect(reason(f, input({ mode: 'close', side: 'short', amount: '20' })))
           .not.toBe('account-unavailable');
       }
@@ -813,7 +863,7 @@ describe('composeOrder', () => {
    * 一个还空着的限价框不是「保证金不足」。
    *
    * 过去 `insufficient-margin` 兼任「事实还不够」的兜底，于是切到限价、先填金额的用户
-   * 被告知他的钱不够，而他缺的只是一个价格。按本页 CONTEXT：未填完的输入框不出声，
+   * 被告知他的钱不够，而他缺的只是一个价格。按本页 README 第 5 节：未填完的输入框不出声，
    * 只让按钮保持禁用。
    */
   it('says nothing while the limit price box is still empty', () => {
@@ -976,6 +1026,9 @@ describe('composeOrder', () => {
   it('allows increasing a cross-margin position in the same margin mode', () => {
     const f = facts({
       market: priced('ETH', 100, 2),
+      activeAssetData: { ...capacity('ETH', 100, '100', '10', 1),
+        leverage: { type: 'cross', value: 1 },
+      },
       account: {
         availability: 'live',
         account: account({
@@ -1012,6 +1065,7 @@ describe('composeOrder', () => {
   it('submits only the entered opposite size without adding the held size', () => {
     const f = facts({
       market: priced('ETH', 100, 2),
+      activeAssetData: capacity('ETH', 100, '100', '10', 1),
       account: {
         availability: 'live',
         account: account({
@@ -1443,6 +1497,7 @@ describe('unavailable and merged margin estimates', () => {
 
 describe('opposite orders use a single net isolated position', () => {
   const f = facts({
+    activeAssetData: capacity('ETH', 100, '1000', '100', 2),
     account: { ...withPositions(), account: account({
       availableBalanceExact: '1000', positions: [ethPosition({
         sziExact: '-1', entryPxExact: '100', positionValueExact: '100',

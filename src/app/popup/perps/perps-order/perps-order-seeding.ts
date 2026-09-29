@@ -127,7 +127,7 @@ function positionFor(facts: PerpsOrderFacts): PerpsPosition | null {
 /**
  * 这一单该用的杠杆。
  *
- * 平仓不提供杠杆控件，它的值恒等于持仓杠杆（见本页 CONTEXT 的「杠杆即订单参数」），所以
+ * 平仓不提供杠杆控件，它的值恒等于持仓杠杆（见本页 README 第 3.2 节），所以
  * 平仓分支必须先于开仓分支 —— 过去 `loadMarket` 那条播种没有这个守卫，行情帧只要晚于账户
  * 帧到达，就会把持仓杠杆换成开仓的缺省值。
  */

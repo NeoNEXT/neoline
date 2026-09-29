@@ -50,7 +50,7 @@ export interface PerpsOrderFeeRates {
  * 交易场所当前所说的一切，以本页面读到的样子呈现。
  *
  * 读取失败同样是事实：`account` 原样来自账户状态流，可用性信息一并带上，因此一个读不到
- * 的账户绝不会被误当成一个什么都没有的账户（见根 CONTEXT 中的账户状态）。
+ * 的账户绝不会被误当成一个什么都没有的账户（见本页 README 第 2.1 节）。
  */
 export interface PerpsOrderFacts {
   /** 路由中的币种，HIP-3 市场会带上 DEX 前缀。 */
@@ -97,6 +97,7 @@ export interface PerpsOrderInput {
 export type PerpsOrderUnavailableCode =
   | 'invalid-protection'
   | 'account-unavailable'
+  | 'capacity-unavailable'
   | 'market-missing'
   | 'market-error'
   | 'cross-margin-unavailable'
@@ -139,7 +140,7 @@ export interface PerpsOrderComposition {
   /** 阻止提交的那唯一一条原因；没有时为 null。 */
   availability: PerpsOrderUnavailable | null;
   /**
-   * 要交给交易订单模块的意图；当事实与输入还不足以描述一笔可提交的订单时为 null。
+   * 可提交或可进入模式准备阶段的意图；交易服务在更新设置后再次验证容量。
    */
   intent: PerpsTradeOrderIntent | null;
   /**
@@ -147,6 +148,8 @@ export interface PerpsOrderComposition {
    * 不是订单的属性。
    */
   submittable: boolean;
+  /** 无仓位且已知模式不同；可开始设置模式，但不能据此直接发送订单。 */
+  preparable: boolean;
   market: PerpsMarket | null;
   position: PerpsPosition | null;
   symbol: string;
@@ -192,9 +195,7 @@ export function composeOrder(
   // 容量属于交易场所当前模式；切换后的预览不能沿用另一种模式的按方向抵押品与上限。
   const activeAssetData = facts.activeAssetData?.leverage.type === input.marginMode
     ? facts.activeAssetData : null;
-  const accountUnavailable = facts.account.availability === 'unavailable' ||
-    (input.mode !== 'close' && !activeAssetData &&
-      account?.abstractionMode === 'unknown');
+  const accountUnavailable = facts.account.availability === 'unavailable';
   const marketRates = marketFeeRates(facts.feeRates, market);
   // 估不出这个市场的费率时，内部算术退回账户费率；页面凭 `feeEstimateUnavailable` 不拿它报价。
   const feeRates = marketRates ?? facts.feeRates;
@@ -262,7 +263,7 @@ export function composeOrder(
 
   const availableExact = activeAssetData
     ? availableToTradeForSide(activeAssetData, input.side)
-    : account?.availableBalanceExact ?? null;
+    : null;
 
   const maxOrderNotional = activeAssetData
     ? maxOrderNotionalForSide(
@@ -271,7 +272,7 @@ export function composeOrder(
         input.leverage,
         orderPriceExact
       )
-    : collateralToNotional(availableExact ?? '0', input.leverage);
+    : new BigNumber(0);
 
   const percentBase = percentBaseFor({
     closeMode,
@@ -304,6 +305,7 @@ export function composeOrder(
   } : undefined;
   let availability = orderUnavailable({
     accountUnavailable,
+    capacityAvailable: !!activeAssetData,
     marketStatus: facts.market.status,
     account,
     position,
@@ -329,7 +331,7 @@ export function composeOrder(
     availability = { code: 'invalid-protection', params: { min: PERPS_MIN_ORDER_NOTIONAL, symbol } };
   }
 
-  const submittable =
+  const validOrder =
     facts.market.status === 'ready' &&
     // 单资产容量不包含持仓；首次账户快照到达前，无法检查反向仓位。
     !!account &&
@@ -337,12 +339,18 @@ export function composeOrder(
     !availability &&
     hasExecutionPrice &&
     new BigNumber(preview?.sizeExact ?? 0).isGreaterThan(0);
+  const preparable = validOrder && !closeMode && !position &&
+    !!facts.activeAssetData && !activeAssetData;
+  if (validOrder && !closeMode && !activeAssetData) {
+    availability = { code: 'capacity-unavailable', params: { min: PERPS_MIN_ORDER_NOTIONAL, symbol } };
+  }
+  const submittable = validOrder && !availability;
 
   return {
     preview,
     availability,
     intent:
-      submittable && market
+      (submittable || preparable) && market
         ? {
             market: {
               key: market.key,
@@ -365,6 +373,7 @@ export function composeOrder(
           }
         : null,
     submittable,
+    preparable,
     market,
     position,
     symbol,
@@ -640,7 +649,7 @@ function composePreview(params: {
  * 永远只有一条：一次性列出所有异议的表单，会让用户猜先修哪个，所以这些检查是从「再怎么
  * 输入也解决不了的」排到「取决于金额的」。
  *
- * 这里的每一条都是客户端可判定条件（见根 CONTEXT）—— 身份、协议精度、正数金额、最小名义
+ * 这里的每一条都是客户端可判定条件（见本页 README 第 3.7 节）—— 身份、协议精度、正数金额、最小名义
  * 价值、reduce-only 方向、可用余额、市场状态，以及用户自己的滑点。别的都不属于这里：
  * 未平仓量上限、预言机偏离，以及盘口究竟能否成交，都归交易场所判断；按 ADR-0006，一个去
  * 猜这些的客户端拦下的是合法订单，而不是在避免亏损。那些会以拒绝的形式回来，由页面翻译。
@@ -649,6 +658,7 @@ function composePreview(params: {
  */
 function orderUnavailable(params: {
   accountUnavailable: boolean;
+  capacityAvailable: boolean;
   marketStatus: PerpsOrderMarketFacts['status'];
   account: PerpsAccount | null;
   position: PerpsPosition | null;
@@ -670,6 +680,7 @@ function orderUnavailable(params: {
 }): PerpsOrderUnavailable | null {
   const {
     accountUnavailable,
+    capacityAvailable,
     marketStatus,
     account,
     position,
@@ -736,7 +747,7 @@ function orderUnavailable(params: {
   if (!closeMode) {
     // 「事实还没到」和「限价框还空着」都不是保证金不足 —— 它们是**还答不上来**。
     // 过去这里用 `insufficient-margin` 当兜底，于是切到限价、先填金额的用户被告知他的钱
-    // 不够，而他缺的只是一个价格；市场帧还在路上时同理。按本页 CONTEXT：未填完的输入框
+    // 不够，而他缺的只是一个价格；市场帧还在路上时同理。按本页 README 第 5 节：未填完的输入框
     // 不是一条原因，它只让按钮保持禁用 —— `submittable` 本来就要求 `hasExecutionPrice`
     // 和 `market.status === 'ready'`，所以这里安静下来并不会放行任何东西。
     if (!market || !hasExecutionPrice) {
@@ -746,7 +757,7 @@ function orderUnavailable(params: {
       maxOrderNotional.dividedBy(orderPriceExact),
       market.szDecimals
     );
-    if (new BigNumber(orderSizeExact).isGreaterThan(maxSize)) {
+    if (capacityAvailable && new BigNumber(orderSizeExact).isGreaterThan(maxSize)) {
       return reason('insufficient-margin');
     }
   }
@@ -881,31 +892,14 @@ export function normalizeLimitPrice(
 /**
  * Hyperliquid 为这个资产按方向上报的自由抵押品。
  *
- * 这是一个以 USDC 计的保证金数字，不是名义价值：在没有仓位的账户上，无论链上签的是多少
- * 倍杠杆，`availableToTrade` 都与 `withdrawable` 完全相等。因此当表单预览另一个杠杆时，
- * 它绝不能被重新缩放 —— 杠杆是把它乘成购买力（见 `collateralToNotional`）。
+ * 本地按抵押品金额消费，不随表单杠杆缩放；名义容量由下方函数结合数量上限计算。
+ * 这个值属于该地址和合约的当前模式，不能由账户 USDC 余额或另一种模式的值代替。
  */
 function availableToTradeForSide(
   data: PerpsActiveAssetData,
   side: PerpsOrderSide
 ): string {
   return data.availableToTrade[side === 'long' ? 0 : 1];
-}
-
-/**
- * 一笔抵押品的购买力：由杠杆相乘得到。
- *
- * 这里不预留 taker 手续费。Hyperliquid 自家表单的 100% 正好就是抵押品 × 杠杆 —— 交易场所
- * 已经在 `availableToTrade` 内部留了缓冲，在这里再扣一笔手续费只会低于它给的数字。
- */
-function collateralToNotional(
-  collateral: BigNumber.Value,
-  leverage: number
-): BigNumber {
-  const value = new BigNumber(collateral || 0);
-  return value.isFinite() && value.isGreaterThan(0)
-    ? value.times(Math.max(1, leverage || 1))
-    : new BigNumber(0);
 }
 
 /** 同时施加账户购买力和交易场所的单资产数量上限。 */

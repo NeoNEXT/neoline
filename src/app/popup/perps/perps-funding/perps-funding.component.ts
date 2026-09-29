@@ -339,12 +339,9 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 这个账户实际能提出多少 —— 在两种账户形态下它并不是同一个字段。
-   *
-   * 标准账户就取永续侧的 `withdrawable`。统一账户把 USDC 放在现货清算所里，交易场所把它的
-   * 永续数字标记为「无意义」—— 无论账户有多少资金，那里的 `withdrawable` 都是 0 —— 所以读
-   * 那个字段会把一个有资金的账户显示成 $0，并拒绝它本来做得到的每一笔提现。要减去它的 hold，
-   * 理由和标准账户要减去保证金一样：被占用的抵押品不可提取。
+   * 提现表单当前使用的本地上限：标准账户取永续 withdrawable，统一/组合账户取现货 USDC total-hold。
+   * 后者尚未证明等于所有持仓、冻结和借款场景下的最大可提额，不能把 hold 等同于完整保证金要求。
+   * 待核对的真实账户边界见本页 README 第 3.1 节和 F17。
    */
   get withdrawableExact(): string {
     const account = this.account;
