@@ -45,7 +45,7 @@ export class PopupHomeDappAuthComponent implements OnChanges {
   }
 
   initData() {
-    if (chrome.tabs) {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs[0] && tabs[0].favIconUrl) {
           this.favIconUrl = tabs[0].favIconUrl;

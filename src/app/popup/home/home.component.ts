@@ -93,7 +93,7 @@ export class PopupHomeComponent implements OnInit {
     this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
-    if (chrome.tabs) {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.getCurrent((tab) => {
         if (tab) {
           this.showDappAuth = false;

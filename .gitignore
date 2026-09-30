@@ -10,6 +10,8 @@ dist.zip
 
 # dependencies
 /node_modules
+/test-results
+/playwright-report
 
 ## third party
 *.pem

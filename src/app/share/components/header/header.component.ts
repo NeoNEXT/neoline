@@ -68,7 +68,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
         }
       });
 
-    if (chrome.tabs) {
+    if (typeof chrome !== 'undefined' && chrome.tabs) {
       chrome.tabs.getCurrent((tab) => {
         if (tab) {
           this.showExpandView = false;
