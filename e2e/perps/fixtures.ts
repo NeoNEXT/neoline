@@ -23,7 +23,12 @@ export const test = base.extend<{ wallet: ReturnType<typeof createWallet>; hl: F
         () => (window as any).__perpsSocket?.unexpected ?? []
       );
       await testInfo.attach('network-summary', {
-        body: JSON.stringify({ info: hl.infoRequests, writes: hl.writes.map((item) => item.action), unexpected: hl.unexpected, unexpectedSockets, errors }, null, 2),
+        body: JSON.stringify({
+          info: hl.infoRequests, writes: hl.writes.map((item) => item.action),
+          fundingRpc: hl.funding.rpcRequests, depositBroadcasts: hl.funding.broadcasts,
+          feeRequests: hl.funding.feeRequests,
+          unexpected: hl.unexpected, unexpectedSockets, errors,
+        }, null, 2),
         contentType: 'application/json',
       });
       expect.soft(hl.unexpected, 'All remote requests must have explicit fixtures').toEqual([]);

@@ -40,6 +40,7 @@ interface NotificationContent {
   perpsOrderCanceled: string;
   perpsOrderFilled: string;
   perpsOrderPartiallyFilled: string;
+  perpsProtectionNotConfirmed: string;
   perpsOrderResting: string;
   perpsOrderUnfilled: string;
   perpsOrderRejected: string;
@@ -102,6 +103,8 @@ export class NotificationService {
       'Unable to load the bridge fee and limits. Please try again later.',
     perpsOrderCanceled: 'Order canceled.',
     perpsOrderFilled: 'Order filled.',
+    perpsProtectionNotConfirmed:
+      'Order processed, but TP/SL is not fully confirmed. Check open orders before opening another position.',
     perpsOrderPartiallyFilled:
       'Order partially filled. Check the remaining position before retrying.',
     perpsOrderResting: 'Limit order placed and resting.',
@@ -172,6 +175,8 @@ export class NotificationService {
     perpsOrderCanceled: '订单已撤销。',
     perpsOrderFilled: '订单已全部成交。',
     perpsOrderPartiallyFilled: '订单部分成交，重试前请检查剩余持仓。',
+    perpsProtectionNotConfirmed:
+      '订单已处理，但止盈/止损未全部确认，请检查当前委托，勿重复开仓。',
     perpsOrderResting: '限价单已挂单。',
     perpsOrderUnfilled: '市价单未成交，未自动重试。',
     perpsOrderRejected: '订单被拒绝，请检查当前市场与账户状态。',
@@ -236,6 +241,8 @@ export class NotificationService {
     perpsOrderCanceled: '注文をキャンセルしました。',
     perpsOrderFilled: '注文は全て約定しました。',
     perpsOrderPartiallyFilled: '注文は一部約定しました。再試行前に残りのポジションを確認してください。',
+    perpsProtectionNotConfirmed:
+      '注文は処理されましたが、利確・損切りは未確認です。重複注文せず、未約定注文を確認してください。',
     perpsOrderResting: '指値注文を発注しました。',
     perpsOrderUnfilled: '成行注文は約定しませんでした。自動再試行は行っていません。',
     perpsOrderRejected: '注文が拒否されました。現在の市場と口座の状態を確認してください。',
@@ -303,6 +310,8 @@ export class NotificationService {
     perpsOrderCanceled: '주문을 취소했습니다.',
     perpsOrderFilled: '주문이 전부 체결되었습니다.',
     perpsOrderPartiallyFilled: '주문이 일부 체결되었습니다. 다시 시도하기 전에 남은 포지션을 확인하세요.',
+    perpsProtectionNotConfirmed:
+      '주문이 처리되었지만 익절/손절은 모두 확인되지 않았습니다. 중복 주문 전에 미체결 주문을 확인하세요.',
     perpsOrderResting: '지정가 주문이 등록되었습니다.',
     perpsOrderUnfilled: '시장가 주문이 체결되지 않았습니다. 자동 재시도하지 않았습니다.',
     perpsOrderRejected: '주문이 거부되었습니다. 현재 시장 및 계정 상태를 확인하세요.',

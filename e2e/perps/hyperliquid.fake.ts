@@ -1,6 +1,8 @@
 import { encode } from '@msgpack/msgpack';
 import { concat, keccak256, verifyTypedData, ZeroAddress } from 'ethers';
 import { Page, Route } from '@playwright/test';
+import BigNumber from 'bignumber.js';
+import { FakeFunding } from './funding.fake';
 import { installSocket, pushFrame } from './socket';
 
 type Payload = Record<string, any>;
@@ -16,14 +18,33 @@ export class FakeHyperliquid {
   readonly infoRequests: Payload[] = [];
   readonly writes: Payload[] = [];
   readonly unexpected: string[] = [];
+  readonly funding: FakeFunding;
   lostResponse = false;
-  private filled = false;
+  withdrawLostResponse = false;
+  protectionRejected = false;
+  partialFillSize: string | null = null;
+  rejectLeverage = false;
+  capacityAfterLeverage: string | null = null;
+  accountValue = '1000';
+  accountMode = 'default';
+  spotTotal = '300';
+  spotHold = '50';
+  positionSize = '0';
   private leverage = { type: 'cross', value: 2 };
+  private capacity = '20';
 
-  constructor(private page: Page, readonly user: string) {}
+  constructor(private page: Page, readonly user: string) {
+    this.funding = new FakeFunding(user);
+  }
 
   get orders() { return this.writes.filter((request) => request.action.type === 'order'); }
   get statusQueries() { return this.infoRequests.filter((request) => request.type === 'orderStatus'); }
+  get withdrawals() { return this.writes.filter((request) => request.action.type === 'sendToEvmWithData'); }
+
+  seedPosition(size: string) {
+    this.positionSize = size;
+    this.leverage = { type: 'isolated', value: 2 };
+  }
 
   async install() {
     await installSocket(this.page);
@@ -38,22 +59,25 @@ export class FakeHyperliquid {
   }
 
   private account(dex = '') {
-    const positioned = !dex && this.filled;
+    const positioned = !dex && !new BigNumber(this.positionSize).isZero();
+    const notional = new BigNumber(this.positionSize).abs().times(100);
+    const margin = positioned ? notional.div(this.leverage.value).toFixed() : '0';
+    const free = new BigNumber(this.accountValue).minus(margin).toFixed();
     const summary = {
-      accountValue: dex ? '0' : '1000', totalRawUsd: dex ? '0' : '1000',
-      totalNtlPos: positioned ? '100' : '0', totalMarginUsed: positioned ? '50' : '0',
+      accountValue: dex ? '0' : this.accountValue, totalRawUsd: dex ? '0' : this.accountValue,
+      totalNtlPos: positioned ? notional.toFixed() : '0', totalMarginUsed: margin,
     };
     return {
       marginSummary: summary,
       crossMarginSummary: positioned && this.leverage.type === 'isolated'
-        ? { accountValue: '950', totalRawUsd: '950', totalNtlPos: '0', totalMarginUsed: '0' }
+        ? { accountValue: free, totalRawUsd: free, totalNtlPos: '0', totalMarginUsed: '0' }
         : summary,
       crossMaintenanceMarginUsed: positioned && this.leverage.type === 'cross' ? '2' : '0',
-      withdrawable: dex ? '0' : positioned ? '950' : '1000', time: Date.now(),
+      withdrawable: dex || this.accountMode === 'unifiedAccount' ? '0' : free, time: Date.now(),
       assetPositions: positioned ? [{ type: 'oneWay', position: {
-        coin: 'ETH', szi: '1', entryPx: '100', positionValue: '100',
+        coin: 'ETH', szi: this.positionSize, entryPx: '100', positionValue: notional.toFixed(),
         unrealizedPnl: '0', returnOnEquity: '0', liquidationPx: null,
-        leverage: { ...this.leverage, rawUsd: '50' }, marginUsed: '50',
+        leverage: { ...this.leverage, rawUsd: margin }, marginUsed: margin,
         cumFunding: { allTime: '0', sinceOpen: '0', sinceChange: '0' },
       } }] : [],
     };
@@ -70,12 +94,10 @@ export class FakeHyperliquid {
         marginTables: [[1, { marginTiers: [{ lowerBound: '0', maxLeverage: 25 }] }]], collateralToken: 0,
       }, body.dex ? [] : [assetCtx()]];
       case 'clearinghouseState': return this.account(body.dex);
-      case 'spotClearinghouseState': return { balances: [] };
-      case 'userAbstraction': return 'default';
-      case 'activeAssetData': return {
-        user: this.user, coin: 'ETH', leverage: this.leverage,
-        maxTradeSzs: ['20', '20'], availableToTrade: ['1000', '1000'], markPx: '100',
-      };
+      case 'spotClearinghouseState': return { balances: this.accountMode === 'unifiedAccount'
+        ? [{ coin: 'USDC', token: 0, total: this.spotTotal, hold: this.spotHold, entryNtl: '0' }] : [] };
+      case 'userAbstraction': return this.accountMode;
+      case 'activeAssetData': return this.activeAssetData();
       case 'userFees': return { userCrossRate: '0.00045', userAddRate: '0.00015', activeReferralDiscount: '0' };
       case 'candleSnapshot': {
         const req = body.req;
@@ -95,30 +117,67 @@ export class FakeHyperliquid {
     }
   }
 
+  private activeAssetData() {
+    return {
+      user: this.user, coin: 'ETH', leverage: this.leverage,
+      maxTradeSzs: [this.capacity, this.capacity], availableToTrade: ['1000', '1000'], markPx: '100',
+    };
+  }
+
   private async serve(route: Route) {
     const request = route.request();
     const url = new URL(request.url());
     if (url.origin === 'http://127.0.0.1:4300') { await route.continue(); return; }
     try {
+      if (await this.funding.serve(route)) { return; }
       if (url.origin === api && ['/info', '/exchange'].includes(url.pathname)) {
         if (request.method() === 'OPTIONS') { await route.fulfill({ status: 204, headers: cors }); return; }
         const body = request.postDataJSON();
         if (url.pathname === '/info') { await route.fulfill({ json: this.answer(body), headers: cors }); return; }
         this.writes.push(body);
-        if (recoverSigner(body).toLowerCase() !== this.user) { throw new Error('Invalid test-wallet signature'); }
+        const signer = body.action.type === 'sendToEvmWithData' ? recoverWithdrawalSigner(body) : recoverSigner(body);
+        if (signer.toLowerCase() !== this.user) { throw new Error('Invalid test-wallet signature'); }
+        if (body.action.type === 'sendToEvmWithData') {
+          if (this.withdrawLostResponse) { await route.abort('connectionreset'); return; }
+          if (body.action.sourceDex === 'spot') {
+            this.spotTotal = new BigNumber(this.spotTotal).minus(body.action.amount).toFixed();
+          } else {
+            this.accountValue = new BigNumber(this.accountValue).minus(body.action.amount).toFixed();
+          }
+          await route.fulfill({ headers: cors, json: { status: 'ok', response: { type: 'default' } } });
+          return;
+        }
         if (body.action.type === 'updateLeverage') {
+          if (this.rejectLeverage) {
+            await route.fulfill({ headers: cors, json: { status: 'err', response: 'Insufficient margin to set leverage' } });
+            return;
+          }
           this.leverage = {
             type: body.action.isCross ? 'cross' : 'isolated',
             value: body.action.leverage,
           };
+          if (this.capacityAfterLeverage !== null) { this.capacity = this.capacityAfterLeverage; }
           await route.fulfill({ headers: cors, json: { status: 'ok', response: { type: 'default' } } });
+          await pushFrame(this.page, { channel: 'activeAssetData', data: this.activeAssetData() });
           return;
         }
         if (body.action.type === 'order') {
           if (this.lostResponse) { await route.abort('connectionreset'); return; }
-          this.filled = true;
+          const parent = body.action.orders[0];
+          const fillSize = this.partialFillSize ?? parent.s;
+          const before = new BigNumber(this.positionSize);
+          const change = new BigNumber(fillSize).times(parent.b ? 1 : -1);
+          if (parent.r && (before.isZero() || before.times(change).isPositive() || change.abs().gt(before.abs()))) {
+            throw new Error('Invalid reduce-only close');
+          }
+          this.positionSize = before.plus(change).toFixed();
+          const statuses = [
+            { filled: { totalSz: fillSize, avgPx: '100', oid: 10001 } },
+            ...body.action.orders.slice(1).map(() => this.protectionRejected
+              ? { error: 'Trigger order rejected' } : 'waitingForTrigger'),
+          ];
           await route.fulfill({ headers: cors, json: { status: 'ok', response: { type: 'order', data: {
-            statuses: [{ filled: { totalSz: '1', avgPx: '100', oid: 10001 } }],
+            statuses,
           } } } });
           await pushFrame(this.page, { channel: 'clearinghouseState', data: { user: this.user, dex: '', clearinghouseState: this.account() } });
           return;
@@ -157,6 +216,21 @@ export class FakeHyperliquid {
       await route.abort('blockedbyclient');
     }
   }
+}
+
+/** User-signed withdrawals use a different EIP-712 domain from exchange orders. */
+export function recoverWithdrawalSigner(request: Payload): string {
+  return verifyTypedData(
+    { name: 'HyperliquidSignTransaction', version: '1', chainId: 421614, verifyingContract: ZeroAddress },
+    { 'HyperliquidTransaction:SendToEvmWithData': [
+      { name: 'hyperliquidChain', type: 'string' }, { name: 'token', type: 'string' },
+      { name: 'amount', type: 'string' }, { name: 'sourceDex', type: 'string' },
+      { name: 'destinationRecipient', type: 'string' }, { name: 'addressEncoding', type: 'string' },
+      { name: 'destinationChainId', type: 'uint32' }, { name: 'gasLimit', type: 'uint64' },
+      { name: 'data', type: 'bytes' }, { name: 'nonce', type: 'uint64' },
+    ] },
+    request.action, request.signature,
+  );
 }
 
 /** Recover from the wire payload, without importing the app's signing function. */

@@ -16,11 +16,13 @@ Playwright 自动启动并关闭 `127.0.0.1:4300` 上的 Angular 开发服务器
 专用 Angular `e2e` 配置使用 `environment.e2e.ts`，固定 Perps 测试网，不改开发配置。
 浏览器使用全新 context，测试通过实际 UI 导入随机无资金钱包、锁定、解锁，再操作 Perps。
 
-当前三条用例：
+当前 17 条用例：
 
-1. NeoX 钱包进入 Perps → ETH 详情，验证账户金额与 WebSocket 行情更新。
-2. 默认逐仓模式市价做多，验证杠杆写入、IOC 价格/数量/方向、cloid、nonce、真实签名地址，以及成交后的仓位和可用保证金。
-3. 快速点击两次提交并丢弃订单响应，验证未知状态、禁止再次下单；自动查询和手动重查始终使用原 cloid，只有一笔订单请求。
+| 测试文件 | 数量 | 场景 |
+| --- | --- | --- |
+| `perps.spec.ts` | 3 | 市场与行情更新、IOC 开仓及签名、订单响应丢失后禁止重复提交并查询原 cloid |
+| `funding.spec.ts` | 7 | 入金精度/下限/余额/MAX、取消确认后重新准备并广播、gas 不足、源链回滚；提现费上涨后重新确认、统一账户现货可用余额、MAX 余额下降、提现响应丢失 |
+| `complex-orders.spec.ts` | 7 | 多空 TP/SL 的方向校验与父子单、父单成交但保护单拒绝、部分成交、部分后全部平仓、模式同步后容量归零、杠杆写入拒绝 |
 
 HTTP 在网络边界模拟。WebSocket 使用 `addInitScript` 安装协议替身，捕获创建 socket 的
 Angular zone，测试推送帧时回到该 zone，保证实际页面刷新。这与参考实现的方法一致，
@@ -29,9 +31,17 @@ Angular zone，测试推送帧时回到该 zone，保证实际页面刷新。这
 模拟服务会在 `updateLeverage` 成功后更新保证金模式和杠杆，并在后续查询中返回新状态，
 以覆盖应用提交订单前的容量复核。
 
+资金通道的 `funding.fake.ts` 模拟 Arbitrum Sepolia RPC、HyperEVM Testnet RPC 和 Circle
+报价。USDC EIP-712 授权、EVM 原始交易、Hyperliquid 提现动作都由应用真实签署；测试独立
+恢复签名并解码目标合约、链 ID、金额、CCTP domain、转发器、hook data 和费用上限。
+入金的开户费只计入到账估算，不进入 CCTP `maxFee`。源链回执成功仅刷新源链余额，
+不会在模拟中自动增加 HyperCore 余额。
+
 ```sh
 npm run e2e:headed
 npm run e2e -- --grep 'lost response'
+npm run e2e -- funding.spec.ts
+npm run e2e -- complex-orders.spec.ts
 npm run e2e:report
 ```
 
@@ -40,5 +50,8 @@ npm run e2e:report
 的无资金密钥。测试不自动重试、不依赖真实交易所或链 RPC、不使用固定 sleep。
 
 范围：与参考实现一样，这一版运行于网页环境，覆盖 `ChromeService` 的本地存储分支。
-它不覆盖扩展后台通信、真实交易所验签或真实成交，也尚未覆盖 HIP-3、统一账户和出入金。
-这些属于后续独立测试层。现有 `npm run lint`、`npm run test:ci` 仍应照常执行。
+它不覆盖扩展后台通信、真实交易所验签/成交、真实跨链到账、HIP-3 或组合保证金风险模型。
+统一账户提现只验证当前实现的现货 `total - hold` 上限与 `sourceDex: 'spot'`，不代表所有
+持仓/借贷情况下的真实可提额度。当前界面没有限价单控件，因此不通过调用内部方法伪造
+限价 E2E。提现响应丢失用例验证提示与不自动重发；当前页面并不永久禁止用户再次提现。
+现有 `npm run lint`、`npm run test:ci` 仍应照常执行。
