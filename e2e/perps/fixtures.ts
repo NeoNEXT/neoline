@@ -33,6 +33,7 @@ export const test = base.extend<{ wallet: ReturnType<typeof createWallet>; hl: F
           finalVenueState: { positionSize: hl.positionSize, leverage: hl.leverage },
           info: hl.infoRequests, writes: hl.writes.map((item) => item.action),
           fundingRpc: hl.funding.rpcRequests, depositBroadcasts: hl.funding.broadcasts,
+          fundingProtocol: hl.funding.events,
           feeRequests: hl.funding.feeRequests,
           unexpected: hl.unexpected, unexpectedSockets, errors,
         }, null, 2),

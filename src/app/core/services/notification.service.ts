@@ -50,6 +50,7 @@ interface NotificationContent {
   perpsMarketChangedReviewAgain: string;
   perpsPositionChangedReviewAgain: string;
   perpsDepositSubmitted: string;
+  perpsDepositStatusUnknown: string;
   perpsDepositStillPending: string;
   perpsDepositReverted: string;
   perpsWithdrawSubmitted: string;
@@ -122,6 +123,8 @@ export class NotificationService {
     perpsPositionChangedReviewAgain:
       'Your position changed before signing. No order was sent. Please place the order again.',
     perpsDepositSubmitted: 'Deposit initiated. Waiting for USDC to arrive in your Hyperliquid account.',
+    perpsDepositStatusUnknown:
+      'The deposit broadcast result is unknown. Checking the original transaction. Check your balance and transaction history before depositing again.',
     perpsDepositStillPending:
       'Deposit is on chain but not confirmed yet. It may still land — check the transaction before sending another.',
     perpsDepositReverted:
@@ -187,6 +190,8 @@ export class NotificationService {
       '签名前行情或订单信息已变化，订单未发出，请重新下单。',
     perpsPositionChangedReviewAgain: '签名前仓位已发生变化，订单未发出，请重新下单。',
     perpsDepositSubmitted: '存入已发起，等待 USDC 到达 Hyperliquid 账户。',
+    perpsDepositStatusUnknown:
+      '存入广播结果未知，正在查询原交易。请先核对余额与交易记录，再决定是否重新存入。',
     perpsDepositStillPending:
       '存入已上链但尚未确认，仍可能成功。再次发送前请先查询该笔交易。',
     perpsDepositReverted:
@@ -254,6 +259,8 @@ export class NotificationService {
     perpsPositionChangedReviewAgain:
       '署名前にポジションが変化しました。注文は送信されていません。再度注文してください。',
     perpsDepositSubmitted: '入金を開始しました。Hyperliquid アカウントへの USDC の反映をお待ちください。',
+    perpsDepositStatusUnknown:
+      '入金の送信結果は不明です。元のトランザクションを確認しています。再度入金する前に、残高と取引履歴を確認してください。',
     perpsDepositStillPending:
       '入金はチェーンに送信済みですが未確認です。成立する可能性があるため、再送前に取引を確認してください。',
     perpsDepositReverted:
@@ -324,6 +331,8 @@ export class NotificationService {
     perpsPositionChangedReviewAgain:
       '서명 전에 포지션이 변경되었습니다. 주문은 전송되지 않았습니다. 다시 주문해 주세요.',
     perpsDepositSubmitted: '입금을 시작했습니다. USDC가 Hyperliquid 계정에 도착할 때까지 기다려 주세요.',
+    perpsDepositStatusUnknown:
+      '입금 전송 결과를 알 수 없습니다. 원래 트랜잭션을 확인 중입니다. 다시 입금하기 전에 잔액과 거래 내역을 확인하세요.',
     perpsDepositStillPending:
       '입금이 체인에 전송되었으나 아직 확인되지 않았습니다. 성사될 수 있으니 재전송 전에 거래를 확인하세요.',
     perpsDepositReverted:

@@ -5,6 +5,7 @@ import { of, throwError, TimeoutError } from 'rxjs';
 import { PerpsFeeQuoteService } from './perps-fee-quote.service';
 import { PerpsRpcService } from './perps-rpc';
 import { environment } from '@/environments/environment';
+import { PERPS_HYPEREVM_CONFIG } from '@popup/_lib/perps';
 
 const FAST = 1000;
 /** 报价按收款方而定：账户是否已存在会改变收费金额。 */
@@ -67,6 +68,17 @@ describe('PerpsFeeQuoteService deposit quotes', () => {
     expect(url).toContain('/3/19');
     expect(url).toContain('forward=true');
     expect(url).toContain('hyperCoreDeposit=true');
+  });
+
+  it('F1 uses the mainnet Circle route and HyperEVM RPC from the build network', async () => {
+    environment.perpsNetwork = 'mainnet';
+    service = new PerpsFeeQuoteService(http, rpc);
+    http.get.and.returnValue(of(feeResponse()) as any);
+    await service.depositQuote('10', RECIPIENT);
+    expect(http.get).toHaveBeenCalledOnceWith(
+      'https://iris-api.circle.com/v2/burn/USDC/fees/3/19?forward=true&hyperCoreDeposit=true'
+    );
+    expect(rpc.withEndpoint.calls.mostRecent().args[0]).toBe(PERPS_HYPEREVM_CONFIG.mainnet);
   });
 
   it('quotes the flat forwarding fee in USDC', async () => {

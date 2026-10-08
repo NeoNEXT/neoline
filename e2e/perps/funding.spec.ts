@@ -1,28 +1,14 @@
-import { Page } from '@playwright/test';
 import { Transaction, getAddress, keccak256, verifyTypedData, zeroPadValue } from 'ethers';
 import { test, expect } from './fixtures';
 import { enterPerps } from './wallet';
 import { depositAbi, fundingContracts } from './funding.fake';
 import { recoverWithdrawalSigner } from './hyperliquid.fake';
 
-async function openFunding(page: Page, direction: 'Deposit' | 'Withdraw') {
-  await enterPerps(page);
-  await page.locator('.card-actions').getByRole('button', { name: direction, exact: true }).click();
-  await expect(page).toHaveURL(new RegExp(`/popup/perps/funding\\?tab=${direction.toLowerCase()}$`));
-  await expect(page.locator('.balance-tip')).toContainText(direction === 'Deposit' ? '500.12' : '$1,000');
-}
-
-const amount = (page: Page) => page.locator('.amount-input input');
-const submit = (page: Page) => page.locator('.submit-wrap button');
-const sheet = (page: Page) => page.locator('.confirm-sheet');
-const confirm = (page: Page) => sheet(page).getByRole('button', { name: 'Confirm', exact: true });
-async function expectToast(page: Page, message: string) {
-  await expect(page.locator('simple-snack-bar').filter({ hasText: message })).toBeVisible();
-}
+import { openFunding, amount, submit, sheet, confirm, expectToast } from './funding.ui';
 
 test('deposit validates amount, cancels safely, then signs and confirms one CCTP transaction', async ({ page, wallet, hl }) => {
   hl.funding.accountExists = false;
-  await openFunding(page, 'Deposit');
+  await openFunding(page, 'Deposit', '500.12');
   await amount(page).fill('4.999999');
   await expect(submit(page)).toBeDisabled();
   await expect(page.locator('.error-tip')).toContainText('minimum of 5');
@@ -93,7 +79,7 @@ test('deposit validates amount, cancels safely, then signs and confirms one CCTP
 
 test('deposit refuses confirmation when Arbitrum ETH cannot cover gas', async ({ page, hl }) => {
   hl.funding.nativeBalance = 0n;
-  await openFunding(page, 'Deposit');
+  await openFunding(page, 'Deposit', '500.12');
   await amount(page).fill('10');
   await submit(page).click();
   await expect(page.locator('.error-tip')).toContainText('Not enough ETH on Arbitrum Sepolia');
@@ -104,7 +90,7 @@ test('deposit refuses confirmation when Arbitrum ETH cannot cover gas', async ({
 
 test('reverted deposit reports the source-chain failure without claiming a credit', async ({ page, hl }) => {
   hl.funding.receiptStatus = 0;
-  await openFunding(page, 'Deposit');
+  await openFunding(page, 'Deposit', '500.12');
   await amount(page).fill('10');
   await submit(page).click();
   await expect(confirm(page)).toBeEnabled();
@@ -118,7 +104,7 @@ test('reverted deposit reports the source-chain failure without claiming a credi
 });
 
 test('withdrawal reopens confirmation after a fee increase and signs only after reconfirmation', async ({ page, wallet, hl }) => {
-  await openFunding(page, 'Withdraw');
+  await openFunding(page, 'Withdraw', '$1,000');
   await amount(page).fill('0.3');
   await expect(submit(page)).toBeDisabled();
   await expect(page.locator('.error-tip')).toContainText('minimum of 0.4');
@@ -166,7 +152,7 @@ test('unified withdrawal uses free spot USDC and sends sourceDex spot', async ({
 });
 
 test('MAX withdrawal stops when refreshed balance falls below the confirmed amount', async ({ page, hl }) => {
-  await openFunding(page, 'Withdraw');
+  await openFunding(page, 'Withdraw', '$1,000');
   await page.locator('.preset-row').getByText('Max', { exact: true }).click();
   await expect(amount(page)).toHaveValue('1000');
   await submit(page).click();
@@ -181,7 +167,7 @@ test('MAX withdrawal stops when refreshed balance falls below the confirmed amou
 
 test('lost withdrawal response shows uncertainty and does not resend automatically', async ({ page, hl }) => {
   hl.withdrawLostResponse = true;
-  await openFunding(page, 'Withdraw');
+  await openFunding(page, 'Withdraw', '$1,000');
   await amount(page).fill('10');
   await submit(page).click();
   await expect(confirm(page)).toBeEnabled();

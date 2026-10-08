@@ -44,7 +44,10 @@ export async function installSocket(page: Page) {
       close() {
         if (this.readyState === 3) { return; }
         this.readyState = 3;
-        setTimeout(() => this.onclose?.({ code: 1000 }));
+        setTimeout(() => {
+          const notify = () => this.onclose?.({ code: 1000 });
+          this.zone ? this.zone.run(notify) : notify();
+        });
       }
       deliver(frame: unknown) {
         if (this.readyState !== 1) { return; }

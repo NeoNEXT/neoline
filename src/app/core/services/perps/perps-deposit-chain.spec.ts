@@ -117,6 +117,17 @@ describe('PerpsDepositChainService deposit call', () => {
     expect(Number(burn.minFinalityThreshold)).toBe(1000);
   });
 
+  it('F1 pairs the mainnet source extension with the mainnet HyperEVM forwarder', async () => {
+    const mainnet = PERPS_DEPOSIT_CONFIG.mainnet;
+    await service.depositFeeExact(mainnet, AUTHORIZATION, '0.2');
+    const burn = burnData();
+    expect(sent.to).toBe(mainnet.cctp.extension);
+    expect(burn.mintRecipient).toBe(ethers.zeroPadValue(PERPS_HYPEREVM_CONFIG.mainnet.cctpForwarder, 32));
+    expect(burn.destinationCaller).toBe(burn.mintRecipient);
+    expect(burn.destinationDomain).toBe(19n);
+    expect(rpc.withEndpoint.calls.mostRecent().args[0]).toBe(mainnet);
+  });
+
   it('authorises CCTP for the fee it was given, not for the amount', async () => {
     await service.depositFeeExact(CONFIG, AUTHORIZATION, '0.2');
     const burn = burnData();

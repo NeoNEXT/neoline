@@ -26,29 +26,63 @@ const sourceRpcUrls = [
   'https://arbitrum-sepolia-rpc.publicnode.com/',
 ];
 const feeUrl = 'https://iris-api-sandbox.circle.com/v2/burn/USDC/fees/3/19?forward=true&hyperCoreDeposit=true';
+type FundingEvent = { at: string; endpoint: string; request?: unknown; response?: unknown; clientFailure?: string };
+
+/** Delay a protocol response until the UI has reached the intended lifecycle boundary. */
+export function responseGate() {
+  let arrived!: () => void;
+  let resume!: () => void;
+  let sent!: () => void;
+  const received = new Promise<void>((resolve) => { arrived = resolve; });
+  const pending = new Promise<void>((resolve) => { resume = resolve; });
+  const completed = new Promise<void>((resolve) => { sent = resolve; });
+  return { received, completed, promise: pending, release: resume, sent,
+    wait: async () => { arrived(); await pending; } };
+}
 
 /** Protocol-only RPC fixture. Wallet authorization and raw transaction signing stay real. */
 export class FakeFunding {
   readonly rpcRequests: { url: string; method: string; params: any[] }[] = [];
   readonly broadcasts: string[] = [];
   readonly feeRequests: string[] = [];
+  readonly events: FundingEvent[] = [];
   tokenBalance = parseUnits('500.123456', 6);
   nativeBalance = parseEther('1');
   withdrawFee = '0.2';
   accountExists = true;
-  receiptStatus = 1;
+  receiptStatus: number | null = 1;
+  circleFees: any[] = [{
+    finalityThreshold: 1000, minimumFee: 1.4,
+    forwardFee: { low: 200000, med: 200000, high: 200000 },
+  }];
+  gasEstimate = 100000n;
+  nativeBalanceUnavailable = false;
+  tokenBalanceUnavailable = false;
+  broadcastFailure: 'rotate-known' | 'lost-then-nonce' | 'disconnect' | null = null;
+  private depositQuoteGate?: ReturnType<typeof responseGate>;
+  private withdrawQuoteGate?: { gate: ReturnType<typeof responseGate>; malformed: boolean };
 
   constructor(private user: string) {}
+
+  holdNextDepositQuote() {
+    const gate = responseGate(); this.depositQuoteGate = gate; return gate;
+  }
+
+  holdNextWithdrawQuote(malformed = false) {
+    const gate = responseGate(); this.withdrawQuoteGate = { gate, malformed }; return gate;
+  }
 
   async serve(route: Route): Promise<boolean> {
     const request = route.request();
     const url = request.url();
     if (url === feeUrl && request.method() === 'GET') {
       this.feeRequests.push(url);
-      await route.fulfill({ json: [{
-        finalityThreshold: 1000, minimumFee: 1.4,
-        forwardFee: { low: 200000, med: 200000, high: 200000 },
-      }] });
+      const entries = JSON.parse(JSON.stringify(this.circleFees));
+      this.events.push({ at: new Date().toISOString(), endpoint: url, response: entries });
+      const gate = this.depositQuoteGate; this.depositQuoteGate = undefined;
+      await gate?.wait();
+      await route.fulfill({ json: entries });
+      gate?.sent();
       return true;
     }
     const source = sourceRpcUrls.includes(url);
@@ -59,11 +93,49 @@ export class FakeFunding {
       throw new Error(`Unexpected funding method: ${request.method()}`);
     }
     const body = request.postDataJSON();
+    const items = Array.isArray(body) ? body : [body];
+    const withdrawalQuote = (item: any) => !source && item.method === 'eth_call' &&
+      item.params[0].to.toLowerCase() === fundingContracts.coreWallet.toLowerCase() &&
+      item.params[0].data.startsWith(coreAbi.getFunction('calculateCrossChainWithdrawalFee')!.selector);
+    const held = items.some(withdrawalQuote) ? this.withdrawQuoteGate : undefined;
+    if (held) { this.withdrawQuoteGate = undefined; }
     const respond = (item: any) => {
       this.rpcRequests.push({ url, method: item.method, params: item.params });
+      const balanceCall = source && item.method === 'eth_call' &&
+        item.params[0].to.toLowerCase() === fundingContracts.usdc.toLowerCase() &&
+        item.params[0].data.startsWith(tokenAbi.getFunction('balanceOf')!.selector);
+      if ((source && item.method === 'eth_getBalance' && this.nativeBalanceUnavailable) ||
+          (balanceCall && this.tokenBalanceUnavailable)) {
+        return { jsonrpc: '2.0', id: item.id, error: { code: -32000, message: 'Balance read unavailable' } };
+      }
+      if (held?.malformed && withdrawalQuote(item)) { return { jsonrpc: '2.0', id: item.id, result: '0x' }; }
       return { jsonrpc: '2.0', id: item.id, result: this.rpc(source, item.method, item.params) };
     };
-    await route.fulfill({ json: Array.isArray(body) ? body.map(respond) : respond(body) });
+    // Capture the old response before waiting: changing global fee state must not rewrite it.
+    const responses = items.map(respond);
+    const event: FundingEvent = {
+      at: new Date().toISOString(), endpoint: url, request: body,
+    };
+    this.events.push(event);
+    await held?.gate.wait();
+    const broadcast = items.findIndex((item: any) => item.method === 'eth_sendRawTransaction');
+    if (broadcast >= 0 && this.broadcastFailure) {
+      if (this.broadcastFailure === 'disconnect') {
+        event.clientFailure = 'connectionreset'; await route.abort('connectionreset'); return true;
+      }
+      const lost = this.broadcastFailure === 'rotate-known'
+        ? url === sourceRpcUrls[0] : this.broadcasts.length === 1;
+      // A gateway may answer other batch items while returning no broadcast result.
+      // Keep this distinct from a dropped HTTP batch, which also loses eth_blockNumber.
+      responses[broadcast] = {
+        jsonrpc: '2.0', id: items[broadcast].id,
+        error: { code: -32000, message: lost ? 'network error: broadcast response lost'
+          : this.broadcastFailure === 'rotate-known' ? 'already known' : 'nonce too low' },
+      };
+    }
+    event.response = Array.isArray(body) ? responses : responses[0];
+    await route.fulfill({ json: Array.isArray(body) ? responses : responses[0] });
+    held?.gate.sent();
     return true;
   }
 
@@ -105,7 +177,7 @@ export class FakeFunding {
       case 'eth_estimateGas':
         if (params[0].to.toLowerCase() !== fundingContracts.extension.toLowerCase() ||
             !depositAbi.parseTransaction(params[0])) { throw new Error('Wrong deposit gas estimate'); }
-        return toQuantity(100000);
+        return toQuantity(this.gasEstimate);
       case 'eth_gasPrice':
       case 'eth_maxPriorityFeePerGas': return toQuantity(1_000_000_000);
       case 'eth_getTransactionCount': return '0x0';
@@ -133,6 +205,7 @@ export class FakeFunding {
       case 'eth_getTransactionReceipt': {
         const raw = this.broadcasts.find((item) => keccak256(item) === params[0]);
         if (!raw) { throw new Error('Receipt requested for an unknown deposit'); }
+        if (this.receiptStatus === null) { return null; }
         return {
           transactionHash: params[0], transactionIndex: '0x0', blockHash, blockNumber: '0x64',
           from: this.user, to: fundingContracts.extension, contractAddress: null,

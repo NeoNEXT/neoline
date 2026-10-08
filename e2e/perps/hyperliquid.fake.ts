@@ -40,14 +40,18 @@ export class FakeHyperliquid {
   protectionWaitingForFill = false;
   lostResponse = false;
   withdrawLostResponse = false;
+  withdrawFailures: Array<'nonce' | 'balance' | '503' | 'malformed'> = [];
+  withdrawResponseGate: Promise<void> = Promise.resolve();
   protectionRejected = false;
   partialFillSize: string | null = null;
   rejectLeverage = false;
   capacityAfterLeverage: string | null = null;
   accountValue = '1000';
   accountMode = 'default';
+  accountReadFailureStatus: number | null = null;
   spotTotal = '300';
   spotHold = '50';
+  spotBalances: Payload[] | null = null;
   positionSize = '0';
   leverage = { type: 'cross', value: 2 };
 
@@ -122,8 +126,9 @@ export class FakeHyperliquid {
         marginTables: [[1, { marginTiers: [{ lowerBound: '0', maxLeverage: 25 }] }]], collateralToken: 0,
       }, (body.dex || '') !== this.dex ? [] : [this.context()]];
       case 'clearinghouseState': return this.account(body.dex);
-      case 'spotClearinghouseState': return { balances: this.accountMode === 'unifiedAccount'
-        ? [{ coin: 'USDC', token: 0, total: this.spotTotal, hold: this.spotHold, entryNtl: '0' }] : [] };
+      case 'spotClearinghouseState': return { balances: this.spotBalances ??
+        (['unifiedAccount', 'portfolioMargin'].includes(this.accountMode)
+          ? [{ coin: 'USDC', token: 0, total: this.spotTotal, hold: this.spotHold, entryNtl: '0' }] : []) };
       case 'userAbstraction': return this.accountMode;
       case 'activeAssetData': return this.activeAssetData();
       case 'userFees': return this.fees;
@@ -170,6 +175,13 @@ export class FakeHyperliquid {
         if (request.method() === 'OPTIONS') { await route.fulfill({ status: 204, headers: cors }); return; }
         const body = request.postDataJSON();
         if (url.pathname === '/info') {
+          if (body.type === 'clearinghouseState' && this.accountReadFailureStatus !== null) {
+            this.infoRequests.push(body);
+            const response = { error: 'Account read unavailable' };
+            this.events.push({ at: new Date().toISOString(), endpoint: 'info', request: body, response,
+              clientFailure: String(this.accountReadFailureStatus) });
+            await route.fulfill({ status: this.accountReadFailureStatus, headers: cors, json: response }); return;
+          }
           if (body.type === 'activeAssetData' && this.writes.some((item) => item.action.type === 'updateLeverage')) {
             await this.capacityAfterLeverageGate;
           }
@@ -183,13 +195,28 @@ export class FakeHyperliquid {
         const signer = body.action.type === 'sendToEvmWithData' ? recoverWithdrawalSigner(body) : recoverSigner(body);
         if (signer.toLowerCase() !== this.user) { throw new Error('Invalid test-wallet signature'); }
         if (body.action.type === 'sendToEvmWithData') {
+          const failure = this.withdrawFailures.shift();
+          if (failure === 'nonce' || failure === 'balance') {
+            event.response = { status: 'err', response: failure === 'nonce' ? 'Invalid nonce' : 'Insufficient balance' };
+            await route.fulfill({ headers: cors, json: event.response }); return;
+          }
           if (this.withdrawLostResponse) { event.clientFailure = 'disconnect'; await route.abort('connectionreset'); return; }
           if (body.action.sourceDex === 'spot') {
             this.spotTotal = new BigNumber(this.spotTotal).minus(body.action.amount).toFixed();
+            const usdc = this.spotBalances?.find((balance) => balance.coin === 'USDC');
+            if (usdc) { usdc.total = new BigNumber(usdc.total).minus(body.action.amount).toFixed(); }
           } else {
             this.accountValue = new BigNumber(this.accountValue).minus(body.action.amount).toFixed();
           }
           event.response = { status: 'ok', response: { type: 'default' } };
+          await this.withdrawResponseGate;
+          // These failures occur after the simulated venue has debited the account.
+          if (failure === '503') {
+            event.clientFailure = '503'; await route.fulfill({ status: 503, headers: cors, body: 'Unavailable' }); return;
+          }
+          if (failure === 'malformed') {
+            event.clientFailure = 'malformed'; await route.fulfill({ headers: cors, body: '{"status":' }); return;
+          }
           await route.fulfill({ headers: cors, json: event.response });
           return;
         }
