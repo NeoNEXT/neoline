@@ -275,11 +275,11 @@ npm run test:ci -- \
   --include='src/app/core/services/perps/perps-data-channel.service.spec.ts'
 ```
 
-本次结果：Node `16.20.1`、npm `8.19.4`、ChromeHeadless `154`；lint 通过，定向测试 **134 项通过**。首次测试因沙箱禁止监听 Karma `9876` 端口未启动，允许本地监听后同一命令通过。未执行全量测试、生产构建或真实资金交易。
+本次结果：Node `16.20.1`、npm `8.19.4`、ChromeHeadless `154`；lint 通过，定向测试 **136 项通过**。未执行全量测试、生产构建或真实资金交易。新增的浏览器验收及 A1–A11 覆盖边界见[首页验收映射][tab-e2e]；本地替身测试不能代替下面的真实网络步骤。
 
-下单/资金联动可继续参考 [订单生命周期测试][lifecycle-test]、[订单编排测试][composition-test]、[交易提交测试][trade-test]、[写服务测试][exchange-test]、[资金页测试][funding-test]；这些文件不在本次 134 项执行范围内。
+下单/资金联动可继续参考 [订单生命周期测试][lifecycle-test]、[订单编排测试][composition-test]、[交易提交测试][trade-test]、[写服务测试][exchange-test]、[资金页测试][funding-test]；这些文件不在本次 136 项执行范围内。
 
-### 7.3 可复现验收步骤（本次未执行）
+### 7.3 可复现验收步骤（真实网络验收未执行）
 
 通用准备：记录代码版本、构建的 `perpsNetwork`、钱包类型、测试地址和账户模式；打开开发者工具保留 Network 请求及 WS Messages。故障场景使用本地接口替身或已有测试 fake 注入；涉及下单/出入金时使用有测试资金的测试账户。
 
@@ -348,6 +348,7 @@ npm run test:ci -- \
 [protocol-fees]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees
 
 [feature-map]: ../perps-feature-map.zh-CN.md#shared-contracts
+[tab-e2e]: ../../../../../e2e/perps/tab-acceptance.md
 [protocol-spot]: https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/info-endpoint/spot
 [protocol-portfolio]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/portfolio-margin
 [protocol-liquidations]: https://hyperliquid.gitbook.io/hyperliquid-docs/trading/liquidations

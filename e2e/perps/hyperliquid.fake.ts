@@ -27,6 +27,8 @@ export class FakeHyperliquid {
   mark = '100';
   szDecimals = 4;
   marketMetadata: Payload = {};
+  marketSnapshots: Record<string, { universe: Payload[]; ctxs: Payload[] }> | null = null;
+  marketSnapshotFailureDex: string | null = null;
   fees = { userCrossRate: '0.00045', userAddRate: '0.00015', activeReferralDiscount: '0' };
   availableToTrade = ['1000', '1000'];
   maxTradeSzs = ['20', '20'];
@@ -49,9 +51,14 @@ export class FakeHyperliquid {
   accountValue = '1000';
   accountMode = 'default';
   accountReadFailureStatus: number | null = null;
+  accountReadFailureDex: string | null = null;
   spotTotal = '300';
   spotHold = '50';
   spotBalances: Payload[] | null = null;
+  historyFills: Payload[] = [];
+  historicalOrders: Payload[] = [];
+  fundingHistory: Payload[] = [];
+  ledgerHistory: Payload[] = [];
   positionSize = '0';
   leverage = { type: 'cross', value: 2 };
 
@@ -119,12 +126,22 @@ export class FakeHyperliquid {
     if (body.dex && body.dex !== 'xyz') { throw new Error(`Unexpected DEX: ${body.dex}`); }
     switch (body.type) {
       case 'perpDexs': return [null, { name: 'xyz', fullName: 'XYZ' }];
-      case 'metaAndAssetCtxs': return [{
-        universe: (body.dex || '') !== this.dex ? [] : [{
-          name: this.coin, szDecimals: this.szDecimals, maxLeverage: 25, marginTableId: 1, ...this.marketMetadata,
-        }],
-        marginTables: [[1, { marginTiers: [{ lowerBound: '0', maxLeverage: 25 }] }]], collateralToken: 0,
-      }, (body.dex || '') !== this.dex ? [] : [this.context()]];
+      case 'metaAndAssetCtxs': {
+        const snapshot = this.marketSnapshots?.[body.dex || ''];
+        if (snapshot) {
+          return [{
+            universe: snapshot.universe,
+            marginTables: [[1, { marginTiers: [{ lowerBound: '0', maxLeverage: 25 }] }]],
+            collateralToken: 0,
+          }, snapshot.ctxs];
+        }
+        return [{
+          universe: (body.dex || '') !== this.dex ? [] : [{
+            name: this.coin, szDecimals: this.szDecimals, maxLeverage: 25, marginTableId: 1, ...this.marketMetadata,
+          }],
+          marginTables: [[1, { marginTiers: [{ lowerBound: '0', maxLeverage: 25 }] }]], collateralToken: 0,
+        }, (body.dex || '') !== this.dex ? [] : [this.context()]];
+      }
       case 'clearinghouseState': return this.account(body.dex);
       case 'spotClearinghouseState': return { balances: this.spotBalances ??
         (['unifiedAccount', 'portfolioMargin'].includes(this.accountMode)
@@ -134,17 +151,32 @@ export class FakeHyperliquid {
       case 'userFees': return this.fees;
       case 'candleSnapshot': {
         const req = body.req;
-        if (req.coin !== this.coin || req.interval !== '15m') { throw new Error('Unexpected candle series'); }
-        const duration = 15 * 60_000;
+        const requestedCoin = req.coin;
+        const intervalMs: Record<string, number> = {
+          '1m': 60_000, '5m': 5 * 60_000, '15m': 15 * 60_000, '1h': 60 * 60_000,
+          '12h': 12 * 60 * 60_000, '1d': 24 * 60 * 60_000, '1w': 7 * 24 * 60 * 60_000,
+          '1M': 30 * 24 * 60 * 60_000,
+        };
+        const duration = intervalMs[req.interval];
+        const configuredMarket = Object.entries(this.marketSnapshots || {}).some(([dex, snapshot]) =>
+          snapshot.universe.some((asset) => `${dex ? `${dex}:` : ''}${asset.name}` === requestedCoin)
+        );
+        if ((requestedCoin !== this.coin && !configuredMarket) || !duration) {
+          throw new Error('Unexpected candle series');
+        }
         const end = Math.floor(req.endTime / duration) * duration;
         const count = Math.min(100, Math.max(0, Math.floor((end - req.startTime) / duration)));
         return Array.from({ length: count }, (_, index) => {
           const t = end - (count - 1 - index) * duration;
-          return { t, T: t + duration - 1, s: this.coin, i: '15m', o: this.price, h: this.price, l: this.price, c: this.price, v: '10', n: 5 };
+          return { t, T: t + duration - 1, s: requestedCoin, i: req.interval, o: this.price, h: this.price, l: this.price, c: this.price, v: '10', n: 5 };
         });
       }
       case 'frontendOpenOrders':
-      case 'userFills': return [];
+        return [];
+      case 'userFills': return this.historyFills;
+      case 'historicalOrders': return this.historicalOrders;
+      case 'userFunding': return this.fundingHistory;
+      case 'userNonFundingLedgerUpdates': return this.ledgerHistory;
       case 'orderStatus': {
         const parent = this.orders.find((item) => item.action.orders[0].c === body.oid)?.action.orders[0];
         return this.statusQueries.length >= this.orderFoundAfterQueries && parent ? { status: 'order', order: {
@@ -175,7 +207,15 @@ export class FakeHyperliquid {
         if (request.method() === 'OPTIONS') { await route.fulfill({ status: 204, headers: cors }); return; }
         const body = request.postDataJSON();
         if (url.pathname === '/info') {
-          if (body.type === 'clearinghouseState' && this.accountReadFailureStatus !== null) {
+          if (body.type === 'metaAndAssetCtxs' && body.dex === this.marketSnapshotFailureDex) {
+            this.infoRequests.push(body);
+            const response = { error: 'Market snapshot unavailable' };
+            this.events.push({ at: new Date().toISOString(), endpoint: 'info', request: body, response,
+              clientFailure: '503' });
+            await route.fulfill({ status: 503, headers: cors, json: response }); return;
+          }
+          if (body.type === 'clearinghouseState' && this.accountReadFailureStatus !== null &&
+              (this.accountReadFailureDex === null || body.dex === this.accountReadFailureDex)) {
             this.infoRequests.push(body);
             const response = { error: 'Account read unavailable' };
             this.events.push({ at: new Date().toISOString(), endpoint: 'info', request: body, response,

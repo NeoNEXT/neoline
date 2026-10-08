@@ -298,9 +298,9 @@ npm run test:ci -- \
   --reporters=dots
 ```
 
-本次环境：Node `16.20.1`、npm `8.19.4`、ChromeHeadless `154`。定向测试 **329 项通过**。`npm run lint` **未通过**：现有 [资金页模板][funding-html] 第 49 行 `withdrawableExact != null` 触发 `@angular-eslint/template/eqeqeq`，要求 `!==`；本次仅新增文档，未修改该模板。未执行全量测试、生产构建或真实端到端交易验收。
+本轮环境：Node `16.20.1`、npm `8.19.4`、ChromeHeadless `154`、Playwright `1.44.1`。README 定向测试 **334 项通过**，新增 **4 条详情页浏览器验收通过**，`npm run lint` 与 E2E TypeScript 检查通过。浏览器映射和运行限制见 [market/:coin 7.3 验收映射][detail-e2e]。未执行全量测试、生产构建或真实端到端交易验收。
 
-### 7.3 可复现验收方案（本次未执行）
+### 7.3 可复现验收方案（自动化部分执行，真实行情未执行）
 
 准备标准永续和已启用 HIP-3 市场、一个有仓位的钱包以及可控制 REST/WS 延迟和失败的替身。保留公开接口响应、截图和时间顺序；交易入口验收停在下单表单即可，不需要提交真实订单。
 
@@ -321,6 +321,8 @@ npm run test:ci -- \
 | M13 销毁和钱包切换 | 延迟 storage/账户/行情/K 线响应时换非空地址、清空钱包、离页 | 新地址不见旧仓位；离页后不新建周期订阅；清空钱包分支及共享请求回收单独记录实际结果 |
 | M14 外部对照 | 固定网络/coin/时间，核对接口与官方前端；资金费跨一个真实结算点 | 对照 mid、prevDayPx 口径、OI 单位及 sinceOpen 符号；倒计时归零本身不算结算证据 |
 
+浏览器映射、运行命令和本次记录见 [market/:coin 7.3 验收映射][detail-e2e]。本轮浏览器测试覆盖 M1–M4、M11 和 M12 的部分步骤；M5–M10、M13 的相应单测覆盖不等同于浏览器验收，M14 仍需真实网络对照。不得据此将 M1–M14 全部记为通过。
+
 ### 7.4 当前边界与待补证据
 
 1. **连接健康度不等于各数据源完整。** canOrder 不等待账户完整或 K 线补缺；重连元数据失败仍可能显示旧 maxLeverage。需要分别保存行情、账户和图表证据。
@@ -330,7 +332,7 @@ npm run test:ci -- \
 5. **历史完整性有实现假设。** 5000 根换算为固定时长、月按 30 天估算、无成交周期的空缺及原始快照排序，都需要稀疏市场样本核对；正常重连的空响应也不证明每个缺失时间段已补全。
 6. **恢复状态不持久化。** 会话缓存只保存柱数组，不保存 gapped 及视口；重新进入并失败补取时不能仅凭缓存出现就认定历史完整。单个数据集随会话增大，没有总根数裁剪。
 7. **界面价格和结算含义不同。** 头部 mid、标记估值、预言机结算以及 K 线 close 各有用途；v×c 是图表名义量估算。prevDayPx 和 sinceOpen 的具体口径仍需真实外部对照。
-8. **证明范围有限。** 本次 329 项是现有定向单元/模板测试；M1–M14 为待执行方案，不代表已完成浏览器实测、实时行情对账或下单成功验证。
+8. **证明范围有限。** 本轮 334 项是定向单元/模板测试，另有 4 条浏览器验收覆盖部分场景；M1–M14 尚未完整执行，不代表已完成实时行情对账或真实下单验证。
 
 [component]: ./perps-market.component.ts
 [html]: ./perps-market.component.html
@@ -352,6 +354,7 @@ npm run test:ci -- \
 [model]: ../../_lib/perps.ts
 [order-doc]: ../perps-order/README.md
 [funding-html]: ../perps-funding/perps-funding.component.html
+[detail-e2e]: ../../../../../e2e/perps/market-detail-acceptance.md
 [market-service]: ../../../core/services/perps/perps-market-dataset.service.ts
 [market-model]: ../../../core/services/perps/perps-market-dataset.ts
 [market-test]: ../../../core/services/perps/perps-market-dataset.service.spec.ts

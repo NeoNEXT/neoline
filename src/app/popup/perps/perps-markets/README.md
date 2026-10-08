@@ -237,11 +237,11 @@ flowchart TD
 | [行情数据集测试][market-test]，42 项 | 注册表失败和限流、启用 DEX/assetId、并发快照、TTL、缺 DEX 重试、在途帧、重连、按 DEX 名/原始下标更新；也包含单市场详情等共用服务用例 |
 | [共享数据集测试][dataset-test]、[通道测试][channel-test] | 引用计数、同条目请求共享、缓冲回放、恢复排队、频道身份、心跳和重连 |
 | [读取服务测试][hyperliquid-test]、[格式化测试][util-test] | 读取请求与精确数值、图标及金额/价格展示；含其他业务用例 |
-| markets 页面及列表模板 | 当前 markets 目录没有独立 spec；列表测试以组件逻辑为主，不等同于已验证自动聚焦、×、下拉点击、导航按钮及断线样式的真实渲染 |
+| markets 页面及列表模板 | [4 条 Playwright 验收][market-e2e]覆盖自动聚焦、搜索/清空、分批分页、报价刷新与重排、缺价、HIP-3 导航和部分 DEX 失败提示；市场列表仍有组件逻辑测试作为数值/集合边界补充 |
 
-本轮沿用本会话整理 market/:coin 时刚完成的测试结果：Node `16.20.1`、npm `8.19.4`、ChromeHeadless `154`，**329 项通过**，包含上述列表/共享模块及详情、K 线、账户测试；329 不是 markets 专属用例数。本轮只新增文档，未重复执行测试。完整执行命令和记录见 [详情文档第 7.2 节][test-record]。
+本轮测试环境为 Node `16.20.1`、npm `8.19.4`、ChromeHeadless `154`、Playwright `1.44.1`。markets 定向单测 **177 项通过**，新增 **4 条浏览器验收通过**，E2E TypeScript 检查与 `npm run lint` 通过。完整映射和边界见 [markets 7.3 验收映射][market-e2e]；另有更广的详情测试结果见 [详情文档第 7.2 节][test-record]。
 
-如需单独复查本页所依赖的模块，可在仓库根目录执行以下命令；这是建议的缩小范围命令，**本轮未单独执行或另报通过数**：
+如需单独复查本页所依赖的模块，可在仓库根目录执行以下命令；本轮执行结果为 **177 项通过**：
 
 ```bash
 nvm use
@@ -256,9 +256,9 @@ npm run test:ci -- \
 npm run lint
 ```
 
-最近一次 `npm run lint` 未通过：现有 [资金页模板][funding-html] 第 49 行 `withdrawableExact != null` 触发 `@angular-eslint/template/eqeqeq`。本轮未改该模板、未重跑 lint，也未执行全量测试或生产构建。
+本轮 `npm run lint` 通过。未执行全量 `npm run test:ci` 或生产构建；上方单测命令仅覆盖 markets 相关组件与共享行情模块。
 
-### 7.3 可复现验收方案（本轮未执行）
+### 7.3 可复现验收方案（自动化部分执行，真实行情未执行）
 
 使用含标准及 xyz 市场的固定响应/WS 替身，准备至少 65 个普通市场、NEO/GAS、同名跨 DEX 项以及缺价格/成交额的项。记录网络请求次数、原始数值、截图和操作顺序，避免用不断变化的实盘价格代替确定的算术预期。
 
@@ -280,6 +280,8 @@ npm run lint
 | S14 连接和回收 | 丢 pong、断网、恢复；延迟响应时离页，分别保留/移除其他观察者 | stale 时仅报价/涨跌调暗且仍可导航；无观察者后停重试；晚到快照缓存可供下次使用 |
 | S15 UI 与真实结果 | 模拟图标失败、点 ×、菜单外点击、重复点击行；对照实时接口同一 coin | 字母降级、菜单和清词有效；只导航不签名/写 exchange；外部核对 prevDayPx 口径及当前集合 |
 
+浏览器映射、命令和本次运行记录见 [markets 7.3 验收映射][market-e2e]。本轮浏览器测试实际覆盖 S1/S2/S8 的搜索与分页、S4/S5/S9 的价格/排序显示、S10 的 HIP-3 路由及 S11 的部分 DEX 失败提示。其余场景按上表由组件/服务单测覆盖或仍待浏览器/真实网络验收；不可把全部 S1–S15 视作浏览器通过。
+
 ### 7.4 当前边界与待补证据
 
 1. **列表完整性不是全字段校验。** incomplete 主要由注册表请求错误或已请求 DEX 的 null 响应决定；成功但漏掉启用 DEX 的注册表、个别缺 ctx 等未必置该标记。无匹配结论应限制在当前已知集合。
@@ -288,7 +290,7 @@ npm run lint
 4. **行序不是持续更新的实时名次。** 价格/成交额更新不会重排；匹配集合变化会重排并重置页数，即使并非用户主动操作。不能把注释中的“只由用户动作重排”当成没有例外的承诺。
 5. **同名资产可见区分不足。** 内部身份与路由保留 DEX，但行上只显示 symbol；置顶也只按 symbol。应验证同名跨 DEX 市场能否被用户正确选择。
 6. **异常数值与请求悬挂仍需验收。** 缺成交额没有单独沉底规则，接口缺显式超时；不能用“有自动重试”推导任何读取都能在固定时限内结束。
-7. **验证没有覆盖完整页面交互。** 已有逻辑测试不能替代 markets 自动聚焦、清词、模板样式、键盘操作和真实网络对照。S1–S15 为待执行方案，不是已通过的验收记录。
+7. **自动化覆盖是部分的。** 浏览器测试覆盖上述关键交互，但未执行离页重入、Neo2/Neo3 切换、长时间 TTL/退避、真实断线恢复和真实行情对照；S1–S15 的完整验收仍未完成。
 
 [component]: ./perps-markets.component.ts
 [html]: ./perps-markets.component.html
@@ -306,6 +308,7 @@ npm run lint
 [util-test]: ../perps.util.spec.ts
 [detail-doc]: ../perps-market/README.md
 [test-record]: ../perps-market/README.md#72-已有测试与本次结果
+[market-e2e]: ../../../../../e2e/perps/markets-acceptance.md
 [order-doc]: ../perps-order/README.md
 [funding-html]: ../perps-funding/perps-funding.component.html
 [market-service]: ../../../core/services/perps/perps-market-dataset.service.ts

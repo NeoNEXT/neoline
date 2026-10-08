@@ -222,6 +222,29 @@ describe('PerpsHistoryComponent 成交 tab 的兜底', () => {
     component.ngOnDestroy();
   });
 
+  it('H1 成功读取的归档页签切回时复用结果，不重复请求', () => {
+    const getHistoricalOrders = jasmine.createSpy().and.returnValue(of([]));
+    const getUserFunding = jasmine.createSpy().and.returnValue(of([]));
+    const getLedgerUpdates = jasmine.createSpy().and.returnValue(of([]));
+    const { component } = loaded({
+      getHistoricalOrders,
+      getUserFunding,
+      getLedgerUpdates,
+    });
+
+    component.setTab('orderHistory');
+    component.setTab('funding');
+    component.setTab('transfers');
+    component.setTab('orderHistory');
+    component.setTab('funding');
+    component.setTab('transfers');
+
+    expect(getHistoricalOrders).toHaveBeenCalledTimes(1);
+    expect(getUserFunding).toHaveBeenCalledTimes(1);
+    expect(getLedgerUpdates).toHaveBeenCalledTimes(1);
+    component.ngOnDestroy();
+  });
+
   it('历史委托保留 open 状态，以显示未平仓记录', () => {
     const order = {
       coin: 'ETH',
@@ -265,6 +288,60 @@ describe('PerpsHistoryComponent 成交 tab 的兜底', () => {
     component.setTab('funding');
     expect(component.fundings.map((row) => row.hash)).toEqual(['0x3', '0x2', '0x1']);
     expect(component.tabLoading).toBeFalse();
+    component.ngOnDestroy();
+  });
+
+  it('H3 归档列表按时间稳定排序，并只保留最新 200 条', () => {
+    const rows = Array.from({ length: 201 }, (_, index) => ({
+      time: index < 3 ? 3000 : 2000 - index,
+      hash: `row-${index}`,
+      delta: { type: 'funding', coin: 'ETH', usdc: '0.01' },
+    }));
+    const fills = Array.from({ length: 201 }, (_, index) =>
+      fill(`fill-${index}`, index)
+    );
+    const { component } = loaded({
+      getUserFills: () => of(fills),
+      getUserFunding: () => of(rows),
+      getHistoricalOrders: () => of(rows.map((row, index) => ({
+        order: { coin: 'ETH', oid: `${index}` },
+        status: 'open',
+        statusTimestamp: row.time,
+      }))),
+      getLedgerUpdates: () => of(rows),
+    });
+
+    component.setTab('funding');
+    expect(component.fundings.length).toBe(200);
+    expect(component.fundings.slice(0, 3).map((row) => row.hash)).toEqual([
+      'row-0', 'row-1', 'row-2',
+    ]);
+    component.setTab('orderHistory');
+    expect(component.historicalOrders.length).toBe(200);
+    expect(component.historicalOrders.slice(0, 3).map((row) => row.order.oid)).toEqual([
+      '0', '1', '2',
+    ]);
+    component.setTab('transfers');
+    expect(component.transfers.length).toBe(200);
+    component.setTab('fills');
+    expect(component.fills.length).toBe(201);
+    expect(component.fills[0].tid).toBe('fill-200');
+    component.ngOnDestroy();
+  });
+
+  it('H4 晚到的 WS 成交快照取代较早 REST 快照', () => {
+    const rest = new Subject<any[]>();
+    const { component, frames } = loaded({ getUserFills: () => rest });
+
+    component.setTab('fills');
+    rest.next([fill('rest-only', 1), fill('shared', 2)]);
+    expect(component.fills.map((row) => row.tid)).toEqual(['shared', 'rest-only']);
+
+    frames.next({
+      isSnapshot: true,
+      fills: [fill('shared', 2), fill('ws-only', 3)],
+    });
+    expect(component.fills.map((row) => row.tid)).toEqual(['ws-only', 'shared']);
     component.ngOnDestroy();
   });
 
