@@ -9,6 +9,8 @@ export async function installSocket(page: Page) {
       sent: [] as any[],
       unexpected: [] as string[],
       sockets: [] as any[],
+      pong: true,
+      autoOpen: true,
       push(frame: unknown) {
         control.sockets.filter((socket) => socket.readyState === 1)
           .forEach((socket) => socket.deliver(frame));
@@ -24,15 +26,18 @@ export async function installSocket(page: Page) {
       constructor(public url: string) {
         control.sockets.push(this);
         setTimeout(() => {
-          if (this.readyState !== 0) { return; }
-          this.readyState = 1;
-          this.onopen?.({});
+          if (control.autoOpen) { this.open(); }
         });
+      }
+      open() {
+        if (this.readyState !== 0) { return; }
+        const notify = () => { this.readyState = 1; this.onopen?.({}); };
+        this.zone ? this.zone.run(notify) : notify();
       }
       send(raw: string) {
         const message = JSON.parse(raw);
         control.sent.push(message);
-        if (message.method === 'ping') {
+        if (message.method === 'ping' && control.pong) {
           setTimeout(() => this.deliver({ channel: 'pong' }));
         }
       }

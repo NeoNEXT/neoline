@@ -688,16 +688,18 @@ describe('PerpsOrderComponent asynchronous submission', () => {
     expect(trades.calls.mostRecent().args[1].requestedSizeExact).toBe('0.05');
   });
 
-  it('refuses changed asset metadata during unlock', async () => {
-    const pending = value.submit();
-    await Promise.resolve();
-    const updated = facts();
-    (updated.market as any).market.assetId = 2;
-    value.facts = updated;
-    unlock('private-key');
-    await pending;
-    expect(trades).not.toHaveBeenCalled();
-  });
+  for (const metadata of [{ assetId: 2 }, { szDecimals: 2 }]) {
+    it(`O6 refuses changed ${Object.keys(metadata)[0]} during unlock`, async () => {
+      const pending = value.submit();
+      await Promise.resolve();
+      const updated = facts();
+      Object.assign((updated.market as any).market, metadata);
+      value.facts = updated;
+      unlock('private-key');
+      await pending;
+      expect(trades).not.toHaveBeenCalled();
+    });
+  }
 
   it('does not seed or reprice inputs during unlock', async () => {
     value.setPercent(50);

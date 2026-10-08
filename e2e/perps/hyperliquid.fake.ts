@@ -19,6 +19,25 @@ export class FakeHyperliquid {
   readonly writes: Payload[] = [];
   readonly unexpected: string[] = [];
   readonly funding: FakeFunding;
+  readonly events: Array<{
+    at: string; endpoint: string; request: Payload; response?: unknown; clientFailure?: string;
+  }> = [];
+  coin = 'ETH';
+  price = '100';
+  mark = '100';
+  szDecimals = 4;
+  marketMetadata: Payload = {};
+  fees = { userCrossRate: '0.00045', userAddRate: '0.00015', activeReferralDiscount: '0' };
+  availableToTrade = ['1000', '1000'];
+  maxTradeSzs = ['20', '20'];
+  capacityOverride: Payload | null | undefined;
+  capacityOverrideAfterLeverage: Payload | null | undefined;
+  orderFailure: 'disconnect' | '503' | 'malformed' | null = null;
+  orderFoundAfterQueries = Infinity;
+  orderResponseGate: Promise<void> = Promise.resolve();
+  capacityAfterLeverageGate: Promise<void> = Promise.resolve();
+  leverageResponseLost = false;
+  protectionWaitingForFill = false;
   lostResponse = false;
   withdrawLostResponse = false;
   protectionRejected = false;
@@ -30,8 +49,7 @@ export class FakeHyperliquid {
   spotTotal = '300';
   spotHold = '50';
   positionSize = '0';
-  private leverage = { type: 'cross', value: 2 };
-  private capacity = '20';
+  leverage = { type: 'cross', value: 2 };
 
   constructor(private page: Page, readonly user: string) {
     this.funding = new FakeFunding(user);
@@ -40,6 +58,7 @@ export class FakeHyperliquid {
   get orders() { return this.writes.filter((request) => request.action.type === 'order'); }
   get statusQueries() { return this.infoRequests.filter((request) => request.type === 'orderStatus'); }
   get withdrawals() { return this.writes.filter((request) => request.action.type === 'sendToEvmWithData'); }
+  get dex() { return this.coin.includes(':') ? this.coin.split(':')[0] : ''; }
 
   seedPosition(size: string) {
     this.positionSize = size;
@@ -55,16 +74,23 @@ export class FakeHyperliquid {
     await this.page.waitForFunction(() => (window as any).__perpsSocket.sent.some(
       (message: any) => message.subscription?.type === 'activeAssetCtx'
     ));
-    await pushFrame(this.page, { channel: 'activeAssetCtx', data: { coin: 'ETH', ctx: assetCtx(price) } });
+    this.price = price;
+    await pushFrame(this.page, { channel: 'activeAssetCtx', data: { coin: this.coin, ctx: this.context() } });
   }
 
+  async pushCapacity() {
+    await pushFrame(this.page, { channel: 'activeAssetData', data: this.activeAssetData() });
+  }
+
+  private context() { return { ...assetCtx(this.price), markPx: this.mark }; }
+
   private account(dex = '') {
-    const positioned = !dex && !new BigNumber(this.positionSize).isZero();
-    const notional = new BigNumber(this.positionSize).abs().times(100);
+    const positioned = dex === this.dex && !new BigNumber(this.positionSize).isZero();
+    const notional = new BigNumber(this.positionSize).abs().times(this.mark);
     const margin = positioned ? notional.div(this.leverage.value).toFixed() : '0';
     const free = new BigNumber(this.accountValue).minus(margin).toFixed();
     const summary = {
-      accountValue: dex ? '0' : this.accountValue, totalRawUsd: dex ? '0' : this.accountValue,
+      accountValue: dex !== this.dex ? '0' : this.accountValue, totalRawUsd: dex !== this.dex ? '0' : this.accountValue,
       totalNtlPos: positioned ? notional.toFixed() : '0', totalMarginUsed: margin,
     };
     return {
@@ -73,9 +99,9 @@ export class FakeHyperliquid {
         ? { accountValue: free, totalRawUsd: free, totalNtlPos: '0', totalMarginUsed: '0' }
         : summary,
       crossMaintenanceMarginUsed: positioned && this.leverage.type === 'cross' ? '2' : '0',
-      withdrawable: dex || this.accountMode === 'unifiedAccount' ? '0' : free, time: Date.now(),
+      withdrawable: dex !== this.dex || this.accountMode === 'unifiedAccount' ? '0' : free, time: Date.now(),
       assetPositions: positioned ? [{ type: 'oneWay', position: {
-        coin: 'ETH', szi: this.positionSize, entryPx: '100', positionValue: notional.toFixed(),
+        coin: this.coin, szi: this.positionSize, entryPx: this.price, positionValue: notional.toFixed(),
         unrealizedPnl: '0', returnOnEquity: '0', liquidationPx: null,
         leverage: { ...this.leverage, rawUsd: margin }, marginUsed: margin,
         cumFunding: { allTime: '0', sinceOpen: '0', sinceChange: '0' },
@@ -90,37 +116,47 @@ export class FakeHyperliquid {
     switch (body.type) {
       case 'perpDexs': return [null, { name: 'xyz', fullName: 'XYZ' }];
       case 'metaAndAssetCtxs': return [{
-        universe: body.dex ? [] : [{ name: 'ETH', szDecimals: 4, maxLeverage: 25, marginTableId: 1 }],
+        universe: (body.dex || '') !== this.dex ? [] : [{
+          name: this.coin, szDecimals: this.szDecimals, maxLeverage: 25, marginTableId: 1, ...this.marketMetadata,
+        }],
         marginTables: [[1, { marginTiers: [{ lowerBound: '0', maxLeverage: 25 }] }]], collateralToken: 0,
-      }, body.dex ? [] : [assetCtx()]];
+      }, (body.dex || '') !== this.dex ? [] : [this.context()]];
       case 'clearinghouseState': return this.account(body.dex);
       case 'spotClearinghouseState': return { balances: this.accountMode === 'unifiedAccount'
         ? [{ coin: 'USDC', token: 0, total: this.spotTotal, hold: this.spotHold, entryNtl: '0' }] : [] };
       case 'userAbstraction': return this.accountMode;
       case 'activeAssetData': return this.activeAssetData();
-      case 'userFees': return { userCrossRate: '0.00045', userAddRate: '0.00015', activeReferralDiscount: '0' };
+      case 'userFees': return this.fees;
       case 'candleSnapshot': {
         const req = body.req;
-        if (req.coin !== 'ETH' || req.interval !== '15m') { throw new Error('Unexpected candle series'); }
+        if (req.coin !== this.coin || req.interval !== '15m') { throw new Error('Unexpected candle series'); }
         const duration = 15 * 60_000;
         const end = Math.floor(req.endTime / duration) * duration;
         const count = Math.min(100, Math.max(0, Math.floor((end - req.startTime) / duration)));
         return Array.from({ length: count }, (_, index) => {
           const t = end - (count - 1 - index) * duration;
-          return { t, T: t + duration - 1, s: 'ETH', i: '15m', o: '99', h: '101', l: '98', c: '100', v: '10', n: 5 };
+          return { t, T: t + duration - 1, s: this.coin, i: '15m', o: this.price, h: this.price, l: this.price, c: this.price, v: '10', n: 5 };
         });
       }
       case 'frontendOpenOrders':
       case 'userFills': return [];
-      case 'orderStatus': return { status: 'unknownOid' };
+      case 'orderStatus': {
+        const parent = this.orders.find((item) => item.action.orders[0].c === body.oid)?.action.orders[0];
+        return this.statusQueries.length >= this.orderFoundAfterQueries && parent ? { status: 'order', order: {
+          order: { coin: this.coin, side: parent.b ? 'B' : 'A', limitPx: parent.p, sz: '0',
+            oid: 10001, timestamp: 1, origSz: parent.s, cloid: parent.c },
+          status: 'filled', statusTimestamp: 2,
+        } } : { status: 'unknownOid' };
+      }
       default: throw new Error(`Unmocked info: ${body.type}`);
     }
   }
 
   private activeAssetData() {
+    if (this.capacityOverride !== undefined) { return this.capacityOverride; }
     return {
-      user: this.user, coin: 'ETH', leverage: this.leverage,
-      maxTradeSzs: [this.capacity, this.capacity], availableToTrade: ['1000', '1000'], markPx: '100',
+      user: this.user, coin: this.coin, leverage: this.leverage,
+      maxTradeSzs: this.maxTradeSzs, availableToTrade: this.availableToTrade, markPx: this.mark,
     };
   }
 
@@ -133,36 +169,49 @@ export class FakeHyperliquid {
       if (url.origin === api && ['/info', '/exchange'].includes(url.pathname)) {
         if (request.method() === 'OPTIONS') { await route.fulfill({ status: 204, headers: cors }); return; }
         const body = request.postDataJSON();
-        if (url.pathname === '/info') { await route.fulfill({ json: this.answer(body), headers: cors }); return; }
+        if (url.pathname === '/info') {
+          if (body.type === 'activeAssetData' && this.writes.some((item) => item.action.type === 'updateLeverage')) {
+            await this.capacityAfterLeverageGate;
+          }
+          const response = this.answer(body);
+          this.events.push({ at: new Date().toISOString(), endpoint: 'info', request: body, response });
+          await route.fulfill({ json: response, headers: cors }); return;
+        }
+        const event: (typeof this.events)[number] = { at: new Date().toISOString(), endpoint: 'exchange', request: body };
+        this.events.push(event);
         this.writes.push(body);
         const signer = body.action.type === 'sendToEvmWithData' ? recoverWithdrawalSigner(body) : recoverSigner(body);
         if (signer.toLowerCase() !== this.user) { throw new Error('Invalid test-wallet signature'); }
         if (body.action.type === 'sendToEvmWithData') {
-          if (this.withdrawLostResponse) { await route.abort('connectionreset'); return; }
+          if (this.withdrawLostResponse) { event.clientFailure = 'disconnect'; await route.abort('connectionreset'); return; }
           if (body.action.sourceDex === 'spot') {
             this.spotTotal = new BigNumber(this.spotTotal).minus(body.action.amount).toFixed();
           } else {
             this.accountValue = new BigNumber(this.accountValue).minus(body.action.amount).toFixed();
           }
-          await route.fulfill({ headers: cors, json: { status: 'ok', response: { type: 'default' } } });
+          event.response = { status: 'ok', response: { type: 'default' } };
+          await route.fulfill({ headers: cors, json: event.response });
           return;
         }
         if (body.action.type === 'updateLeverage') {
           if (this.rejectLeverage) {
-            await route.fulfill({ headers: cors, json: { status: 'err', response: 'Insufficient margin to set leverage' } });
+            event.response = { status: 'err', response: 'Insufficient margin to set leverage' };
+            await route.fulfill({ headers: cors, json: event.response });
             return;
           }
           this.leverage = {
             type: body.action.isCross ? 'cross' : 'isolated',
             value: body.action.leverage,
           };
-          if (this.capacityAfterLeverage !== null) { this.capacity = this.capacityAfterLeverage; }
+          if (this.capacityAfterLeverage !== null) { this.maxTradeSzs = [this.capacityAfterLeverage, this.capacityAfterLeverage]; }
+          this.capacityOverride = this.capacityOverrideAfterLeverage;
+          event.response = { status: 'ok', response: { type: 'default' } };
+          if (this.leverageResponseLost) { event.clientFailure = 'disconnect'; await route.abort('connectionreset'); return; }
           await route.fulfill({ headers: cors, json: { status: 'ok', response: { type: 'default' } } });
-          await pushFrame(this.page, { channel: 'activeAssetData', data: this.activeAssetData() });
+          if (this.activeAssetData()) { await this.pushCapacity(); }
           return;
         }
         if (body.action.type === 'order') {
-          if (this.lostResponse) { await route.abort('connectionreset'); return; }
           const parent = body.action.orders[0];
           const fillSize = this.partialFillSize ?? parent.s;
           const before = new BigNumber(this.positionSize);
@@ -172,14 +221,21 @@ export class FakeHyperliquid {
           }
           this.positionSize = before.plus(change).toFixed();
           const statuses = [
-            { filled: { totalSz: fillSize, avgPx: '100', oid: 10001 } },
+            { filled: { totalSz: fillSize, avgPx: this.price, oid: 10001 } },
             ...body.action.orders.slice(1).map(() => this.protectionRejected
-              ? { error: 'Trigger order rejected' } : 'waitingForTrigger'),
+              ? { error: 'Trigger order rejected' } : this.protectionWaitingForFill ? 'waitingForFill' : 'waitingForTrigger'),
           ];
-          await route.fulfill({ headers: cors, json: { status: 'ok', response: { type: 'order', data: {
-            statuses,
-          } } } });
-          await pushFrame(this.page, { channel: 'clearinghouseState', data: { user: this.user, dex: '', clearinghouseState: this.account() } });
+          event.response = { status: 'ok', response: { type: 'order', data: { statuses } } };
+          await this.orderResponseGate;
+          // The venue accepted and filled before its response was lost/corrupted.
+          event.clientFailure = this.lostResponse ? 'disconnect' : this.orderFailure ?? undefined;
+          if (this.lostResponse || this.orderFailure === 'disconnect') { await route.abort('connectionreset'); return; }
+          if (this.orderFailure === '503') { await route.fulfill({ status: 503, headers: cors, body: 'Unavailable' }); return; }
+          if (this.orderFailure === 'malformed') { await route.fulfill({ headers: cors, json: { status: 'ok', response: {} } }); return; }
+          await route.fulfill({ headers: cors, json: event.response });
+          await pushFrame(this.page, { channel: 'clearinghouseState', data: {
+            user: this.user, dex: this.dex, clearinghouseState: this.account(this.dex),
+          } });
           return;
         }
       }

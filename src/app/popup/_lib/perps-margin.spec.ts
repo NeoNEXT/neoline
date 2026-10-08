@@ -64,6 +64,25 @@ describe('perps margin tiers', () => {
     expect(price('1', '100', '100')).toBeNull();
     expect(price('1', '100', 'NaN')).toBeNull();
   });
+
+  for (const example of [
+    { size: '10', cost: '1000', collateral: '200', long: true, table: tiers.slice(0, 1), upper: false },
+    { size: '10', cost: '1000', collateral: '200', long: false, table: tiers.slice(0, 1), upper: false },
+    { size: '31000', cost: '3100000', collateral: '1000000', long: true, table: tiers, upper: false },
+    { size: '29000', cost: '2900000', collateral: '1000000', long: false, table: tiers, upper: true },
+  ]) {
+    it(`O8 equity equals maintenance at liquidation: ${example.long ? 'long' : 'short'} cost ${example.cost}`, () => {
+      const result = price(example.size, example.cost, example.collateral, example.long, example.table);
+      expect(result).not.toBeNull();
+      const notional = new BigNumber(result).times(example.size);
+      const pnl = notional.minus(example.cost).times(example.long ? 1 : -1);
+      const equity = pnl.plus(example.collateral);
+      // Independent piecewise equation: rate 5%, then 10% minus the 150k deduction.
+      expect(notional.gte('3000000')).toBe(example.upper);
+      const maintenance = example.upper ? notional.times('0.1').minus('150000') : notional.times('0.05');
+      expect(equity.minus(maintenance).abs().lt('0.00000001')).toBeTrue();
+    });
+  }
 });
 
 describe('cross liquidation price', () => {

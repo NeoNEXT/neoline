@@ -16,13 +16,15 @@ Playwright 自动启动并关闭 `127.0.0.1:4300` 上的 Angular 开发服务器
 专用 Angular `e2e` 配置使用 `environment.e2e.ts`，固定 Perps 测试网，不改开发配置。
 浏览器使用全新 context，测试通过实际 UI 导入随机无资金钱包、锁定、解锁，再操作 Perps。
 
-当前 17 条用例：
+当前 44 条用例；下单验收按 [README 7.3 的 O1–O17 映射](perps/acceptance.md)维护：
 
 | 测试文件 | 数量 | 场景 |
 | --- | --- | --- |
 | `perps.spec.ts` | 3 | 市场与行情更新、IOC 开仓及签名、订单响应丢失后禁止重复提交并查询原 cloid |
 | `funding.spec.ts` | 7 | 入金精度/下限/余额/MAX、取消确认后重新准备并广播、gas 不足、源链回滚；提现费上涨后重新确认、统一账户现货可用余额、MAX 余额下降、提现响应丢失 |
 | `complex-orders.spec.ts` | 7 | 多空 TP/SL 的方向校验与父子单、父单成交但保护单拒绝、部分成交、部分后全部平仓、模式同步后容量归零、杠杆写入拒绝 |
+| `order-acceptance.spec.ts` | 16 | 普通/加仓/平仓入口、cross 路由、精度与保证金、方向容量、反向净仓、尾数全平、独立杠杆、HIP-3 费率、TP/SL 单位联动 |
+| `order-recovery.spec.ts` | 11 | partial + waitingForFill、已接受订单的响应丢失/503/畸形答复及恢复、心跳超时重连、离开后的写入回调、首次模式同步的容量等待与拦截 |
 
 HTTP 在网络边界模拟。WebSocket 使用 `addInitScript` 安装协议替身，捕获创建 socket 的
 Angular zone，测试推送帧时回到该 zone，保证实际页面刷新。这与参考实现的方法一致，
@@ -42,15 +44,18 @@ npm run e2e:headed
 npm run e2e -- --grep 'lost response'
 npm run e2e -- funding.spec.ts
 npm run e2e -- complex-orders.spec.ts
+npm run e2e -- --grep 'O17'
 npm run e2e:report
 ```
 
-失败时保存 trace、截图；每条测试附带协议请求摘要。产物在根目录 `test-results/` 和
+每条测试保存最终页面截图、版本/环境信息及带时间的原始协议请求/响应；失败额外保存 trace
+和失败截图。O2 另附计算输入及表单截图。产物在根目录 `test-results/` 和
 `playwright-report/`，均不提交。trace 会记录测试钱包输入，因此这套测试只使用临时生成
 的无资金密钥。测试不自动重试、不依赖真实交易所或链 RPC、不使用固定 sleep。
 
 范围：与参考实现一样，这一版运行于网页环境，覆盖 `ChromeService` 的本地存储分支。
-它不覆盖扩展后台通信、真实交易所验签/成交、真实跨链到账、HIP-3 或组合保证金风险模型。
+它不覆盖扩展后台通信、真实交易所验签/成交、真实跨链到账或组合保证金风险模型。
+HIP-3 已覆盖协议 coin/assetId 和下单费率；真实方向容量口径与小额退出条件（O15/O16）仍待测试网验收。
 统一账户提现只验证当前实现的现货 `total - hold` 上限与 `sourceDex: 'spot'`，不代表所有
 持仓/借贷情况下的真实可提额度。当前界面没有限价单控件，因此不通过调用内部方法伪造
 限价 E2E。提现响应丢失用例验证提示与不自动重发；当前页面并不永久禁止用户再次提现。

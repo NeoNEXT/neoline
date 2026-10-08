@@ -338,6 +338,22 @@ describe('PerpsTradeOrderService', () => {
     expect(order.reduceOnly).toBeTrue();
   });
 
+  for (const size of ['0', '-2']) {
+    it(`O5 refuses a full close when refreshed position becomes ${size}`, () => {
+      accounts.refreshAccount.and.returnValue(of({
+        availability: 'live', account: account(size === '0' ? [] : [{
+          key: 'hl:ETH', coin: 'ETH', sziExact: size, leverageType: 'isolated',
+        }]), missingDexes: [], updatedAt: 1,
+      }));
+      const errors = jasmine.createSpy('errors');
+      service.submit(PRIVATE_KEY, intent({ operation: 'close', side: 'short' })).subscribe({ error: errors });
+      expect(errors).toHaveBeenCalledWith(jasmine.objectContaining({ code: 'position-changed' }));
+      expect(exchange.submitOrder).not.toHaveBeenCalled();
+      expect(exchange.updateLeverage).not.toHaveBeenCalled();
+      expect(capacities.getActiveAssetData).not.toHaveBeenCalled();
+    });
+  }
+
   it('rejects a close when the authoritative account is unavailable', () => {
     accounts.refreshAccount.and.returnValue(
       of({

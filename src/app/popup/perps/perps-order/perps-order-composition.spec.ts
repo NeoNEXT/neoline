@@ -983,6 +983,27 @@ describe('composeOrder', () => {
     expect(composed.availability).toBeNull();
   });
 
+  for (const orderType of ['market', 'limit'] as const) {
+    it(`O16 local precheck distinguishes a $5 full exit from a partial ${orderType} exit`, () => {
+      const f = facts({
+        market: priced('ETH', 100, 4),
+        account: withPositions(ethPosition({
+          sziExact: '0.05', positionValueExact: '5', leverageType: 'isolated', isLong: true,
+        })),
+      });
+      const closing = input({ mode: 'close', side: 'short', orderType, limitPrice: '100' });
+      const full = composeOrder(f, { ...closing, amount: '5', activePercent: 100 });
+      expect(full.submittable).toBeTrue();
+      expect(full.intent.operation).toBe('close');
+      const partial = composeOrder(f, { ...closing, amount: '2.5', activePercent: 50 });
+      expect(partial.fullClose).toBeFalse();
+      expect(partial.availability?.code).toBe('below-minimum');
+      expect(partial.submittable).toBeFalse();
+      expect(partial.intent).toBeNull();
+      // This only proves the client boundary; no assertion about venue acceptance.
+    });
+  }
+
   it('prices margin and fee off the size that reaches the exchange', () => {
     const f = facts({ coin: 'SOME', market: priced('SOME', 3.33, 0) });
 
@@ -1426,6 +1447,17 @@ describe('review baseline', () => {
 
 
 describe('order margin price and maintenance tiers', () => {
+  it('O2 distinguishes input USD, lot notional and mark-based margin for P=30 M=31', () => {
+    const composed = composeOrder(facts({
+      market: { status: 'ready', market: ethMarket({ midPxExact: '30', markPxExact: '31', szDecimals: 2 }) },
+      activeAssetData: capacity('ETH', 31, '1000', '20', 5),
+    }), input({ amount: '100', leverage: 5 }));
+    expect(composed.submittable).toBeTrue();
+    expect(composed.intent.requestedSizeExact).toBe('3.33');
+    expect(composed.preview.notionalExact).toBe('99.9');
+    expect(composed.preview.marginExact).toBe('20.646');
+  });
+
   it('uses mark for initial margin while keeping the execution price for size and fees', () => {
     const composed = composeOrder(facts({
       market: { status: 'ready', market: ethMarket({ markPxExact: '110' }) },
