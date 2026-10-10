@@ -76,6 +76,27 @@ describe('PerpsExchangeWriteService orders', () => {
     }));
   }
 
+  for (const scenario of [
+    { parentSize: '1.25', child: 'waitingForFill', unconfirmed: true },
+    { parentSize: '1.25', child: 'waitingForTrigger', unconfirmed: false },
+    { parentSize: '0.4', child: 'waitingForFill', unconfirmed: true },
+  ]) {
+    it(`preserves the parent fill and checks protection ${JSON.stringify(scenario)}`, fakeAsync(() => {
+      http.post.and.returnValue(of({ status: 'ok', response: { type: 'order', data: { statuses: [
+        { filled: { totalSz: scenario.parentSize, avgPx: '100', oid: '1' } }, scenario.child,
+      ] } } }) as any);
+      let result;
+      service.submitOrder(PRIVATE_KEY, { ...ORDER, protection: [{
+        kind: 'sl', triggerPriceExact: '80', priceExact: '72', sizeExact: '1.25',
+        cloid: '0x00000000000000000000000000000002',
+      }] }).subscribe((value) => result = value);
+      flushMicrotasks();
+      expect(result.status).toBe(scenario.parentSize === '1.25' ? 'filled' : 'partial');
+      expect(!!result.protectionError).toBe(scenario.unconfirmed);
+      expect(http.post).toHaveBeenCalledTimes(1);
+    }));
+  }
+
   it('interprets partial fills through the adapter interface', fakeAsync(() => {
     http.post.and.returnValue(
       of({
@@ -259,6 +280,11 @@ describe('PerpsExchangeWriteService builder fee', () => {
   let service: PerpsExchangeWriteService;
 
   const bodies = () => http.post.calls.allArgs().map((args) => args[1]);
+  const builderReply = (body: any, approved = 0) => of(
+    body.type === 'userAbstraction' ? 'disabled' :
+    body.type === 'clearinghouseState' ? { marginSummary: { accountValue: '100' } } :
+    body.type === 'maxBuilderFee' ? approved : exchangeOk
+  );
 
   beforeEach(() => {
     http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
@@ -268,15 +294,17 @@ describe('PerpsExchangeWriteService builder fee', () => {
 
   it('approves a configured builder once and attaches it to orders', fakeAsync(() => {
     http.post.and.callFake(((_url: string, body: any) =>
-      body.type === 'maxBuilderFee' ? of(0) : of(exchangeOk)) as any);
+      builderReply(body)) as any);
 
     service.submitOrder(PRIVATE_KEY, ORDER).subscribe();
     flushMicrotasks();
 
-    expect(bodies()).toHaveSize(3);
-    expect(bodies()[0].type).toBe('maxBuilderFee');
-    expect(bodies()[1].action.type).toBe('approveBuilderFee');
-    expect(bodies()[2].action.builder).toEqual({
+    expect(bodies()).toHaveSize(5);
+    expect(bodies()[0]).toEqual({ type: 'userAbstraction', user: BUILDER });
+    expect(bodies()[1]).toEqual({ type: 'clearinghouseState', user: BUILDER });
+    expect(bodies()[2].type).toBe('maxBuilderFee');
+    expect(bodies()[3].action.type).toBe('approveBuilderFee');
+    expect(bodies()[4].action.builder).toEqual({
       b: BUILDER,
       f: PERPS_BUILDER_FEE_TENTHS_BPS,
     });
@@ -285,9 +313,8 @@ describe('PerpsExchangeWriteService builder fee', () => {
     service.submitOrder(PRIVATE_KEY, ORDER).subscribe();
     flushMicrotasks();
 
-    // 该授权是每个账户一次性的签名，并在整个会话内记住 ——
-    // 第二笔订单只发一个请求，而不是三个。
-    expect(http.post).toHaveBeenCalledTimes(1);
+    // 用户授权在会话内复用，builder 的当前模式和权益仍须重新读取。
+    expect(http.post).toHaveBeenCalledTimes(3);
     expect(http.post.calls.mostRecent().args[1].action.builder).toEqual({
       b: BUILDER,
       f: PERPS_BUILDER_FEE_TENTHS_BPS,
@@ -296,20 +323,63 @@ describe('PerpsExchangeWriteService builder fee', () => {
 
   it('skips approval when the account already authorized the builder fee', fakeAsync(() => {
     http.post.and.callFake(((_url: string, body: any) =>
-      body.type === 'maxBuilderFee'
-        ? of(PERPS_BUILDER_FEE_TENTHS_BPS)
-        : of(exchangeOk)) as any);
+      builderReply(body, PERPS_BUILDER_FEE_TENTHS_BPS)) as any);
 
     service.submitOrder(PRIVATE_KEY, ORDER).subscribe();
     flushMicrotasks();
 
-    expect(bodies()).toHaveSize(2);
-    expect(bodies()[0].type).toBe('maxBuilderFee');
-    expect(bodies()[1].action.type).toBe('order');
-    expect(bodies()[1].action.builder).toEqual({
+    expect(bodies()).toHaveSize(4);
+    expect(bodies()[2].type).toBe('maxBuilderFee');
+    expect(bodies()[3].action.type).toBe('order');
+    expect(bodies()[3].action.builder).toEqual({
       b: BUILDER,
       f: PERPS_BUILDER_FEE_TENTHS_BPS,
     });
+  }));
+
+  for (const scenario of [
+    { mode: 'unifiedAccount', value: '100' },
+    { mode: 'portfolioMargin', value: '100' },
+    { mode: 'dexAbstraction', value: '100' },
+    { mode: 'default', value: '100' },
+    { mode: 'disabled', value: '99.99999999' },
+    { mode: 'disabled', value: 'invalid' },
+  ]) {
+    it(`does not authorize or send orders for an ineligible builder ${JSON.stringify(scenario)}`, fakeAsync(() => {
+      http.post.and.callFake(((_url: string, body: any) => of(
+        body.type === 'userAbstraction' ? scenario.mode :
+        { marginSummary: { accountValue: scenario.value } }
+      )) as any);
+      let failure: Error;
+      service.submitOrder(PRIVATE_KEY, ORDER).subscribe({ error: (error) => failure = error });
+      flushMicrotasks();
+      expect(failure?.message).toContain(scenario.mode === 'disabled' ? '100 USDC' : 'Standard');
+      expect(bodies().some((body) => body.action)).toBeFalse();
+    }));
+  }
+
+  it('rechecks builder eligibility even after user approval was cached', fakeAsync(() => {
+    let mode = 'disabled';
+    http.post.and.callFake(((_url: string, body: any) =>
+      body.type === 'userAbstraction' ? of(mode) : builderReply(body)) as any);
+    service.submitOrder(PRIVATE_KEY, ORDER).subscribe();
+    flushMicrotasks();
+    http.post.calls.reset();
+    mode = 'portfolioMargin';
+    let failure: Error;
+    service.submitOrder(PRIVATE_KEY, ORDER).subscribe({ error: (error) => failure = error });
+    flushMicrotasks();
+    expect(failure?.message).toContain('Standard');
+    expect(bodies().some((body) => body.action)).toBeFalse();
+  }));
+
+  it('does not sign a direct builder approval when eligibility cannot be read', fakeAsync(() => {
+    http.post.and.returnValue(throwError(() => new HttpErrorResponse({ status: 503 })) as any);
+    let failure: HttpErrorResponse;
+    service.approveBuilderFee(PRIVATE_KEY).subscribe({ error: (error) => failure = error });
+    flushMicrotasks();
+    expect(failure?.status).toBe(503);
+    expect(bodies().some((body) => body.action)).toBeFalse();
   }));
 });
 

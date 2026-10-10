@@ -3,7 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
 import { stringify as stringifyLosslessJson } from 'lossless-json';
-import { Observable, Subject, from, of, throwError } from 'rxjs';
+import { Observable, Subject, forkJoin, from, of, throwError } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 
 import {
@@ -61,8 +61,8 @@ export interface PerpsWithdrawSource {
  *（Execution Result）。调用方交给它一个已经规范化的 action，拿回一个可判定的结果 ——
  * 或者执行状态未知（Execution Status Unknown），而后者不等于失败。
  *
- * 它不读取任何自己不写的东西。提现是被告知该扣哪个余额，而不是自己去查账户，所以本模块
- * 只欠账户那一侧一件事：`wrote()`，它宣告「你手上的事实现在过期了」。这是一个通知，而且
+ * 提现是被告知该扣哪个余额，而不是自己去查用户账户；启用 builder 时只读它的收费资格与
+ * 用户授权额度。本模块只欠账户那一侧一件事：`wrote()`，它宣告「你手上的事实现在过期了」。这是一个通知，而且
  * 会一直只是通知 —— 没有本地订单状态机，没有跨窗口仲裁，也不持久化交易意图
  *（ADR-0003、ADR-0006）。
  */
@@ -149,28 +149,58 @@ export class PerpsExchangeWriteService {
       return of(undefined);
     }
     const user = new ethers.Wallet(privateKey).address.toLowerCase();
-    if (this.builderFeeApproved.has(user)) {
-      return of(undefined);
-    }
-    return this.getMaxBuilderFee(user).pipe(
-      catchError(() => of(0)),
-      switchMap((approved) => {
-        if (approved >= PERPS_BUILDER_FEE_TENTHS_BPS) {
-          this.builderFeeApproved.add(user);
+    return this.ensureBuilderReady().pipe(
+      switchMap(() => {
+        if (this.builderFeeApproved.has(user)) {
           return of(undefined);
         }
-        return this.approveBuilderFee(privateKey).pipe(
-          map(() => {
-            this.builderFeeApproved.add(user);
-            return undefined;
+        return this.getMaxBuilderFee(user).pipe(
+          catchError(() => of(0)),
+          switchMap((approved) => {
+            if (approved >= PERPS_BUILDER_FEE_TENTHS_BPS) {
+              this.builderFeeApproved.add(user);
+              return of(undefined);
+            }
+            return this.signBuilderFeeApproval(privateKey).pipe(
+              map(() => {
+                this.builderFeeApproved.add(user);
+                return undefined;
+              })
+            );
           })
         );
       })
     );
   }
 
+  /** 收费资格每次重查；不能用旧授权推断 builder 仍处于 Standard 或仍有足够权益。 */
+  private ensureBuilderReady(): Observable<void> {
+    const builder = this.builderAddress;
+    if (!ethers.isAddress(builder) || !Number.isInteger(PERPS_BUILDER_FEE_TENTHS_BPS) ||
+        PERPS_BUILDER_FEE_TENTHS_BPS <= 0 || PERPS_BUILDER_FEE_TENTHS_BPS > 100) {
+      return throwError(() => new Error('Invalid Hyperliquid builder configuration'));
+    }
+    return forkJoin([
+      this.postInfo<string>({ type: 'userAbstraction', user: builder }),
+      this.postInfo<any>({ type: 'clearinghouseState', user: builder }),
+    ]).pipe(map(([mode, state]) => {
+      // disabled 是明确关闭账户抽象的模式；default 的含义未由官方接口定义，不能据此确认收费资格。
+      if (mode !== 'disabled') {
+        throw new Error('Builder must explicitly use Standard account mode');
+      }
+      const value = new BigNumber(perpsFiniteDecimal(state?.marginSummary?.accountValue) ?? NaN);
+      if (!value.isFinite() || value.isLessThan(100)) {
+        throw new Error('Builder perps account value must be at least 100 USDC');
+      }
+    }));
+  }
+
   /** 签署这份一次性授权，允许我们的 builder 收取它的费用。 */
   approveBuilderFee(privateKey: string): Observable<PerpsExchangeResponse> {
+    return this.ensureBuilderReady().pipe(switchMap(() => this.signBuilderFeeApproval(privateKey)));
+  }
+
+  private signBuilderFeeApproval(privateKey: string): Observable<PerpsExchangeResponse> {
     const nonce = this.nextNonce(privateKey);
     return from(
       signHyperliquidApproveBuilderFee(
@@ -245,7 +275,9 @@ export class PerpsExchangeWriteService {
               const statuses: any[] = response.response?.data?.statuses ?? [];
               const failed = order.protection.map((_, index) => statuses[index + 1])
                 .filter((status) => !status?.resting?.oid && !status?.filled?.oid &&
-                  status !== 'waitingForFill' && status !== 'waitingForTrigger');
+                  // waitingForFill 的子单尚未放置；只有父单仍挂单时它才是预期的等待状态。
+                  !(status === 'waitingForFill' && result.status === 'resting') &&
+                  status !== 'waitingForTrigger');
               if (failed.length || result.status === 'partial') {
                 result.protectionError = failed.map((status) => status?.error).filter(Boolean).join('; ') ||
                   'TP/SL placement is not confirmed. Check open orders before placing another order.';
@@ -474,7 +506,7 @@ export class PerpsExchangeWriteService {
       );
   }
 
-  /** 仅仅是为写入服务而存在的那两次免鉴权读取。 */
+  /** 写入服务所需的免鉴权读取：订单追查、builder 资格与费用授权。 */
   private postInfo<T>(body: any): Observable<T> {
     return this.http
       .post(this.api.info, body, {

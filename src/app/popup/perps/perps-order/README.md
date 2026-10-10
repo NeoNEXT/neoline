@@ -187,9 +187,11 @@ L1 写入使用 `msgpack(action) + uint64 nonce + 无 vault 标记` 的哈希作
 
 `userFees` 的 taker 取 `userCrossRate`，maker 取 `userAddRate`；正费率乘 `1-activeReferralDiscount`，负 maker 返佣不打推荐折扣。读取前或失败时使用基础 taker `0.00045`、maker `0.00015`，即 `0.045%/0.015%`。这只是兜底，不证明已取得该账户当前实际费率。
 
-HIP-3 再乘部署方系数 `d<1 ? d+1 : 2d` 和 growth 系数（开启为 0.1，否则为 1）；非正 maker 不乘部署方系数，但仍应用 growth。缺少部署方系数时显示费用无法估算，订单本身仍可继续。当前实现未计 aligned quote token 的额外调整；扩展 DEX 支持范围时需复核。[官方 Fees 公式][p-fees]
+HIP-3 再乘部署方系数 `d<1 ? d+1 : 2d` 和 growth 系数（开启为 0.1，否则为 1）；非正 maker 不乘部署方系数，但仍应用 growth。缺少部署方系数时显示费用无法估算，订单本身仍可继续。当前未计 AQAv1 的额外费用调整；AQAv2 无交易费或成交量贡献优惠。[官方 Fees 公式][p-fees]、[Aligned quote assets](https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/aligned-quote-assets)
 
 builder 配置值 `45` 的单位是十分之一个 bp，对应 `0.045%=0.00045`；只在 builder 地址已配置时加入。整理时主网/测试网地址均为空，实际 builder 费率为 0，不发费用授权。
+
+配置 builder 后，费用授权与订单签名前校验地址有效、费率为 1–100 的整数（单位 0.1 bp，上限 0.1%），并查询 builder 的 `userAbstraction` 和标准 `clearinghouseState`：仅接受 `disabled` 模式、永续权益至少 100 USDC。读取失败或资格不符时终止；已缓存用户授权也重查资格。[Builder codes][p-builder]
 
 预览内部计算 `fee=N×(协议费率+builder费率)`，平仓预计收到会扣除这项。**当前模板手续费一行只展示总费率，不展示手续费金额**；普通市价显示 taker，底层限价分支可显示 taker/maker 两侧，负总费率保留返佣符号。
 
@@ -208,9 +210,9 @@ TP/SL 是随这笔父单提交的固定数量子单，不等同于为整个已�
 | USDC 联动 | 收益/损失金额为 `Δ×本次订单数量`；无订单数量时用当前仓位绝对数量预览。逆算为 `Δ=金额/数量`，再解触发价；不包含费用和资金费 |
 | 子单构造 | 方向与父单相反、`reduceOnly=true`、`trigger.isMarket=true`，分组 `normalTpsl`；数量取本次请求数量，父子各有独立 cloid |
 | 触发后限价 | 平多的卖出子单约为触发价×0.9，平空的买入子单约为×1.1，再量化；与父单保存的滑点值独立 |
-| 响应处理 | 检查主单及各子单状态。主单成交但子单拒绝/缺失时保留成交结果并提示保护未确认；父单部分成交也提示保护未确认 |
+| 响应处理 | 子单拒绝/缺失或父单部分成交时提示保护未确认，保留父单结果且不自动补单。waitingForFill 仅在父单 resting 时视为正常等待；单独的 waitingForTrigger 不触发未确认提示 |
 
-协议由 **mark price** 触发 TP/SL，父单未完全成交时子单生效存在额外条件；本页只处理下单响应，不能从“主单部分成交”推断已有完整保护。[官方 TP/SL][p-tpsl]
+协议由 **mark price** 触发 TP/SL。父单全成后放置子单；部分成交父单若主动取消，全部子单取消，若因保证金不足取消，则按父单全成的情况放置。本页不持续跟踪后续保护状态。[官方 TP/SL][p-tpsl]
 
 证据：[TP/SL 输入联动][component]、[保护价规则][protection]、[子单构造][trade-service]、[分组及逐项响应][exchange]。
 
@@ -256,7 +258,7 @@ TP/SL 是随这笔父单提交的固定数量子单，不等同于为整个已�
 | 保证金不足 | 表单按可交易容量拦截；交易场所仍可拒绝杠杆或订单 | 保存 availableToTrade、maxTradeSzs、输入杠杆、参考价及原始拒绝原因 |
 | 全平前仓位消失/反向 | 强制刷新后按 key 和方向检查，报 `position-changed`，不发订单 | 账户不可用则失败；全平数量允许跟随最新仓位变化 |
 | 杠杆写入失败 | 普通单停止后续订单，显示 `perpsLeverageUpdateFailed`；独立调整失败恢复已知杠杆 | “订单未发送”不证明网络故障下杠杆操作一定未生效；当前没有独立杠杆未知结果恢复流程 |
-| builder 查询/授权失败 | 查询失败按未授权处理，尝试一次授权；授权失败终止订单发送 | 只在配置 builder 时适用；会话授权缓存不等于永久授权 |
+| builder 资格/授权失败 | 模式/权益读取失败或资格不符，终止费用授权与订单发送；仅 maxBuilderFee 查询失败按未授权处理并尝试一次授权，授权失败终止订单 | 只在配置 builder 时适用；每单重查收费资格，会话用户授权缓存不等于永久授权 |
 | HTTP 4xx 或明确业务拒绝 | 当前分类为确定答复，显示错误；订单逐项拒绝保留原文 | 下单路径不自动用新 nonce 重发 |
 | HTTP 0/5xx、响应丢失或无法解析 | 父订单转 unknown 并保留 cloid，开始查询，不重复提交 | unknown 中的零成交占位值不证明实际未成交 |
 | HTTP 长时间不返回 | `/exchange` 和订单状态查询没有显式 `timeout`，可能持续等待 | “4 次、间隔 1.5 秒”是次数策略，不是保证 6 秒内结束；请求不结算时尝试次数也不会推进 |
@@ -333,7 +335,7 @@ Hyperliquid 的 `activeAssetData` 请求按地址与合约读取，返回 `lever
 | [播种测试][seeding-test] | 行情/账户到达顺序、用户输入不被覆盖、默认方向/杠杆/全平金额 |
 | [生命周期测试][lifecycle-test] | 提交闸门、未知结果四次查询、再查询、销毁及过期回调 |
 | [交易服务测试][trade-test] | IOC/GTC 与 reduce-only、全平取最新数量、杠杆失败停止订单、设置后容量缺失/错误模式/旧杠杆/零额度阻止发送、保护子单方向和边界 |
-| [写服务测试][exchange-test] | payload、部分成交、未知结果不重发、主单/保护单分别确认、cloid 查询、builder 授权 |
+| [写服务测试][exchange-test] | payload、部分成交、未知结果不重发、保护单等待状态、cloid 查询、builder 资格校验与授权缓存后的重查 |
 | [签名测试][signing-test]、[nonce 测试][nonce-test] | 固定哈希样例、uint64 编码、签名恢复及实例内 nonce 分配；不等于真实端点验签记录 |
 | [读取服务测试][hyperliquid-test]、[全仓池测试][cross-test] | 费率/精度适配、容量 REST/WS 并行与仲裁、10 秒超时、畸形容量过滤、全仓抵押池、账户模式、完整跨 DEX 风险 |
 | [保证金测试][margin-test]、[保护价测试][protection-test]、[协议模型测试][perps-test]、[格式化测试][format-test] | 分档边界、保护价方向/精度、协议数值与页面格式 |
@@ -377,7 +379,7 @@ npm run test:ci -- \
 | O8 强平分档 | 用可控单档/多档元数据及跨档仓位，分别计算多空、加仓、反向部分抵减和净零 | 满足权益=维持保证金方程；按强平价处价值选档；净零/无数据时 N/A。全仓固定数量换杠杆不改变强平预估 |
 | O9 费用 | 模拟 userFees 返佣、推荐折扣、HIP-3 d<1/d>=1、growth；另让元数据缺系数 | 费率与公式一致，负号保留；缺系数显示无法估算；当前无 builder 配置时不发送授权。费用行只显示费率 |
 | O10 TP/SL 输入 | 多空分别填合法/反侧触发价，切换 %/$；仅开开关不填，再只填 TP；解锁中跨过触发价 | 两空不附子单；反侧点击时报错且不发送；联动符合公式；解锁后再次校验保护价 |
-| O11 父子响应 | 返回父单 filled + 子单 error，再返回 partial + waitingForFill | 父单真实结果保留，提示保护未确认，不自动补保护单/重下父单；账户确认父单影响 |
+| O11 父子响应 | 返回父单 filled + 子单 error/waitingForFill、partial + waitingForFill、filled + waitingForTrigger | 前两类提示保护未确认，最后一类不误报；保留父单结果，不自动补保护单或重下父单 |
 | O12 结果未知 | 模拟 POST 已被接受但客户端收到 0/5xx 或畸形响应；再模拟查询有订单/四次无结果 | 原 cloid 被查询，无新 order；有结果后刷新；耗尽仍禁用下单，再查一次沿用原 cloid |
 | O13 断线/退出 | 已加载时停止 pong，再恢复；在提交后离开或切换钱包 | stale 提示与重连；旧回调不导航、未知查询停止。已交服务的写入仍可能完成，去历史/账户确认 |
 | O14 模型保留分支 | 运行对应测试或通过测试夹具设置 limit/GTC、显式 reverse；不要求用户点击不存在的控件 | 限价规范化及 GTC 生效；显式 reverse 使用最新旧仓+目标新仓数量，与 O4 普通反向单区分 |

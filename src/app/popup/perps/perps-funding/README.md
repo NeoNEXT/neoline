@@ -140,7 +140,7 @@ flowchart TD
 | 入金上限 | 当前配置源链的 USDC balanceOf，未知为 null；不读取 NeoX 当前网络的 USDC 余额 |
 | 标准及非 unified 模式提现 | 标准 DEX 的 withdrawableExact；不加上其他 HIP-3 DEX 可提额，也不加独立现货余额 |
 | unifiedAccount / portfolioMargin 提现 | `max(spotUsdcExact - spotUsdcHoldExact, 0)`，从 spot 扣款；本页只处理 USDC，不折算 HYPE 等其他抵押品 |
-| dexAbstraction | 当前解析为非 unified，沿用标准 DEX withdrawable/sourceDex='' 路径；不在本页切换账户模式 |
+| dexAbstraction | 协议已停用，API 仍保留返回值；本地兼容标准 DEX withdrawable/sourceDex='' 路径，不切换模式 |
 | unknown 模式 | 可提余额为 null，阻止提现；入金使用独立源链余额，不单因模式 unknown 被禁用，但仍要求账户数据存在 |
 | 百分比 | `floor_6(当前上限×25%或50%)`；MAX=`floor_6(当前上限)`，不预扣通道费，费用从输入总额中扣 |
 | 入金下限 | A≥5 USDC，明确是产品下限，不是当前 CCTP 的固定协议门槛 |
@@ -170,6 +170,8 @@ flowchart TD
 | 网络费 networkFeeExact | `floor(estimateGas × 12/10) × (maxFeePerGas ?? gasPrice) / 10^18` ETH |
 
 例：A=10、minimumFee=1.4 bp、forwardFee.high=200000、新账户费=1，则 CCTP maxFee=0.2014、总交易费=1.2014、预计收到=8.7986 USDC；网络 gas 另由 ETH 支付。新账户费不能被重复放进 CCTP maxFee。
+
+2026-10-08 核对 [Activation gas fee](https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/activation-gas-fee)：新 HyperCore 账户首次成为交易目标地址时收取 1 个 quote token。当前资金路径的实际扣费仍待 F16/H14 验证。
 
 网络费依据真实 batchDepositForBurnWithAuth 调用估算并加 20% gas 余量。广播前重新估 gas、获取 nonce 和交易费率，**确认层网络费不是最终花费或固定上限**；当前不因这项 ETH 估算上涨重新打开确认层。
 

@@ -48,9 +48,9 @@ npm run test:ci -- --progress=false \
 | O6 | [响应丢失测试](perps.spec.ts)双击只发送一次 | [组件测试][component]使用延迟私钥 Promise，覆盖超滑点、固定数量容量不足、assetId/数量精度变化、钱包切换；滑点内保留点击时数量和基准价格；[渲染测试][render]验证控件锁定和重复点击 |
 | O7 | [表单验收](order-acceptance.spec.ts)：独立杠杆成功、业务拒绝、已生效但响应丢失；只出现 updateLeverage；返回详情重新读取真实替身状态 | 网络未知时不能把页面恢复旧杠杆视为场所回滚；[组件测试][component]另覆盖全仓模式、并发锁 |
 | O8 | 不通过界面构造不存在的强平档位控件 | [保证金测试][margin]独立核对权益=维持保证金、多空单档/跨档与边界；[组合测试][composition]覆盖加仓、反向抵减、净零/缺数据 N/A、全仓固定数量与杠杆无关 |
-| O9 | [表单验收](order-acceptance.spec.ts)：推荐折扣、HIP-3 d<1/d>=1/growth/缺系数、只显示费率，无 builder 授权 | [组合测试][composition]、[组件测试][component]验证负 maker 费率及返佣符号；当前 UI 无 maker 限价入口，不能伪装成浏览器可点击场景 |
+| O9 | [表单验收](order-acceptance.spec.ts)：推荐折扣、HIP-3 d<1/d>=1/growth/缺系数、只显示费率，无 builder 授权 | [组合测试][composition]、[组件测试][component]验证负 maker 费率及返佣符号；[写服务测试][exchange]覆盖 builder 模式/权益门槛、读取失败及授权缓存后的资格重查。当前 builder 地址为空，UI 无 maker 限价入口 |
 | O10 | [复杂订单](complex-orders.spec.ts)多空合法/反侧触发价、仅 TP；[表单验收](order-acceptance.spec.ts)开关开启但两项空、不生成子单，%/$ 联动 | [渲染测试][render]验证解锁中价格穿过触发价后再次拦截及多空联动公式 |
-| O11 | [复杂订单](complex-orders.spec.ts)filled + error；[恢复验收](order-recovery.spec.ts)partial + waitingForFill；账户保留父单影响，提示保护未确认，无补单 | 网络替身只声明协议响应，不调用应用业务计算 |
+| O11 | [复杂订单](complex-orders.spec.ts)filled + error；[恢复验收](order-recovery.spec.ts)partial + waitingForFill；账户保留父单影响，提示保护未确认，无补单 | [写服务测试][exchange]验证 filled + waitingForFill 提示未确认、filled + waitingForTrigger 不误报，以及 partial 始终提示未确认；网络替身只声明协议响应，不调用应用业务计算 |
 | O12 | [恢复验收](order-recovery.spec.ts)：先成交再丢响应/503/畸形响应，原 cloid 查回，刷新持仓；[响应丢失测试](perps.spec.ts)：四次无结果，再查四次仍沿用 cloid，保持禁用 | 不自动重发；查询得到订单也不自动导航或冒充完整成交确认 |
 | O13 | [恢复验收](order-recovery.spec.ts)：停止 pong，走真实 30s ping + 10s 超时，旧报价/stale、重连与恢复订阅；离开后已提交写入可完成，旧回调不导航 | [组件测试][component]与[生命周期测试][lifecycle]验证地址切换、销毁停止未知查询和忽略过期回调。按当前规则，stale 本身不禁用 HTTP 下单 |
 | O14 | 当前 UI 无限价/GTC/显式 reverse 控件，不编造入口 | [交易服务测试][trade]验证限价规范化、GTC、reduceOnly、显式 reverse 使用刷新旧仓+目标数量；属于模型保留分支 |
@@ -90,4 +90,5 @@ O16：IOC/GTC × 全平/部分平仓，四组均使用名义额低于 10 USD 的
 [composition]: ../../src/app/popup/perps/perps-order/perps-order-composition.spec.ts
 [lifecycle]: ../../src/app/popup/perps/perps-order/perps-order-lifecycle.spec.ts
 [trade]: ../../src/app/core/services/perps/perps-trade-order.service.spec.ts
+[exchange]: ../../src/app/core/services/perps/perps-exchange-write.service.spec.ts
 [margin]: ../../src/app/popup/_lib/perps-margin.spec.ts

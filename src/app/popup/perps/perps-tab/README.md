@@ -104,7 +104,7 @@ flowchart TD
 
 | 字段/规则 | 来源、计算与单位 |
 | --- | --- |
-| 标准账户价值 | 聚合已读取 DEX 的 `marginSummary.accountValue`，单位为本产品支持市场的 USD/USDC 金额。`default`、`disabled`、`dexAbstraction` 在当前实现中进入非统一模式分支 |
+| 标准账户价值 | 聚合已读取 DEX 的 `marginSummary.accountValue`，单位为本产品支持市场的 USD/USDC 金额。`default`、`disabled`、`dexAbstraction` 进入非统一模式兼容分支；模式范围见[功能地图](../perps-feature-map.zh-CN.md#7-当前功能边界与容易误读的地方) |
 | 标准账户可用保证金 | 聚合各 DEX 的 `withdrawable`；这是本页展示口径，不代表任意市场、任意方向都能用这笔汇总金额下单 |
 | 统一/组合保证金账户余额 | 只读取标准条目持有的现货 USDC `total` 一次，不累加各 DEX 的 `accountValue`；标题为 USDC 余额 |
 | 统一/组合保证金可用值 | `max(0, spot USDC total - hold)`，单位 USDC；不计算其他抵押资产的价值、抵押折扣或完整组合保证金风险 |
@@ -146,7 +146,7 @@ flowchart TD
 | 平仓 | 部分平仓数量不超过当前仓位绝对数量；全平直接保留完整仓位数量，避免用两位小数金额反推而残留零头。普通单/部分平仓本地最低名义额为 10 USD；全平跳过此预检，最终由交易场所判定 | `submittedSize`、`orderAvailability`、[提交服务][trade-service] |
 | 杠杆与保证金预览 | 杠杆单位为倍。开仓预估保证金 `Q × markPx / L`；最大容量还要考虑当前市场、方向、保证金模式及 `activeAssetData`。杠杆写入可能因保证金档位被拒绝，不能只比较首页 `maxLeverage` | `composePerpsOrder`、`buildOrderPreview`、`PerpsTradeOrderService.submit` |
 | 交易手续费 | 预估 `N × (市场 maker/taker 费率 + builder 费率)`，单位 USD/USDC；费率为小数比例。限价单展示两侧费率，因为 GTC 也可能立即吃单；负 maker 费率表示返佣 | `marketFeeRates`、`quotesBothFeeSides`、`buildOrderPreview` |
-| HIP-3 费用修正 | 部署方系数 `d<1 ? d+1 : 2d`，growth mode 系数为 `0.1`，否则为 `1`；正 maker/taker 费率应用部署方系数，非正 maker 不应用。缺少部署方费率配置时，UI 标记无法估算 | `marketFeeRates`；[官方费用公式][protocol-fees] |
+| HIP-3 费用修正 | 部署方系数 `d<1 ? d+1 : 2d`，growth mode 系数为 `0.1`，否则为 `1`；正 maker/taker 费率应用部署方系数，非正 maker 不应用。缺少部署方费率配置时，UI 标记无法估算；AQA 范围见[下单费用](../perps-order/README.md#35-手续费与展示单位) | `marketFeeRates`；[官方费用公式][protocol-fees] |
 | builder 费用 | 配置值 `45` 的单位为 `0.1 bp`，对应 `0.045% = 0.00045`；仅配置 builder 地址时启用，地址为空时费率为零，不能只凭常量断言实际收费 | [常量][perps-lib]、[写服务][exchange-service]；[Exchange 参数][protocol-exchange] |
 
 资金页的网络费和跨链费属于独立报价，不等同于上表的交易手续费。本页的可用保证金也不等同于资金页最终可提现额；后者需按账户模式、费用和提交前刷新结果重新校验。
