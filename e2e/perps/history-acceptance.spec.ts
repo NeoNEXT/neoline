@@ -63,9 +63,9 @@ test('H1 history tabs load on demand once and render protocol values', async ({ 
   expect(hl.infoRequests.filter((request) => request.type === 'userNonFundingLedgerUpdates')).toHaveLength(1);
 });
 
-test('H3 the three archived lists cap at 200 newest rows', async ({ page, hl }) => {
+test('H3 the three archived lists display all fetched rows', async ({ page, hl }) => {
   const now = Date.now();
-  const times = Array.from({ length: 201 }, (_, index) => now - index * 1000);
+  const times = Array.from({ length: 262 }, (_, index) => now - index * 1000);
   hl.fundingHistory = times.map((time, index) => ({
     time, hash: `funding-${index}`, delta: { type: 'funding', coin: 'ETH', usdc: `${index + 1}` },
   }));
@@ -84,6 +84,6 @@ test('H3 the three archived lists cap at 200 newest rows', async ({ page, hl }) 
   const tabs = page.locator('.history-tabs button');
   for (const index of [2, 3, 4]) {
     await tabs.nth(index).click();
-    await expect(page.locator('.fill-row.fill-trade')).toHaveCount(200);
+    await expect(page.locator('.fill-row.fill-trade')).toHaveCount(times.length);
   }
 });

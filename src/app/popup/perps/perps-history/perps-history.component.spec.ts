@@ -291,7 +291,7 @@ describe('PerpsHistoryComponent 成交 tab 的兜底', () => {
     component.ngOnDestroy();
   });
 
-  it('H3 归档列表按时间稳定排序，并只保留最新 200 条', () => {
+  it('H3 归档列表按时间稳定排序，并保留全部已取得的记录', () => {
     const rows = Array.from({ length: 201 }, (_, index) => ({
       time: index < 3 ? 3000 : 2000 - index,
       hash: `row-${index}`,
@@ -312,17 +312,17 @@ describe('PerpsHistoryComponent 成交 tab 的兜底', () => {
     });
 
     component.setTab('funding');
-    expect(component.fundings.length).toBe(200);
+    expect(component.fundings.length).toBe(rows.length);
     expect(component.fundings.slice(0, 3).map((row) => row.hash)).toEqual([
       'row-0', 'row-1', 'row-2',
     ]);
     component.setTab('orderHistory');
-    expect(component.historicalOrders.length).toBe(200);
+    expect(component.historicalOrders.length).toBe(rows.length);
     expect(component.historicalOrders.slice(0, 3).map((row) => row.order.oid)).toEqual([
       '0', '1', '2',
     ]);
     component.setTab('transfers');
-    expect(component.transfers.length).toBe(200);
+    expect(component.transfers.length).toBe(rows.length);
     component.setTab('fills');
     expect(component.fills.length).toBe(201);
     expect(component.fills[0].tid).toBe('fill-200');

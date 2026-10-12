@@ -32,9 +32,6 @@ type PerpsActivityTab =
   | 'funding'
   | 'transfers';
 
-/** 弹窗最多也就能滚这么长；更早的行留给网页端去看。 */
-const MAX_ARCHIVE_ROWS = 200;
-
 @Component({
   templateUrl: 'perps-history.component.html',
   styleUrls: ['perps-history.component.scss'],
@@ -214,20 +211,20 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
       this.historicalOrders = this.newestFirst(
         res as PerpsHistoricalOrder[],
         (row) => row.statusTimestamp
-      ).slice(0, MAX_ARCHIVE_ROWS);
+      );
       return;
     }
     if (tab === 'funding') {
       this.fundings = this.newestFirst(
         res as PerpsFundingUpdate[],
         (row) => row.time
-      ).slice(0, MAX_ARCHIVE_ROWS);
+      );
       return;
     }
     this.transfers = this.newestFirst(
       res as PerpsLedgerUpdate[],
       (row) => row.time
-    ).slice(0, MAX_ARCHIVE_ROWS);
+    );
   }
 
   private watchLiveActivity() {

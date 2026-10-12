@@ -14,7 +14,7 @@ import { formatSignedUsd, formatUsd } from '../perps.util';
  *
  * 规则是普通函数，组件和测试直接调用；管道只是包一层。理由和
  * [perps-format.pipe.ts](../perps-format.pipe.ts) 一样：模板里直接调组件方法，会在每一轮
- * 变更检测中把每一行重算一遍 —— 而这一页最多能列 200 行，每行要问七八个问题。
+ * 变更检测中把每一行重算一遍，每行要问七八个问题。
  * 纯管道按参数缓存，没有变动的行只算一次。
  */
 
