@@ -2022,7 +2022,7 @@
     "message": "네트워크 수수료"
   },
   "perpsBelowMinDeposit": {
-    "message": "이 지갑의 최소 입금 금액 {{amount}} {{symbol}}보다 적습니다."
+    "message": "최소 입금 금액 {{amount}} {{symbol}}보다 적습니다."
   },
   "perpsBelowMinWithdraw": {
     "message": "최소 금액 {{amount}} {{symbol}}보다 적습니다. 이 경로는 출금할 때마다 {{fee}} {{symbol}}을 차감하므로 이보다 적으면 수수료 단계에서 거부됩니다."

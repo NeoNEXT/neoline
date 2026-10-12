@@ -2022,7 +2022,7 @@
     "message": "ネットワーク手数料"
   },
   "perpsBelowMinDeposit": {
-    "message": "このウォレットの最低入金額 {{amount}} {{symbol}} を下回っています。"
+    "message": "最低入金額 {{amount}} {{symbol}} を下回っています。"
   },
   "perpsBelowMinWithdraw": {
     "message": "最低額 {{amount}} {{symbol}} を下回っています。この経路は出金ごとに {{fee}} {{symbol}} を差し引くため、これを下回ると手数料の段階で拒否されます。"

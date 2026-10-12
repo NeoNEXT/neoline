@@ -174,6 +174,71 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       .trim();
 
   describe('止盈止损', () => {
+    for (const side of ['long', 'short'] as const) {
+      it(`clears prices and return drafts when switching from ${side} to the opposite side`, () => {
+        queryParams = { side };
+        fixture.detectChanges();
+        component.amount = '200';
+        component.setProtectionEnabled(true);
+        component.setProtectionUnit('sl', '$');
+        fixture.detectChanges();
+        const returns: NodeListOf<HTMLInputElement> = fixture.nativeElement.querySelectorAll('.protection-return input');
+        returns.forEach((input, index) => {
+          input.value = index === 0 ? '10.5' : '5.0';
+          input.dispatchEvent(new Event('input'));
+        });
+        fixture.detectChanges();
+        expect(component.canSubmit).toBeTrue();
+        const inputs: NodeListOf<HTMLInputElement> = fixture.nativeElement.querySelectorAll('.protection-fields input');
+        expect(Array.from(inputs).every(input => input.value !== '')).toBeTrue();
+
+        const options: NodeListOf<HTMLElement> = fixture.nativeElement.querySelectorAll('.side-toggle .option');
+        options[side === 'long' ? 1 : 0].click();
+        fixture.detectChanges();
+
+        expect(component.side).toBe(side === 'long' ? 'short' : 'long');
+        expect(component.protectionEnabled).toBeTrue();
+        expect(component.protectionUnits).toEqual({ tp: '%', sl: '$' });
+        expect(Array.from(inputs).map(input => input.value)).toEqual(['', '', '', '']);
+        expect(component.composition.intent?.protection).toBeUndefined();
+        expect(fixture.nativeElement.querySelector('.error-tip')).toBeNull();
+        expect(component.canSubmit).toBeTrue();
+      });
+    }
+
+    it('keeps protection inputs when clicking the already selected side', () => {
+      fixture.detectChanges();
+      component.amount = '200';
+      component.setProtectionEnabled(true);
+      component.setProtectionPrice('tp', '2200');
+      component.setProtectionReturn('sl', '50.0');
+      fixture.detectChanges();
+      const inputs: NodeListOf<HTMLInputElement> = fixture.nativeElement.querySelectorAll('.protection-fields input');
+      const values = Array.from(inputs).map(input => input.value);
+
+      fixture.nativeElement.querySelector('.side-toggle .option').click();
+      fixture.detectChanges();
+
+      expect(Array.from(inputs).map(input => input.value)).toEqual(values);
+      expect(component.composition.intent.protection).toEqual({ takeProfitPriceExact: '2200', stopLossPriceExact: '1900' });
+    });
+
+    it('clears hidden protection inputs when switching side with protection disabled', () => {
+      fixture.detectChanges();
+      component.setProtectionEnabled(true);
+      component.setProtectionPrice('tp', '2200');
+      component.setProtectionReturn('sl', '50.0');
+      component.setProtectionEnabled(false);
+      fixture.detectChanges();
+
+      fixture.nativeElement.querySelectorAll('.side-toggle .option')[1].click();
+      fixture.nativeElement.querySelector('.protection-switch').click();
+      fixture.detectChanges();
+
+      const inputs: NodeListOf<HTMLInputElement> = fixture.nativeElement.querySelectorAll('.protection-fields input');
+      expect(Array.from(inputs).map(input => input.value)).toEqual(['', '', '', '']);
+    });
+
     it('shows an error and blocks submit when profit or loss is negative', () => {
       const notify = spyOn(TestBed.inject(GlobalService), 'snackBarTip');
       const submit = spyOn(TestBed.inject(PerpsTradeOrderService), 'submit');
@@ -282,8 +347,8 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       component.finishProtectionReturn('sl');
       expect(component.stopLossPrice).toBe('1900');
       component.setSide('short');
-      expect(component.canSubmit).toBeFalse();
-      expect(component.composition.submittable).toBeFalse();
+      expect(component.canSubmit).toBeTrue();
+      expect(component.composition.intent.protection).toBeUndefined();
       component.setProtectionPrice('tp', '1900');
       component.setProtectionPrice('sl', '2100');
       expect(component.canSubmit).toBeTrue();

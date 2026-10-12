@@ -2022,7 +2022,7 @@
     "message": "Network fee"
   },
   "perpsBelowMinDeposit": {
-    "message": "Amount is below the minimum of {{amount}} {{symbol}} for deposits from this wallet."
+    "message": "Amount is below the minimum deposit amount of {{amount}} {{symbol}}."
   },
   "perpsBelowMinWithdraw": {
     "message": "Amount is below the minimum of {{amount}} {{symbol}}. The route takes {{fee}} {{symbol}} out of every withdrawal, and a smaller amount is refused where it is charged."

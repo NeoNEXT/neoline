@@ -2022,7 +2022,7 @@
     "message": "网络费用"
   },
   "perpsBelowMinDeposit": {
-    "message": "低于本钱包的最低存入限额 {{amount}} {{symbol}}。"
+    "message": "低于最低存入限额 {{amount}} {{symbol}}。"
   },
   "perpsBelowMinWithdraw": {
     "message": "低于最低限额 {{amount}} {{symbol}}。该通道每笔提取都会扣除 {{fee}} {{symbol}}，低于此金额会在扣费环节被拒绝。"

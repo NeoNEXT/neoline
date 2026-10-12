@@ -749,6 +749,12 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     if (this.closeMode || this.addMode) {
       return;
     }
+    if (this.side !== side) {
+      // 保护价依赖订单方向，盈亏输入草稿也不能沿用到反方向。
+      this.takeProfitPrice = '';
+      this.stopLossPrice = '';
+      this.protectionReturnDraft = {};
+    }
     this.side = side;
     this.touched.add('side');
     this.lifecycle.edited();
