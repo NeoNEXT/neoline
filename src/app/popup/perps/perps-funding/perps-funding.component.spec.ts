@@ -1,11 +1,10 @@
 import BigNumber from 'bignumber.js';
-import { of, throwError } from 'rxjs';
+import { BehaviorSubject, of, throwError } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Pipe, PipeTransform } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import { TooltipComponent } from '@/app/share/components/tooltip/tooltip.component';
+import { LoadingComponent } from '@/app/share/components/loading/loading.component';
 import { ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
 
@@ -27,17 +26,16 @@ import { PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS } from '@popup/_lib/perps';
  * 提现的定价来自报价而不是常量，所以这些测试会写明它们据以计算的那份报价。取 1 USDC 是为了
  * 让算术一目了然；真实数字是合约在当时所说的那个。
  */
-const QUOTE = { feeExact: '1', maxFeeExact: '1' };
+const QUOTE = { feeExact: '1' };
 
 /**
  * 这些测试里准备入金总是失败，而且失败会被上报而不是吞掉，所以组件需要一个上报的去处。
  */
 const globalStub = () => ({ snackBarTip: () => {} } as any);
-
 /** 这些测试里从不取报价；既不准备也不发送入金。 */
 const feeQuoteStub = () =>
   ({
-    depositQuote: () => Promise.reject(new Error('not stubbed')),
+    depositFeeRate: () => Promise.reject(new Error('not stubbed')),
     withdrawQuote: () => Promise.resolve({ ...QUOTE }),
     minWithdrawExact: (quote: { feeExact: string }) =>
       new BigNumber(quote.feeExact).times(2).toFixed(),
@@ -112,7 +110,7 @@ describe('PerpsFundingComponent balance line', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [PerpsFundingComponent, TranslateStubPipe],
+      declarations: [PerpsFundingComponent, TranslateStubPipe, LoadingComponent],
       imports: [FormsModule],
       providers: [
         {
@@ -212,6 +210,7 @@ describe('PerpsFundingComponent amount boundaries', () => {
       null,
       writesStub()
     );
+    (component as any).depositFee = { protocolFeeBps: 0, forwardFeeExact: '0.2' };
     component.withdrawQuote = { ...QUOTE };
   });
 
@@ -395,7 +394,7 @@ describe('PerpsFundingComponent amount boundaries', () => {
     component.accountLoading = false;
     component.walletBalanceExact = '100';
     component.amount = '50';
-    component.depositQuote = { feeExact: '0.2', maxFeeExact: '0.2' };
+    (component as any).depositFee = { protocolFeeBps: 0, forwardFeeExact: '0.2' };
 
     expect(component.confirmFeeExact).toBe('0.2');
     expect(component.confirmReceiveExact).toBe('49.8');
@@ -406,7 +405,7 @@ describe('PerpsFundingComponent amount boundaries', () => {
     component.accountLoading = false;
     component.walletBalanceExact = '100';
     component.amount = '50';
-    component.depositQuote = null;
+    (component as any).depositFee = null;
 
     expect(component.confirmFeeExact).toBeNull();
     expect(component.confirmReceiveExact).toBeNull();
@@ -479,10 +478,9 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
       null,
       writes
     );
+    (component as any).depositFee = { protocolFeeBps: 0, forwardFeeExact: '0.2' };
     component.tab = 'withdraw';
     component.withdrawQuote = { ...QUOTE };
-    // 确认页当初是用它画出来的；`submit` 只会对用户已经看过的报价签名。
-    component.withdrawConfirmedQuote = { ...QUOTE };
     component.accountLoading = false;
     component.account = account('100') as any;
     (component as any).address = '0xabc';
@@ -622,41 +620,14 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
     );
   });
 
-  it('will not sign against a quote the user was never shown', async () => {
+  it('does not submit without a loaded withdrawal fee', async () => {
     component.amount = '50';
-    component.withdrawConfirmedQuote = null;
+    component.withdrawQuote = null;
     hyperliquid.getAccount.and.returnValue(of(account('100')));
 
     await component.submit();
 
     expect(writes.withdraw).not.toHaveBeenCalled();
-    expect(component.confirming).toBeTrue();
-  });
-
-  it('signs a withdrawal the route turned out to price cheaper', async () => {
-    component.amount = '50';
-    hyperliquid.getAccount.and.returnValue(of(account('100')));
-    (component as any).feeQuote.withdrawQuote = () =>
-      Promise.resolve({ feeExact: '0.5', maxFeeExact: '0.5' });
-
-    await component.submit();
-
-    // 用户拿到的比确认页承诺的更多。把他们送回去同意一个更好的数字，
-    // 是没有任何问题作为依据的摩擦。
-    expect(writes.withdraw).toHaveBeenCalled();
-    expect(component.confirming).toBeFalse();
-  });
-
-  it('asks again when the route got more expensive than the quote shown', async () => {
-    component.amount = '50';
-    hyperliquid.getAccount.and.returnValue(of(account('100')));
-    (component as any).feeQuote.withdrawQuote = () =>
-      Promise.resolve({ feeExact: '2', maxFeeExact: '2' });
-
-    await component.submit();
-
-    expect(writes.withdraw).not.toHaveBeenCalled();
-    expect(component.confirming).toBeTrue();
   });
 
   it('drops the refresh warnings as soon as the amount is edited', async () => {
@@ -690,6 +661,7 @@ describe('PerpsFundingComponent submit gate', () => {
       null,
       writesStub()
     );
+    (component as any).depositFee = { protocolFeeBps: 0, forwardFeeExact: '0.2' };
     component.withdrawQuote = { ...QUOTE };
     component.accountLoading = false;
   });
@@ -737,98 +709,6 @@ describe('PerpsFundingComponent submit gate', () => {
     expect(component.canSubmit).toBeTrue();
   });
 
-  it('blocks a deposit whose gas the chain currency cannot cover', () => {
-    component.account = { abstractionMode: 'default' } as any;
-    component.walletBalanceExact = '100';
-    component.amount = '50';
-    component.networkFeeExact = '0.0002';
-    component.nativeBalanceExact = '0.0001';
-
-    expect(component.gasShortfall).toBeTrue();
-    expect(component.disabledReason).toBe('perpsGasShortfall');
-    expect(component.canSubmit).toBeFalse();
-
-    component.nativeBalanceExact = '0.0002';
-    expect(component.gasShortfall).toBeFalse();
-    expect(component.canSubmit).toBeTrue();
-  });
-
-  it('does not call a shortfall while the fee is still unknown', () => {
-    component.account = { abstractionMode: 'default' } as any;
-    component.walletBalanceExact = '100';
-    component.amount = '50';
-    component.networkFeeExact = null;
-    component.nativeBalanceExact = '0';
-
-    expect(component.gasShortfall).toBeFalse();
-  });
-
-  it('shows a deposit for confirmation instead of sending it straight away', () => {
-    component.account = { abstractionMode: 'default' } as any;
-    component.walletBalanceExact = '100';
-    component.amount = '50';
-
-    component.requestSubmit();
-
-    expect(component.confirming).toBeTrue();
-    expect(component.submitting).toBeFalse();
-  });
-
-  // 收款方从来不是有疑问的那一部分。用户要同意的，是一笔从合约里读来的、
-  // 而其 owner 可以修改的手续费。
-  it('shows a withdrawal for confirmation rather than sending it on one press', async () => {
-    component.tab = 'withdraw';
-    component.account = { abstractionMode: 'default', withdrawableExact: '100' } as any;
-    component.amount = '50';
-
-    component.requestSubmit();
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(component.confirming).toBeTrue();
-    expect(component.submitting).toBeFalse();
-    expect(component.withdrawConfirmedQuote).toEqual(QUOTE);
-  });
-
-  it('keeps the confirm button down until the withdrawal has a quote to agree to', () => {
-    component.tab = 'withdraw';
-    component.account = {
-      abstractionMode: 'default',
-      withdrawableExact: '100',
-    } as any;
-    component.amount = '50';
-    component.withdrawConfirmedQuote = null;
-    component.preparingWithdraw = true;
-
-    expect(component.canConfirm).toBeFalse();
-
-    component.preparingWithdraw = false;
-    component.withdrawConfirmedQuote = { ...QUOTE };
-
-    expect(component.canConfirm).toBeTrue();
-  });
-
-  // `submit` 检查的每一项，这个确认面板都得跟着检查：它拒绝时一声不吭，
-  // 所以一个看起来能按的确认按钮，就是一个按了没反应的按钮。
-  it('never offers a confirm button that submitting would refuse', () => {
-    component.tab = 'withdraw';
-    component.account = {
-      abstractionMode: 'default',
-      withdrawableExact: '100',
-    } as any;
-    component.amount = '50';
-    component.withdrawConfirmedQuote = { ...QUOTE };
-    expect(component.canConfirm).toBeTrue();
-
-    // 新报价把下限抬到了用户已经同意的数额之上；
-    // 面板会以新数字重新打开，并且绝不能接受旧的那个。
-    component.amount = '1.5';
-
-    expect(component.belowMinimum).toBeTrue();
-    expect(component.canSubmit).toBeFalse();
-    expect(component.canConfirm).toBeFalse();
-  });
-
   it('offers percentages of the real balance rather than fixed amounts', () => {
     component.account = { abstractionMode: 'default' } as any;
     component.walletBalanceExact = '37.5';
@@ -862,604 +742,92 @@ describe('PerpsFundingComponent submit gate', () => {
  * 一笔入金的网络手续费，要等确认页把它准备好之后才知道，这意味着确认面板可能是第一个发现
  * 「钱包付不起这笔发送」的地方。界面为此做什么，就是这里要讲的事。
  */
-describe('PerpsFundingComponent deposit confirmation', () => {
+describe('PerpsFundingComponent page fees', () => {
   let component: PerpsFundingComponent;
-
-  const CONFIG = {
-    decimals: 6,
-    symbol: 'USDC',
-    nativeSymbol: 'ETH',
-    chainName: 'Arbitrum Sepolia',
-  };
-
-  /** 够不够付下面那笔估算的 gas —— 这是唯一要紧的变量。 */
-  function build(nativeBalanceExact: string, global: any = globalStub()) {
-    const component = new PerpsFundingComponent(
-      { snapshot: { queryParams: {} } } as any,
-      null,
-      global,
-      { depositConfig: CONFIG } as any,
-      accountStateStub(),
-      { getPassword: () => Promise.resolve('password') } as any,
-      { getPrivateKey: () => Promise.resolve('0xkey') } as any,
-      {
-        ...depositChainStub(),
-        authorizeDeposit: () =>
-          Promise.resolve({ from: '0xabc', amountExact: '50' }),
-        depositFeeExact: () => Promise.resolve('0.004'),
-      } as any,
-      {
-        ...feeQuoteStub(),
-        depositQuote: () =>
-          Promise.resolve({ feeExact: '0.2', maxFeeExact: '0.2' }),
-      } as any,
-      null,
-      writesStub()
-    );
-    component.tab = 'deposit';
-    component.accountLoading = false;
-    component.account = { abstractionMode: 'default' } as any;
-    component.walletBalanceExact = '100';
-    component.nativeBalanceExact = nativeBalanceExact;
-    component.amount = '50';
-    (component as any).address = '0xabc';
-    (component as any).wallet = { accounts: [{ extra: {} }] };
-    return component;
-  }
-
-  /** 让整条准备链跑完；它的每一步都是一个已 resolve 的 promise。 */
-  async function settle() {
-    for (let i = 0; i < 10; i++) {
-      await Promise.resolve();
-    }
-  }
-
-  it('ignores a cancelled preparation that finishes after its replacement', async () => {
-    component = build('1');
-    let finishOld: (fee: string) => void;
-    const chain = (component as any).depositChain;
-    chain.authorizeDeposit = (_config, _key, amountExact) =>
-      Promise.resolve({ from: '0xabc', amountExact });
-    chain.depositFeeExact = (_config, authorization) =>
-      authorization.amountExact === '50'
-        ? new Promise<string>((resolve) => (finishOld = resolve))
-        : Promise.resolve('0.002');
-
-    component.requestSubmit();
-    await settle();
-    component.cancelConfirm();
-    component.amount = '10';
-    component.requestSubmit();
-    await settle();
-    finishOld('0.004');
-    await settle();
-
-    expect((component as any).depositAuthorization.amountExact).toBe('10');
-    expect(component.networkFeeExact).toBe('0.002');
-    expect(component.canConfirm).toBeTrue();
-  });
-
-  it('does not let an old failure close or finish a replacement preparation', async () => {
-    component = build('1');
-    let failOld: (error: Error) => void;
-    const quotes = (component as any).feeQuote;
-    quotes.depositQuote = (amount) => amount === '50'
-      ? new Promise((_resolve, reject) => (failOld = reject))
-      : new Promise(() => {});
-
-    component.requestSubmit();
-    component.cancelConfirm();
-    component.amount = '10';
-    component.requestSubmit();
-    failOld(new Error('old request failed'));
-    await settle();
-
-    expect(component.confirming).toBeTrue();
-    expect(component.preparingDeposit).toBeTrue();
-    expect(component.canConfirm).toBeFalse();
-  });
-
-  it('does not restore an in-flight authorization after destruction', async () => {
-    component = build('1');
-    let finish: (fee: string) => void;
-    (component as any).depositChain.depositFeeExact = () =>
-      new Promise<string>((resolve) => (finish = resolve));
-    component.requestSubmit();
-    await settle();
-    component.ngOnDestroy();
-    finish('0.004');
-    await settle();
-
-    expect((component as any).depositAuthorization).toBeNull();
-    expect(component.depositQuote).toBeNull();
-  });
-
-  it('offers the confirm button once the deposit is priced', async () => {
-    component = build('1');
-    component.requestSubmit();
-    await settle();
-
-    expect(component.networkFeeExact).toBe('0.004');
-    expect(component.gasShortfall).toBeFalse();
-    expect(component.canConfirm).toBeTrue();
-  });
-
-  // 网络手续费要等确认面板已经打开、并且已经签过一次授权之后才知道。把面板留着不关，
-  // 会把表单给出的原因藏在一个 `submit` 一声不吭就拒绝的确认按钮后面。
-  it('closes the sheet when the fee turns out to be unaffordable', async () => {
-    component = build('0.000001');
-    expect(component.canSubmit).toBeTrue();
-
-    component.requestSubmit();
-    await settle();
-
-    expect(component.confirming).toBeFalse();
-    expect(component.networkFeeExact).toBe('0.004');
-    expect(component.gasShortfall).toBeTrue();
-    expect(component.canSubmit).toBeFalse();
-    expect(component.canConfirm).toBeFalse();
-  });
-
-  it('says why, on the form, in the currency the fee is actually paid in', async () => {
-    component = build('0.000001');
-    component.requestSubmit();
-    await settle();
-
-    expect(component.disabledReason).toBe('perpsGasShortfall');
-    expect(component.disabledReasonParams.symbol).toBe('ETH');
-    expect(component.disabledReasonParams.chain).toBe('Arbitrum Sepolia');
-  });
-
-  it('drops the unused authorisation rather than leaving it valid after the sheet closes', async () => {
-    component = build('0.000001');
-    component.requestSubmit();
-    await settle();
-
-    expect((component as any).depositAuthorization).toBeNull();
-    expect(component.depositQuote).toBeNull();
-  });
-
-  it('still forgets the fee when the user backs out of an affordable deposit', async () => {
-    component = build('1');
-    component.requestSubmit();
-    await settle();
-    expect(component.networkFeeExact).toBe('0.004');
-
-    component.cancelConfirm();
-
-    expect(component.networkFeeExact).toBeNull();
-    expect((component as any).depositAuthorization).toBeNull();
-  });
-
-  it('names the token being moved when the reason is about the token', () => {
-    component = build('1');
-    component.amount = '0.000001';
-
-    expect(component.disabledReason).toBe('perpsBelowMinDeposit');
-    expect(component.disabledReasonParams.symbol).toBe('USDC');
-  });
-
-  it('drops a prepared deposit when the user leaves the tab', async () => {
-    component = build('1');
-    component.requestSubmit();
-    await settle();
-    expect((component as any).depositAuthorization).not.toBeNull();
-
-    component.setTab('withdraw');
-
-    expect(component.confirming).toBeFalse();
-    expect((component as any).depositAuthorization).toBeNull();
-    expect(component.networkFeeExact).toBeNull();
-  });
-
-  it('drops a prepared deposit when the screen is destroyed', async () => {
-    component = build('1');
-    component.requestSubmit();
-    await settle();
-    expect((component as any).depositAuthorization).not.toBeNull();
-
-    component.ngOnDestroy();
-
-    expect((component as any).depositAuthorization).toBeNull();
-  });
-
-  // 入金要私钥的时刻是**确认页打开的那一刻**，早于任何一次提交。这个判断曾经放在 `submit()`
-  // 里，于是硬件钱包用户按下「存入」得到的是 `getPrivateKey` 抛出的错误被报成一次失败的交易,
-  // 而「这台钱包签不了」那条文案永远到不了。闸门失效时，下面这个 reject 会重新变成一次
-  // `txFailed`。
-  it('never reaches for a key a hardware wallet does not have', async () => {
-    const global = jasmine.createSpyObj('GlobalService', ['snackBarTip']);
-    component = build('1', global);
-    (component as any).wallet = { accounts: [{ extra: { ledgerSLIP44: 60 } }] };
-    (component as any).evmWallet = {
-      getPrivateKey: () => Promise.reject(new Error('invalid JSON wallet')),
-    };
-
-    expect(component.disabledReason).toBe('perpsSigningUnavailable');
-    expect(component.canSubmit).toBeFalse();
-
-    component.requestSubmit();
-    await settle();
-
-    expect(component.confirming).toBeFalse();
-    expect(component.networkFeeExact).toBeNull();
-    expect(global.snackBarTip).not.toHaveBeenCalled();
-  });
-});
-
-/**
- * 提现报价失败过去会在界面上留下一句「请重试」，却没有任何真的能重试的控件。下限、到账估算
- * 和按钮全都依赖这份报价，所以一次失手不能是死胡同。
- */
-describe('PerpsFundingComponent withdrawal quote', () => {
-  let component: PerpsFundingComponent;
-  let withdrawQuote: jasmine.Spy;
-
-  const CONFIG = {
-    decimals: 6,
-    symbol: 'USDC',
-    nativeSymbol: 'ETH',
-    chainName: 'Arbitrum Sepolia',
-  };
+  let depositFee: jasmine.Spy;
+  let withdrawFee: jasmine.Spy;
 
   beforeEach(() => {
-    withdrawQuote = jasmine.createSpy('withdrawQuote');
+    depositFee = jasmine.createSpy('depositFeeRate').and.resolveTo(
+      { protocolFeeBps: 0, forwardFeeExact: '0.2' }
+    );
+    withdrawFee = jasmine.createSpy('withdrawQuote').and.resolveTo({ feeExact: '0.3' });
     component = new PerpsFundingComponent(
       { snapshot: { queryParams: {} } } as any,
-      null,
-      globalStub(),
-      { depositConfig: CONFIG, getAccount: () => of({ abstractionMode: 'default', withdrawableExact: '100' }) } as any,
-      accountStateStub(),
-      null,
-      null,
-      depositChainStub(),
-      {
-        ...feeQuoteStub(),
-        withdrawQuote: (...args: unknown[]) => withdrawQuote(...args),
-      } as any,
-      null,
-      writesStub()
+      { select: () => of({ currentWallet: null }) } as any,
+      globalStub(), { depositConfig: { decimals: 6 } } as any,
+      accountStateStub(), null, null, depositChainStub(),
+      { ...feeQuoteStub(), depositFeeRate: depositFee, withdrawQuote: withdrawFee } as any,
+      { watchConnectionState: () => of('live') } as any, writesStub()
     );
-    component.accountLoading = false;
-    component.account = {
-      abstractionMode: 'default',
-      withdrawableExact: '100',
-    } as any;
-    (component as any).address = '0xabc';
   });
 
-  async function settle() {
-    for (let i = 0; i < 10; i++) {
-      await Promise.resolve();
-    }
-  }
+  afterEach(() => component.ngOnDestroy());
 
-  it('lets the user retry a quote that failed to load', async () => {
-    withdrawQuote.and.returnValue(Promise.reject(new Error('timeout')));
-    component.setTab('withdraw');
-    await settle();
-
-    expect(component.withdrawQuote).toBeNull();
-    expect(component.disabledReason).toBe('perpsFeeQuoteUnknown');
-    expect(component.showRetry).toBeTrue();
-
-    withdrawQuote.and.returnValue(
-      Promise.resolve({ feeExact: '0.2', maxFeeExact: '0.2' })
-    );
-    component.reload();
-    await settle();
-
-    expect(component.withdrawQuote).toEqual({
-      feeExact: '0.2',
-      maxFeeExact: '0.2',
-    });
-    expect(component.disabledReason).not.toBe('perpsFeeQuoteUnknown');
-  });
-
-  it('does not let a slower quote overwrite a newer one', async () => {
-    const pending: Array<(value: { feeExact: string; maxFeeExact: string }) => void> =
-      [];
-    withdrawQuote.and.callFake(
-      () =>
-        new Promise<{ feeExact: string; maxFeeExact: string }>((resolve) => {
-          pending.push(resolve);
-        })
-    );
-
-    component.setTab('withdraw');
-    component.setTab('deposit');
-    component.setTab('withdraw');
-    expect(pending.length).toBe(2);
-
-    pending[1]({ feeExact: '0.3', maxFeeExact: '0.3' });
-    await settle();
-    expect(component.withdrawQuote?.feeExact).toBe('0.3');
-
-    pending[0]({ feeExact: '0.1', maxFeeExact: '0.1' });
-    await settle();
-    expect(component.withdrawQuote?.feeExact).toBe('0.3');
-  });
-
-  it('closes the sheet when the confirmation quote cannot be read', async () => {
-    withdrawQuote.and.returnValue(Promise.reject(new Error('timeout')));
-    component.tab = 'withdraw';
-    component.withdrawQuote = { feeExact: '0.2', maxFeeExact: '0.2' };
-    component.amount = '50';
-
-    component.requestSubmit();
-    await settle();
-
-    expect(component.confirming).toBeFalse();
-    expect(component.withdrawQuote).toBeNull();
-    expect(component.showRetry).toBeTrue();
-  });
-});
-
-/**
- * 那份已签名的授权，准许扩展合约恰好取走这一笔入金；无论它所对应的那次发送发生了什么，
- * 它在自己的有效窗口内始终有效。这之后界面还留着什么，就是这里要讲的事。
- */
-describe('PerpsFundingComponent deposit authorisation lifetime', () => {
-  let component: PerpsFundingComponent;
-  let sendDeposit: jasmine.Spy;
-  let depositQuote: jasmine.Spy;
-
-  const CONFIG = {
-    chainId: 421614,
-    decimals: 6,
-    symbol: 'USDC',
-    nativeSymbol: 'ETH',
-    chainName: 'Arbitrum Sepolia',
-  };
-
-  const held = () => (component as any).depositAuthorization;
-
-  beforeEach(() => {
-    sendDeposit = jasmine.createSpy('sendDeposit').and.returnValue(
-      Promise.resolve('0xhash')
-    );
-    depositQuote = jasmine
-      .createSpy('depositQuote')
-      .and.returnValue(Promise.resolve({ feeExact: '0.2', maxFeeExact: '0.2' }));
-    component = new PerpsFundingComponent(
-      { snapshot: { queryParams: {} } } as any,
-      null,
-      globalStub(),
-      {
-        depositConfig: CONFIG,
-        getAccount: () => of({ abstractionMode: 'default' }),
-      } as any,
-      accountStateStub(),
-      { getPassword: () => Promise.resolve('password') } as any,
-      { getPrivateKey: () => Promise.resolve('0xkey') } as any,
-      {
-        ...depositChainStub(),
-        tokenBalanceExact: () => Promise.resolve('100'),
-        nativeBalanceExact: () => Promise.resolve('1'),
-        authorizeDeposit: () =>
-          Promise.resolve({ from: '0xabc', amountExact: '50' }),
-        depositFeeExact: () => Promise.resolve('0.004'),
-        sendDeposit: (...args: unknown[]) => sendDeposit(...args),
-      } as any,
-      {
-        ...feeQuoteStub(),
-        depositQuote: (...args: unknown[]) => depositQuote(...args),
-      } as any,
-      null,
-      writesStub()
-    );
-    component.tab = 'deposit';
-    component.accountLoading = false;
-    component.account = { abstractionMode: 'default' } as any;
+  it('loads both fees once on entry and reuses them for input, presets and tab switches', fakeAsync(() => {
+    depositFee.and.resolveTo({ protocolFeeBps: 1.4, forwardFeeExact: '0.2' });
+    component.ngOnInit();
+    tick();
+    component.amount = '10';
+    component.onAmountChange();
+    expect(component.confirmFeeExact).toBe('0.2014');
+    expect(component.confirmReceiveExact).toBe('9.7986');
+    component.amount = '3.33';
+    component.onAmountChange();
+    expect(component.confirmFeeExact).toBe('0.200467');
     component.walletBalanceExact = '100';
-    component.nativeBalanceExact = '1';
-    component.amount = '50';
-    (component as any).address = '0xabc';
-    (component as any).wallet = { accounts: [{ extra: {} }] };
-  });
-
-  async function settle() {
-    for (let i = 0; i < 20; i++) {
-      await Promise.resolve();
-    }
-  }
-
-  /** 打开确认面板并让它签名 —— 授权就是在那里出现的。 */
-  async function confirmDeposit() {
-    component.requestSubmit();
-    await settle();
-    expect(held()).not.toBeNull();
-    await component.submit();
-    await settle();
-  }
-
-  [
-    { outcome: 'confirmed', message: null },
-    { outcome: 'reverted', message: 'perpsDepositReverted' },
-    { outcome: 'pending', message: 'perpsDepositStillPending' },
-  ].forEach(({ outcome, message }) => {
-    it(`waits for the current deposit receipt and reports ${outcome}`, async () => {
-      let finish: (value: string) => void;
-      const receipt = spyOn((component as any).depositChain, 'depositOutcome')
-        .and.returnValue(new Promise<string>((resolve) => (finish = resolve)));
-      const notify = spyOn((component as any).global, 'snackBarTip');
-      const refresh = spyOn((component as any).accountStates, 'refreshAccount').and.callThrough();
-      const balances = spyOn<any>(component, 'loadWalletBalance').and.callThrough();
-
-      component.requestSubmit();
-      await settle();
-      const submission = component.submit();
-      await settle();
-
-      expect(receipt).toHaveBeenCalledOnceWith(CONFIG, '0xhash', PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS);
-      expect(notify.calls.allArgs()).toEqual([['perpsDepositSubmitted']]);
-      expect(refresh).toHaveBeenCalledTimes(1);
-      expect(balances).toHaveBeenCalledTimes(1);
-
-      finish(outcome);
-      await submission;
-      await settle();
-
-      expect(notify.calls.allArgs()).toEqual(
-        message ? [['perpsDepositSubmitted'], [message]] : [['perpsDepositSubmitted']]
-      );
-      expect(refresh).toHaveBeenCalledTimes(2);
-      expect(balances).toHaveBeenCalledTimes(2);
-      expect(component.submitting).toBeFalse();
-    });
-  });
-
-  ['refresh failure', 'balance decrease', 'key failure'].forEach((failure) => {
-    it(`discards the prepared deposit after ${failure}`, async () => {
-      component.requestSubmit();
-      await settle();
-      expect(held()).not.toBeNull();
-
-      if (failure === 'refresh failure') {
-        spyOn((component as any).accountStates, 'refreshAccount').and.returnValue(
-          throwError(() => new Error('unavailable'))
-        );
-      } else if (failure === 'balance decrease') {
-        spyOn((component as any).depositChain, 'tokenBalanceExact')
-          .and.returnValue(Promise.resolve('10'));
-      } else {
-        spyOn((component as any).evmWallet, 'getPrivateKey')
-          .and.callFake(() => Promise.reject(new Error('cannot decrypt')));
-      }
-
-      await component.submit();
-
-      expect(held()).toBeNull();
-      expect(component.depositQuote).toBeNull();
-      expect(component.networkFeeExact).toBeNull();
-      expect(component.confirming).toBeFalse();
-      expect(component.submitting).toBeFalse();
-      expect(sendDeposit).not.toHaveBeenCalled();
-    });
-  });
-
-  it('drops the permission once the send has spent it', async () => {
-    await confirmDeposit();
-
-    expect(sendDeposit).toHaveBeenCalled();
-    // nonce 已经在链上被消耗掉了，所以此时若还留着它，
-    // 留下的是一份再也授权不了任何东西的许可。
-    expect(held()).toBeNull();
-    expect(component.depositQuote).toBeNull();
-  });
-
-  it('drops the permission when the send failed, rather than leaving it live', async () => {
-    sendDeposit.and.returnValue(Promise.reject(new Error('reverted')));
-
-    await confirmDeposit();
-
-    expect(held()).toBeNull();
-    expect(component.submitting).toBeFalse();
-  });
-
-  it('tracks the original hash after an ambiguous broadcast without resubmitting', async () => {
-    const hash = '0x' + '12'.repeat(32);
-    sendDeposit.and.callFake(() => Promise.reject(
-      new PerpsBroadcastStatusUnknownError(hash, new Error('response lost'))
-    ));
-    const notify = spyOn((component as any).global, 'snackBarTip');
-    const receipt = spyOn((component as any).depositChain, 'depositOutcome')
-      .and.resolveTo('confirmed');
-
-    await confirmDeposit();
-
-    expect(receipt).toHaveBeenCalledOnceWith(CONFIG, hash, PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS);
-    expect(notify.calls.allArgs()).toEqual([['perpsDepositStatusUnknown']]);
-    expect(sendDeposit).toHaveBeenCalledTimes(1);
-    expect(held()).toBeNull();
-    expect(component.amount).toBeNull();
-    expect(component.confirming).toBeFalse();
-    expect(component.submitting).toBeFalse();
-  });
-
-  ['refresh', 'quote'].forEach((phase) => {
-    it(`discards the old amount when input changes during ${phase}`, async () => {
-      component.requestSubmit();
-      await settle();
-      let finish: () => void;
-      if (phase === 'refresh') {
-        spyOn<any>(component, 'refreshBeforeSubmit').and.callFake(
-          () => new Promise<void>((resolve) => (finish = resolve))
-        );
-        depositQuote.and.resolveTo({ feeExact: '0.9', maxFeeExact: '0.9' });
-      } else {
-        depositQuote.and.callFake(() => new Promise((resolve) => {
-          finish = () => resolve({ feeExact: '0.9', maxFeeExact: '0.9' });
-        }));
-      }
-      const submission = component.submit();
-      await settle();
-      // 模拟绑定值变化，验证发送边界也能防住旧授权，而不只依赖 disabled。
-      component.amount = '10';
-      finish();
-      await submission;
-
-      expect(sendDeposit).not.toHaveBeenCalled();
-      expect(held()).toBeNull();
-      expect(component.confirming).toBeFalse();
-      expect(component.submitting).toBeFalse();
-      expect(component.amount).toBe('10');
-    });
-  });
-
-  it('keeps presets and tabs from changing an in-flight deposit', async () => {
-    component.requestSubmit();
-    await settle();
-    let finish: () => void;
-    spyOn<any>(component, 'refreshBeforeSubmit').and.callFake(
-      () => new Promise<void>((resolve) => (finish = resolve))
-    );
-    const submission = component.submit();
-    component.setPercent(25);
     component.setMax();
+    expect(component.confirmReceiveExact).toBe('99.786');
     component.setTab('withdraw');
-    expect(component.amount).toBe('50');
-    expect(component.tab).toBe('deposit');
-    finish();
-    await submission;
-    expect(sendDeposit).toHaveBeenCalledTimes(1);
-  });
+    component.amount = '20';
+    expect(component.confirmFeeExact).toBe('0.3');
+    component.setTab('deposit');
+    component.reload();
+    tick();
+    expect(depositFee).toHaveBeenCalledTimes(1);
+    expect(withdrawFee).toHaveBeenCalledTimes(1);
+  }));
 
-  // 例外情形：这笔入金还没有被尝试过，面板是就着同一笔重新打开的，
-  // 重新签名也只是把已经同意过的东西再要一次。
-  it('keeps the permission when the sheet reopens on a moved quote', async () => {
-    component.requestSubmit();
-    await settle();
-    const signed = held();
-    depositQuote.and.returnValue(
-      Promise.resolve({ feeExact: '0.9', maxFeeExact: '0.9' })
-    );
+  it('blocks deposits when the entry request fails and retries only the failed fee', fakeAsync(() => {
+    depositFee.and.rejectWith(new Error('offline'));
+    component.ngOnInit();
+    tick();
+    component.accountLoading = false;
+    component.account = { abstractionMode: 'default' } as any;
+    component.walletBalanceExact = '100';
+    component.amount = '10';
+    expect(component.canSubmit).toBeFalse();
+    expect(component.confirmFeeExact).toBeNull();
+    expect(component.showRetry).toBeTrue();
+    depositFee.and.resolveTo({ protocolFeeBps: 0, forwardFeeExact: '0.2' });
+    component.reload();
+    tick(400);
+    expect(component.confirmReceiveExact).toBe('9.8');
+    expect(component.canSubmit).toBeTrue();
+    expect(depositFee).toHaveBeenCalledTimes(2);
+    expect(withdrawFee).toHaveBeenCalledTimes(1);
+  }));
 
-    await component.submit();
-    await settle();
-
-    expect(sendDeposit).not.toHaveBeenCalled();
-    expect(component.confirming).toBeTrue();
-    expect(held()).toBe(signed);
-    await component.submit();
-    expect(sendDeposit).toHaveBeenCalledOnceWith(CONFIG, '0xkey', signed, '0.9');
-  });
+  it('ignores fee responses after leaving the page', fakeAsync(() => {
+    let finish: (value: any) => void;
+    depositFee.and.returnValue(new Promise((resolve) => { finish = resolve; }));
+    component.ngOnInit();
+    component.ngOnDestroy();
+    finish({ protocolFeeBps: 0, forwardFeeExact: '0.2' });
+    tick();
+    expect(component.confirmFeeExact).toBeNull();
+    expect(component.withdrawQuote).toBeNull();
+  }));
 });
 
-/**
- * 确认页那一行「交易费」带一个 hover 说明。
- *
- * 它活在 `*ngIf="confirming"` 里，而 JIT 只在视图真正创建时才校验属性绑定——在这个用例
- * 出现之前，整套测试从没把确认面板渲染过一次，所以一个拼错的指令名会一路安静地走到
- * 生产构建才炸。这两条用例的第一份价值是「面板能渲染出来」。
- */
-describe('PerpsFundingComponent confirmation fee breakdown', () => {
+/** 资金页的手续费、输入锁定和入金确认弹窗渲染。 */
+describe('PerpsFundingComponent inline fee display', () => {
   let fixture: ComponentFixture<PerpsFundingComponent>;
   let component: PerpsFundingComponent;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [PerpsFundingComponent, TranslateStubPipe, TooltipComponent],
+      declarations: [PerpsFundingComponent, TranslateStubPipe, LoadingComponent],
       imports: [FormsModule],
       providers: [
         { provide: ActivatedRoute, useValue: { snapshot: { queryParams: {} } } },
@@ -1476,6 +844,7 @@ describe('PerpsFundingComponent confirmation fee breakdown', () => {
               symbol: 'USDC',
               chainName: 'Arbitrum Sepolia',
               nativeSymbol: 'ETH',
+              chainId: 421614,
               cctp: { extension: '0xext' },
             },
             watchConnectionState: () => of('live'),
@@ -1492,15 +861,11 @@ describe('PerpsFundingComponent confirmation fee breakdown', () => {
     fixture = TestBed.createComponent(PerpsFundingComponent);
     component = fixture.componentInstance;
     component.amount = '50';
-    component.confirming = true;
   });
 
   afterEach(() => fixture.destroy());
 
-  const tooltip = () => fixture.debugElement.query(By.directive(TooltipComponent));
-
   it('disables the amount input while submission is pending', async () => {
-    component.confirming = false;
     component.submitting = true;
     fixture.detectChanges();
     await fixture.whenStable();
@@ -1513,22 +878,304 @@ describe('PerpsFundingComponent confirmation fee breakdown', () => {
     expect(input.disabled).toBeFalse();
   });
 
-  it('explains what the deposit transaction fee is made of', () => {
-    component.tab = 'deposit';
+  it('shows a loading indicator on Continue until preparation ends', async () => {
+    component.preparingDeposit = true;
     fixture.detectChanges();
-
-    const found = tooltip();
-    expect(found).not.toBeNull();
-    // TranslateStubPipe 原样返回 key，所以这里读到的就是那条文案的 key。
-    expect((found.componentInstance as TooltipComponent).tip).toBe(
-      'perpsDepositFeeBreakdown'
-    );
+    await fixture.whenStable();
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector('.submit-wrap button');
+    expect(button.disabled).toBeTrue();
+    expect(button.getAttribute('aria-busy')).toBe('true');
+    expect(button.querySelector('loading')).not.toBeNull();
+    expect(button.textContent.trim()).toBe('');
+    expect(fixture.nativeElement.querySelector('.confirm-sheet')).toBeNull();
+    component.preparingDeposit = false;
+    fixture.detectChanges();
+    expect(button.querySelector('loading')).toBeNull();
+    expect(button.textContent).toContain('perpsContinue');
   });
 
-  it('gives the withdrawal side no breakdown, because there is only one fee', () => {
+  for (const tab of ['deposit', 'withdraw'] as const) {
+    it(`shows the ${tab} fee without a tooltip`, () => {
+      component.tab = tab;
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('.detail-rows tooltip')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.confirm-sheet')).toBeNull();
+    });
+  }
+
+});
+
+describe('PerpsFundingComponent single submission', () => {
+  let component: PerpsFundingComponent;
+  let chain: jasmine.SpyObj<any>;
+  let chrome: jasmine.SpyObj<any>;
+  let wallet: jasmine.SpyObj<any>;
+  let writes: jasmine.SpyObj<any>;
+  let states: any;
+  let accountStore: BehaviorSubject<any>;
+  const address = '0xabc';
+  const config = { chainId: 421614, decimals: 6, nativeSymbol: 'ETH', chainName: 'Arbitrum Sepolia' };
+  const account = { abstractionMode: 'disabled', unified: false, withdrawableExact: '100' };
+  const settle = async () => { for (let i = 0; i < 20; i++) { await Promise.resolve(); } };
+
+  beforeEach(() => {
+    chain = jasmine.createSpyObj('chain', ['tokenBalanceExact', 'nativeBalanceExact', 'authorizeDeposit',
+      'sendDeposit', 'depositOutcome', 'depositFeeExact']);
+    chain.tokenBalanceExact.and.resolveTo('100');
+    chain.nativeBalanceExact.and.resolveTo('1');
+    chain.authorizeDeposit.and.resolveTo({ from: address, amountExact: '10' });
+    chain.sendDeposit.and.resolveTo('0xhash');
+    chain.depositOutcome.and.resolveTo('confirmed');
+    chain.depositFeeExact.and.resolveTo('0.00012');
+    chrome = jasmine.createSpyObj('chrome', ['getPassword']);
+    chrome.getPassword.and.resolveTo('pw');
+    wallet = jasmine.createSpyObj('wallet', ['getPrivateKey']);
+    wallet.getPrivateKey.and.resolveTo('0xkey');
+    writes = jasmine.createSpyObj('writes', ['withdraw']);
+    writes.withdraw.and.returnValue(of({}));
+    states = {
+      refreshAccount: jasmine.createSpy('refresh').and.returnValue(of({ account })),
+      watchAccount: () => of({ account, availability: 'live' }),
+    };
+    accountStore = new BehaviorSubject({ currentWallet: { accounts: [{ address, extra: {} }] } });
+    component = new PerpsFundingComponent({ snapshot: { queryParams: {} } } as any,
+      { select: () => accountStore } as any,
+      globalStub(), { depositConfig: config } as any, states, chrome, wallet, chain,
+      feeQuoteStub(), { watchConnectionState: () => of('live') } as any, writes);
+    Object.assign(component, { address, wallet: accountStore.value.currentWallet, account,
+      accountLoading: false, walletBalanceExact: '100', nativeBalanceExact: '1', amount: '10',
+      withdrawQuote: { feeExact: '0.2' }, depositFee: { protocolFeeBps: 0, forwardFeeExact: '0.2' } });
+  });
+
+  afterEach(() => component.ngOnDestroy());
+
+  it('keeps confirmation closed until preparation finishes', async () => {
+    let finish: (balance: string) => void;
+    chain.tokenBalanceExact.and.returnValue(new Promise(resolve => finish = resolve));
+    const pending = component.submitFunding();
+    expect(component.confirming).toBeFalse();
+    expect(component.preparingDeposit).toBeTrue();
+    expect(component.canConfirm).toBeFalse();
+    await component.submit();
+    expect(chain.sendDeposit).not.toHaveBeenCalled();
+    finish('100');
+    await pending;
+    expect(component.confirming).toBeTrue();
+    expect(component.preparingDeposit).toBeFalse();
+    expect(component.canConfirm).toBeTrue();
+  });
+
+  it('authorizes for estimation before confirmation and reauthorizes before sending', async () => {
+    const order: string[] = [];
+    chain.tokenBalanceExact.and.callFake(async () => { order.push('USDC'); return '100'; });
+    chain.nativeBalanceExact.and.callFake(async () => { order.push('ETH'); return '1'; });
+    wallet.getPrivateKey.and.callFake(async () => { order.push('key'); return '0xkey'; });
+    chain.authorizeDeposit.and.callFake(async () => { order.push('auth'); return { from: address, amountExact: '10' }; });
+    chain.sendDeposit.and.callFake(async () => { order.push('send'); return '0xhash'; });
+    await component.submitFunding();
+    expect(order).toEqual(['USDC', 'ETH', 'key', 'auth']);
+    expect(component.confirming).toBeTrue();
+    expect(component.networkFeeExact).toBe('0.00012');
+    expect(chain.sendDeposit).not.toHaveBeenCalled();
+    expect(wallet.getPrivateKey).toHaveBeenCalledTimes(1);
+    await component.submit();
+    expect(chain.depositFeeExact).toHaveBeenCalledTimes(1);
+    expect(chain.authorizeDeposit).toHaveBeenCalledTimes(2);
+    expect(order.slice(0, 9)).toEqual(['USDC', 'ETH', 'key', 'auth', 'USDC', 'ETH', 'key', 'auth', 'send']);
+    expect(wallet.getPrivateKey).toHaveBeenCalledTimes(2);
+    expect(chain.depositOutcome).toHaveBeenCalledOnceWith(config, '0xhash', PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS);
+  });
+
+  it('reduces a MAX draft and waits for another click without unlocking', async () => {
+    component.setMax();
+    chain.tokenBalanceExact.and.resolveTo('80');
+    await component.submitFunding();
+    expect(component.amount).toBe('80');
+    expect(component.balanceMovedUnderInput).toBeTrue();
+    expect(wallet.getPrivateKey).not.toHaveBeenCalled();
+    expect(chain.authorizeDeposit).not.toHaveBeenCalled();
+  });
+
+  for (const balance of ['tokenBalanceExact', 'nativeBalanceExact']) {
+    it(`stops before unlocking when ${balance} cannot be refreshed`, async () => {
+      chain[balance].and.rejectWith(new Error('offline'));
+      await component.submitFunding();
+      expect(component.refreshFailed).toBeTrue();
+      expect(wallet.getPrivateKey).not.toHaveBeenCalled();
+    });
+  }
+
+  it('retains the ETH shortfall reason from the real transaction budget', async () => {
+    chain.nativeBalanceExact.and.resolveTo('0');
+    await component.submitFunding();
+    expect(component.disabledReason).toBe('perpsGasShortfall');
+    expect(component.amount).toBe('10');
+    expect(chain.depositOutcome).not.toHaveBeenCalled();
+  });
+
+  for (const change of ['wallet', 'amount', 'destroy']) {
+    it(`does not withdraw when ${change} changes during key decryption`, async () => {
+      if (change === 'wallet') { component.ngOnInit(); }
+      component.tab = 'withdraw';
+      let finish: (value: string) => void;
+      wallet.getPrivateKey.and.returnValue(new Promise<string>(resolve => finish = resolve));
+      const pending = component.submitFunding();
+      await settle();
+      if (change === 'wallet') { accountStore.next({ currentWallet: { accounts: [{ address: '0xdef' }] } }); }
+      if (change === 'amount') { component.amount = '20'; component.onAmountChange(); }
+      if (change === 'destroy') { component.ngOnDestroy(); }
+      finish('0xkey');
+      await pending;
+      expect(writes.withdraw).not.toHaveBeenCalled();
+    });
+  }
+
+  it('blocks repeat clicks through refresh and decryption', async () => {
     component.tab = 'withdraw';
-    fixture.detectChanges();
-
-    expect(tooltip()).toBeNull();
+    await Promise.all([component.submitFunding(), component.submitFunding()]);
+    expect(wallet.getPrivateKey).toHaveBeenCalledTimes(1);
+    expect(writes.withdraw).toHaveBeenCalledTimes(1);
   });
+
+  it('tracks the original hash after an ambiguous broadcast without sending again', async () => {
+    chain.sendDeposit.and.rejectWith(new PerpsBroadcastStatusUnknownError('0xhash', new Error('response lost')));
+    await component.submitFunding();
+    await component.submit();
+    expect(chain.sendDeposit).toHaveBeenCalledTimes(1);
+    expect(chain.depositOutcome).toHaveBeenCalledOnceWith(config, '0xhash', PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS);
+    expect(component.amount).toBeNull();
+  });
+
+  it('does not sign or estimate while the amount is being edited', () => {
+    component.onAmountChange();
+    expect(wallet.getPrivateKey).not.toHaveBeenCalled();
+    expect(chain.authorizeDeposit).not.toHaveBeenCalled();
+    expect(chain.depositFeeExact).not.toHaveBeenCalled();
+  });
+
+  it('cannot bypass deposit confirmation by calling submit directly', async () => {
+    await component.submit();
+    expect(wallet.getPrivateKey).not.toHaveBeenCalled();
+    expect(chain.sendDeposit).not.toHaveBeenCalled();
+  });
+
+  it('discards a cancelled authorization and stops gas refresh until preparing a new draft', fakeAsync(() => {
+    void component.submitFunding();
+    tick();
+    component.cancelConfirm();
+    tick(60000);
+    expect(component.confirming).toBeFalse();
+    expect(component.networkFeeExact).toBeNull();
+    expect(chain.depositFeeExact).toHaveBeenCalledTimes(1);
+    void component.submit();
+    tick();
+    expect(chain.sendDeposit).not.toHaveBeenCalled();
+    void component.submitFunding();
+    tick();
+    expect(chain.authorizeDeposit).toHaveBeenCalledTimes(2);
+    expect(component.canConfirm).toBeTrue();
+    tick(30000);
+    expect(chain.depositFeeExact).toHaveBeenCalledTimes(3);
+    component.ngOnDestroy();
+  }));
+
+  it('refreshes the network fee every 30 seconds and sends with a new authorization and the confirmed route fee', fakeAsync(() => {
+    chain.authorizeDeposit.and.resolveTo({ from: address, amountExact: '10', nonce: 'estimate',
+      validBefore: Math.floor(Date.now() / 1000) + 60 });
+    void component.submitFunding();
+    tick();
+    const authorization = chain.depositFeeExact.calls.first().args[1];
+    chain.depositFeeExact.and.resolveTo('0.00024');
+    (component as any).depositFee = { protocolFeeBps: 0, forwardFeeExact: '0.8' };
+    component.nativeBalanceExact = '0.0002';
+    tick(29999);
+    expect(chain.depositFeeExact).toHaveBeenCalledTimes(1);
+    tick(1);
+    expect(chain.depositFeeExact).toHaveBeenCalledTimes(2);
+    expect(chain.depositFeeExact.calls.mostRecent().args).toEqual([config, authorization, '0.2']);
+    expect(component.networkFeeExact).toBe('0.00024');
+    expect(component.gasShortfall).toBeTrue();
+    expect(component.canConfirm).toBeFalse();
+    chain.depositFeeExact.and.resolveTo('0.00018');
+    tick(30000);
+    expect(component.networkFeeExact).toBe('0.00018');
+    expect(component.canConfirm).toBeTrue();
+    expect(component.confirmFeeExact).toBe('0.2');
+    expect(component.confirmReceiveExact).toBe('9.8');
+    expect(authorization.validBefore).toBeLessThanOrEqual(Math.floor(Date.now() / 1000));
+    const freshAuthorization = { ...authorization, nonce: 'send', validBefore: Math.floor(Date.now() / 1000) + 1800 };
+    chain.authorizeDeposit.and.resolveTo(freshAuthorization);
+    void component.submit();
+    tick();
+    expect(chain.sendDeposit).toHaveBeenCalledOnceWith(config, '0xkey', freshAuthorization, '0.2');
+    expect(chain.authorizeDeposit).toHaveBeenCalledTimes(2);
+    expect(wallet.getPrivateKey).toHaveBeenCalledTimes(2);
+    tick(60000);
+    expect(chain.depositFeeExact).toHaveBeenCalledTimes(3);
+  }));
+
+  it('rechecks ETH before decrypting the key for the final transaction', async () => {
+    await component.submitFunding();
+    chain.nativeBalanceExact.and.resolveTo('0.000119999999999999');
+    await component.submit();
+    expect(component.disabledReason).toBe('perpsGasShortfall');
+    expect(component.confirming).toBeFalse();
+    expect(wallet.getPrivateKey).toHaveBeenCalledTimes(1);
+    expect(chain.sendDeposit).not.toHaveBeenCalled();
+  });
+
+  it('accepts an ETH balance equal to the confirmed network fee', async () => {
+    await component.submitFunding();
+    chain.nativeBalanceExact.and.resolveTo('0.00012');
+    await component.submit();
+    expect(chain.sendDeposit).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows a fresh preparation after a gas estimate failure and closes confirmation if refreshing fails', fakeAsync(() => {
+    chain.depositFeeExact.and.rejectWith(new Error('offline'));
+    void component.submitFunding();
+    tick();
+    expect(component.confirming).toBeFalse();
+    expect(component.canSubmit).toBeTrue();
+    expect(chain.sendDeposit).not.toHaveBeenCalled();
+    chain.depositFeeExact.and.resolveTo('0.00012');
+    void component.submitFunding();
+    tick();
+    expect(component.canConfirm).toBeTrue();
+    chain.depositFeeExact.and.rejectWith(new Error('offline'));
+    tick(30000);
+    expect(component.confirming).toBeFalse();
+    expect(component.networkFeeExact).toBeNull();
+    expect(component.preparingDeposit).toBeFalse();
+    expect(component.canSubmit).toBeTrue();
+    tick(60000);
+    expect(chain.depositFeeExact).toHaveBeenCalledTimes(3);
+  }));
+
+  for (const change of ['amount', 'tab', 'destroy', 'cancel']) {
+    it(`ignores a periodic gas estimate that finishes after ${change} changes`, fakeAsync(() => {
+      void component.submitFunding();
+      tick();
+      let finish: (value: any) => void;
+      chain.depositFeeExact.and.returnValue(new Promise(resolve => finish = resolve));
+      tick(30000);
+      expect(component.preparingDeposit).toBeTrue();
+      expect(component.canConfirm).toBeFalse();
+      void component.submit();
+      tick(30000);
+      expect(chain.depositFeeExact).toHaveBeenCalledTimes(2);
+      if (change === 'amount') { component.amount = '20'; component.onAmountChange(); }
+      if (change === 'tab') { component.setTab('withdraw'); }
+      if (change === 'destroy') { component.ngOnDestroy(); }
+      if (change === 'cancel') { component.cancelConfirm(); }
+      finish('0.0009');
+      tick();
+      expect(component.confirming).toBeFalse();
+      expect(component.networkFeeExact).toBeNull();
+      expect(chain.sendDeposit).not.toHaveBeenCalled();
+      tick(60000);
+      expect(chain.depositFeeExact).toHaveBeenCalledTimes(2);
+    }));
+  }
 });

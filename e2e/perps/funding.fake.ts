@@ -1,4 +1,4 @@
-import { AbiCoder, Interface, Transaction, ZeroAddress, keccak256, parseEther, parseUnits, toQuantity } from 'ethers';
+import { Interface, Transaction, ZeroAddress, keccak256, parseEther, parseUnits, toQuantity } from 'ethers';
 import { Route } from '@playwright/test';
 
 export const fundingContracts = {
@@ -17,9 +17,7 @@ const tokenAbi = new Interface([
 ]);
 const coreAbi = new Interface([
   'function calculateCrossChainWithdrawalFee(bool shouldForward,uint32 destinationChainId) view returns (uint256)',
-  'function newCoreAccountFee() view returns (uint64)',
 ]);
-const coder = AbiCoder.defaultAbiCoder();
 const blockHash = `0x${'11'.repeat(32)}`;
 const sourceRpcUrls = [
   'https://sepolia-rollup.arbitrum.io/rpc',
@@ -49,7 +47,6 @@ export class FakeFunding {
   tokenBalance = parseUnits('500.123456', 6);
   nativeBalance = parseEther('1');
   withdrawFee = '0.2';
-  accountExists = true;
   receiptStatus: number | null = 1;
   circleFees: any[] = [{
     finalityThreshold: 1000, minimumFee: 1.4,
@@ -59,13 +56,13 @@ export class FakeFunding {
   nativeBalanceUnavailable = false;
   tokenBalanceUnavailable = false;
   broadcastFailure: 'rotate-known' | 'lost-then-nonce' | 'disconnect' | null = null;
-  private depositQuoteGate?: ReturnType<typeof responseGate>;
+  private gasEstimateGate?: ReturnType<typeof responseGate>;
   private withdrawQuoteGate?: { gate: ReturnType<typeof responseGate>; malformed: boolean };
 
   constructor(private user: string) {}
 
-  holdNextDepositQuote() {
-    const gate = responseGate(); this.depositQuoteGate = gate; return gate;
+  holdNextGasEstimate() {
+    const gate = responseGate(); this.gasEstimateGate = gate; return gate;
   }
 
   holdNextWithdrawQuote(malformed = false) {
@@ -79,10 +76,7 @@ export class FakeFunding {
       this.feeRequests.push(url);
       const entries = JSON.parse(JSON.stringify(this.circleFees));
       this.events.push({ at: new Date().toISOString(), endpoint: url, response: entries });
-      const gate = this.depositQuoteGate; this.depositQuoteGate = undefined;
-      await gate?.wait();
       await route.fulfill({ json: entries });
-      gate?.sent();
       return true;
     }
     const source = sourceRpcUrls.includes(url);
@@ -113,11 +107,15 @@ export class FakeFunding {
     };
     // Capture the old response before waiting: changing global fee state must not rewrite it.
     const responses = items.map(respond);
+    const heldGas = source && items.some((item) => item.method === 'eth_estimateGas')
+      ? this.gasEstimateGate : undefined;
+    if (heldGas) { this.gasEstimateGate = undefined; }
     const event: FundingEvent = {
       at: new Date().toISOString(), endpoint: url, request: body,
     };
     this.events.push(event);
     await held?.gate.wait();
+    await heldGas?.wait();
     const broadcast = items.findIndex((item: any) => item.method === 'eth_sendRawTransaction');
     if (broadcast >= 0 && this.broadcastFailure) {
       if (this.broadcastFailure === 'disconnect') {
@@ -136,6 +134,7 @@ export class FakeFunding {
     event.response = Array.isArray(body) ? responses : responses[0];
     await route.fulfill({ json: Array.isArray(body) ? responses : responses[0] });
     held?.gate.sent();
+    heldGas?.sent();
     return true;
   }
 
@@ -152,17 +151,8 @@ export class FakeFunding {
         if (decoded.name === 'name') { return tokenAbi.encodeFunctionResult('name', ['USD Coin']); }
         if (decoded.name === 'version') { return tokenAbi.encodeFunctionResult('version', ['2']); }
       }
-      if (!source && to === '0x0000000000000000000000000000000000000810') {
-        if (coder.decode(['address'], call.data)[0].toLowerCase() !== this.user) {
-          throw new Error('Wrong account existence recipient');
-        }
-        return coder.encode(['bool'], [this.accountExists]);
-      }
       if (!source && to === fundingContracts.coreWallet.toLowerCase()) {
         const decoded = coreAbi.parseTransaction(call)!;
-        if (decoded.name === 'newCoreAccountFee') {
-          return coreAbi.encodeFunctionResult(decoded.name, [parseUnits('1', 8)]);
-        }
         if (decoded.name === 'calculateCrossChainWithdrawalFee' && decoded.args[0] && decoded.args[1] === 3n) {
           return coreAbi.encodeFunctionResult(decoded.name, [parseUnits(this.withdrawFee, 6)]);
         }

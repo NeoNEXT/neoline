@@ -179,6 +179,7 @@
     }
     .value {
       color: var(--title-color);
+      text-align: right;
     }
   }
 }
@@ -194,6 +195,9 @@
   padding: 14px 22px 22px;
 
   button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     height: 44px;
     border-radius: 24px;
@@ -207,6 +211,11 @@
     &:disabled {
       opacity: 0.4;
       cursor: not-allowed;
+    }
+
+    &.loading {
+      opacity: 1;
+      cursor: wait;
     }
   }
 }
@@ -238,6 +247,8 @@
 
   .sheet {
     width: 100%;
+    max-height: 100vh;
+    overflow-y: auto;
     background: var(--body-background-color);
     border-radius: 16px 16px 0 0;
     padding: 20px 22px 22px;
@@ -256,7 +267,6 @@
       padding: 8px 0;
       font-size: 12px;
 
-      // `tooltip` 自带一个 flex 容器，所以这一行也得是 flex，否则它会自己占一行。
       .label {
         display: flex;
         align-items: center;
@@ -267,11 +277,6 @@
         em {
           font-style: normal;
         }
-
-        tooltip img {
-          width: 13px;
-          height: 13px;
-        }
       }
 
       .value {
@@ -279,17 +284,14 @@
         text-align: right;
         word-break: break-all;
 
-        &.address {
-          font-size: 11px;
+        &.fee-updating {
+          animation: network-fee-update 600ms ease-in-out infinite;
+
+          @media (prefers-reduced-motion: reduce) {
+            animation: none;
+          }
         }
       }
-    }
-
-    .sheet-note {
-      margin-top: 10px;
-      font-size: 12px;
-      line-height: 1.6;
-      color: var(--sub-title-color);
     }
 
     // The sheet supplies its own gutters, so the tip drops the ones it carries
@@ -329,5 +331,15 @@
         }
       }
     }
+  }
+}
+
+@keyframes network-fee-update {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
   }
 }

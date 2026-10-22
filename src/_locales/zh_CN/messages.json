@@ -1976,12 +1976,6 @@
   "perpsEstimated": {
     "message": "预计"
   },
-  "perpsNetwork": {
-    "message": "网络"
-  },
-  "perpsRecipient": {
-    "message": "收款方"
-  },
   "perpsRetry": {
     "message": "重试"
   },
@@ -1989,10 +1983,10 @@
     "message": "确认存入"
   },
   "perpsDepositChainNotice": {
-    "message": "这笔交易在 {{chain}} 上发出，网络费用由该链上的 {{symbol}} 支付。"
+    "message": "将 {{chain}} 上的 {{symbol}} 存入 HyperCore。"
   },
-  "perpsDepositIrreversible": {
-    "message": "转入 CCTP 合约，由它把资金记入您的 Hyperliquid 账户。该转账无法撤回。"
+  "perpsWithdrawChainNotice": {
+    "message": "从 HyperCore 提款 {{symbol}} 至 {{chain}}"
   },
   "perpsBalanceUnknown": {
     "message": "无法读取你在存入链上的余额。"
@@ -2018,6 +2012,9 @@
   "perpsBalance": {
     "message": "余额"
   },
+  "perpsContinue": {
+    "message": "继续"
+  },
   "perpsNetworkFee": {
     "message": "网络费用"
   },
@@ -2028,13 +2025,7 @@
     "message": "低于最低限额 {{amount}} {{symbol}}。该通道每笔提取都会扣除 {{fee}} {{symbol}}，低于此金额会在扣费环节被拒绝。"
   },
   "perpsRouteFee": {
-    "message": "跨链费"
-  },
-  "perpsTransactionFee": {
-    "message": "交易费"
-  },
-  "perpsDepositFeeBreakdown": {
-    "message": "从存入金额中扣除。含跨链费，以及 Hyperliquid 账户尚未创建时的新账户费。"
+    "message": "手续费"
   },
   "perpsYouReceive": {
     "message": "您收到"
@@ -2222,20 +2213,11 @@
   "perpsMarketChangedReviewAgain": {
     "message": "签名前行情或订单信息已变化，订单未发出，请重新下单。"
   },
-  "perpsFeeQuoteChangedReviewAgain": {
-    "message": "费用报价已变化。提交前请重新确认。"
-  },
   "perpsFeeQuoteUnknown": {
     "message": "无法读取当前费用，因此未发送。请重试。"
   },
   "perpsUnknownValue": {
     "message": "未知"
-  },
-  "perpsConfirmWithdrawTitle": {
-    "message": "确认提款"
-  },
-  "perpsWithdrawEstimateNote": {
-    "message": "费用为上限，实际到账只会更多。实际扣费以交易所账本为准。"
   },
   "perpsWithdrawStatusUnknown": {
     "message": "交易所未返回结果，本次提款是否已执行无法判定。请先核对余额与 Hyperliquid 账本，再决定是否重新发起。"

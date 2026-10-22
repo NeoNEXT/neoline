@@ -13,9 +13,12 @@ export async function openFunding(page: Page, direction: 'Deposit' | 'Withdraw',
 export const amount = (page: Page) => page.locator('.amount-input input');
 export const submit = (page: Page) => page.locator('.submit-wrap button');
 export const sheet = (page: Page) => page.locator('.confirm-sheet');
-export const confirm = (page: Page) => sheet(page).getByRole('button', { name: 'Confirm', exact: true });
-export const cancel = (page: Page) => sheet(page).getByRole('button', { name: 'Cancel', exact: true });
-export const confirmRow = (page: Page, label: string) => sheet(page).locator('.row')
+export async function confirmDeposit(page: Page) {
+  await expect(sheet(page)).toBeVisible();
+  await expect(sheet(page).locator('.sheet-title')).toHaveText('Confirm deposit');
+  await sheet(page).locator('.primary').click();
+}
+export const fundingRow = (page: Page, label: string) => page.locator('.detail-rows .row')
   .filter({ has: page.locator('.label', { hasText: label }) }).locator('.value');
 export async function expectToast(page: Page, message: string) {
   await expect(page.locator('simple-snack-bar').filter({ hasText: message })).toBeVisible();

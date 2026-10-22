@@ -12,7 +12,6 @@ import {
   PERPS_CHAIN_MAX_RETRIES,
   PERPS_CHAIN_REQUEST_TIMEOUT_MS,
   PERPS_CHAIN_RETRY_BASE_MS,
-  PERPS_CORE_USER_EXISTS_PRECOMPILE,
   PERPS_DEPOSIT_CONFIG,
   PERPS_HYPEREVM_CONFIG,
   resolvePerpsTestnet,
@@ -36,11 +35,7 @@ const USDC_DECIMALS = 6;
  */
 const CORE_DEPOSIT_WALLET = new ethers.Interface([
   'function calculateCrossChainWithdrawalFee(bool shouldForward, uint32 destinationChainId) view returns (uint256)',
-  'function newCoreAccountFee() view returns (uint64)',
 ]);
-
-/** HyperCore 按 8 位小数计数，而 USDC 的 EVM 侧按 6 位。 */
-const CORE_DECIMALS = 8;
 
 /** Circle 手续费端点按最终性档位给出的答复。 */
 interface CctpFeeEntry {
@@ -54,21 +49,17 @@ interface CctpFeeEntry {
 /**
  * 某个时点读到的手续费，绝不是常量。
  *
- * 这条通道两侧都是按次定价的 —— Circle 通过 HTTP 报出入金费，而提现费是一个合约变量、
- * 其 owner 可以修改 —— 所以报价会在签名前重新读取并比对，而不是相信它一段时间。这个数字
- * 是上限：实际 mint 可能收得更少，因此到账金额只会好于估算。
+ * 进入资金页时读取：入金费率由 Circle HTTP 返回，提现手续费由合约返回。
+ * 报价用于预计到账计算，最终扣费和到账仍以实际执行结果为准。
  */
 export interface PerpsFeeQuote {
-  /** 这条通道从转账中扣走的全部费用 —— 展示给用户的就是这个数。 */
+  /** 当前通道的手续费报价，用于展示及预计收到计算。 */
   feeExact: string;
-  /**
-   * 其中属于 CCTP 的那部分，也是唯一可以作为 `maxFee` 传出去的部分。
-   *
-   * 它与 `feeExact` 不是同一个数：一笔入金的通道费还可能包含 Circle 的开户费，而那笔钱
-   * 是在 CCTP 早已完成之后，由 `CoreDepositWallet` 在 HyperCore 那一段收走的。把它当作
-   * `maxFee` 交给 CCTP，等于授权它拿走一笔谁也没打算给它的钱。
-   */
-  maxFeeExact: string;
+}
+
+export interface PerpsDepositFeeRate {
+  protocolFeeBps: number;
+  forwardFeeExact: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -80,17 +71,8 @@ export class PerpsFeeQuoteService {
     private rpc: PerpsRpcService
   ) {}
 
-  /**
-   * 一笔 `amountExact` 的入金里，CCTP 会扣走多少。
-   *
-   * 之所以需要金额，是因为答案由两部分组成：一笔固定的转发费，以及一笔按基点报价的协议
-   * 费。后者目前在这条通道上是零 —— 而这恰恰是要算它而不是假定它的理由：读出来的零是
-   * 事实，跳过不读的零只是猜测。
-   */
-  async depositQuote(
-    amountExact: string,
-    recipient: string
-  ): Promise<PerpsFeeQuote> {
+  /** 读取入金协议费基点及以 USDC 计的固定转发费。 */
+  async depositFeeRate(): Promise<PerpsDepositFeeRate> {
     const source = this.depositConfig.cctp.sourceDomain;
     const base = this.isTestnet
       ? PERPS_CCTP_FEE_API.testnet
@@ -125,64 +107,10 @@ export class PerpsFeeQuoteService {
       throw new PerpsChainError('rejected', 'Circle quoted an unreadable fee');
     }
 
-    const amount = new BigNumber(amountExact);
-    if (!amount.isFinite()) {
-      throw new PerpsChainError(
-        'rejected',
-        'Cannot quote a fee for this amount'
-      );
-    }
-
-    // 向上取整：报价是承诺给用户的上限，所以不足一个最小单位的零头必须由产品这边承担，
-    // 而不是落到用户头上。
-    const protocolFee = amount
-      .times(bps)
-      .div(10000)
-      .decimalPlaces(USDC_DECIMALS, BigNumber.ROUND_CEIL);
-
-    const account = await this.newAccountFeeExact(recipient);
-    // 只含 CCTP 自己的收费，别的都不含：它按基点报出的协议费，
-    // 加上它在 mint 时收取的转发费。
-    const cctpFee = protocolFee.plus(forward.shiftedBy(-USDC_DECIMALS));
-
     return {
-      feeExact: cctpFee.plus(account).toFixed(),
-      maxFeeExact: cctpFee.toFixed(),
+      protocolFeeBps: fast.minimumFee,
+      forwardFeeExact: forward.shiftedBy(-USDC_DECIMALS).toFixed(),
     };
-  }
-
-  /**
-   * Circle 为「入账到一个尚不存在的账户」所收的费用。
-   *
-   * 目前两个网络上都是零，但仍然照读不误：它是一个合约变量，owner 随时可以打开，而且它
-   * 是从入金实际入账的金额里扣的。它被合并进同一份报价而不是单独展示 —— 告诉用户的是
-   * 这条通道的总成本，而不是哪个合约拿走了其中哪一份。
-   *
-   * 不要与 Hyperliquid 的一次性开户费混淆，本合约明确不收那笔费用，也没有任何界面报告它。
-   */
-  private async newAccountFeeExact(recipient: string): Promise<string> {
-    const evm = this.hyperEvmConfig;
-    const coder = ethers.AbiCoder.defaultAbiCoder();
-    return this.rpc.withEndpoint(evm, async (provider) => {
-      const [exists] = coder.decode(
-        ['bool'],
-        await provider.call({
-          to: PERPS_CORE_USER_EXISTS_PRECOMPILE,
-          data: coder.encode(['address'], [recipient]),
-        })
-      ) as unknown as [boolean];
-      if (exists) {
-        return '0';
-      }
-      const [fee] = CORE_DEPOSIT_WALLET.decodeFunctionResult(
-        'newCoreAccountFee',
-        await provider.call({
-          to: evm.coreDepositWallet,
-          data: CORE_DEPOSIT_WALLET.encodeFunctionData('newCoreAccountFee'),
-        })
-      ) as unknown as [bigint];
-      return ethers.formatUnits(fee, CORE_DECIMALS);
-    });
   }
 
   /** 提现通道会扣走多少，从决定这件事的那个合约里读出来。 */
@@ -215,7 +143,7 @@ export class PerpsFeeQuoteService {
 
     // 合约自己算出它的 `maxFee`，而这就是那个数，所以这里通道费和 CCTP 上限是同一个东西。
     const feeExact = ethers.formatUnits(fee, USDC_DECIMALS);
-    return { feeExact, maxFeeExact: feeExact };
+    return { feeExact };
   }
 
   /**

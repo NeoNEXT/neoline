@@ -279,13 +279,6 @@ export const PERPS_CCTP_FEE_API = {
 };
 
 /**
- * HyperCore 的「用户是否存在」预编译，用于判断 Circle 的开户费是否适用于某笔入金。它回答的
- * 是账户是否存在，而不是账户是否已激活 —— 那笔一次性的激活费是 Hyperliquid 的，在这里看不到。
- */
-export const PERPS_CORE_USER_EXISTS_PRECOMPILE =
-  '0x0000000000000000000000000000000000000810';
-
-/**
  * 提现中 HyperCore 到 HyperEVM 那一段所携带的 gas 上限。
  *
  * 此参数采用 Circle 的 sendToEvmWithData 提现示例值，不是用户钱包发送的 EVM 交易估算。

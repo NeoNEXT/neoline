@@ -1976,12 +1976,6 @@
   "perpsEstimated": {
     "message": "概算"
   },
-  "perpsNetwork": {
-    "message": "ネットワーク"
-  },
-  "perpsRecipient": {
-    "message": "送金先"
-  },
   "perpsRetry": {
     "message": "再試行"
   },
@@ -1989,10 +1983,10 @@
     "message": "入金の確認"
   },
   "perpsDepositChainNotice": {
-    "message": "この取引は {{chain}} 上で送信され、ネットワーク手数料は同チェーンの {{symbol}} で支払われます。"
+    "message": "{{chain}} 上の {{symbol}} を HyperCore に入金します。"
   },
-  "perpsDepositIrreversible": {
-    "message": "CCTP コントラクトへ送金し、そこから Hyperliquid の口座に反映されます。この送金は取り消せません。"
+  "perpsWithdrawChainNotice": {
+    "message": "HyperCore から {{chain}} に {{symbol}} を出金します。"
   },
   "perpsBalanceUnknown": {
     "message": "入金チェーン上の残高を取得できませんでした。"
@@ -2018,6 +2012,9 @@
   "perpsBalance": {
     "message": "残高"
   },
+  "perpsContinue": {
+    "message": "続ける"
+  },
   "perpsNetworkFee": {
     "message": "ネットワーク手数料"
   },
@@ -2028,13 +2025,7 @@
     "message": "最低額 {{amount}} {{symbol}} を下回っています。この経路は出金ごとに {{fee}} {{symbol}} を差し引くため、これを下回ると手数料の段階で拒否されます。"
   },
   "perpsRouteFee": {
-    "message": "クロスチェーン手数料"
-  },
-  "perpsTransactionFee": {
-    "message": "取引手数料"
-  },
-  "perpsDepositFeeBreakdown": {
-    "message": "入金額から差し引かれます。クロスチェーン手数料と、Hyperliquid アカウントが未作成の場合の新規アカウント手数料を含みます。"
+    "message": "手数料"
   },
   "perpsYouReceive": {
     "message": "受取額"
@@ -2222,20 +2213,11 @@
   "perpsMarketChangedReviewAgain": {
     "message": "署名前に市場または注文情報が変化しました。注文は送信されていません。再度注文してください。"
   },
-  "perpsFeeQuoteChangedReviewAgain": {
-    "message": "手数料の見積もりが変わりました。送信する前にもう一度確認してください。"
-  },
   "perpsFeeQuoteUnknown": {
     "message": "現在の手数料を取得できないため、送信していません。もう一度お試しください。"
   },
   "perpsUnknownValue": {
     "message": "不明"
-  },
-  "perpsConfirmWithdrawTitle": {
-    "message": "出金の確認"
-  },
-  "perpsWithdrawEstimateNote": {
-    "message": "手数料は上限のため、実際の着金額はこれ以上になります。実際の請求額は取引所の台帳が正となります。"
   },
   "perpsWithdrawStatusUnknown": {
     "message": "取引所から結果が返らなかったため、この出金が実行されたかどうかは不明です。残高と Hyperliquid の台帳を確認してから、再送するか判断してください。"

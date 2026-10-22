@@ -31,7 +31,7 @@
       <input
         type="text"
         inputmode="decimal"
-        [disabled]="submitting"
+        [disabled]="fundingBusy"
         [(ngModel)]="amount"
         (input)="onAmountInput($event)"
         placeholder="0"
@@ -62,13 +62,13 @@
       <span
         *ngFor="let percent of presetPercents"
         [class.active]="activePreset === percent"
-        [class.disabled]="submitting || !maxAmountKnown"
+        [class.disabled]="fundingBusy || !maxAmountKnown"
         (click)="setPercent(percent)"
         >{{ percent }}%</span
       >
       <span
         [class.active]="activePreset === -1"
-        [class.disabled]="submitting || !maxAmountKnown"
+        [class.disabled]="fundingBusy || !maxAmountKnown"
         (click)="setMax()"
       >
         {{ "perpsMaxFunding" | translate | async }}
@@ -93,43 +93,42 @@
     </div>
   </div>
 
-  <!-- 交易发生在入金链上，而不是用户当前选中的那条链，
-       付钱的也是那条链的货币。 -->
-  <p class="chain-notice" *ngIf="isDeposit">
+  <!-- 说明资金在 HyperCore 与所配置链之间的转移方向。 -->
+  <p class="chain-notice">
     {{
-      "perpsDepositChainNotice"
-        | translate: { chain: token.chainName, symbol: token.nativeSymbol }
+      (isDeposit ? "perpsDepositChainNotice" : "perpsWithdrawChainNotice")
+        | translate: { chain: token.chainName, symbol: token.symbol }
         | async
     }}
   </p>
 
-  <!-- 只有提现侧在表单上报数。存入的两笔费用都要等确认页才知道 —— 网络费需要一份签过名的
-       授权才估得出来，跨链费与它同时敲定 —— 而一个永远读作 `N/A` 的行不如不放。
-       到账时间两侧都不再有：见 P3-5，那一行曾经是个没有任何事实支撑的硬编码文案。 -->
-  <div class="detail-rows" *ngIf="isWithdraw">
-      <div class="row">
-        <span class="label">{{ "perpsRouteFee" | translate | async }}</span>
-        <span class="value">
-          {{
-            withdrawFeeExact === null
-              ? ("perpsUnknownValue" | translate | async)
-              : formatUsd(withdrawFeeExact)
-          }}
-        </span>
-      </div>
-      <div class="row">
-        <span class="label">
-          {{ "perpsYouReceive" | translate | async }}
-          <em>({{ "perpsEstimated" | translate | async }})</em>
-        </span>
-        <span class="value">
-          {{
-            withdrawReceiveExact === null
-              ? ("perpsUnknownValue" | translate | async)
-              : formatUsd(withdrawReceiveExact)
-          }}
-        </span>
-      </div>
+  <!-- USDC 报价沿用进页快照；授权后的网络费在确认弹窗展示。 -->
+  <div class="detail-rows">
+    <div class="row">
+      <span class="label">
+        {{ "perpsRouteFee" | translate | async }}
+      </span>
+      <span class="value">
+        {{
+          confirmFeeExact === null
+            ? ("perpsUnknownValue" | translate | async)
+            : formatUsd(confirmFeeExact)
+        }}
+      </span>
+    </div>
+    <div class="row">
+      <span class="label">
+        {{ "perpsYouReceive" | translate | async }}
+        <em>({{ "perpsEstimated" | translate | async }})</em>
+      </span>
+      <span class="value">
+        {{
+          (isDeposit ? confirmReceiveExact : withdrawReceiveExact) === null
+            ? ("perpsUnknownValue" | translate | async)
+            : formatUsd(isDeposit ? confirmReceiveExact : withdrawReceiveExact)
+        }}
+      </span>
+    </div>
   </div>
 
   <!-- 一条原因，控件不可用期间始终显示。 -->
@@ -138,73 +137,44 @@
   </p>
 
   <div class="submit-wrap">
-    <button [disabled]="!canSubmit" (click)="requestSubmit()">
-      {{ (isDeposit ? "perpsDeposit" : "perpsWithdraw") | translate | async }}
-      <ng-container *ngIf="amount"> {{ formatUsd(amount) }}</ng-container>
+    <button
+      [disabled]="!canSubmit"
+      [class.loading]="preparingDeposit"
+      [attr.aria-busy]="preparingDeposit"
+      [attr.aria-label]="preparingDeposit ? ('loading' | translate | async) : null"
+      (click)="submitFunding()"
+    >
+      <loading *ngIf="preparingDeposit"></loading>
+      <ng-container *ngIf="!preparingDeposit">
+        {{ (isDeposit ? "perpsContinue" : "perpsWithdraw") | translate | async }}
+        <ng-container *ngIf="amount"> {{ formatUsd(amount) }}</ng-container>
+      </ng-container>
     </button>
   </div>
 
-  <!-- 两种意图在发出之前都要过一遍确认。入金发往一个用户读不懂的合约地址，
-       且无法撤回；提现的定价来自一笔其合约 owner 可以修改的手续费，
-       而用户被要求同意的正是这个价格。 -->
   <div class="confirm-sheet" *ngIf="confirming">
-    <div class="sheet">
-      <div class="sheet-title">
-        {{
-          (isDeposit ? "perpsConfirmDepositTitle" : "perpsConfirmWithdrawTitle")
-            | translate
-            | async
-        }}
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="deposit-confirm-title">
+      <div class="sheet-title" id="deposit-confirm-title">
+        {{ "perpsConfirmDepositTitle" | translate | async }}
       </div>
       <div class="row">
         <span class="label">{{ "perpsAmount" | translate | async }}</span>
         <span class="value">{{ formatUsd(amount) }} {{ token.symbol }}</span>
       </div>
       <div class="row">
-        <span class="label">{{ "perpsNetwork" | translate | async }}</span>
-        <span class="value">{{ token.chainName }}</span>
+        <span class="label">{{ "perpsRouteFee" | translate | async }}</span>
+        <span class="value">{{ formatUsd(confirmFeeExact) }} {{ token.symbol }}</span>
       </div>
       <div class="row">
-        <span class="label">{{ "perpsRecipient" | translate | async }}</span>
-        <span class="value address">{{
-          isDeposit ? token.cctp.extension : withdrawRecipient
-        }}</span>
-      </div>
-      <div class="row">
-        <span class="label">
-          <!-- 存入那笔是两项之和，所以用更宽的「交易费」并在旁边拆开说；提现只有合约报的
-               那一笔跨链费，叫得准就不必改口。 -->
-          {{
-            (isDeposit ? "perpsTransactionFee" : "perpsRouteFee")
-              | translate
-              | async
-          }}
-          <!-- 存入的这个数是两笔钱的和，而用户同意的是那个和；hover 说明和里有什么。
-               提现那边只有一笔，拆开说没有可拆的。 -->
-          <tooltip
-            *ngIf="isDeposit"
-            placement="topLeft"
-            [tip]="'perpsDepositFeeBreakdown' | translate | async"
-          >
-            <img src="assets/images/common/tooltip.svg" alt="" />
-          </tooltip>
-        </span>
-        <span class="value">
-          {{
-            confirmFeeExact === null
-              ? ("perpsUnknownValue" | translate | async)
-              : formatUsd(confirmFeeExact)
-          }}
-          {{ confirmFeeExact === null ? "" : token.symbol }}
-        </span>
-      </div>
-      <div class="row" *ngIf="isDeposit">
         <span class="label">
           {{ "perpsNetworkFee" | translate | async }}
           <em>({{ "perpsEstimated" | translate | async }})</em>
         </span>
-        <span class="value">
-          {{ formatBalance(networkFeeExact, 6) }} {{ token.nativeSymbol }}
+        <span
+          class="value"
+          [class.fee-updating]="preparingDeposit"
+        >
+          {{ formatBalance(networkFeeExact, 8) }} {{ token.nativeSymbol }}
         </span>
       </div>
       <div class="row">
@@ -212,36 +182,16 @@
           {{ "perpsYouReceive" | translate | async }}
           <em>({{ "perpsEstimated" | translate | async }})</em>
         </span>
-        <span class="value">
-          {{
-            confirmReceiveExact === null
-              ? ("perpsUnknownValue" | translate | async)
-              : formatUsd(confirmReceiveExact)
-          }}
-        </span>
+        <span class="value">{{ formatUsd(confirmReceiveExact) }} {{ token.symbol }}</span>
       </div>
-      <p class="sheet-note">
-        {{
-          (isDeposit ? "perpsDepositIrreversible" : "perpsWithdrawEstimateNote")
-            | translate
-            | async
-        }}
-      </p>
-      <!-- 「准备」能敲定一个确认面板打开之前界面回答不了的问题 —— 入金的网络手续费
-           只有在这里才知道 —— 所以那条原因也必须能在面板里读到。
-           表单下方的那段文案被这层遮罩挡住了。 -->
       <p class="error-tip" *ngIf="disabledReason">
         {{ disabledReason | translate: disabledReasonParams | async }}
       </p>
       <div class="sheet-actions">
-        <button class="ghost" (click)="cancelConfirm()">
+        <button class="ghost" [disabled]="submitting" (click)="cancelConfirm()">
           {{ "cancel" | translate | async }}
         </button>
-        <button
-          class="primary"
-          [disabled]="!canConfirm"
-          (click)="submit()"
-        >
+        <button class="primary" [disabled]="!canConfirm" (click)="submit()">
           {{ "confirm" | translate | async }}
         </button>
       </div>

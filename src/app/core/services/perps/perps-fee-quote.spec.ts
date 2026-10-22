@@ -8,9 +8,6 @@ import { environment } from '@/environments/environment';
 import { PERPS_HYPEREVM_CONFIG } from '@popup/_lib/perps';
 
 const FAST = 1000;
-/** 报价按收款方而定：账户是否已存在会改变收费金额。 */
-const RECIPIENT = '0x1234567890123456789012345678901234567890';
-
 function feeResponse(overrides: Partial<any> = {}) {
   return [
     {
@@ -21,10 +18,6 @@ function feeResponse(overrides: Partial<any> = {}) {
     },
     { finalityThreshold: 2000, minimumFee: 0 },
   ];
-}
-
-function encodedBool(value: boolean): string {
-  return ethers.AbiCoder.defaultAbiCoder().encode(['bool'], [value]);
 }
 
 function encodedUint(value: bigint): string {
@@ -46,9 +39,8 @@ describe('PerpsFeeQuoteService deposit quotes', () => {
     rpc = jasmine.createSpyObj<PerpsRpcService>('PerpsRpcService', [
       'withEndpoint',
     ]);
-    // 收款方在 HyperCore 上已经存在，因此不收开户费。
     rpc.withEndpoint.and.callFake((endpoints: any, run: any) =>
-      run({ call: () => Promise.resolve(encodedBool(true)) })
+      run({ call: () => Promise.resolve(encodedUint(200000n)) })
     );
     service = new PerpsFeeQuoteService(http, rpc);
   });
@@ -60,7 +52,7 @@ describe('PerpsFeeQuoteService deposit quotes', () => {
   it('asks for the HyperCore deposit route, not a plain HyperEVM transfer', async () => {
     http.get.and.returnValue(of(feeResponse()) as any);
 
-    await service.depositQuote('10', RECIPIENT);
+    await service.depositFeeRate();
 
     const url = http.get.calls.mostRecent().args[0] as string;
     expect(url).toContain('iris-api-sandbox.circle.com');
@@ -70,64 +62,42 @@ describe('PerpsFeeQuoteService deposit quotes', () => {
     expect(url).toContain('hyperCoreDeposit=true');
   });
 
-  it('F1 uses the mainnet Circle route and HyperEVM RPC from the build network', async () => {
+  it('F1 uses the mainnet Circle route and withdrawal HyperEVM RPC from the build network', async () => {
     environment.perpsNetwork = 'mainnet';
     service = new PerpsFeeQuoteService(http, rpc);
     http.get.and.returnValue(of(feeResponse()) as any);
-    await service.depositQuote('10', RECIPIENT);
+    await service.depositFeeRate();
     expect(http.get).toHaveBeenCalledOnceWith(
       'https://iris-api.circle.com/v2/burn/USDC/fees/3/19?forward=true&hyperCoreDeposit=true'
     );
+    expect(rpc.withEndpoint).not.toHaveBeenCalled();
+    await service.withdrawQuote();
     expect(rpc.withEndpoint.calls.mostRecent().args[0]).toBe(PERPS_HYPEREVM_CONFIG.mainnet);
   });
 
   it('quotes the flat forwarding fee in USDC', async () => {
     http.get.and.returnValue(of(feeResponse()) as any);
 
-    const quote = await service.depositQuote('10', RECIPIENT);
+    const quote = await service.depositFeeRate();
 
-    expect(quote.feeExact).toBe('0.2');
+    expect(quote.forwardFeeExact).toBe('0.2');
   });
 
-  it('adds the protocol fee in basis points, rounded up', async () => {
+  it('returns the protocol fee in basis points and the forwarding fee in USDC', async () => {
     http.get.and.returnValue(of(feeResponse({ minimumFee: 1.4 })) as any);
 
-    // 10 USDC 按 1.4bps 是 0.0014，不需要舍入；3.33 得到 0.0004662，
-    // 这个值不能向下舍入到用户头上。
-    const quote = await service.depositQuote('3.33', RECIPIENT);
-
-    expect(quote.feeExact).toBe('0.200467');
+    expect(await service.depositFeeRate()).toEqual({ protocolFeeBps: 1.4, forwardFeeExact: '0.2' });
+    expect(http.get).toHaveBeenCalledTimes(1);
   });
 
-  it('folds in the new-account fee when the recipient does not exist yet', async () => {
+  it('quotes only CCTP fees without querying account existence or account fees', async () => {
     http.get.and.returnValue(of(feeResponse()) as any);
-    rpc.withEndpoint.and.callFake((endpoints: any, run: any) =>
-      run({
-        call: (tx: { to: string }) =>
-          Promise.resolve(
-            tx.to === '0x0000000000000000000000000000000000000810'
-              ? encodedBool(false)
-              : encodedUint(100000000n)
-          ),
-      })
-    );
+    rpc.withEndpoint.and.rejectWith(new Error('Account RPC unavailable'));
 
-    const quote = await service.depositQuote('10', RECIPIENT);
+    const quote = await service.depositFeeRate();
 
-    // 0.2 的转发费加上 Circle 开户收的 1 USDC，
-    // 对用户报成一个数字，而不是逐项列出。
-    expect(quote.feeExact).toBe('1.2');
-    // 但 CCTP 只会被授权它自己那一份：开户费是之后在 HyperCore 那一段，
-    // 由一个 CCTP 全然不知的合约收走的。
-    expect(quote.maxFeeExact).toBe('0.2');
-  });
-
-  it('charges no new-account fee to an account that already exists', async () => {
-    http.get.and.returnValue(of(feeResponse()) as any);
-
-    const quote = await service.depositQuote('10', RECIPIENT);
-
-    expect(quote.feeExact).toBe('0.2');
+    expect(quote.forwardFeeExact).toBe('0.2');
+    expect(rpc.withEndpoint).not.toHaveBeenCalled();
   });
 
   it('refuses to quote when the fast transfer is missing', async () => {
@@ -135,7 +105,7 @@ describe('PerpsFeeQuoteService deposit quotes', () => {
       of([{ finalityThreshold: 2000, minimumFee: 0 }]) as any
     );
 
-    await expectAsync(service.depositQuote('10', RECIPIENT)).toBeRejectedWithError(
+    await expectAsync(service.depositFeeRate()).toBeRejectedWithError(
       /fast transfer/
     );
   });
@@ -145,7 +115,7 @@ describe('PerpsFeeQuoteService deposit quotes', () => {
       of([{ finalityThreshold: FAST, minimumFee: 0 }]) as any
     );
 
-    await expectAsync(service.depositQuote('10', RECIPIENT)).toBeRejectedWithError(
+    await expectAsync(service.depositFeeRate()).toBeRejectedWithError(
       /unreadable/
     );
   });
@@ -155,7 +125,7 @@ describe('PerpsFeeQuoteService deposit quotes', () => {
       throwError(() => ({ status: 400, message: 'Bad request' }))
     );
 
-    await expectAsync(service.depositQuote('10', RECIPIENT)).toBeRejectedWith(
+    await expectAsync(service.depositFeeRate()).toBeRejectedWith(
       jasmine.objectContaining({ failure: 'rejected' })
     );
   });
@@ -171,10 +141,10 @@ describe('PerpsFeeQuoteService deposit quotes', () => {
       ) as any;
     });
 
-    const quote = await service.depositQuote('10', RECIPIENT);
+    const quote = await service.depositFeeRate();
 
     expect(attempts).toBe(2);
-    expect(quote.feeExact).toBe('0.2');
+    expect(quote.forwardFeeExact).toBe('0.2');
   });
 
   // 会把整条重试阶梯跑完，所以才给它留出时间。
@@ -183,7 +153,7 @@ describe('PerpsFeeQuoteService deposit quotes', () => {
     async () => {
       http.get.and.returnValue(throwError(() => new TimeoutError()) as any);
 
-      await expectAsync(service.depositQuote('10', RECIPIENT)).toBeRejectedWith(
+      await expectAsync(service.depositFeeRate()).toBeRejectedWith(
         jasmine.objectContaining({ failure: 'unavailable' })
       );
     },
@@ -244,10 +214,10 @@ describe('PerpsFeeQuoteService withdrawal quotes', () => {
   });
 
   it('derives the withdrawal floor from the quote, not from a constant', () => {
-    expect(service.minWithdrawExact({ feeExact: '0.2', maxFeeExact: '0.2' })).toBe(
+    expect(service.minWithdrawExact({ feeExact: '0.2' })).toBe(
       '0.4'
     );
-    expect(service.minWithdrawExact({ feeExact: '0.35', maxFeeExact: '0.35' })).toBe(
+    expect(service.minWithdrawExact({ feeExact: '0.35' })).toBe(
       '0.7'
     );
   });

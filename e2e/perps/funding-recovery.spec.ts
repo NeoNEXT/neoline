@@ -2,7 +2,7 @@ import { Transaction, keccak256 } from 'ethers';
 import { test, expect } from './fixtures';
 import { depositAbi, responseGate } from './funding.fake';
 import { recoverWithdrawalSigner } from './hyperliquid.fake';
-import { amount, cancel, confirm, confirmRow, expectToast, openFunding, sheet, submit } from './funding.ui';
+import { amount, fundingRow, expectToast, openFunding, sheet, submit, confirmDeposit } from './funding.ui';
 
 for (const failure of ['rotate-known', 'lost-then-nonce'] as const) {
   test(`F9 accepted deposit with ${failure} only rebroadcasts the original bytes`, async ({ page, hl }) => {
@@ -10,8 +10,7 @@ for (const failure of ['rotate-known', 'lost-then-nonce'] as const) {
     await openFunding(page, 'Deposit', '500.12');
     await amount(page).fill('10');
     await submit(page).click();
-    await expect(confirm(page)).toBeEnabled();
-    await confirm(page).click({ clickCount: 2 });
+    await confirmDeposit(page);
     await expect(page.locator('simple-snack-bar')).toContainText(failure === 'rotate-known'
       ? 'Deposit initiated' : 'broadcast result is unknown');
     await expect(page.locator('.balance-tip')).toContainText('490.12');
@@ -33,8 +32,6 @@ for (const failure of ['rotate-known', 'lost-then-nonce'] as const) {
 test('F7 known gap: failed refresh with a stale retained account should not withdraw', async ({ page, hl }) => {
   await openFunding(page, 'Withdraw', '$1,000');
   await amount(page).fill('10');
-  await submit(page).click();
-  await expect(confirm(page)).toBeEnabled();
   hl.accountReadFailureStatus = 429;
   await page.evaluate(() => {
     const sockets = (window as any).__perpsSocket;
@@ -43,70 +40,63 @@ test('F7 known gap: failed refresh with a stale retained account should not with
   });
   await expect(page.locator('.stale-note')).toBeVisible();
   await expect(page.locator('.balance-tip')).toContainText('$1,000');
-  await confirm(page).click();
+  await submit(page).click();
   await expectToast(page, 'Withdrawal initiated');
   await expect(amount(page)).toHaveValue('');
-  test.fail(true, 'README F7/7.4: refreshBeforeSubmit accepts a stale retained account after the read failed');
+  test.fail(true, 'README F7/7.4: refreshAccount retains a stale account after the read failed');
   expect(hl.withdrawals).toHaveLength(0);
 });
 
-test('F8 canceled deposit quote cannot restore or overwrite its replacement', async ({ page, hl }) => {
+test('F8 leaving during deposit preparation cannot send the abandoned amount', async ({ page, hl }) => {
   await openFunding(page, 'Deposit', '500.12');
-  const old = hl.funding.holdNextDepositQuote();
+  await amount(page).fill('10');
+  await expect(fundingRow(page, 'Service fee')).toContainText('$0.20');
+  const old = hl.funding.holdNextGasEstimate();
   try {
-    await amount(page).fill('10');
     await submit(page).click();
     await old.received;
-    await expect(confirm(page)).toBeDisabled();
-    await cancel(page).click();
+    await expect(amount(page)).toBeDisabled();
+    await page.goBack();
     hl.funding.circleFees[0].forwardFee.high = 400000;
+    await openFunding(page, 'Deposit', '500.12');
     await amount(page).fill('20');
     await submit(page).click();
-    await expect(confirm(page)).toBeEnabled();
-    await expect(confirmRow(page, 'Transaction fee')).toHaveText('$0.40 USDC');
+    await confirmDeposit(page);
+    await expect(amount(page)).toHaveValue('');
     old.release();
     await old.completed;
-    await expect.poll(() => hl.funding.rpcRequests.filter((request) => request.method === 'eth_call' &&
-      request.params[0].to.toLowerCase() === '0x0000000000000000000000000000000000000810').length).toBe(2);
-    await expect(confirmRow(page, 'Transaction fee')).toHaveText('$0.40 USDC');
-    await confirm(page).click();
-    await expect(amount(page)).toHaveValue('');
     expect(hl.funding.broadcasts).toHaveLength(1);
-    // The old amount never acquired an authorization or gas estimate.
     const estimates = hl.funding.rpcRequests.filter((request) => request.method === 'eth_estimateGas');
-    expect(estimates).toHaveLength(2);
-    for (const request of estimates) {
+    expect(estimates.length).toBeGreaterThanOrEqual(2);
+    for (const request of estimates.slice(1)) {
       const [authorization] = depositAbi.decodeFunctionData('batchDepositForBurnWithAuth', request.params[0].data);
       expect(authorization.amount).toBe(20000000n);
     }
     const [authorization] = depositAbi.decodeFunctionData('batchDepositForBurnWithAuth', Transaction.from(hl.funding.broadcasts[0]).data);
     expect(authorization.amount).toBe(20000000n);
+    await expect(sheet(page)).toHaveCount(0);
   } finally { old.release(); }
 });
 
 for (const malformed of [false, true]) {
-  test(`F13 known gap: canceled withdrawal ${malformed ? 'failure' : 'quote'} must not affect a new confirmation`, async ({ page, hl }) => {
-    await openFunding(page, 'Withdraw', '$1,000');
-    await expect(page.locator('.detail-rows .row').filter({ hasText: 'Cross-chain fee' })).toContainText('$0.2');
+  test(`F13 abandoned page fee ${malformed ? 'failure' : 'quote'} cannot affect a later operation`, async ({ page, hl }) => {
     const old = hl.funding.holdNextWithdrawQuote(malformed);
     try {
-      await amount(page).fill('10');
-      await submit(page).click();
+      await openFunding(page, 'Withdraw', '$1,000');
       await old.received;
-      await cancel(page).click();
+      await page.locator('.funding-header .back').click();
       hl.funding.withdrawFee = '0.4';
+      await openFunding(page, 'Withdraw', '$1,000');
       await amount(page).fill('20');
       await submit(page).click();
-      await expect(confirm(page)).toBeEnabled();
-      await expect(confirmRow(page, 'Cross-chain fee')).toHaveText('$0.40 USDC');
+      await expect(amount(page)).toHaveValue('');
       old.release();
       await old.completed;
-      // Qualify the documented race before the expected failure assertion.
-      if (malformed) { await expect(sheet(page)).toHaveCount(0); }
-      else { await expect(confirmRow(page, 'Cross-chain fee')).toHaveText('$0.20 USDC'); }
-      expect(hl.withdrawals).toHaveLength(0);
-      test.fail(true, 'README F13/7.4: prepareWithdraw has no generation guard after cancel and reopen');
-      await expect(confirmRow(page, 'Cross-chain fee')).toHaveText('$0.40 USDC', { timeout: 1000 });
+      await expect(fundingRow(page, 'Service fee')).toContainText('$0.4');
+      await expect(page.locator('.balance-tip')).toContainText('$980');
+      expect(hl.withdrawals).toHaveLength(1);
+      expect(hl.withdrawals[0].action.amount).toBe('20');
+      await expect(sheet(page)).toHaveCount(0);
     } finally { old.release(); }
   });
 }
@@ -116,18 +106,13 @@ test('F10 reloading a pending deposit does not restore persistent transaction tr
   await openFunding(page, 'Deposit', '500.12');
   await amount(page).fill('10');
   await submit(page).click();
-  await expect(confirm(page)).toBeEnabled();
-  await confirm(page).click();
+  await confirmDeposit(page);
   await expectToast(page, 'Deposit initiated');
   await expect.poll(() => hl.funding.rpcRequests.filter((request) => request.method === 'eth_getTransactionReceipt').length).toBe(1);
   await page.reload();
   await expect(page.locator('.balance-tip')).toContainText('500.12');
   await expect(amount(page)).toHaveValue('');
   await expect(sheet(page)).toHaveCount(0);
-  await amount(page).fill('10');
-  await submit(page).click();
-  await expect(confirm(page)).toBeEnabled();
-  await cancel(page).click();
   expect(hl.funding.rpcRequests.filter((request) => request.method === 'eth_getTransactionReceipt')).toHaveLength(1);
   expect(hl.funding.broadcasts).toHaveLength(1);
   expect(hl.accountValue).toBe('1000');
@@ -139,8 +124,6 @@ test('F12 pending withdrawal response locks input and presets without another wr
     await openFunding(page, 'Withdraw', '$1,000');
     await amount(page).fill('10');
     await submit(page).click();
-    await expect(confirm(page)).toBeEnabled();
-    await confirm(page).click({ clickCount: 2 });
     await expect.poll(() => hl.withdrawals.length).toBe(1);
     await expect(amount(page)).toBeDisabled();
     await expect(submit(page)).toBeDisabled();
@@ -159,8 +142,7 @@ test('F9 disconnected broadcast batches track the original hash without signing 
   await openFunding(page, 'Deposit', '500.12');
   await amount(page).fill('10');
   await submit(page).click();
-  await expect(confirm(page)).toBeEnabled();
-  await confirm(page).click();
+  await confirmDeposit(page);
   await expect(page.locator('simple-snack-bar')).toContainText('broadcast result is unknown', { timeout: 20000 });
   await expect(amount(page)).toHaveValue('');
   expect(new Set(hl.funding.broadcasts).size).toBe(1);
@@ -179,8 +161,6 @@ for (const refusals of [['nonce'], ['nonce', 'nonce'], ['balance']] as const) {
     await openFunding(page, 'Withdraw', '$1,000');
     await amount(page).fill('10');
     await submit(page).click();
-    await expect(confirm(page)).toBeEnabled();
-    await confirm(page).click();
     const succeeds = refusals.length === 1 && refusals[0] === 'nonce';
     await expectToast(page, succeeds ? 'Withdrawal initiated' : refusals[0] === 'nonce' ? 'Invalid nonce' : 'Insufficient balance');
     await expect(amount(page)).toHaveValue(succeeds ? '' : '10');
@@ -204,24 +184,13 @@ for (const failure of ['503', 'malformed'] as const) {
     await openFunding(page, 'Withdraw', '$1,000');
     await amount(page).fill('10');
     await submit(page).click();
-    await expect(confirm(page)).toBeEnabled();
-    await confirm(page).click({ clickCount: 2 });
     await expectToast(page, 'unknown whether this withdrawal ran');
     await expect(page.locator('.balance-tip')).toContainText('$990');
     await expect(amount(page)).toHaveValue('10');
     expect(hl.withdrawals).toHaveLength(1);
     expect(hl.funding.broadcasts).toHaveLength(0);
-    // Characterize the current boundary: the warning does not persistently block a new user intent.
-    if (failure === '503') {
-      await expect(submit(page)).toBeEnabled();
-      await submit(page).click();
-      await expect(confirm(page)).toBeEnabled();
-      await confirm(page).click();
-      await expect(amount(page)).toHaveValue('');
-      expect(hl.withdrawals).toHaveLength(2);
-      expect(hl.withdrawals[1].nonce).toBeGreaterThan(hl.withdrawals[0].nonce);
-      expect(hl.accountValue).toBe('980');
-    }
+    await expect(submit(page)).toBeEnabled();
+    expect(hl.withdrawals).toHaveLength(1);
     await expect(sheet(page)).toHaveCount(0);
   });
 }

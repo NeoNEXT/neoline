@@ -1976,12 +1976,6 @@
   "perpsEstimated": {
     "message": "estimate"
   },
-  "perpsNetwork": {
-    "message": "Network"
-  },
-  "perpsRecipient": {
-    "message": "Recipient"
-  },
   "perpsRetry": {
     "message": "Retry"
   },
@@ -1989,10 +1983,10 @@
     "message": "Confirm deposit"
   },
   "perpsDepositChainNotice": {
-    "message": "This transaction is sent on {{chain}} and its network fee is paid in {{symbol}} on that chain."
+    "message": "Deposit {{symbol}} from {{chain}} into HyperCore."
   },
-  "perpsDepositIrreversible": {
-    "message": "Sent to the CCTP contract, which credits your Hyperliquid account. This transfer cannot be recalled."
+  "perpsWithdrawChainNotice": {
+    "message": "Withdraw {{symbol}} from HyperCore to {{chain}}."
   },
   "perpsBalanceUnknown": {
     "message": "Could not read your balance on the deposit chain."
@@ -2018,6 +2012,9 @@
   "perpsBalance": {
     "message": "balance"
   },
+  "perpsContinue": {
+    "message": "Continue"
+  },
   "perpsNetworkFee": {
     "message": "Network fee"
   },
@@ -2028,13 +2025,7 @@
     "message": "Amount is below the minimum of {{amount}} {{symbol}}. The route takes {{fee}} {{symbol}} out of every withdrawal, and a smaller amount is refused where it is charged."
   },
   "perpsRouteFee": {
-    "message": "Cross-chain fee"
-  },
-  "perpsTransactionFee": {
-    "message": "Transaction fee"
-  },
-  "perpsDepositFeeBreakdown": {
-    "message": "Deducted from your deposit. Covers the cross-chain fee, plus the new-account fee if your Hyperliquid account does not exist yet."
+    "message": "Service fee"
   },
   "perpsYouReceive": {
     "message": "You receive"
@@ -2222,20 +2213,11 @@
   "perpsMarketChangedReviewAgain": {
     "message": "The market or order details changed before signing. No order was sent. Please place the order again."
   },
-  "perpsFeeQuoteChangedReviewAgain": {
-    "message": "The fee quote changed. Review it again before submitting."
-  },
   "perpsFeeQuoteUnknown": {
     "message": "Could not read the current fee, so nothing was sent. Try again."
   },
   "perpsUnknownValue": {
     "message": "Unknown"
-  },
-  "perpsConfirmWithdrawTitle": {
-    "message": "Confirm withdrawal"
-  },
-  "perpsWithdrawEstimateNote": {
-    "message": "The fee is a ceiling, so the amount that arrives can only be higher. The exchange ledger records what was actually charged."
   },
   "perpsWithdrawStatusUnknown": {
     "message": "The exchange did not return a result, so it is unknown whether this withdrawal ran. Check your balance and the Hyperliquid ledger before sending it again."

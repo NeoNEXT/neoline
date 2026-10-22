@@ -57,7 +57,6 @@ interface NotificationContent {
   perpsWithdrawStatusUnknown: string;
   perpsSigningUnavailable: string;
   perpsRefreshFailed: string;
-  perpsFeeQuoteChangedReviewAgain: string;
 }
 
 @Injectable()
@@ -136,8 +135,6 @@ export class NotificationService {
       'This wallet does not support Hyperliquid typed-data signing yet.',
     perpsRefreshFailed:
       'Could not confirm the latest balance, so nothing was sent. Try again.',
-    perpsFeeQuoteChangedReviewAgain:
-      'The fee quote changed. Review it again before submitting.',
   };
   private CN: NotificationContent = {
     close: '关闭',
@@ -201,7 +198,6 @@ export class NotificationService {
       '交易所未返回结果，本次提款是否已执行无法判定。请先核对余额与 Hyperliquid 账本，再决定是否重新发起。',
     perpsSigningUnavailable: '该钱包暂不支持 Hyperliquid 类型化数据签名。',
     perpsRefreshFailed: '无法取得最新余额，未发起任何操作，请重试。',
-    perpsFeeQuoteChangedReviewAgain: '费用报价已变化。提交前请重新确认。',
   };
   private JA: NotificationContent = {
     close: '閉じる',
@@ -272,8 +268,6 @@ export class NotificationService {
       'このウォレットはHyperliquidの型付きデータ署名にまだ対応していません。',
     perpsRefreshFailed:
       '最新の残高を確認できなかったため、何も送信していません。再試行してください。',
-    perpsFeeQuoteChangedReviewAgain:
-      '手数料の見積もりが変わりました。送信する前にもう一度確認してください。',
   };
   private KO: NotificationContent = {
     close: '닫기',
@@ -344,8 +338,6 @@ export class NotificationService {
       '이 지갑은 아직 Hyperliquid 형식화 데이터 서명을 지원하지 않습니다.',
     perpsRefreshFailed:
       '최신 잔액을 확인하지 못해 아무것도 전송하지 않았습니다. 다시 시도하세요.',
-    perpsFeeQuoteChangedReviewAgain:
-      '수수료 견적이 변경되었습니다. 제출하기 전에 다시 확인하세요.',
   };
   constructor(private settingState: SettingState) {
     this.content = this.EN;

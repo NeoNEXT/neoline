@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { firstValueFrom, Observable, Unsubscribable } from 'rxjs';
+import { firstValueFrom, Unsubscribable } from 'rxjs';
 import BigNumber from 'bignumber.js';
 
 import { AppState } from '@/app/reduers';
@@ -18,10 +18,10 @@ import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.se
 import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
 import {
   coversExact,
-  PerpsDepositAuthorization,
   PerpsDepositChainService,
 } from '@/app/core/services/perps/perps-deposit-chain.service';
 import {
+  PerpsDepositFeeRate,
   PerpsFeeQuote,
   PerpsFeeQuoteService,
 } from '@/app/core/services/perps/perps-fee-quote.service';
@@ -74,45 +74,20 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   nativeBalanceExact: string = null;
   /** 这笔入金的网络手续费估算，以链自身货币计。 */
   networkFeeExact: string = null;
-  /** 入金确认步骤已打开。 */
-  confirming = false;
-  /** 仍在计算屏幕上这笔入金会花多少钱。 */
   preparingDeposit = false;
-  preparingWithdraw = false;
-  /**
-   * 确认页当初据以绘制的那份报价。
-   *
-   * 刻意与实时的 `withdrawQuote` 分开：必须与签名所对应的那个数字相符的，是用户同意过的那个
-   * 数字，而不是签名那一刻合约恰好在说的数字。
-   */
-  withdrawConfirmedQuote: PerpsFeeQuote | null = null;
-  /**
-   * 这笔入金将据以发送的那份已签名许可，以及展示给用户时所报的手续费。持有的是它而不是私钥
-   * —— 私钥会在广播时重新取，而不是跨整个对话框一直留着。
-   */
-  private depositAuthorization: PerpsDepositAuthorization | null = null;
-  private depositPreparationSeq = 0;
-  /**
-   * 确认页当初据以绘制、并且已经签名的那份报价。
-   *
-   * 入金只有这一份，不像提现那样另有一份实时的：表单上不报价，因为这里两笔费用都要等确认页
-   * 才知道 —— 网络费需要一份签过名的授权才估得出来，而跨链费与它同时敲定。
-   */
-  depositQuote: PerpsFeeQuote | null = null;
+  private depositConfirmedFeeExact: string | null = null;
+  private submissionSeq = 0;
+  private destroyed = false;
+  /** 进入本页时读到的入金费率。改金额只在本地计算，不再请求。 */
+  private depositFee: PerpsDepositFeeRate | null = null;
+  private feesLoading = false;
 
   readonly minDeposit = PERPS_MIN_DEPOSIT;
   /**
-   * 提现通道声称它会扣走多少，每次都重新读取而不是当作常量保存：转发费存放在一个 owner 可以
-   * 修改的合约里。为 null 表示读不到，此时会挡下这笔提现，而不是退回到一个可能是错的数字。
+   * 进入本页时读到的提现手续费。为 null 表示读不到，此时会挡下这笔提现，而不是退回到一个
+   * 可能是错的数字。
    */
   withdrawQuote: PerpsFeeQuote | null = null;
-  /**
-   * 界面正在等待哪一次在途的提现报价。
-   *
-   * 每次读取都自增，这样上一次进入该标签页时较慢的答复就不会覆盖较新的那个。下限和按钮都
-   * 依赖这份报价；显示错的那一份，比什么都不显示更糟。
-   */
-  private withdrawQuoteSeq = 0;
   /**
    * 用百分比而不是固定金额：在一个余额可能为零或未知的界面上，$50 按钮是一个只能以报错收场
    * 的提议。
@@ -131,6 +106,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   private connectionSub: Unsubscribable;
   private accountStateSub: Unsubscribable;
   private balanceTimer: ReturnType<typeof setInterval>;
+  private depositGasTimer: ReturnType<typeof setInterval>;
 
   constructor(
     private route: ActivatedRoute,
@@ -150,8 +126,8 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     const tab = this.route.snapshot.queryParams.tab;
     if (tab === 'withdraw') {
       this.tab = 'withdraw';
-      void this.loadWithdrawQuote();
     }
+    void this.loadFees();
     this.connectionSub = this.channel
       .watchConnectionState()
       .subscribe((state) => {
@@ -159,11 +135,13 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
       });
     this.accountSub = this.store.select('account').subscribe((state) => {
       const address = state.currentWallet?.accounts[0]?.address;
+      if (this.wallet && this.wallet !== state.currentWallet) { this.invalidateSubmission(); }
       this.wallet = state.currentWallet as EvmWalletJSON;
       if (
         address &&
         (address !== this.address || this.token !== this.loadedConfig)
       ) {
+        this.invalidateSubmission();
         this.address = address;
         this.loadedConfig = this.token;
         this.watchAccountState(address);
@@ -243,99 +221,20 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * 一次性算清屏幕上这笔入金实际要花多少钱。
-   *
-   * 这里的每一项都需要用户最终确定的金额：CCTP 手续费是按次报价的，而 gas 在授权存在之前
-   * 根本估不出来 —— 没有有效授权，这次调用会 revert。这也是它在确认页打开时才运行、而不是
-   * 每次按键都跑的原因，同样是私钥在这里取用、用完即弃、而不是在整个对话框生命周期内一直
-   * 留着的原因。
-   */
-  private async prepareDeposit() {
-    const seq = ++this.depositPreparationSeq;
-    const config = this.token;
-    const amount = this.submissionAmount;
-    const address = this.address;
-    const superseded = () =>
-      seq !== this.depositPreparationSeq ||
-      config !== this.token || address !== this.address || !this.confirming;
-
-    this.preparingDeposit = true;
-    this.networkFeeExact = null;
-    this.depositAuthorization = null;
-    this.depositQuote = null;
-    try {
-      const quote = await this.feeQuote.depositQuote(amount, address);
-      if (superseded()) {
-        return;
-      }
-      const password = await this.chrome.getPassword();
-      const privateKey = await this.evmWallet.getPrivateKey(
-        this.wallet,
-        password
-      );
-      if (superseded()) {
-        return;
-      }
-      const authorization = await this.depositChain.authorizeDeposit(
-        config,
-        privateKey,
-        amount
-      );
-      if (superseded()) {
-        return;
-      }
-      const fee = await this.depositChain.depositFeeExact(
-        config,
-        authorization,
-        quote.maxFeeExact
-      );
-      if (superseded()) {
-        return;
-      }
-      this.depositQuote = quote;
-      this.depositAuthorization = authorization;
-      this.networkFeeExact = fee;
-      if (this.gasShortfall) {
-        // 手续费是表单必须显示的那条原因；这份授权不会被用到，
-        // 也不该活得比一个用户从未确认过的确认面板更久。
-        this.depositAuthorization = null;
-        this.depositQuote = null;
-        this.confirming = false;
-      }
-    } catch (error) {
-      if (!superseded()) {
-        this.confirming = false;
-        this.global.snackBarTip('txFailed', (error as Error)?.message || error);
-      }
-    } finally {
-      if (seq === this.depositPreparationSeq) {
-        this.preparingDeposit = false;
-      }
-    }
-  }
-
-  /**
-   * 入金链自身的货币不够付这笔手续费。
-   *
-   * 它值得拥有自己的状态而不是归入一个笼统的失败：用户手上有他们正想入金的 USDC，却完全
-   * 不知道自己还需要一条他们没选过的链上的 gas。
-   */
+  /** 授权后估算的真实交易预算用于准备和最终发送前的余额校验。 */
   get gasShortfall(): boolean {
-    return (
-      this.isDeposit &&
-      this.networkFeeExact !== null &&
+    return this.isDeposit && this.networkFeeExact !== null &&
       this.nativeBalanceExact !== null &&
-      !coversExact(this.nativeBalanceExact, this.networkFeeExact)
-    );
+      !coversExact(this.nativeBalanceExact, this.networkFeeExact);
   }
 
   ngOnDestroy() {
+    this.destroyed = true;
     this.accountSub?.unsubscribe();
     this.connectionSub?.unsubscribe();
     this.accountStateSub?.unsubscribe();
     clearInterval(this.balanceTimer);
-    this.discardDepositPreparation();
+    this.invalidateSubmission();
   }
 
   /**
@@ -376,15 +275,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     return this.tab === 'withdraw';
   }
 
-  /**
-   * 这台钱包在本地根本签不了这两条意图。
-   *
-   * 硬件钱包与二维码钱包手上没有可导出的私钥，而两个方向都要用到它：提现要签一条交易场所
-   * 动作，存入要签一份 EIP-3009 授权 —— 后者发生在**确认页打开的那一刻**（`prepareDeposit`），
-   * 早于任何一次提交。所以这个判断必须和余额、报价一样进闸门。放在 `submit()` 里太晚了：
-   * 存入路径会先一步在取私钥时抛错，被当成一次失败的交易报给用户，而真正的原因
-   * ——「这台钱包签不了」—— 那条文案反而永远到不了。
-   */
+  /** 硬件或二维码钱包无法导出这两条资金路径所需的私钥。 */
   get signingUnavailable(): boolean {
     const extra = this.wallet?.accounts[0]?.extra;
     return !!(extra?.ledgerSLIP44 || extra?.qrBasedXFP);
@@ -424,21 +315,40 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     return this.withdrawQuote?.feeExact ?? null;
   }
 
-  /**
-   * 提现的落点：签名者本人在入金链上的地址。
-   *
-   * 显示出来而不是让用户假定。它永远不会是别的地址 —— 这条通道也没有指定其他收款方的办法
-   * —— 而一个省略它的确认页，等于让用户凭信任接受这一点。
-   */
-  get withdrawRecipient(): string {
-    return this.address;
-  }
-
-  /** 确认页正在同意的那笔跨链费，无论它对应的是哪种意图。 */
+  /** 入金用本页费率按当前金额计算；提现用进入页面时读到的报价。 */
   get confirmFeeExact(): string | null {
     return this.isDeposit
-      ? this.depositQuote?.feeExact ?? null
-      : this.withdrawConfirmedQuote?.feeExact ?? null;
+      ? this.depositConfirmedFeeExact ?? this.currentDepositFee
+      : this.withdrawFeeExact;
+  }
+
+  private get currentDepositFee(): string | null {
+    if (!this.depositFee) {
+      return null;
+    }
+    const protocolFee = new BigNumber(this.hasPositiveAmount ? this.submissionAmount : '0')
+      .times(this.depositFee.protocolFeeBps)
+      .div(10000)
+      .decimalPlaces(this.amountDecimals, BigNumber.ROUND_CEIL);
+    return protocolFee.plus(this.depositFee.forwardFeeExact).toFixed();
+  }
+
+  /** 进入资金页或重试时各读一次入金费率和提现手续费。 */
+  private async loadFees() {
+    if (this.feesLoading || (this.depositFee && this.withdrawQuote)) {
+      return;
+    }
+    const config = this.token;
+    this.feesLoading = true;
+    const [depositFee, withdrawQuote] = await Promise.all([
+      this.depositFee ?? this.feeQuote.depositFeeRate().catch(() => null),
+      this.withdrawQuote ?? this.feeQuote.withdrawQuote().catch(() => null),
+    ]);
+    if (!this.destroyed && config === this.token) {
+      this.depositFee = depositFee;
+      this.withdrawQuote = withdrawQuote;
+    }
+    this.feesLoading = false;
   }
 
   /**
@@ -451,28 +361,6 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     }
     const net = new BigNumber(this.submissionAmount).minus(fee);
     return net.isGreaterThan(0) ? net.toFixed() : '0';
-  }
-
-  /**
-   * 确认页是否已经有一个完整的答案可供确认。
-   *
-   * 一个还在等报价的界面没有任何东西可供用户同意，所以按钮保持按不下去，而不是对着一片空白
-   * 发出去。
-   */
-  get canConfirm(): boolean {
-    if (this.submitting) {
-      return false;
-    }
-    // 「准备」正是确认页存在的意义，而且它能敲定一个在它运行之前界面回答不了的问题：入金的
-    // 网络手续费只有在这里才知道，而它决定钱包究竟付不付得起这次发送。`submit` 会一声不吭地
-    // 拒绝 `canSubmit` 拒绝的一切，所以确认面板必须问同样的问题，而不是给出一个按了没反应的
-    // 按钮。
-    if (!this.canSubmit) {
-      return false;
-    }
-    return this.isDeposit
-      ? !this.preparingDeposit && !!this.depositQuote
-      : !this.preparingWithdraw && !!this.withdrawConfirmedQuote;
   }
 
   /**
@@ -571,8 +459,8 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     if (!this.maxAmountKnown) {
       return this.isDeposit ? 'perpsBalanceUnknown' : 'perpsWithdrawableUnknown';
     }
-    if (this.isWithdraw && !this.withdrawQuote) {
-      return 'perpsFeeQuoteUnknown';
+    if (this.isDeposit ? !this.depositFee : !this.withdrawQuote) {
+      return this.feesLoading ? '' : 'perpsFeeQuoteUnknown';
     }
     if (this.refreshFailed) {
       return 'perpsRefreshFailed';
@@ -604,39 +492,32 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
       !!this.account &&
       !this.accountLoading &&
       !this.accountLoadError &&
-      !this.submitting &&
+      !this.fundingBusy &&
       !this.belowMinimum &&
       !this.exceedsBalance &&
       !this.amountExceedsPrecision &&
       !this.signingUnavailable &&
       !this.gasShortfall &&
       this.maxAmountKnown &&
-      (this.isDeposit || !!this.withdrawQuote)
+      (this.isDeposit ? !!this.depositFee : !!this.withdrawQuote)
     );
   }
 
-  /**
-   * 读取一笔提现当前要花多少钱。
-   *
-   * 「未知」是一个独立的状态：到账金额、金额必须跨过的下限，以及按钮是否可用，全都由这个
-   * 数字推导而来，所以读取失败会中止提现，而不是让一个陈旧的数字顶上去。
-   */
-  private async loadWithdrawQuote() {
-    const seq = ++this.withdrawQuoteSeq;
-    try {
-      const quote = await this.feeQuote.withdrawQuote();
-      if (seq !== this.withdrawQuoteSeq || !this.isWithdraw) {
-        return;
-      }
-      this.withdrawQuote = quote;
-    } catch (error) {
-      // 与成功路径一样加了保护：在用户已经走开之后才失败的读取，
-      // 不能把当前标签页正在用的那份报价抹掉。
-      if (seq !== this.withdrawQuoteSeq || !this.isWithdraw) {
-        return;
-      }
-      this.withdrawQuote = null;
-    }
+  get fundingBusy(): boolean {
+    return this.submitting || this.preparingDeposit || this.confirming;
+  }
+
+  get confirming(): boolean {
+    return this.depositConfirmedFeeExact !== null;
+  }
+
+  get canConfirm(): boolean {
+    return this.confirming && !this.submitting && !this.preparingDeposit && !this.gasShortfall && !this.exceedsBalance &&
+      !this.signingUnavailable && !this.accountLoadError && this.isDeposit;
+  }
+
+  cancelConfirm() {
+    if (!this.submitting) { this.invalidateSubmission(); }
   }
 
   /**
@@ -645,7 +526,10 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
    * 没有它，余额未知和报价未知都是死胡同：文案写着「重试」，而这是唯一真的能重试的控件。
    */
   get showRetry(): boolean {
-    return !this.maxAmountKnown || (this.isWithdraw && !this.withdrawQuote);
+    return !this.maxAmountKnown || (!this.feesLoading && (
+      (this.isDeposit && !this.depositFee) ||
+      (this.isWithdraw && !this.withdrawQuote)
+    ));
   }
 
   setTab(tab: FundingTab) {
@@ -653,29 +537,25 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
       return;
     }
     this.tab = tab;
-    this.discardDepositPreparation();
-    if (tab === 'withdraw') {
-      void this.loadWithdrawQuote();
-    }
+    this.invalidateSubmission();
     this.amount = null;
     this.activePreset = null;
-    this.confirming = false;
-    this.withdrawConfirmedQuote = null;
     this.clearRefreshWarnings();
   }
 
   setPercent(percent: number) {
-    if (this.submitting || !this.maxAmountKnown) {
+    if (this.fundingBusy || !this.maxAmountKnown) {
       return;
     }
     this.activePreset = percent;
     this.amount = this.floorAmount(
       new BigNumber(this.maxAmountExact).times(percent).dividedBy(100)
     );
+    this.networkFeeExact = null;
   }
 
   setMax() {
-    if (this.submitting || !this.maxAmountKnown) {
+    if (this.fundingBusy || !this.maxAmountKnown) {
       return;
     }
     this.activePreset = -1;
@@ -683,6 +563,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     // MAX 会落在一个被它自己的精度校验拒绝的值上。向下取整也是唯一安全的方向：向上取整等于
     // 去要并不存在的钱。
     this.amount = this.floorAmount(this.maxAmountExact);
+    this.networkFeeExact = null;
   }
 
   /** 绝不把 MAX 的值向上舍入到超过可动用的 USDC 余额。 */
@@ -715,6 +596,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   }
 
   onAmountChange() {
+    this.invalidateSubmission();
     this.activePreset = null;
     this.clearRefreshWarnings();
   }
@@ -724,277 +606,188 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     this.balanceMovedUnderInput = false;
   }
 
-  /**
-   * 取一份新的账户快照；入金时再取一份新的源余额。
-   *
-   * 界面是实时的，但「实时」是数据源的属性，不是对此时此刻的保证。在本次提交内至少成功往返
-   * 交易场所一次之前，什么都不会被签名。
-   */
-  private async refreshBeforeSubmit(): Promise<void> {
-    const address = this.address;
-    const state = await firstValueFrom(
-      this.accountStates.refreshAccount(address)
-    );
-    if (address !== this.address || !state.account) {
-      throw new Error('Account changed during refresh');
-    }
-    this.account = state.account;
-    if (this.isWithdraw && !this.maxAmountKnown) {
-      throw new Error('Withdrawal source balance unavailable');
-    }
-    if (this.isDeposit) {
-      await this.loadWalletBalance(address);
-      if (this.walletBalanceExact === null) {
-        throw new Error('Source balance unavailable');
-      }
-    }
-  }
-
-  /**
-   * 两种意图在发出之前都要过一遍确认。
-   *
-   * 入金是一笔不可逆的、发往用户读不懂的合约地址的转账。提现发往用户自己的地址，这曾被当作
-   * 跳过这一步的理由 —— 但地址从来不是有疑问的那一部分。用户要同意的，是一笔从合约里读来的、
-   * 而其 owner 可以修改的手续费，以及扣完之后剩下的金额；一个没人被问过的数字，不是任何人
-   * 同意过的数字。
-   */
-  requestSubmit() {
-    if (!this.canSubmit) {
-      return;
-    }
-    this.confirming = true;
-    if (this.isDeposit) {
-      void this.prepareDeposit();
-      return;
-    }
-    void this.prepareWithdraw();
-  }
-
-  /**
-   * 在提现被提交确认的那一刻为它定价。
-   *
-   * 在这里读取并保存下来，而不是复用背后界面上的那一份：`submit` 会再读一次，两者不一致就
-   * 拒绝签名。
-   */
-  private async prepareWithdraw() {
-    this.preparingWithdraw = true;
-    this.withdrawConfirmedQuote = null;
-    try {
-      const quote = await this.feeQuote.withdrawQuote();
-      if (!this.confirming || !this.isWithdraw) {
-        return;
-      }
-      this.withdrawQuote = quote;
-      this.withdrawConfirmedQuote = quote;
-    } catch (error) {
-      if (this.isWithdraw) {
-        this.withdrawQuote = null;
-      }
-      this.withdrawConfirmedQuote = null;
-      this.confirming = false;
-    } finally {
-      this.preparingWithdraw = false;
-    }
-  }
-
-  cancelConfirm() {
-    this.confirming = false;
-    this.discardDepositPreparation();
-    this.withdrawConfirmedQuote = null;
-  }
-
-  /**
-   * 丢弃为一笔不会发出、或者已经发出的入金所准备的东西。
-   *
-   * 无论它所对应的那次尝试发生了什么，这份授权在自己的整个有效窗口内都保持有效，所以那次
-   * 尝试一结束就把它丢掉：用户退出了、切了标签页、离开了界面、发送失败了，或者发送成功并把
-   * 它用掉了。唯一保留它的情形是手续费报价发生变动 —— 那时确认面板会就着同一笔入金重新打开，
-   * 重新签名只会请用户去同意他们已经同意过的东西。
-   */
-  private discardDepositPreparation() {
-    ++this.depositPreparationSeq;
+  private invalidateSubmission() {
+    clearInterval(this.depositGasTimer);
+    ++this.submissionSeq;
+    this.submitting = false;
     this.preparingDeposit = false;
-    this.depositAuthorization = null;
-    this.depositQuote = null;
+    this.depositConfirmedFeeExact = null;
     this.networkFeeExact = null;
   }
 
-  /** 读取失败之后重试，好让未知的余额或报价不至于变成死胡同。 */
   reload() {
     if (this.address) {
-      this.accountStates.refreshAccount(this.address).subscribe();
-      this.loadWalletBalance(this.address);
+      const address = this.address;
+      this.accountStates.refreshAccount(address).subscribe();
+      this.loadWalletBalance(address);
     }
-    if (this.isWithdraw) {
-      void this.loadWithdrawQuote();
+    void this.loadFees();
+  }
+
+  submitFunding() {
+    return this.isDeposit ? this.prepareDeposit() : this.submit();
+  }
+
+  /** 点击继续后签授权、估算费用；确认期间复用授权，每 30 秒刷新 gas 预算。 */
+  private async prepareDeposit() {
+    if (!this.canSubmit || this.destroyed) { return; }
+    const seq = ++this.submissionSeq;
+    const address = this.address;
+    const wallet = this.wallet;
+    const config = this.token;
+    const amount = this.submissionAmount;
+    const wasMax = this.activePreset === -1;
+    this.preparingDeposit = true;
+    this.clearRefreshWarnings();
+    try {
+      await this.loadWalletBalance(address);
+      if (seq !== this.submissionSeq) { return; }
+      if (this.walletBalanceExact === null || this.nativeBalanceExact === null) {
+        this.refreshFailed = true;
+        return;
+      }
+      if (this.exceedsBalance) {
+        this.balanceMovedUnderInput = true;
+        if (wasMax) { this.amount = this.floorAmount(this.maxAmountExact); }
+        return;
+      }
+      const password = await this.chrome.getPassword();
+      if (seq !== this.submissionSeq) { return; }
+      const privateKey = await this.evmWallet.getPrivateKey(wallet, password);
+      if (seq !== this.submissionSeq) { return; }
+      const feeExact = this.currentDepositFee;
+      const authorization = await this.depositChain.authorizeDeposit(config, privateKey, amount);
+      if (seq !== this.submissionSeq) { return; }
+      const networkFeeExact = await this.depositChain.depositFeeExact(config, authorization, feeExact);
+      if (seq !== this.submissionSeq) { return; }
+      this.networkFeeExact = networkFeeExact;
+      if (this.gasShortfall) { return; }
+      this.depositConfirmedFeeExact = feeExact;
+      this.depositGasTimer = setInterval(async () => {
+        if (this.preparingDeposit || this.submitting) { return; }
+        this.preparingDeposit = true;
+        try {
+          const refreshed = await this.depositChain.depositFeeExact(config, authorization, feeExact);
+          if (seq !== this.submissionSeq) { return; }
+          this.networkFeeExact = refreshed;
+        } catch (error) {
+          if (seq === this.submissionSeq) {
+            this.invalidateSubmission();
+            this.global.snackBarTip('txFailed', error?.message || error);
+          }
+        } finally {
+          if (seq === this.submissionSeq) { this.preparingDeposit = false; }
+        }
+      }, 30000);
+    } catch (error) {
+      if (seq === this.submissionSeq) { this.global.snackBarTip('txFailed', error?.message || error); }
+    } finally {
+      if (seq === this.submissionSeq) { this.preparingDeposit = false; }
     }
   }
 
+  /** 先刷新并复核源余额，再解锁一次；两个方向共用同一个提交闸门。 */
   async submit() {
-    if (!this.canSubmit) {
-      return;
-    }
-    this.confirming = false;
+    if (this.destroyed || (this.isDeposit ? !this.canConfirm : !this.canSubmit)) { return; }
+    clearInterval(this.depositGasTimer);
+    const feeExact = this.depositConfirmedFeeExact;
+    const seq = ++this.submissionSeq;
+    const address = this.address;
+    const wallet = this.wallet;
+    const config = this.token;
+    const tab = this.tab;
+    const amount = this.submissionAmount;
+    const wasMax = this.activePreset === -1;
     this.submitting = true;
     this.clearRefreshWarnings();
-    // 这个金额意味着「就是这个数」还是「全部」，决定了下面能对它做什么；
-    // 而这次刷新马上就要覆盖掉那个预设值所依据的余额。
-    const wasMax = this.activePreset === -1;
+    let fromSpot = false;
     try {
-      await this.refreshBeforeSubmit();
-    } catch (error) {
-      this.discardDepositPreparation();
-      this.submitting = false;
-      this.refreshFailed = true;
-      return;
-    }
-    if (this.exceedsBalance) {
-      this.discardDepositPreparation();
-      // MAX 请求意味着「全部」，所以它可以跟着余额一起往下走 —— 但用户仍要确认新的数字。
-      // 手动输入的金额意味着就是那个数，悄悄少发一点等于替用户杜撰意图。
-      this.submitting = false;
-      this.balanceMovedUnderInput = true;
-      if (wasMax && this.maxAmountKnown) {
-        this.amount = this.floorAmount(this.maxAmountExact);
-        this.activePreset = -1;
+      try {
+        if (tab === 'deposit') {
+          await this.loadWalletBalance(address);
+          if (seq !== this.submissionSeq) { return; }
+          if (this.walletBalanceExact === null || this.nativeBalanceExact === null) {
+            this.depositConfirmedFeeExact = null;
+            throw new Error('Source balance unavailable');
+          }
+        } else {
+          const state = await firstValueFrom(this.accountStates.refreshAccount(address));
+          if (seq !== this.submissionSeq) { return; }
+          if (!state.account) {
+            throw new Error('Account refresh failed');
+          }
+          this.account = state.account;
+          if (!this.maxAmountKnown) { throw new Error('Withdrawal source unavailable'); }
+          fromSpot = !!state.account.unified;
+        }
+      } catch (error) {
+        if (seq === this.submissionSeq) { this.refreshFailed = true; }
+        return;
       }
-      return;
-    }
-    try {
+      if (this.exceedsBalance) {
+        this.depositConfirmedFeeExact = null;
+        this.balanceMovedUnderInput = true;
+        if (wasMax && this.maxAmountKnown) {
+          this.amount = this.floorAmount(this.maxAmountExact);
+          this.activePreset = -1;
+        }
+        return;
+      }
+      if (tab === 'deposit' && this.gasShortfall) {
+        this.depositConfirmedFeeExact = null;
+        return;
+      }
       const password = await this.chrome.getPassword();
-      const privateKey = await this.evmWallet.getPrivateKey(
-        this.wallet,
-        password
-      );
-      if (this.isDeposit) {
-        await this.sendDeposit(privateKey);
-        return;
-      }
-      // 已确认的那份报价决定了到账估算，以及这笔金额必须跨过的下限；这里再读一次，而不是
-      // 对着一个可能在用户同意之后已经变动的数字签名。只有手续费变高才会把用户送回去：
-      // 变低意味着付出去的比估算承诺的更多，而请他们重新批准一个更好的数字，是没有任何问题
-      // 作为依据的摩擦。
-      const shown = this.withdrawConfirmedQuote;
-      const fresh = await this.feeQuote.withdrawQuote();
-      this.withdrawQuote = fresh;
-      if (
-        !shown ||
-        new BigNumber(fresh.feeExact).isGreaterThan(shown.feeExact)
-      ) {
-        this.submitting = false;
-        this.withdrawConfirmedQuote = fresh;
-        this.confirming = true;
-        this.global.snackBarTip('perpsFeeQuoteChangedReviewAgain');
-        return;
-      }
-      const request: Observable<unknown> = this.writes.withdraw(
-        privateKey,
-        this.address,
-        this.submissionAmount,
-        // 来源由已确认的账户模式决定；模式未知时可提余额未知，不能进入提现提交。
-        { fromSpot: !!this.account?.unified }
-      );
-      request.subscribe({
-        next: () => {
-          this.submitting = false;
+      if (seq !== this.submissionSeq) { return; }
+      const privateKey = await this.evmWallet.getPrivateKey(wallet, password);
+      if (seq !== this.submissionSeq) { return; }
+      if (tab === 'deposit') {
+        const authorization = await this.depositChain.authorizeDeposit(config, privateKey, amount);
+        if (seq !== this.submissionSeq) { return; }
+        let hash: string;
+        let statusUnknown = false;
+        try {
+          hash = await this.depositChain.sendDeposit(config, privateKey, authorization, feeExact);
+        } catch (error) {
+          if (!(error instanceof PerpsBroadcastStatusUnknownError)) { throw error; }
+          hash = error.hash;
+          statusUnknown = true;
+        }
+        if (seq === this.submissionSeq) {
+          this.depositConfirmedFeeExact = null;
+          this.networkFeeExact = null;
+          this.amount = null;
+          this.activePreset = null;
+          this.global.snackBarTip(statusUnknown ? 'perpsDepositStatusUnknown' : 'perpsDepositSubmitted');
+        }
+        if (seq === this.submissionSeq) { this.submitting = false; }
+        await this.trackDeposit(config, hash, address);
+      } else {
+        try {
+          await firstValueFrom(this.writes.withdraw(privateKey, address, amount, { fromSpot }));
+        } catch (error) {
+          if (!(error instanceof PerpsExecutionStatusUnknownError)) { throw error; }
+          if (seq === this.submissionSeq) {
+            this.global.snackBarTip('perpsWithdrawStatusUnknown');
+            this.refreshAfterWrite();
+          }
+          return;
+        }
+        if (seq === this.submissionSeq) {
           this.global.snackBarTip('perpsWithdrawSubmitted');
           this.amount = null;
           this.activePreset = null;
           this.refreshAfterWrite();
-        },
-        error: (error) => {
-          this.submitting = false;
-          if (error instanceof PerpsExecutionStatusUnknownError) {
-            // 交易场所可能已经执行了它。把这称作失败，正是用户把同一笔余额提两次的方式，
-            // 所以界面照实说，并且不会自作主张再发一次。
-            this.global.snackBarTip('perpsWithdrawStatusUnknown');
-            this.refreshAfterWrite();
-            return;
-          }
-          this.global.snackBarTip('txFailed', error?.message || error);
-        },
-      });
+        }
+      }
     } catch (error) {
-      this.discardDepositPreparation();
-      this.submitting = false;
-      this.global.snackBarTip('verifyFailed', error?.message || error);
+      if (seq === this.submissionSeq) {
+        this.depositConfirmedFeeExact = null;
+        this.global.snackBarTip('txFailed', error?.message || error);
+      }
+    } finally {
+      if (seq === this.submissionSeq) { this.submitting = false; }
     }
-  }
-
-  /**
-   * 广播这笔入金，然后守候它的回执。
-   *
-   * 广播后提示已发起；源链回执用于刷新余额和报告异常，不代表 HyperCore 已到账。
-   */
-  private async sendDeposit(privateKey: string) {
-    const config = this.token;
-    const amount = this.submissionAmount;
-    const address = this.address;
-    let hash: string;
-    let statusUnknown = false;
-    try {
-      const authorization = this.depositAuthorization;
-      const confirmed = this.depositQuote;
-      // 报价等待期间也可能发生编辑或取消；只有仍对应当前输入的同一份授权才能发送。
-      const stillPrepared = () =>
-        this.isDeposit &&
-        config === this.token &&
-        address === this.address &&
-        authorization === this.depositAuthorization &&
-        !!authorization &&
-        new BigNumber(authorization.amountExact).isEqualTo(this.submissionAmount);
-      const discardChangedIntent = () => {
-        this.discardDepositPreparation();
-        this.confirming = false;
-        this.submitting = false;
-        this.global.snackBarTip('perpsRefreshFailed');
-      };
-      if (!stillPrepared() || !confirmed) {
-        discardChangedIntent();
-        return;
-      }
-      // 再读一次，而不是对着展示给用户的那个数字签名：转发费是一个合约变量，而屏幕上的报价
-      // 可能已经在描述另一笔入金，而不是即将发出的这一笔。只有手续费变高才会退回确认 ——
-      // 变低意味着入账得比界面承诺的更多，那不是需要用户同意的变化。
-      const fresh = await this.feeQuote.depositQuote(amount, address);
-      if (!stillPrepared()) {
-        discardChangedIntent();
-        return;
-      }
-      if (new BigNumber(fresh.feeExact).isGreaterThan(confirmed.feeExact)) {
-        this.submitting = false;
-        this.depositQuote = fresh;
-        this.confirming = true;
-        this.global.snackBarTip('perpsFeeQuoteChangedReviewAgain');
-        return;
-      }
-      hash = await this.depositChain.sendDeposit(
-        config,
-        privateKey,
-        authorization,
-        fresh.maxFeeExact
-      );
-    } catch (error) {
-      if (error instanceof PerpsBroadcastStatusUnknownError) {
-        // 原交易可能已经被接受：保留它的哈希查回执，不重新准备或发送入金。
-        hash = error.hash;
-        statusUnknown = true;
-      } else {
-        this.discardDepositPreparation();
-        this.submitting = false;
-        this.global.snackBarTip('txFailed', (error as Error)?.message || error);
-        return;
-      }
-    }
-    // 已尝试发送的许可不能再次用于新交易；这里清除本地副本，不宣称它已在链上消耗。
-    this.discardDepositPreparation();
-    this.submitting = false;
-    this.amount = null;
-    this.activePreset = null;
-    this.global.snackBarTip(
-      statusUnknown ? 'perpsDepositStatusUnknown' : 'perpsDepositSubmitted'
-    );
-    await this.trackDeposit(config, hash, address);
   }
 
   private async trackDeposit(
