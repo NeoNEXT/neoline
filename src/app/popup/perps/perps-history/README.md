@@ -28,10 +28,9 @@
 | 切到历史委托 | 首次按需读取，显示类型、方向、原始数量和订单状态；保留接口中的 `open` 记录，不只保留终态 |
 | 切到资金费 | 首次按需读取；显示收取/支付资金费、币种及带符号的协议金额 |
 | 切到存款和提款 | 首次按需读取非资金费账本；内容也包含账户划转、现货转账等，标题不代表只过滤 deposit/withdraw |
-| 第一次点击撤单 | 当前行按钮变为“确认撤单”，尚未解锁或发送请求；点击其他行会更换待确认订单 |
-| 再次点击同一行 | 检查签名方式和市场资产 ID，进入解锁、签名、发送；相同订单按钮禁用，组件阻止另一笔撤单同时开始 |
+| 点击撤单 | 直接检查签名方式和市场资产 ID，进入解锁、签名、发送；相同订单按钮禁用，组件阻止另一笔撤单同时开始 |
 | 撤单返回成功 | 本地移除对应 oid、清空撤单标记、提示已取消，使历史委托的已加载标记失效；下次选择历史委托时重新读取 |
-| 切换页签 | 清除待确认撤单标记；不取消已经开始的撤单；成功读取过的归档页签通常直接复用内存数据 |
+| 切换页签 | 不取消已经开始的撤单；成功读取过的归档页签通常直接复用内存数据 |
 | 切换钱包地址 | 保留当前页签并调用 `load()` 重新读取；当前实现对旧地址请求和解锁中的撤单隔离不完整，见第 7.4 节 |
 | 离开页面 | 退订账户监听、读取请求和实时订阅；已开始的异步撤单不受这组退订管理 |
 
@@ -78,7 +77,7 @@ flowchart TD
 
 ### 2.2 撤单链路
 
-`requestCancel(order)` 两次确认 → `cancel(order)` → 检查 Ledger/二维码钱包 → 按完整 `order.coin` 查市场 → 设置 `cancelingOrderId` → `ChromeService.getPassword()` → `EvmWalletService.getPrivateKey()` → `PerpsExchangeWriteService.cancelOrder(privateKey, assetId, oid)`。
+点击撤单 → `requestCancel(order)` → 检查 Ledger/二维码钱包 → 按完整 `order.coin` 查市场 → 设置 `cancelingOrderId` → `ChromeService.getPassword()` → `EvmWalletService.getPrivateKey()` → `PerpsExchangeWriteService.cancelOrder(privateKey, assetId, oid)`。
 
 写服务将 oid 解析为 uint64，构造 `{type: 'cancel', cancels: [{a: assetId, o: oid}]}`，分配签名者 nonce，调用 `signHyperliquidL1Action()`，再 POST `/exchange`。它取消的是整张指定挂单的未成交部分，不是按当前显示数量发送减仓，也不会撤回已成交部分。
 
@@ -86,7 +85,7 @@ flowchart TD
 
 该路径没有自动重签重试、撤单结果轮询或持久化恢复。`withNonceRetry()` 存在于写服务，但当前撤单未调用它；下单页的 cloid 未知结果恢复也没有复用到本页。
 
-证据：[组件 `requestCancel/cancel`][component]、[写服务 `cancelOrder/signedL1Action/postExchange`][exchange]、[签名实现][signing]、[nonce 分配][nonce]、[撤单服务测试][exchange-test]；外部格式见 [Exchange endpoint][p-exchange]。
+证据：[组件 `requestCancel`][component]、[写服务 `cancelOrder/signedL1Action/postExchange`][exchange]、[签名实现][signing]、[nonce 分配][nonce]、[撤单服务测试][exchange-test]；外部格式见 [Exchange endpoint][p-exchange]。
 
 ### 2.3 转账记录中的 CCTP 补充读取
 
@@ -190,18 +189,17 @@ flowchart TD
 
 ### 4.2 撤单状态
 
-本页用 `pendingCancelOrderId` 和 `cancelingOrderId` 表达状态，没有与下单页共用的 submitting/unknown 状态机。
+本页用 `cancelingOrderId` 表达撤单状态，没有与下单页共用的 submitting/unknown 状态机。
 
 | 状态/事件 | 转移及 UI |
 | --- | --- |
-| 未确认 | pending 为空，显示撤单 |
-| 待确认 | pending=oid，显示确认撤单；切页签会清除 |
-| 解锁/签名/发送中 | canceling=oid；同一行按钮禁用；cancel() 对任何非空 canceling 直接返回，避免其他行并发发送 |
+| 空闲 | canceling 为空，显示撤单；点击后直接进入撤单流程 |
+| 解锁/签名/发送中 | canceling=oid；同一行按钮禁用；requestCancel() 对任何非空 canceling 直接返回，避免其他行并发发送 |
 | 已发送、回复未到 | 仍是 canceling；没有独立已提交标记、倒计时或结果查询入口 |
-| 写服务 next | 清 pending/canceling，移除对应 oid，历史委托 loaded 失效，提示已取消 |
-| 写服务 error | 清 canceling、显示 txFailed，保留 pending；同一行仍显示确认撤单，可再次操作 |
+| 写服务 next | 清 canceling，移除对应 oid，历史委托 loaded 失效，提示已取消 |
+| 写服务 error | 清 canceling、显示 txFailed；撤单按钮恢复可用 |
 | 密码/私钥读取失败 | 清 canceling、显示 verifyFailed；没有单独“用户拒签”枚举 |
-| 签名方式不支持/缺市场 | 在设置 canceling 前返回并提示错误；pending 保留 |
+| 签名方式不支持/缺市场 | 在设置 canceling 前返回并提示错误 |
 
 ### 4.3 历史委托状态
 
@@ -229,7 +227,7 @@ flowchart TD
 | CCTP 索引/RPC 失败 | 超时或 catch 后保留原始账本 | 不把补充费用读取失败当成历史不存在；当前也没有费用证据缺失提示 |
 | 解锁取消/私钥失败 | verifyFailed，解除本次 canceling | 真实密码弹窗取消路径仍需联调；未区分拒签和其他验证错误 |
 | Ledger/二维码钱包 | 检查 ledgerSLIP44/qrBasedXFP，提示 perpsSigningUnavailable | 不能据此宣称支持硬件钱包撤单 |
-| 重复点击或同时撤不同订单 | 本页用 cancelingOrderId 阻止并发；仅正在撤的行按钮禁用 | 其他行仍能切换待确认标记；无跨窗口协调或持久化防重 |
+| 重复点击或同时撤不同订单 | 本页用 cancelingOrderId 阻止并发；仅正在撤的行按钮禁用 | 在途点击其他行直接返回；无跨窗口协调或持久化防重 |
 | 订单已成交/已取消/不存在 | 交易场所逐项 error 经写服务抛出，页面提示 txFailed | 本页不会因错误主动补查挂单，等待 WS 或重新进入核对 |
 | 撤单响应丢失/5xx/无法解码 | 统一走 error 提示并重新开放操作 | 没有 unknown 状态或自动 oid 查询；错误不证明撤单未生效 |
 | 响应顶层 ok，但逐项结果缺失 | 当前只检查是否有逐项 error，没有完整成功结构校验 | 可能仍进入成功回调；应保留原始响应，不能只凭 toast 验收 |
@@ -282,7 +280,7 @@ flowchart TD
 | 测试 | 主要覆盖 |
 | --- | --- |
 | [组件逻辑测试][component-test] | 市场失败仍显示挂单、现货过滤、快照/增量去重及排序、成交 REST 兜底、按页签错误隔离、销毁后迟到响应、H1 归档缓存及 H3/H4 全量保留/快照竞争 |
-| [组件渲染测试][render-test] | 五类列表、日期分组、原始数量、状态映射、净金额/资金费、两次确认撤单及按钮禁用 |
+| [组件渲染测试][render-test] | 五类列表、日期分组、原始数量、状态映射、净金额/资金费、点击撤单直接提交及按钮禁用 |
 | [纯管道测试][pipe-test] | 净金额不重复扣 builder fee、返佣、非 USDC、内部转账净入账、小额资金费、跨日/跨年分组、未知状态 |
 | [读取服务测试][hyperliquid-test] | 启用 DEX 挂单、聚合参数、现货过滤、无损 ID、资金费请求及 CCTP 关联/失败回退 |
 | [写服务测试][exchange-test] | cancel payload、uint64 最大值无损发送、越界拒绝及通用写入通知 |
@@ -322,8 +320,8 @@ npm run test:ci -- \
 | H4 成交快照竞争 | 分别让 REST 先到、WS 快照先到；重复推增量；WS 成功后 REST 失败 | 不重复相同键；WS 快照替换旧列表；增量/REST 合并；迟到 REST 错误不覆盖 loaded 状态；核对两次快照窗口不同的实际保留范围 |
 | H5 数量与状态 | 委托设 origSz=1.23456、sz=0.25、精度 4；输入 reduce-only 买卖及未知状态 | 显示 1.2346 而非 0.25；close short/close long 正确；取消/拒绝变体映射，未知状态原文；不显示价格 |
 | H6 金额 | 使用第 3 节例子，补零值、负 fee、非 USDC fee、内部转账收发双方 | 精确计算后格式化；builder 不二次扣费，非同币种不相减；资金费小额精度保留；零中性、缺金额不编造 |
-| H7 正常撤单 | 第一次点击、第二次点击并延迟解锁，再连续点同一行和其他行 | 第一次不签名；在途仅一次写入，a/oid 与原单一致；逐项 success 后本地移除；随后 WS 与历史确认已取消，已成交部分不回滚 |
-| H8 撤单前置失败 | 缺市场、Ledger/二维码标记、私钥读取失败、越界 oid | 各路径不发错误订单 ID；显示对应提示、解除 canceling；验证 pending 保留后的按钮文字 |
+| H7 正常撤单 | 点击撤单并延迟解锁，再连续点同一行和其他行 | 一次点击即进入签名发送流程；在途仅一次写入，a/oid 与原单一致；逐项 success 后本地移除；随后 WS 与历史确认已取消，已成交部分不回滚 |
+| H8 撤单前置失败 | 缺市场、Ledger/二维码标记、私钥读取失败、越界 oid | 各路径不发错误订单 ID；显示对应提示、解除 canceling；撤单按钮保持原文案并恢复可用 |
 | H9 撤单结果不确定 | 模拟服务端已撤但响应丢失、5xx、畸形回复，再给顶层 ok 且缺 statuses | 网络错误无自动查询；用 oid 另查真实状态。缺 statuses 当前可能误走成功，记录为验证缺口，不能视为验收通过 |
 | H10 归档刷新 | 先读历史，成功撤单后再打开；另在已加载 funding/transfers 后从外部产生新记录 | 撤单后历史重新请求；其他成功缓存不自动刷新；核对撤单时已在历史页且请求在途的竞态 |
 | H11 断线及首屏失败 | 停止 pong、恢复网络；分别让首屏和归档 HTTP 失败/长时间不返回 | 通道重连重订阅；本页没有 stale 提示和重连 REST；失败页签可再次选择重试，首屏通常需重进；记录无限等待边界 |

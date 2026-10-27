@@ -45,12 +45,7 @@
             [disabled]="cancelingOrderId === order.oid"
             (click)="requestCancel(order)"
           >
-            {{
-              (pendingCancelOrderId === order.oid
-                ? "perpsConfirmCancel"
-                : "perpsCancelOrder"
-              ) | translate | async
-            }}
+            {{ "perpsCancelOrder" | translate | async }}
           </button>
         </div>
       </ng-container>

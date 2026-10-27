@@ -63,9 +63,9 @@
   <div class="account-summary" *ngIf="!closeMode">
     <div class="available">
       <span>{{ "perpsAvailable" | translate | async }}</span>
-      <b>{{ formatBalance(availableExact) }} USDC</b>
+      <b>{{ availableExact === null ? '0' : formatBalance(availableExact) }} USDC</b>
     </div>
-    <div class="current-position" *ngIf="!addMode">
+    <div class="current-position" *ngIf="!addMode && position">
       <span>{{ "perpsCurrentPosition" | translate | async }}</span>
       <b [class.short]="position && !position.isLong">{{ formattedPositionSize }} {{ symbol }}</b>
     </div>
@@ -186,6 +186,23 @@
 
   <!-- 预估 -->
   <div class="summary">
+    <div class="row slippage-row" *ngIf="orderType === 'market'">
+      <span class="label">
+        {{ "perpsSlippage" | translate | async }}
+        <tooltip placement="topLeft" [tip]="'perpsSlippageTip' | translate | async">
+          <img src="assets/images/common/tooltip.svg" alt="" />
+        </tooltip>
+      </span>
+      <span class="value slippage-values">
+        <span>{{ "perpsMax" | translate | async }}: <span class="max-slippage">{{ formattedMaxSlippage }}</span></span>
+        <button type="button" class="edit-slippage"
+          [disabled]="submitting || leverageUpdating || executionStatusUnknown"
+          [attr.aria-label]="'perpsEditSlippage' | translate | async"
+          (click)="openSlippageDialog()">
+          <img src="assets/images/common/edit.svg" alt="" />
+        </button>
+      </span>
+    </div>
     <div class="row" *ngIf="!closeMode">
       <span class="label">
         {{ "perpsLiqPrice" | translate | async }}

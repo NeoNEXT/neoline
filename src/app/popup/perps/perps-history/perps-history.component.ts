@@ -56,7 +56,6 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
   }
   private initialLoadError = false;
   private failedTabs = new Set<PerpsActivityTab>();
-  pendingCancelOrderId: string;
   cancelingOrderId: string;
 
   /** 账本行的方向要看钱有没有落到本地址上，所以模板里的管道也要拿到它。 */
@@ -297,7 +296,6 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
   setTab(tab: PerpsActivityTab) {
     this.tab = tab;
     this.refreshNow();
-    this.pendingCancelOrderId = undefined;
     this.loadTab(tab);
   }
 
@@ -305,15 +303,7 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     this.now = Date.now();
   }
 
-  requestCancel(order: PerpsOpenOrder) {
-    if (this.pendingCancelOrderId === order.oid) {
-      this.cancel(order);
-      return;
-    }
-    this.pendingCancelOrderId = order.oid;
-  }
-
-  private async cancel(order: PerpsOpenOrder) {
+  async requestCancel(order: PerpsOpenOrder) {
     if (this.cancelingOrderId) {
       return;
     }
@@ -341,7 +331,6 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
         .subscribe({
           next: () => {
             this.cancelingOrderId = undefined;
-            this.pendingCancelOrderId = undefined;
             this.openOrders = this.openOrders.filter(
               (item) => item.oid !== order.oid
             );

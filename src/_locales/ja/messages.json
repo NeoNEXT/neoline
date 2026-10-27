@@ -1896,7 +1896,7 @@
     "message": "決済可能額"
   },
   "perpsMax": {
-    "message": "すべて"
+    "message": "最大"
   },
   "perpsLeverage": {
     "message": "レバレッジ"
@@ -2316,7 +2316,7 @@
     "message": "損益の単位"
   },
   "perpsInvalidProtection": {
-    "message": "有効なトリガー価格を少なくとも1つ入力してください。ロングは利確を参考価格より高く、損切りを低く、ショートは逆に設定します。"
+    "message": "有効なトリガー価格を入力してください。ロングは利確を参考価格より高く、損切りを低く、ショートは逆に設定します。"
   },
   "perpsProtectionNotConfirmed": {
     "message": "注文は処理されましたが、利確・損切りは未確認です。重複注文せず、未約定注文を確認してください。"

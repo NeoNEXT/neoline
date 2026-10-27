@@ -452,6 +452,27 @@
       color: var(--theme-color);
     }
 
+    .slippage-values {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--theme-color);
+      white-space: nowrap;
+    }
+
+    .edit-slippage {
+      display: inline-flex;
+      align-items: center;
+      height: auto;
+      padding: 0;
+      border: none;
+      background: transparent;
+      font: inherit;
+      cursor: pointer;
+      img { width: 13px; height: 13px; }
+      &:disabled { opacity: 0.5; cursor: default; }
+    }
+
 
   }
 }

@@ -1896,7 +1896,7 @@
     "message": "可平金额"
   },
   "perpsMax": {
-    "message": "全部"
+    "message": "最大"
   },
   "perpsLeverage": {
     "message": "杠杆"
@@ -2316,7 +2316,7 @@
     "message": "收益/亏损单位"
   },
   "perpsInvalidProtection": {
-    "message": "请填写至少一个有效触发价：多单止盈价高于成交参考价、止损价低于成交参考价；空单相反。"
+    "message": "请填写有效触发价：多单止盈价高于成交参考价、止损价低于成交参考价；空单相反。"
   },
   "perpsProtectionNotConfirmed": {
     "message": "订单已处理，但止盈/止损未全部确认，请检查当前委托，勿重复开仓。"

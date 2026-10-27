@@ -11,6 +11,25 @@ const ordinaryOrder = async (page: Page, query = 'side=long') => {
   await expect(page.locator('.order-header .price')).toHaveText('$100');
 };
 
+test('max slippage setting updates the market order boundary', async ({ page, hl }, testInfo) => {
+  await ordinaryOrder(page);
+  await expect(page.locator('.max-slippage')).toHaveText('3.00%');
+  await page.getByRole('button', { name: 'Adjust max slippage', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('Adjust max slippage');
+  const input = dialog.locator('#perps-slippage-input');
+  await input.fill('11');
+  await expect(dialog.getByRole('button', { name: 'Confirm', exact: true })).toBeDisabled();
+  await input.fill('1.5');
+  await dialog.getByRole('button', { name: 'Confirm', exact: true }).click();
+  await expect(page.locator('.max-slippage')).toHaveText('1.50%');
+  await amount(page).fill('200');
+  await testInfo.attach('slippage-form', { body: await page.screenshot({ fullPage: true, path: testInfo.outputPath('slippage-form.png') }), contentType: 'image/png' });
+  await submit(page).click();
+  await expect(page).toHaveURL(/home\?tab=perps$/);
+  expect(hl.orders[0].action.orders[0]).toMatchObject({ b: true, p: '101.5', s: '2' });
+});
+
 test('O1 standard add and close entries inherit the position and expose only supported controls', async ({ page, hl }) => {
   hl.seedPosition('-2.0001');
   await enterPerps(page);

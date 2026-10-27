@@ -20,7 +20,7 @@ import { PERPS_HISTORY_PIPES } from './perps-history.pipe';
 /**
  * 模板与接线 —— 直接构造组件的那些 spec 覆盖不到它们。
  *
- * 覆盖逐行市场精度、订单类型和方向、状态翻译，以及撤单确认与提交的接线。
+ * 覆盖逐行市场精度、订单类型和方向、状态翻译，以及点击撤单直接提交的接线。
  */
 @Pipe({ name: 'translate' })
 class TranslateStubPipe implements PipeTransform {
@@ -304,7 +304,7 @@ describe('PerpsHistoryComponent 渲染与接线', () => {
     ]);
   });
 
-  it('撤单先确认，提交中禁用按钮，成功后移除对应委托', fakeAsync(() => {
+  it('点击撤单直接提交，提交中禁用按钮，成功后移除对应委托', fakeAsync(() => {
     const canceled = new Subject<void>();
     const cancelOrder = jasmine.createSpy('cancelOrder').and.returnValue(canceled);
     Object.assign(TestBed.inject(ChromeService), {
@@ -321,8 +321,8 @@ describe('PerpsHistoryComponent 渲染与接线', () => {
 
     button.click();
     fixture.detectChanges();
-    expect(button.textContent.trim()).toBe('perpsConfirmCancel');
-    expect(cancelOrder).not.toHaveBeenCalled();
+    expect(button.textContent.trim()).toBe('perpsCancelOrder');
+    expect(button.disabled).toBeTrue();
 
     button.click();
     flushMicrotasks();

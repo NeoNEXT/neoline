@@ -15,6 +15,8 @@ import { PerpsExchangeWriteService } from '@app/core/services/perps/perps-exchan
 import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
 import { PerpsTradeOrderService } from '@/app/core/services/perps/perps-trade-order.service';
 import { PerpsOrderComponent } from './perps-order.component';
+import { PopupPerpsSlippageDialogComponent } from '@popup/_dialogs/perps-slippage/perps-slippage.dialog';
+import { STORAGE_NAME } from '@popup/_lib';
 import { ethMarket, ethPosition } from '../perps.test-fixture';
 
 /**
@@ -298,7 +300,11 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       expect(component.orderType).toBe('market');
       expect(fixture.nativeElement.querySelector('.order-type')).toBeNull();
       expect(fixture.nativeElement.querySelector('.margin-mode')).toBeNull();
-      expect(fixture.nativeElement.querySelector('.slippage-value')).toBeNull();
+      expect(text('.max-slippage')).toBe('3.00%');
+      expect(fixture.nativeElement.querySelectorAll('.slippage-row').length).toBe(1);
+      expect(text('.slippage-row .label')).toBe('perpsSlippage');
+      expect(fixture.nativeElement.querySelector('.edit-slippage img').getAttribute('src'))
+        .toBe('assets/images/common/edit.svg');
       expect(fixture.nativeElement.querySelector('.protection-fields')).toBeNull();
       fixture.nativeElement.querySelector('.protection-switch').click();
       fixture.detectChanges();
@@ -409,7 +415,8 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       fixture.detectChanges();
       component.amount = '200';
       fixture.detectChanges();
-      expect(text('.account-summary')).toContain('N/A');
+      expect(text('.available b')).toBe('0 USDC');
+      expect(component.availableExact).toBeNull();
       expect(fixture.nativeElement.querySelector('.error-tip')).toBeNull();
       fixture.nativeElement.querySelector('.submit-wrap button').click();
       flushMicrotasks();
@@ -454,6 +461,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       expect(component.marginMode).toBe('cross');
       expect(component.leverage).toBe(2);
       expect(component.canSubmit).toBeTrue();
+      expect(text('.current-position')).toContain('perpsCurrentPosition');
       expect(fixture.nativeElement.querySelector('.mode-options')).toBeNull();
     });
 
@@ -525,6 +533,8 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       // 限价来自中间价、杠杆来自交易场所上报的那一个 —— 两条都得穿过订阅才到得了表单。
       expect(component.limitPrice).toBe('2000');
       expect(component.leverage).toBe(10);
+      expect(fixture.nativeElement.querySelector('.current-position')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.available')).not.toBeNull();
     });
 
     it('seeds a close form from the position it is closing', () => {
@@ -627,6 +637,34 @@ describe('PerpsOrderComponent 渲染与接线', () => {
   });
 
   describe('摘要各行', () => {
+    it('opens the existing slippage dialog, saves the choice and submits it', async () => {
+      const open = spyOn(TestBed.inject(MatDialog), 'open').and.returnValue({
+        afterClosed: () => of(1.5),
+      } as any);
+      const save = spyOn(TestBed.inject(ChromeService), 'setStorage');
+      const submit = spyOn(TestBed.inject(PerpsTradeOrderService), 'submit').and.callThrough();
+      fixture.detectChanges();
+      fixture.nativeElement.querySelector('.edit-slippage').click();
+      fixture.detectChanges();
+      expect(open.calls.mostRecent().args[0]).toBe(PopupPerpsSlippageDialogComponent);
+      expect(open.calls.mostRecent().args[1].data).toEqual({ value: 3, min: 0.1, max: 10 });
+      expect(save).toHaveBeenCalledWith(STORAGE_NAME.perpsMaxSlippage, 1.5);
+      expect(text('.max-slippage')).toBe('1.50%');
+      component.amount = '200';
+      await component.submit();
+      expect(submit.calls.mostRecent().args[1].maxSlippagePercent).toBe(1.5);
+    });
+
+    it('restores saved slippage and keeps it when the dialog is cancelled', () => {
+      spyOn(TestBed.inject(ChromeService), 'getStorage').and.returnValue(of(2));
+      const save = spyOn(TestBed.inject(ChromeService), 'setStorage');
+      fixture.detectChanges();
+      fixture.nativeElement.querySelector('.edit-slippage').click();
+      fixture.detectChanges();
+      expect(text('.max-slippage')).toBe('2.00%');
+      expect(save).not.toHaveBeenCalled();
+    });
+
     it('reads N/A before an amount is typed', () => {
       fixture.detectChanges();
 
@@ -705,7 +743,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       expect(fixture.nativeElement.querySelector('.order-type')).toBeNull();
       expect(component.side).toBe('long');
       expect(component.orderType).toBe('market');
-      expect(fixture.nativeElement.querySelector('.edit-slippage')).toBeNull();
+      expect(fixture.nativeElement.querySelector('.edit-slippage').disabled).toBeTrue();
       expect(fixture.nativeElement.querySelector('.protection-switch').disabled).toBeTrue();
     });
 
