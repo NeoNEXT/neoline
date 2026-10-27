@@ -288,7 +288,7 @@
     "message": "Search result"
   },
   "searchAssetsInput": {
-    "message": "Please enter asset, enter to search"
+    "message": "Contract address, Enter to search"
   },
   "hidden": {
     "message": "Hidden"

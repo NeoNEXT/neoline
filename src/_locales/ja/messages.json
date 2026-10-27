@@ -288,7 +288,7 @@
     "message": "検索結果"
   },
   "searchAssetsInput": {
-    "message": "資産を入力し、Enterで検索"
+    "message": "コントラクトアドレス、Enterで検索"
   },
   "hidden": {
     "message": "非表示"
