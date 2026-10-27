@@ -7,6 +7,7 @@ import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { NEO3_CONTRACT, GAS3_CONTRACT, ChainType } from '../../../_lib';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
+import { NEOX_NEO_ASSETS } from '@/app/popup/_lib/bridge';
 
 @Component({
   templateUrl: 'my-assets.component.html',
@@ -21,6 +22,7 @@ export class PopupMyAssetsComponent implements OnDestroy {
   private accountSub: Unsubscribable;
   networkId: number;
   private address: string;
+  private neoXChainId: number;
   chainType: ChainType;
   constructor(
     private neoAssetService: NeoAssetService,
@@ -40,6 +42,7 @@ export class PopupMyAssetsComponent implements OnDestroy {
           this.networkId = state.n3Networks[state.n3NetworkIndex].id;
           break;
         case 'NeoX':
+          this.neoXChainId = state.neoXNetworks[state.neoXNetworkIndex].chainId;
           this.networkId = state.neoXNetworks[state.neoXNetworkIndex].id;
           break;
       }
@@ -85,6 +88,9 @@ export class PopupMyAssetsComponent implements OnDestroy {
       NEO3_CONTRACT,
       GAS3_CONTRACT,
       ETH_SOURCE_ASSET_HASH,
+      ...(this.chainType === 'NeoX'
+        ? [NEOX_NEO_ASSETS[this.neoXChainId]?.asset_id]
+        : []),
     ].indexOf(asset.asset_id) >= 0
       ? false
       : true;

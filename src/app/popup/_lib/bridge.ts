@@ -1,5 +1,19 @@
 import { Asset } from '@/models/models';
 import { BridgeNetwork } from './transaction';
+import { NeoXMainnetNetwork, NeoXTestnetNetwork } from './evm';
+
+export const NEOX_NEO_ASSETS: { [chainId: number]: Asset } = {
+  [NeoXMainnetNetwork.chainId]: {
+    symbol: 'NEO',
+    asset_id: '0xc28736dc83f4fd43d6fb832Fd93c3eE7bB26828f',
+    decimals: 18,
+  },
+  [NeoXTestnetNetwork.chainId]: {
+    symbol: 'NEO',
+    asset_id: '0xab0a26b8d903f36acb4bf9663f8d2de0672433cd',
+    decimals: 18,
+  },
+};
 
 export const BRIDGE_ASSET_LIST_URL = {
   [BridgeNetwork.MainNet]:

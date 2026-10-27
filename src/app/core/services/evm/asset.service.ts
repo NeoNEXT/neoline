@@ -1,5 +1,6 @@
 import { abiERC20, RpcNetwork } from '@/app/popup/_lib';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
+import { NEOX_NEO_ASSETS } from '@/app/popup/_lib/bridge';
 import { AppState } from '@/app/reduers';
 import { Asset } from '@/models/models';
 import { Injectable } from '@angular/core';
@@ -27,7 +28,18 @@ export class EvmAssetService {
       symbol: this.neoXNetwork.symbol,
       decimals: 18,
     };
-    return [assetItem];
+    const assets = [assetItem];
+    const neo = NEOX_NEO_ASSETS[this.neoXNetwork.chainId];
+    if (neo) {
+      const neoBalance = await this.getNeoXAddressAssetBalance(address, neo.asset_id);
+      assets.push({
+        asset_id: neo.asset_id,
+        symbol: neo.symbol,
+        decimals: neo.decimals,
+        balance: ethers.formatUnits(neoBalance, neo.decimals),
+      });
+    }
+    return assets;
   }
 
   async getNeoXAddressAssetBalance(
