@@ -1,6 +1,9 @@
 import { Component, EventEmitter, Input, Output, Pipe, PipeTransform } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, flush, tick } from '@angular/core/testing';
+import { OverlayContainer } from '@angular/cdk/overlay';
 import { FormsModule } from '@angular/forms';
+import { MatDialogModule } from '@angular/material/dialog';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
@@ -99,7 +102,7 @@ describe('PerpsMarketComponent 渲染', () => {
         TooltipStubComponent,
         ...PERPS_FORMAT_PIPES,
       ],
-      imports: [FormsModule],
+      imports: [FormsModule, MatDialogModule, NoopAnimationsModule],
       providers: [
         { provide: ActivatedRoute, useValue: { params } },
         { provide: Router, useValue: { navigateByUrl } },
@@ -148,6 +151,79 @@ describe('PerpsMarketComponent 渲染', () => {
     (fixture.nativeElement.querySelector(selector)?.textContent ?? '')
       .replace(/\s+/g, ' ')
       .trim();
+
+  it('opens the basics dialog, advances through five pages, and closes on Get started', fakeAsync(() => {
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('.learn-card').click();
+    fixture.detectChanges();
+    tick();
+
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    expect(overlay.querySelector('.custom-dialog-panel')).not.toBeNull();
+    expect(overlay.querySelector('.custom-dialog-backdrop')).not.toBeNull();
+    expect(overlay.querySelectorAll('.basics-progress span').length).toBe(5);
+
+    for (const title of [
+      'perpsBasicsWhatTitle',
+      'perpsBasicsDirectionTitle',
+      'perpsBasicsLeverageTitle',
+      'perpsBasicsLiquidationTitle',
+    ]) {
+      expect(overlay.querySelector('h2').textContent).toContain(title);
+      expect(overlay.querySelector('.basics-progress .active')).not.toBeNull();
+      expect(overlay.querySelector('.basics-actions .cancel')).not.toBeNull();
+      if (title === 'perpsBasicsLeverageTitle') {
+        expect(overlay.querySelectorAll('.basics-points li').length).toBe(2);
+        expect(overlay.querySelector('.basics-points').textContent)
+          .not.toContain('perpsBasicsLiquidation');
+      } else if (title === 'perpsBasicsLiquidationTitle') {
+        expect(overlay.querySelectorAll('.basics-points li').length).toBe(1);
+        expect(overlay.querySelector('.basics-points').textContent)
+          .toContain('perpsBasicsLiquidation');
+      }
+      overlay.querySelector<HTMLButtonElement>('.basics-actions .confirm').click();
+      fixture.detectChanges();
+      tick();
+    }
+
+    expect(overlay.querySelector('h2').textContent).toContain('perpsBasicsReadyTitle');
+    expect(overlay.querySelector('.basics-actions .cancel')).toBeNull();
+    expect(overlay.querySelector('.basics-actions .confirm').textContent)
+      .toContain('perpsBasicsStart');
+    overlay.querySelector<HTMLButtonElement>('.basics-actions .confirm').click();
+    fixture.detectChanges();
+    tick();
+    expect(overlay.querySelector('.basics-dialog')).toBeNull();
+    fixture.destroy();
+    flush();
+  }));
+
+  it('allows skipping and closing the guide, and starts from the first page when reopened', fakeAsync(() => {
+    fixture.detectChanges();
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    const open = () => {
+      fixture.nativeElement.querySelector('.learn-card').click();
+      fixture.detectChanges();
+      tick();
+    };
+
+    open();
+    overlay.querySelector<HTMLButtonElement>('.basics-actions .confirm').click();
+    fixture.detectChanges();
+    overlay.querySelector<HTMLButtonElement>('.basics-actions .cancel').click();
+    fixture.detectChanges();
+    tick();
+    expect(overlay.querySelector('.basics-dialog')).toBeNull();
+
+    open();
+    expect(overlay.querySelector('h2').textContent).toContain('perpsBasicsWhatTitle');
+    overlay.querySelector<HTMLButtonElement>('.basics-close').click();
+    fixture.detectChanges();
+    tick();
+    expect(overlay.querySelector('.basics-dialog')).toBeNull();
+    fixture.destroy();
+    flush();
+  }));
 
   it('places a skeleton where a number is on its way', () => {
     fixture.detectChanges();

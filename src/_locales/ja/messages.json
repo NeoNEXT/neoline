@@ -2063,6 +2063,57 @@
   "perpsMoreIntervals": {
     "message": "その他"
   },
+  "perpsBasicsWhatTitle": {
+    "message": "無期限先物とは？"
+  },
+  "perpsBasicsWhatContract": {
+    "message": "無期限先物は原資産の価格に連動するデリバティブです。現物を保有せず、証拠金で取引できます。"
+  },
+  "perpsBasicsWhatExpiry": {
+    "message": "満期日はなく、ポジションを建てる時期と決済する時期を選べます。"
+  },
+  "perpsBasicsDirectionTitle": {
+    "message": "ロング・ショートを選択"
+  },
+  "perpsBasicsLong": {
+    "message": "価格上昇を見込んで買いポジションを建てます。上昇すると利益、下落すると損失が生じます。"
+  },
+  "perpsBasicsShort": {
+    "message": "価格下落を見込んで売りポジションを建てます。下落すると利益、上昇すると損失が生じます。"
+  },
+  "perpsBasicsLeverageTitle": {
+    "message": "レバレッジを設定"
+  },
+  "perpsBasicsLeverage": {
+    "message": "レバレッジを使うと、少ない証拠金で大きなポジションを建てられます。利益と損失の両方が拡大します。"
+  },
+  "perpsBasicsLeverageExample": {
+    "message": "例えばレバレッジ10倍では、価格が1%変動すると、当初証拠金に対して10%の利益または損失が生じます。"
+  },
+  "perpsBasicsLiquidationTitle": {
+    "message": "強制清算に注意"
+  },
+  "perpsBasicsLiquidation": {
+    "message": "マーク価格が清算価格に達すると、ポジションが強制清算され、証拠金を失う可能性があります。レバレッジが高いほど、不利な値動きに耐えられる幅は小さくなります。"
+  },
+  "perpsBasicsReadyTitle": {
+    "message": "取引を始める準備はできましたか？"
+  },
+  "perpsBasicsLowLeverage": {
+    "message": "低いレバレッジから始めることをおすすめします"
+  },
+  "perpsBasicsStopLoss": {
+    "message": "損切り注文の設定をおすすめします"
+  },
+  "perpsBasicsFunding": {
+    "message": "資金調達料は1時間ごとに精算されます。ポジション保有中は支払いまたは受け取りが発生するため、現在の資金調達率を確認してください。"
+  },
+  "perpsBasicsSkip": {
+    "message": "スキップ"
+  },
+  "perpsBasicsStart": {
+    "message": "今すぐ始める"
+  },
   "perpsLearnBasics": {
     "message": "無期限先物の基礎を学ぶ"
   },

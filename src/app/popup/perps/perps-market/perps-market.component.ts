@@ -7,8 +7,10 @@ import {
   OnDestroy,
   OnInit,
   Optional,
+  TemplateRef,
   ViewChild,
 } from '@angular/core';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { asyncScheduler, Subscription, Unsubscribable } from 'rxjs';
@@ -45,11 +47,6 @@ import {
   MISSING_DISPLAY,
   pad2,
 } from '../perps.util';
-
-declare var chrome: any;
-
-const PERPS_BASICS_URL =
-  'https://hyperliquid.gitbook.io/hyperliquid-docs/trading/perpetual-futures';
 
 /**
  * K 线更新允许以多高的频率重绘图表。
@@ -92,6 +89,33 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
 
   /** 市场切换器是否在标题栏下方展开。 */
   showCoinMenu = false;
+  basicsStep = 0;
+  readonly basicsSteps = [
+    {
+      title: 'perpsBasicsWhatTitle',
+      items: ['perpsBasicsWhatContract', 'perpsBasicsWhatExpiry'],
+    },
+    {
+      title: 'perpsBasicsDirectionTitle',
+      items: ['perpsBasicsLong', 'perpsBasicsShort'],
+    },
+    {
+      title: 'perpsBasicsLeverageTitle',
+      items: ['perpsBasicsLeverage', 'perpsBasicsLeverageExample'],
+    },
+    {
+      title: 'perpsBasicsLiquidationTitle',
+      items: ['perpsBasicsLiquidation'],
+    },
+    {
+      title: 'perpsBasicsReadyTitle',
+      items: [
+        'perpsBasicsLowLeverage',
+        'perpsBasicsStopLoss',
+        'perpsBasicsFunding',
+      ],
+    },
+  ];
   /**
    * 切换器当前按什么筛选。
    *
@@ -138,6 +162,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   private countdownTimer: any;
   private accountSub: Unsubscribable;
   private accountStateSub: Unsubscribable;
+  private basicsDialogRef: MatDialogRef<unknown>;
 
   constructor(
     private route: ActivatedRoute,
@@ -147,6 +172,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private channel: PerpsDataChannel,
     private markets$: PerpsMarketDatasetService,
+    private dialog: MatDialog,
     @Optional() private accountStates?: PerpsAccountStateService,
     @Optional() private store?: Store<AppState>
   ) {}
@@ -198,6 +224,7 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.basicsDialogRef?.close();
     this.routeSub?.unsubscribe();
     this.marketRefreshSub?.unsubscribe();
     this.marketsSub?.unsubscribe();
@@ -585,12 +612,16 @@ export class PerpsMarketComponent implements OnInit, OnDestroy {
       });
   }
 
-  learnBasics() {
-    if (chrome.tabs) {
-      chrome.tabs.create({ url: PERPS_BASICS_URL });
-    } else {
-      window.open(PERPS_BASICS_URL, '_blank');
-    }
+  learnBasics(template: TemplateRef<unknown>) {
+    this.basicsStep = 0;
+    this.basicsDialogRef = this.dialog.open(template, {
+      panelClass: 'custom-dialog-panel',
+      backdropClass: 'custom-dialog-backdrop',
+      ariaLabelledBy: 'perps-basics-title',
+    });
+    this.basicsDialogRef.afterClosed().subscribe(() => {
+      this.basicsDialogRef = undefined;
+    });
   }
 
   back() {

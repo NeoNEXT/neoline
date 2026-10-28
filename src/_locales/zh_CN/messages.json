@@ -2063,6 +2063,57 @@
   "perpsMoreIntervals": {
     "message": "更多"
   },
+  "perpsBasicsWhatTitle": {
+    "message": "什么是永续合约？"
+  },
+  "perpsBasicsWhatContract": {
+    "message": "永续合约是一种跟踪标的资产价格的衍生品，无需持有对应现货，即可使用保证金交易。"
+  },
+  "perpsBasicsWhatExpiry": {
+    "message": "合约无固定到期日，可自主选择开仓和平仓时机。"
+  },
+  "perpsBasicsDirectionTitle": {
+    "message": "选择做多或做空"
+  },
+  "perpsBasicsLong": {
+    "message": "预期价格上涨时建立多头仓位。价格上涨可获利，下跌则亏损。"
+  },
+  "perpsBasicsShort": {
+    "message": "预期价格下跌时建立空头仓位。价格下跌可获利，上涨则亏损。"
+  },
+  "perpsBasicsLeverageTitle": {
+    "message": "设置杠杆"
+  },
+  "perpsBasicsLeverage": {
+    "message": "杠杆让您以较少保证金建立更大仓位，同时放大收益与亏损。"
+  },
+  "perpsBasicsLeverageExample": {
+    "message": "以 10× 杠杆为例，价格波动 1%，保证金收益率为 ±10%。"
+  },
+  "perpsBasicsLiquidationTitle": {
+    "message": "注意清算"
+  },
+  "perpsBasicsLiquidation": {
+    "message": "标记价格触及清算价时，仓位可能被清算并损失保证金。杠杆越高，可承受的反向波动越小。"
+  },
+  "perpsBasicsReadyTitle": {
+    "message": "准备好交易了吗？"
+  },
+  "perpsBasicsLowLeverage": {
+    "message": "建议从低杠杆开始"
+  },
+  "perpsBasicsStopLoss": {
+    "message": "建议设置止损"
+  },
+  "perpsBasicsFunding": {
+    "message": "资金费用每小时结算。持仓期间可能支付或收取，请关注当前资金费率。"
+  },
+  "perpsBasicsSkip": {
+    "message": "跳过"
+  },
+  "perpsBasicsStart": {
+    "message": "立即开始"
+  },
   "perpsLearnBasics": {
     "message": "了解永续合约的基础知识"
   },

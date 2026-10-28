@@ -2063,6 +2063,57 @@
   "perpsMoreIntervals": {
     "message": "More"
   },
+  "perpsBasicsWhatTitle": {
+    "message": "What are perpetual futures?"
+  },
+  "perpsBasicsWhatContract": {
+    "message": "Perpetual futures let you trade an asset's price movements using margin, without owning the underlying asset."
+  },
+  "perpsBasicsWhatExpiry": {
+    "message": "There is no fixed expiry date. You choose when to open and close your position."
+  },
+  "perpsBasicsDirectionTitle": {
+    "message": "Go long or short"
+  },
+  "perpsBasicsLong": {
+    "message": "Open a long position if you expect the price to rise. A rise generates a profit; a fall generates a loss."
+  },
+  "perpsBasicsShort": {
+    "message": "Open a short position if you expect the price to fall. A fall generates a profit; a rise generates a loss."
+  },
+  "perpsBasicsLeverageTitle": {
+    "message": "Set your leverage"
+  },
+  "perpsBasicsLeverage": {
+    "message": "Leverage lets you open a larger position with less margin, amplifying both gains and losses."
+  },
+  "perpsBasicsLeverageExample": {
+    "message": "With 10× leverage, a 1% price move results in a 10% gain or loss on your initial margin."
+  },
+  "perpsBasicsLiquidationTitle": {
+    "message": "Liquidation risk"
+  },
+  "perpsBasicsLiquidation": {
+    "message": "If the mark price reaches your liquidation price, your position may be liquidated and you may lose margin. Higher leverage leaves less room for adverse price movements."
+  },
+  "perpsBasicsReadyTitle": {
+    "message": "Ready to trade?"
+  },
+  "perpsBasicsLowLeverage": {
+    "message": "Consider starting with low leverage"
+  },
+  "perpsBasicsStopLoss": {
+    "message": "Consider setting a stop loss"
+  },
+  "perpsBasicsFunding": {
+    "message": "Funding is settled hourly. You may pay or receive funding, so check the current funding rate."
+  },
+  "perpsBasicsSkip": {
+    "message": "Skip"
+  },
+  "perpsBasicsStart": {
+    "message": "Get started"
+  },
   "perpsLearnBasics": {
     "message": "Learn the basics of perpetual futures"
   },

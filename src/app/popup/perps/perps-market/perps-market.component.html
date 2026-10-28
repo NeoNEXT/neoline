@@ -287,7 +287,7 @@
   </ng-container>
 
   <!-- 了解基础知识 -->
-  <div class="learn-card" (click)="learnBasics()">
+  <div class="learn-card" (click)="learnBasics(basicsDialog)">
     {{ "perpsLearnBasics" | translate | async }}
     <svg width="7" height="12" viewBox="0 0 7 12" fill="none">
       <path
@@ -327,4 +327,56 @@
       </button>
     </div>
   </ng-container>
+  <ng-template #basicsDialog let-dialogRef="dialogRef">
+    <div class="basics-dialog">
+      <div class="pop-ups-title">
+        <div class="basics-progress" aria-hidden="true">
+          <span
+            *ngFor="let step of basicsSteps; let i = index"
+            [class.active]="basicsStep === i"
+          ></span>
+        </div>
+        <button
+          type="button"
+          class="basics-close"
+          [attr.aria-label]="'close' | translate | async"
+          (click)="dialogRef.close()"
+        >
+          <img theme src="assets/images/common/close.svg" alt="" />
+        </button>
+      </div>
+
+      <div class="basics-content">
+        <h2 id="perps-basics-title">
+          {{ basicsSteps[basicsStep].title | translate | async }}
+        </h2>
+        <ul class="basics-points">
+          <li *ngFor="let item of basicsSteps[basicsStep].items; let i = index">
+            <span>
+              <strong *ngIf="basicsStep === 1">
+                {{ (i === 0 ? "perpsLong" : "perpsShort") | translate | async }}
+              </strong>
+              {{ item | translate | async }}
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="basics-actions">
+        <ng-container *ngIf="basicsStep < basicsSteps.length - 1; else basicsStart">
+          <button type="button" class="confirm" (click)="basicsStep = basicsStep + 1">
+            {{ "perpsContinue" | translate | async }}
+          </button>
+          <button type="button" class="cancel" (click)="dialogRef.close()">
+            {{ "perpsBasicsSkip" | translate | async }}
+          </button>
+        </ng-container>
+        <ng-template #basicsStart>
+          <button type="button" class="confirm" (click)="dialogRef.close()">
+            {{ "perpsBasicsStart" | translate | async }}
+          </button>
+        </ng-template>
+      </div>
+    </div>
+  </ng-template>
 </div>
