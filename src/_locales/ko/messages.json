@@ -288,7 +288,7 @@
     "message": "검색 결과"
   },
   "searchAssetsInput": {
-    "message": "자산을 입력하고 Enter로 검색하세요"
+    "message": "컨트랙트 주소, Enter로 검색"
   },
   "hidden": {
     "message": "숨김"
