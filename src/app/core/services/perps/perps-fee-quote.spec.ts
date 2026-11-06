@@ -8,6 +8,10 @@ import { environment } from '@/environments/environment';
 import { PERPS_HYPEREVM_CONFIG } from '@popup/_lib/perps';
 
 const FAST = 1000;
+const spotQuote = (markPx = '40') => [{
+  tokens: [{ name: 'USDC', index: 0 }, { name: 'HYPE', index: 107 }],
+  universe: [{ name: '@7', tokens: [107, 0], index: 7 }],
+}, [{ markPx, midPx: '50' }]];
 function feeResponse(overrides: Partial<any> = {}) {
   return [
     {
@@ -35,12 +39,13 @@ describe('PerpsFeeQuoteService deposit quotes', () => {
     // 本地构建指向主网。这个套件针对的是测试网构建的路由，所以它固定网络，而不是继承。
     network = environment.perpsNetwork;
     environment.perpsNetwork = 'testnet';
-    http = jasmine.createSpyObj<HttpClient>('HttpClient', ['get']);
+    http = jasmine.createSpyObj<HttpClient>('HttpClient', ['get', 'post']);
+    http.post.and.returnValue(of(spotQuote()));
     rpc = jasmine.createSpyObj<PerpsRpcService>('PerpsRpcService', [
       'withEndpoint',
     ]);
     rpc.withEndpoint.and.callFake((endpoints: any, run: any) =>
-      run({ call: () => Promise.resolve(encodedUint(200000n)) })
+      run({ call: () => Promise.resolve(encodedUint(200000n)), send: () => Promise.resolve('0x3b9aca00') })
     );
     service = new PerpsFeeQuoteService(http, rpc);
   });
@@ -168,13 +173,15 @@ describe('PerpsFeeQuoteService withdrawal quotes', () => {
   let lastCall: { to?: string; data?: string };
 
   beforeEach(() => {
-    http = jasmine.createSpyObj<HttpClient>('HttpClient', ['get']);
+    http = jasmine.createSpyObj<HttpClient>('HttpClient', ['get', 'post']);
+    http.post.and.returnValue(of(spotQuote()));
     rpc = jasmine.createSpyObj<PerpsRpcService>('PerpsRpcService', [
       'withEndpoint',
     ]);
     lastCall = {};
     rpc.withEndpoint.and.callFake((endpoints: any, run: any) =>
       run({
+        send: () => Promise.resolve('0x3b9aca00'),
         call: (tx: { to: string; data: string }) => {
           lastCall = tx;
           return Promise.resolve(encodedUint(200000n));
@@ -211,6 +218,40 @@ describe('PerpsFeeQuoteService withdrawal quotes', () => {
     const quote = await service.withdrawQuote();
 
     expect(quote.feeExact).toBe('0.2');
+  });
+
+  it('prices 200000 gas in HYPE and uses the spot mark price for its USDC equivalent', async () => {
+    const send = jasmine.createSpy('send').and.resolveTo('0x3b9aca00');
+    rpc.withEndpoint.and.callFake((config: any, run: any) => run({
+      call: () => Promise.resolve(encodedUint(200000n)), send,
+    }));
+    const quote = await service.withdrawQuote();
+    expect(send).toHaveBeenCalledOnceWith('eth_gasPrice', []);
+    expect(http.post.calls.mostRecent().args[1]).toEqual({ type: 'spotMetaAndAssetCtxs' });
+    expect(quote.gasFeeHypeExact).toBe('0.0002');
+    expect(quote.gasFeeUsdcExact).toBe('0.008');
+  });
+
+  it('preserves precision when converting the HYPE gas amount to USDC', async () => {
+    http.post.and.returnValue(of(spotQuote('40.123456789123456789')));
+    const quote = await service.withdrawQuote();
+    expect(quote.gasFeeUsdcExact).toBe('0.0080246913578246913578');
+  });
+
+  for (const markPx of ['0', 'NaN', '']) {
+    it(`does not return a zero gas reserve for an unreadable HYPE price: ${markPx}`, async () => {
+      http.post.and.returnValue(of(spotQuote(markPx)));
+      const quote = await service.withdrawQuote();
+      expect(quote.gasFeeHypeExact).toBe('0.0002');
+      expect(quote.gasFeeUsdcExact).toBeNull();
+    });
+  }
+
+  it('keeps the HYPE gas budget when the spot price request fails', async () => {
+    http.post.and.returnValue(throwError(() => new Error('spot price unavailable')));
+    const quote = await service.withdrawQuote();
+    expect(quote.gasFeeHypeExact).toBe('0.0002');
+    expect(quote.gasFeeUsdcExact).toBeNull();
   });
 
   it('derives the withdrawal floor from the quote, not from a constant', () => {

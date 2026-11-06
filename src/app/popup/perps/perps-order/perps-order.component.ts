@@ -888,6 +888,10 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       if (this.destroyed || this.wallet !== wallet || this.market?.key !== market.key) {
         return;
       }
+      await firstValueFrom(this.writes.ensureUnifiedAccount(privateKey));
+      if (this.destroyed || this.wallet !== wallet || this.market?.key !== market.key) {
+        return;
+      }
       await firstValueFrom(this.writes.updateLeverage(
         privateKey, market.assetId, leverage, market.maxLeverage, marginMode
       ));

@@ -109,7 +109,7 @@ describe('PerpsMarketDatasetService registry failures', () => {
       ]));
     })) as any);
     const hyperliquid = new HyperliquidService(
-      http, channel, { wrote: () => new Subject<void>() } as any
+      http, channel, { wrote: () => new Subject<void>(), accountModeChanges: () => new Subject<any>() } as any
     );
     spyOnProperty<any>(hyperliquid, 'supportedHip3Dexes', 'get').and.returnValue(['xyz']);
     service = new PerpsMarketDatasetService(hyperliquid, channel);

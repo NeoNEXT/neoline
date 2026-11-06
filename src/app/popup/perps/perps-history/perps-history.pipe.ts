@@ -67,7 +67,7 @@ export function orderHistoryTitle(order: PerpsOpenOrder): string {
   return type ? `${type} ${direction}` : direction;
 }
 
-/** MetaMask 活动页状态文案；未知协议状态保留原文。 */
+/** 委托状态对应的本地化文案；未知协议状态保留原文。 */
 export function orderStatusKey(status: string): string {
   switch (status) {
     case 'filled': return 'perpsStatusFilled';

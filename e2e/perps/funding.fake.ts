@@ -159,6 +159,7 @@ export class FakeFunding {
       }
       throw new Error(`Unmocked funding call: ${to} ${call.data}`);
     }
+    if (!source && method === 'eth_gasPrice') { return toQuantity(1_000_000_000); }
     if (!source) { throw new Error(`Unmocked HyperEVM RPC: ${method}`); }
     switch (method) {
       case 'eth_getBalance':

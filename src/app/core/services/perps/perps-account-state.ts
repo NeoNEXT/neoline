@@ -36,6 +36,16 @@ const parseSpotUsdc = (spot: any) => {
   return { totalExact, holdExact, spotHoldExact, freeExact };
 };
 
+const parseSpotHypeAvailable = (spot: any): string | null => {
+  if (!Array.isArray(spot?.balances)) { return null; }
+  const balance = spot.balances.find((item) => item.coin === 'HYPE');
+  if (!balance) { return '0'; }
+  const total = perpsFiniteDecimal(balance.total);
+  const hold = perpsFiniteDecimal(balance.spotHold ?? balance.hold);
+  return total === null || hold === null
+    ? null : BigNumber.maximum(0, new BigNumber(total).minus(hold)).toFixed();
+};
+
 const emptyAccount = (): PerpsAccount => ({
   unified: false,
   abstractionMode: 'unknown',
@@ -66,6 +76,7 @@ export function parsePerpsAccount(
     spotHoldExact: spotUsdcSpotHoldExact,
     freeExact: freeSpotUsdcExact,
   } = parseSpotUsdc(spot);
+  const spotHypeAvailableExact = parseSpotHypeAvailable(spot);
   if (!response || !response.marginSummary) {
     return {
       ...emptyAccount(),
@@ -79,6 +90,7 @@ export function parsePerpsAccount(
       spotUsdcExact,
       spotUsdcHoldExact,
       spotUsdcSpotHoldExact,
+      spotHypeAvailableExact,
     };
   }
 
@@ -156,6 +168,7 @@ export function parsePerpsAccount(
     spotUsdcExact,
     spotUsdcHoldExact,
     spotUsdcSpotHoldExact,
+    spotHypeAvailableExact,
     positions,
   };
 }
@@ -189,6 +202,7 @@ export function updatePerpsAccountFromSpotState(
     spotUsdcExact,
     spotUsdcHoldExact,
     spotUsdcSpotHoldExact,
+    spotHypeAvailableExact: parseSpotHypeAvailable(spot),
   };
 }
 
@@ -214,12 +228,10 @@ export function updatePerpsAccountFromClearinghouseState(
           },
         ],
       };
-  return parsePerpsAccount(
-    perps,
-    spot,
-    account.abstractionMode,
-    account.dex
-  );
+  return {
+    ...parsePerpsAccount(perps, spot, account.abstractionMode, account.dex),
+    spotHypeAvailableExact: account.spotHypeAvailableExact,
+  };
 }
 
 /** 合并所有可读取的 DEX，同时不臆造账户级金额。 */

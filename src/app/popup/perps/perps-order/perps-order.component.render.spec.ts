@@ -404,6 +404,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       const refreshed = new Subject<any>();
       const capacityData = { getActiveAssetData: jasmine.createSpy().and.returnValue(refreshed) };
       const exchange = {
+        ensureUnifiedAccount: jasmine.createSpy().and.returnValue(of(null)),
         updateLeverage: jasmine.createSpy().and.returnValue(of({ status: 'ok' })),
         submitOrder: jasmine.createSpy().and.returnValue(of({ status: 'resting' })),
       };

@@ -60,9 +60,11 @@ describe('PerpsTradeOrderService', () => {
 
   beforeEach(() => {
     exchange = jasmine.createSpyObj('PerpsOrderExchange', [
+      'ensureUnifiedAccount',
       'submitOrder',
       'updateLeverage',
     ]);
+    exchange.ensureUnifiedAccount.and.returnValue(of(null));
     exchange.submitOrder.and.callFake(
       (_privateKey: string, order: PerpsOrder) =>
         of({
@@ -83,6 +85,29 @@ describe('PerpsTradeOrderService', () => {
       return of(capacity({ coin, leverage: { type: args[4], value: args[2] } }));
     });
     service = new PerpsTradeOrderService(exchange, accounts, capacities);
+  });
+
+  it('waits for account migration before leverage, capacity reads and order submission', () => {
+    const migration = new Subject<any>();
+    exchange.ensureUnifiedAccount.and.returnValue(migration);
+    service.submit(PRIVATE_KEY, intent()).subscribe();
+    expect(exchange.ensureUnifiedAccount).toHaveBeenCalledOnceWith(PRIVATE_KEY);
+    expect(exchange.updateLeverage).not.toHaveBeenCalled();
+    expect(capacities.getActiveAssetData).not.toHaveBeenCalled();
+    expect(exchange.submitOrder).not.toHaveBeenCalled();
+    migration.next('unifiedAccount');
+    migration.complete();
+    expect(exchange.submitOrder).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not dispatch an order when migration fails', () => {
+    const failure = new Error('Migration unavailable');
+    exchange.ensureUnifiedAccount.and.returnValue(throwError(() => failure));
+    let error;
+    service.submit(PRIVATE_KEY, intent()).subscribe({ error: (value) => error = value });
+    expect(error).toBe(failure);
+    expect(exchange.updateLeverage).not.toHaveBeenCalled();
+    expect(exchange.submitOrder).not.toHaveBeenCalled();
   });
 
   it('waits for a fresh capacity response after applying margin mode and leverage', () => {

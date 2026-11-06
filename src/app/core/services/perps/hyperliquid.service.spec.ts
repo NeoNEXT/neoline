@@ -6,6 +6,7 @@ import { ethers } from 'ethers';
 import { PERPS_DEPOSIT_CONFIG, PerpsUserFeeRates } from '@popup/_lib/perps';
 import { HyperliquidService } from './hyperliquid.service';
 import { PerpsAccountStateService } from './perps-account-state.service';
+import { PerpsExchangeWriteService } from './perps-exchange-write.service';
 import { fakePerpsDataChannel } from './perps-data-channel.fake';
 import { SNAPSHOT_TTL_MS } from './perps-market-dataset.service';
 import { composeOrder } from '@popup/perps/perps-order/perps-order-composition';
@@ -13,7 +14,7 @@ import { ethMarket } from '@popup/perps/perps.test-fixture';
 import { formatUsd } from '@popup/perps/perps.util';
 
 /** 本服务所用的写入路径：只做一次声明，不发起调用。 */
-const writes = () => ({ wrote: () => new Subject<void>() } as any);
+const writes = () => ({ wrote: () => new Subject<void>(), accountModeChanges: () => new Subject<any>() } as any);
 
 describe('HyperliquidService accounts and fees', () => {
   let http: jasmine.SpyObj<HttpClient>;
@@ -414,6 +415,130 @@ describe('HyperliquidService accounts and fees', () => {
     service.watchAccountMode('0xabc').subscribe((mode) => modes.push(mode)).unsubscribe();
     expect(modes).toEqual(['disabled', 'unifiedAccount']);
     expect(http.post).toHaveBeenCalledTimes(2);
+  });
+
+  it('applies an accepted migration immediately and excludes other accounts and late REST', () => {
+    const changed = new Subject<any>();
+    service = new HyperliquidService(http, channel, { ...writes(), accountModeChanges: () => changed } as any);
+    const rest = new Subject<any>();
+    http.post.and.returnValue(rest);
+    const modes = [];
+    const subscription = service.watchAccountMode('0xABC').subscribe((mode) => modes.push(mode));
+    changed.next({ user: '0xother', accountMode: 'unifiedAccount' });
+    expect(modes).toEqual([]);
+    changed.next({ user: '0xabc', accountMode: 'unifiedAccount' });
+    rest.next('disabled');
+    expect(modes).toEqual(['unifiedAccount']);
+    expect(rest.observers.length).toBe(0);
+    channel.push({ type: 'webData3', user: '0xabc' }, {
+      userState: { user: '0xabc', serverTime: 100, abstraction: 'unifiedAccount' },
+    });
+    channel.push({ type: 'webData3', user: '0xabc' }, {
+      userState: { user: '0xabc', serverTime: 101, abstraction: 'portfolioMargin' },
+    });
+    expect(modes).toEqual(['unifiedAccount', 'portfolioMargin']);
+    expect(http.post).toHaveBeenCalledTimes(1);
+    subscription.unsubscribe();
+  });
+
+  it('verifies conflicting frames after a confirmed mode and preserves external mode changes', () => {
+    const changed = new Subject<any>();
+    service = new HyperliquidService(http, channel, { ...writes(), accountModeChanges: () => changed } as any);
+    http.post.and.returnValues(of('disabled'), throwError(() => new Error('offline')),
+      of('unifiedAccount'), of('portfolioMargin'));
+    const modes = [];
+    const subscription = service.watchAccountMode('0xabc').subscribe((mode) => modes.push(mode));
+    const push = (serverTime: number, abstraction: string) => channel.push(
+      { type: 'webData3', user: '0xabc' }, { userState: { user: '0xabc', serverTime, abstraction } }
+    );
+    push(100, 'disabled');
+    changed.next({ user: '0xabc', accountMode: 'unifiedAccount' });
+    push(101, 'disabled');
+    expect(modes).toEqual(['disabled', 'unifiedAccount']);
+    push(102, 'disabled');
+    expect(modes).toEqual(['disabled', 'unifiedAccount']);
+    push(103, 'portfolioMargin');
+    expect(modes).toEqual(['disabled', 'unifiedAccount', 'portfolioMargin']);
+    push(104, 'portfolioMargin');
+    push(105, 'disabled');
+    expect(modes).toEqual(['disabled', 'unifiedAccount', 'portfolioMargin', 'disabled']);
+    expect(http.post).toHaveBeenCalledTimes(4);
+    subscription.unsubscribe();
+  });
+
+  it('cancels conflicting-frame lookups when a newer confirmation or matching WS frame arrives', () => {
+    const changed = new Subject<any>();
+    service = new HyperliquidService(http, channel, { ...writes(), accountModeChanges: () => changed } as any);
+    const first = new Subject<any>();
+    const second = new Subject<any>();
+    http.post.and.returnValues(of('disabled'), first, second);
+    const modes = [];
+    const subscription = service.watchAccountMode('0xabc').subscribe((mode) => modes.push(mode));
+    changed.next({ user: '0xabc', accountMode: 'unifiedAccount' });
+    channel.push({ type: 'webData3', user: '0xabc' }, {
+      userState: { user: '0xabc', serverTime: 100, abstraction: 'disabled' },
+    });
+    expect(first.observers.length).toBe(1);
+    changed.next({ user: '0xabc', accountMode: 'portfolioMargin' });
+    expect(first.observers.length).toBe(0);
+    first.next('disabled');
+    channel.push({ type: 'webData3', user: '0xabc' }, {
+      userState: { user: '0xabc', serverTime: 101, abstraction: 'disabled' },
+    });
+    expect(second.observers.length).toBe(1);
+    channel.push({ type: 'webData3', user: '0xabc' }, {
+      userState: { user: '0xabc', serverTime: 102, abstraction: 'portfolioMargin' },
+    });
+    expect(second.observers.length).toBe(0);
+    second.next('disabled');
+    expect(modes).toEqual(['disabled', 'unifiedAccount', 'portfolioMargin']);
+    subscription.unsubscribe();
+  });
+
+  it('treats the retired dexAbstraction mode as unknown in REST and websocket data', () => {
+    http.post.and.returnValue(of('dexAbstraction') as any);
+    const modes = [];
+    const subscription = service.watchAccountMode('0xabc').subscribe((mode) => modes.push(mode));
+    channel.push({ type: 'webData3', user: '0xabc' }, {
+      userState: { user: '0xabc', serverTime: 100, abstraction: 'dexAbstraction' },
+    });
+    expect(modes).toEqual(['unknown']);
+    subscription.unsubscribe();
+  });
+
+  it('updates a cached standard account when the action-time check finds it already unified', () => {
+    const privateKey = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
+    const user = ethers.computeAddress(privateKey);
+    const writer = new PerpsExchangeWriteService(http);
+    service = new HyperliquidService(http, channel, writer);
+    spyOnProperty(service, 'enabledDexes', 'get').and.returnValue(['']);
+    let mode = 'disabled';
+    http.post.and.callFake(((_url, body) => {
+      if (body.type === 'userAbstraction') { return of(mode); }
+      if (body.type === 'clearinghouseState') { return of({
+        marginSummary: { accountValue: '10', totalMarginUsed: '0' },
+        crossMarginSummary: { accountValue: '10', totalMarginUsed: '0' },
+        assetPositions: [], withdrawable: '10',
+      }); }
+      if (body.type === 'spotClearinghouseState') { return of({ balances: [{
+        coin: 'USDC', token: 0, total: '100', hold: '5',
+      }] }); }
+      throw new Error('Unexpected request');
+    }) as any);
+    const states = new PerpsAccountStateService(service, channel);
+    const seen = [];
+    const subscription = states.watchAggregatedAccount(user).subscribe((state) => seen.push(state));
+    expect(seen[seen.length - 1].account.totalBalanceExact).toBe('10');
+    mode = 'unifiedAccount';
+    writer.ensureUnifiedAccount(privateKey).subscribe();
+    channel.push({ type: 'webData3', user: user.toLowerCase() }, {
+      userState: { user, serverTime: 101, abstraction: 'disabled' },
+    });
+    expect(seen[seen.length - 1].account.abstractionMode).toBe('unifiedAccount');
+    expect(seen[seen.length - 1].account.totalBalanceExact).toBe('100');
+    expect(seen[seen.length - 1].account.withdrawableExact).toBe('95');
+    expect(http.post.calls.allArgs().every((args) => !!args[1].type)).toBeTrue();
+    subscription.unsubscribe();
   });
 
   it('switches account snapshots on live mode changes and excludes a late old snapshot', () => {

@@ -1,10 +1,13 @@
+import { fakeAsync, flushMicrotasks } from '@angular/core/testing';
+import { BehaviorSubject, of, throwError } from 'rxjs';
+import { aggregatePerpsAccounts, parsePerpsAccount } from '@app/core/services/perps/perps-account-state';
 import { PerpsTabComponent } from './perps-tab.component';
 import { ethMarket } from '../perps.test-fixture';
 
 // 行的顺序、排序、翻页和搜索现在都在 PerpsMarketListComponent 里，
 // 由这个 tab 内嵌；它们的 spec 也跟着搬过去了。
 describe('PerpsTabComponent', () => {
-  const component = () => new PerpsTabComponent(null, null, null, null, null);
+  const component = () => new PerpsTabComponent(null, null, null, null, null, null, null, null);
 
   it('locates a position market by key so HIP-3 namesakes stay apart', () => {
     const value = component();
@@ -93,4 +96,131 @@ describe('PerpsTabComponent', () => {
     value.markets = [ethMarket({ midPxExact: null, markPxExact: '0' })];
     expect(value.positionMarketPrice(position)).toBeNull();
   });
+});
+
+describe('PerpsTabComponent account initialization', () => {
+  let component: PerpsTabComponent;
+  let wallets: BehaviorSubject<any>;
+  let accounts: BehaviorSubject<any>;
+  let chrome: jasmine.SpyObj<any>;
+  let walletService: jasmine.SpyObj<any>;
+  let writes: jasmine.SpyObj<any>;
+
+  beforeEach(() => {
+    wallets = new BehaviorSubject({ currentWallet: { accounts: [{ address: '0xabc', extra: {} }] } });
+    accounts = new BehaviorSubject({ availability: 'live', account: { abstractionMode: 'default' } });
+    chrome = jasmine.createSpyObj('ChromeService', ['getPassword']);
+    chrome.getPassword.and.resolveTo('password');
+    walletService = jasmine.createSpyObj('EvmWalletService', ['getPrivateKey']);
+    walletService.getPrivateKey.and.resolveTo('private-key');
+    writes = jasmine.createSpyObj('PerpsExchangeWriteService', ['ensureUnifiedAccount'], { unifiedAccountEnabled: true });
+    writes.ensureUnifiedAccount.and.returnValue(of('unifiedAccount'));
+    component = new PerpsTabComponent(null, { select: () => wallets } as any,
+      { watchMarkets: () => of({ markets: [], updatedAt: null }) } as any,
+      { watchAggregatedAccount: () => accounts } as any,
+      { watchConnectionState: () => of('live') } as any,
+      chrome, walletService, writes);
+  });
+
+  afterEach(() => component.ngOnDestroy());
+
+  for (const mode of ['default', 'disabled']) {
+    it(`initializes ${mode} through the existing software-wallet session without a submit click`, fakeAsync(() => {
+      accounts.next({ availability: 'live', account: { abstractionMode: mode } });
+      component.ngOnInit();
+      flushMicrotasks();
+      expect(walletService.getPrivateKey).toHaveBeenCalledOnceWith(wallets.value.currentWallet, 'password');
+      expect(writes.ensureUnifiedAccount).toHaveBeenCalledOnceWith('private-key');
+      wallets.next({ ...wallets.value });
+      flushMicrotasks();
+      expect(writes.ensureUnifiedAccount).toHaveBeenCalledTimes(1);
+    }));
+  }
+
+  for (const mode of ['unifiedAccount', 'portfolioMargin', 'unknown', 'dexAbstraction']) {
+    it(`does not unlock or migrate ${mode} during initialization`, fakeAsync(() => {
+      accounts.next({ availability: 'live', account: { abstractionMode: mode } });
+      component.ngOnInit();
+      flushMicrotasks();
+      expect(chrome.getPassword).not.toHaveBeenCalled();
+      expect(walletService.getPrivateKey).not.toHaveBeenCalled();
+      expect(writes.ensureUnifiedAccount).not.toHaveBeenCalled();
+    }));
+  }
+
+  it('does not unlock when the migration feature is disabled', fakeAsync(() => {
+    (Object.getOwnPropertyDescriptor(writes, 'unifiedAccountEnabled').get as jasmine.Spy).and.returnValue(false);
+    component.ngOnInit();
+    flushMicrotasks();
+    expect(chrome.getPassword).not.toHaveBeenCalled();
+    expect(writes.ensureUnifiedAccount).not.toHaveBeenCalled();
+  }));
+
+  for (const extra of [{ ledgerSLIP44: 60 }, { qrBasedXFP: 'fingerprint' }]) {
+    it(`does not request hardware signing during initialization: ${JSON.stringify(extra)}`, fakeAsync(() => {
+      wallets.next({ currentWallet: { accounts: [{ address: '0xabc', extra }] } });
+      component.ngOnInit();
+      flushMicrotasks();
+      expect(chrome.getPassword).not.toHaveBeenCalled();
+      expect(walletService.getPrivateKey).not.toHaveBeenCalled();
+      expect(writes.ensureUnifiedAccount).not.toHaveBeenCalled();
+    }));
+  }
+
+  it('does not decrypt or migrate without an existing unlocked session', fakeAsync(() => {
+    chrome.getPassword.and.resolveTo(undefined);
+    component.ngOnInit();
+    flushMicrotasks();
+    expect(walletService.getPrivateKey).not.toHaveBeenCalled();
+    expect(writes.ensureUnifiedAccount).not.toHaveBeenCalled();
+  }));
+
+  it('waits for the standard DEX account mode when HIP-3 returns first', fakeAsync(() => {
+    accounts.next({ availability: 'loading', account: null });
+    component.ngOnInit();
+    flushMicrotasks();
+    expect(chrome.getPassword).not.toHaveBeenCalled();
+    const hip3 = parsePerpsAccount(null, undefined, 'disabled', 'xyz');
+    accounts.next({ availability: 'loading', account: aggregatePerpsAccounts([hip3]) });
+    flushMicrotasks();
+    expect(chrome.getPassword).not.toHaveBeenCalled();
+    const standard = parsePerpsAccount(null, { balances: [] }, 'disabled');
+    accounts.next({ availability: 'live', account: aggregatePerpsAccounts([standard, hip3]) });
+    flushMicrotasks();
+    expect(writes.ensureUnifiedAccount).toHaveBeenCalledOnceWith('private-key');
+  }));
+
+  it('ignores the old private key when the selected wallet changes during decryption', fakeAsync(() => {
+    let oldKey: (value: string) => void;
+    walletService.getPrivateKey.and.callFake((wallet) => wallet.accounts[0].address === '0xabc'
+      ? new Promise<string>((resolve) => oldKey = resolve)
+      : Promise.resolve('new-private-key'));
+    component.ngOnInit();
+    flushMicrotasks();
+    wallets.next({ currentWallet: { accounts: [{ address: '0xdef', extra: {} }] } });
+    flushMicrotasks();
+    oldKey('old-private-key');
+    flushMicrotasks();
+    expect(writes.ensureUnifiedAccount).toHaveBeenCalledOnceWith('new-private-key');
+  }));
+
+  it('does not dispatch a migration after leaving Perps during decryption', fakeAsync(() => {
+    let finish: (value: string) => void;
+    walletService.getPrivateKey.and.returnValue(new Promise<string>((resolve) => finish = resolve));
+    component.ngOnInit();
+    flushMicrotasks();
+    component.ngOnDestroy();
+    finish('private-key');
+    flushMicrotasks();
+    expect(writes.ensureUnifiedAccount).not.toHaveBeenCalled();
+  }));
+
+  it('keeps the account readable when initialization migration fails', fakeAsync(() => {
+    writes.ensureUnifiedAccount.and.returnValue(throwError(() => new Error('offline')));
+    component.ngOnInit();
+    flushMicrotasks();
+    expect(component.account).toBe(accounts.value.account);
+    expect(component.accountAvailability).toBe('live');
+    expect(component.accountLoadError).toBeFalse();
+  }));
 });

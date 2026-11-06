@@ -3,6 +3,7 @@ import BigNumber from 'bignumber.js';
 import { HttpClient } from '@angular/common/http';
 import {
   Observable,
+  EMPTY,
   defer,
   merge,
   combineLatest,
@@ -79,7 +80,7 @@ export class HyperliquidService {
    * - DEX 注册表不携带价格，比任何一份市场快照都活得久；
    * - 现货状态一直保留到下一次 websocket 更新；
    * - 合并后的账户快照用来吸收短促的导航/请求突发；
-   * - 账户模式由 webData3 持续更新，REST 只提供订阅初值。
+   * - 账户模式由 webData3 持续更新。
    */
   private readonly accountCacheMs = 3000;
   private readonly dexRegistryCacheMs = 6 * 60 * 60 * 1000;
@@ -103,7 +104,7 @@ export class HyperliquidService {
   constructor(
     private http: HttpClient,
     private channel: PerpsDataChannel,
-    writes: PerpsExchangeWriteService
+    private writes: PerpsExchangeWriteService
   ) {
     // 用户刚做完的一次写入，是这些快照唯一确定是错的时刻。写入路径负责把这件事说出来；
     // 至于怎么应对，仍留在这里 —— 快照住在这儿。
@@ -484,9 +485,16 @@ export class HyperliquidService {
       stream = defer(() => {
         let serverTime = -1;
         let previousMode: PerpsAccountMode;
+        let confirmedMode: PerpsAccountMode;
         const parseMode = (mode: PerpsAccountMode): PerpsAccountMode =>
-          ['default', 'disabled', 'dexAbstraction', 'unifiedAccount', 'portfolioMargin'].includes(mode)
+          ['default', 'disabled', 'unifiedAccount', 'portfolioMargin'].includes(mode)
             ? mode : 'unknown';
+        const confirmations = this.writes.accountModeChanges().pipe(
+          filter((change) => change.user === user),
+          map((change) => change.accountMode),
+          tap((mode) => { confirmedMode = mode; }),
+          share()
+        );
         const updates = this.channel.subscribe({ type: 'webData3', user }).pipe(
           map((data) => data?.userState),
           filter((state) => state?.user?.toLowerCase() === user &&
@@ -494,15 +502,29 @@ export class HyperliquidService {
           tap((state) => { serverTime = state.serverTime; }),
           // 官网将未携带 abstraction 的账户按非统一模式处理。
           map((state) => parseMode(state.abstraction ?? 'disabled')),
+          switchMap((mode) => {
+            if (confirmedMode === undefined || mode === confirmedMode) {
+              confirmedMode = undefined;
+              return of(mode);
+            }
+            // 重查冲突模式，区分迟到旧帧与外部切换。
+            return this.post<PerpsAccountMode>({ type: 'userAbstraction', user }).pipe(
+              map(parseMode),
+              tap((verifiedMode) => { confirmedMode = verifiedMode; }),
+              catchError(() => EMPTY),
+              takeUntil(confirmations)
+            );
+          }),
           share()
         );
+        const modeChanges = merge(updates, confirmations).pipe(share());
         return merge(
           this.post<PerpsAccountMode>({ type: 'userAbstraction', user }).pipe(
             map(parseMode),
             catchError(() => of('unknown' as PerpsAccountMode)),
-            takeUntil(updates)
+            takeUntil(modeChanges)
           ),
-          updates
+          modeChanges
         ).pipe(
           distinctUntilChanged(),
           tap((mode) => {

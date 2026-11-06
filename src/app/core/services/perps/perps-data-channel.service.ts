@@ -94,11 +94,7 @@ export class PerpsDataChannel {
    * 真正需要保活的，是冷清到整整一分钟连一帧都没有的连接。ping 的主业写在类文档里：
    * 揭穿一条已经不再投递、却仍然读作 OPEN 的套接字。
    *
-   * 不做成「距最后一帧满 30 秒才 ping」。那样有流量时一条都不用发，探活上也等价（帧到
-   * 达本身就是连接活着的证据），但省下的是每 30 秒 17 个字节，而代价是偏离 MetaMask 用
-   * 的那条基线：`@nktkas/hyperliquid` 的 `WebSocketKeepAlive` 同样是固定间隔加 pong
-   * 超时，默认 30_000 / 10_000，MetaMask 在 `HYPERLIQUID_TRANSPORT_CONFIG` 里显式配的
-   * 就是这两个数。
+   * 每 30 秒发送一次 ping，10 秒内未收到 pong 则判定连接失效并重连。
    */
   private heartbeatTimer: any;
   private readonly heartbeatMs = 30000;

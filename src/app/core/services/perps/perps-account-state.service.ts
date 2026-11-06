@@ -234,6 +234,7 @@ export class PerpsAccountStateService {
               : ('live' as const),
           account,
           missingDexes: [],
+          refreshFailed: false,
           updatedAt: Date.now(),
         };
       }),
@@ -247,6 +248,7 @@ export class PerpsAccountStateService {
             : ('unavailable' as const),
           account: keepsStale ? current.account : null,
           missingDexes: keepsStale ? [] : [key.dex],
+          refreshFailed: true,
           updatedAt: current.updatedAt,
         });
       })
@@ -285,6 +287,7 @@ export class PerpsAccountStateService {
     }
     return {
       availability: state.availability,
+      refreshFailed: state.refreshFailed,
       account:
         frame.kind === 'spot'
           ? updatePerpsAccountFromSpotState(state.account, frame.value)
@@ -333,6 +336,7 @@ export class PerpsAccountStateService {
         : 'live',
       account,
       missingDexes,
+      refreshFailed: states.some((state) => state.refreshFailed),
       updatedAt: updated.length ? Math.min(...updated) : null,
     };
   }

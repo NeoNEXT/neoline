@@ -143,6 +143,45 @@ describe('PerpsAccountStateService', () => {
     const latest = seen[seen.length - 1];
     expect(latest.availability).toBe('unavailable');
     expect(latest.account).toBeNull();
+    expect(latest.refreshFailed).toBeTrue();
+    subscription.unsubscribe();
+  });
+
+  it('reports a failed REST refresh while retaining stale data and clears the failure on REST success', () => {
+    let latest: PerpsAccountState<PerpsAccount>;
+    const subscription = service.watchAccount('0xabc').subscribe((state) => latest = state);
+    const previous = latest.account;
+    connection.next('stale');
+    const pending = new Subject<PerpsAccount>();
+    source.getAccount.and.returnValue(pending);
+    let refreshed: PerpsAccountState<PerpsAccount>;
+    service.refreshAccount('0xabc').subscribe((state) => refreshed = state);
+    pending.error(new Error('offline'));
+    expect(refreshed.availability).toBe('stale');
+    expect(refreshed.account).toBe(previous);
+    expect(refreshed.refreshFailed).toBeTrue();
+    channels.get('clearinghouseState:0xabc:').next(clearinghouse('25'));
+    expect(latest.account.withdrawableExact).toBe('25');
+    expect(latest.refreshFailed).toBeTrue();
+    source.getAccount.and.returnValue(of(account('', { withdrawableExact: '12' })));
+    service.refreshAccount('0xabc').subscribe((state) => refreshed = state);
+    expect(refreshed.availability).toBe('stale');
+    expect(refreshed.account.withdrawableExact).toBe('12');
+    expect(refreshed.refreshFailed).toBeFalse();
+    subscription.unsubscribe();
+  });
+
+  it('preserves the REST failure result when buffered frames are replayed over the retained account', () => {
+    const subscription = service.watchAccount('0xabc').subscribe();
+    connection.next('stale');
+    const pending = new Subject<PerpsAccount>();
+    source.getAccount.and.returnValue(pending);
+    let result: PerpsAccountState<PerpsAccount>;
+    service.refreshAccount('0xabc').subscribe((state) => result = state);
+    channels.get('clearinghouseState:0xabc:').next(clearinghouse('25'));
+    pending.error(new Error('offline'));
+    expect(result.account.withdrawableExact).toBe('25');
+    expect(result.refreshFailed).toBeTrue();
     subscription.unsubscribe();
   });
 

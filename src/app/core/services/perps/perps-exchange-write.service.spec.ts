@@ -1,11 +1,12 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { fakeAsync, flushMicrotasks } from '@angular/core/testing';
 import { ethers } from 'ethers';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 
 import { PERPS_BUILDER_FEE_TENTHS_BPS } from '@popup/_lib/perps';
 import { PerpsExchangeWriteService } from './perps-exchange-write.service';
 import { PerpsOrder } from './perps-trade-order';
+import { hyperliquidActionHash } from './hyperliquid-signing';
 
 const PRIVATE_KEY =
   '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
@@ -24,6 +25,126 @@ const ORDER: PerpsOrder = {
 };
 
 const exchangeOk = { status: 'ok', response: { type: 'default' } };
+
+describe('PerpsExchangeWriteService account migration', () => {
+  let http: jasmine.SpyObj<HttpClient>;
+  let service: PerpsExchangeWriteService;
+
+  beforeEach(() => {
+    http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
+    service = new PerpsExchangeWriteService(http);
+  });
+
+  for (const mode of ['default', 'disabled']) {
+    it(`migrates ${mode} with the L1 agent action and publishes the accepted mode`, fakeAsync(() => {
+      http.post.and.callFake(((_url, body) =>
+        of(body.type === 'userAbstraction' ? mode : exchangeOk)) as any);
+      const changes = [];
+      service.accountModeChanges().subscribe((change) => changes.push(change));
+      let migrated;
+      service.ensureUnifiedAccount(PRIVATE_KEY).subscribe((value) => migrated = value);
+      flushMicrotasks();
+      expect(http.post.calls.first().args[1]).toEqual({ type: 'userAbstraction', user: SIGNER.toLowerCase() });
+      const body = http.post.calls.mostRecent().args[1];
+      expect(body.action).toEqual({ type: 'agentSetAbstraction', abstraction: 'u' });
+      expect(ethers.verifyTypedData({
+        name: 'Exchange', version: '1', chainId: 1337,
+        verifyingContract: '0x0000000000000000000000000000000000000000',
+      }, { Agent: [{ name: 'source', type: 'string' }, { name: 'connectionId', type: 'bytes32' }] }, {
+        source: 'b', connectionId: hyperliquidActionHash(body.action, body.nonce),
+      }, body.signature)).toBe(SIGNER);
+      expect(migrated).toBe('unifiedAccount');
+      expect(changes).toEqual([{ user: SIGNER.toLowerCase(), accountMode: 'unifiedAccount' }]);
+      expect(http.post).toHaveBeenCalledTimes(2);
+    }));
+  }
+
+  for (const mode of ['unifiedAccount', 'portfolioMargin', 'dexAbstraction', 'unexpected']) {
+    it(`does not migrate ${mode}`, () => {
+      http.post.and.returnValue(of(mode) as any);
+      const changed = jasmine.createSpy('changed');
+      const wrote = jasmine.createSpy('wrote');
+      service.accountModeChanges().subscribe(changed);
+      service.wrote().subscribe(wrote);
+      let migrated;
+      service.ensureUnifiedAccount(PRIVATE_KEY).subscribe((value) => migrated = value);
+      expect(migrated).toBe(mode === 'unifiedAccount' || mode === 'portfolioMargin' ? mode : 'unknown');
+      expect(changed).toHaveBeenCalledOnceWith({ user: SIGNER.toLowerCase(), accountMode: migrated });
+      expect(wrote).not.toHaveBeenCalled();
+      expect(http.post).toHaveBeenCalledTimes(1);
+      expect(http.post.calls.first().args[1].type).toBe('userAbstraction');
+    });
+  }
+
+  it('does not read or sign when migration is disabled', () => {
+    spyOnProperty(service, 'unifiedAccountEnabled', 'get').and.returnValue(false);
+    let migrated;
+    service.ensureUnifiedAccount('unavailable').subscribe((value) => migrated = value);
+    expect(migrated).toBeNull();
+    expect(http.post).not.toHaveBeenCalled();
+  });
+
+  it('shares a pending migration and rechecks the mode on the next action', fakeAsync(() => {
+    const reply = new Subject<any>();
+    let mode = 'disabled';
+    http.post.and.callFake(((_url, body) => body.type === 'userAbstraction' ? of(mode) : reply) as any);
+    const results = [];
+    service.ensureUnifiedAccount(PRIVATE_KEY).subscribe((value) => results.push(value));
+    service.ensureUnifiedAccount(PRIVATE_KEY).subscribe((value) => results.push(value));
+    flushMicrotasks();
+    expect(http.post).toHaveBeenCalledTimes(2);
+    expect(results).toEqual([]);
+    mode = 'unifiedAccount';
+    reply.next(exchangeOk);
+    reply.complete();
+    expect(results).toEqual(['unifiedAccount', 'unifiedAccount']);
+    service.ensureUnifiedAccount(PRIVATE_KEY).subscribe((value) => results.push(value));
+    expect(results).toEqual(['unifiedAccount', 'unifiedAccount', 'unifiedAccount']);
+    expect(http.post).toHaveBeenCalledTimes(3);
+  }));
+
+  it('does not retry an unknown migration result or publish success, and rechecks on the next action', fakeAsync(() => {
+    http.post.and.callFake(((_url, body) => body.type === 'userAbstraction' ? of('default')
+      : throwError(() => new HttpErrorResponse({ status: 0 }))) as any);
+    const changed = jasmine.createSpy('changed');
+    const failed = jasmine.createSpy('failed');
+    service.accountModeChanges().subscribe(changed);
+    service.ensureUnifiedAccount(PRIVATE_KEY).subscribe({ error: failed });
+    flushMicrotasks();
+    expect(http.post).toHaveBeenCalledTimes(2);
+    expect(failed).toHaveBeenCalledTimes(1);
+    expect(changed).not.toHaveBeenCalled();
+    http.post.and.returnValue(of('unifiedAccount') as any);
+    let migrated;
+    service.ensureUnifiedAccount(PRIVATE_KEY).subscribe((value) => migrated = value);
+    expect(migrated).toBe('unifiedAccount');
+    expect(http.post).toHaveBeenCalledTimes(3);
+  }));
+
+  it('does not sign when the account mode cannot be read', () => {
+    http.post.and.returnValue(throwError(() => new Error('offline')));
+    const failed = jasmine.createSpy('failed');
+    service.ensureUnifiedAccount(PRIVATE_KEY).subscribe({ error: failed });
+    expect(failed).toHaveBeenCalledTimes(1);
+    expect(http.post).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not dispatch a migration after the last caller leaves during the mode lookup', fakeAsync(() => {
+    const mode = new Subject<any>();
+    http.post.and.callFake(((_url, body) => body.type === 'userAbstraction' ? mode : of(exchangeOk)) as any);
+    const subscription = service.ensureUnifiedAccount(PRIVATE_KEY).subscribe();
+    subscription.unsubscribe();
+    mode.next('disabled');
+    flushMicrotasks();
+    expect(http.post).toHaveBeenCalledTimes(1);
+    service.ensureUnifiedAccount(PRIVATE_KEY).subscribe();
+    mode.next('disabled');
+    mode.complete();
+    flushMicrotasks();
+    expect(http.post).toHaveBeenCalledTimes(3);
+    expect(http.post.calls.mostRecent().args[1].action.type).toBe('agentSetAbstraction');
+  }));
+});
 
 describe('PerpsExchangeWriteService orders', () => {
   let http: jasmine.SpyObj<HttpClient>;

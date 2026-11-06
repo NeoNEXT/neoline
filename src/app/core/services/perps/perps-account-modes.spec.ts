@@ -327,7 +327,7 @@ describe('Perps account modes by address', () => {
 
   const cardFor = (address: string) => {
     const state = seen.get(address);
-    const card = new PerpsTabComponent(null, null, null, null, null);
+    const card = new PerpsTabComponent(null, null, null, null, null, null, null, null);
     card.account = state.account;
     card.accountAvailability = state.availability;
     return { state, card };

@@ -29,7 +29,12 @@ for (const failure of ['rotate-known', 'lost-then-nonce'] as const) {
   });
 }
 
-test('F7 known gap: failed refresh with a stale retained account should not withdraw', async ({ page, hl }) => {
+test('F7 failed REST refresh retains the amount without withdrawing; REST success allows retry while WS remains stale', async ({ page, hl }) => {
+  hl.accountMode = 'unifiedAccount';
+  hl.spotBalances = [
+    { coin: 'USDC', token: 0, total: '1000', hold: '0' },
+    { coin: 'HYPE', token: 107, total: '1', hold: '0' },
+  ];
   await openFunding(page, 'Withdraw', '$1,000');
   await amount(page).fill('10');
   hl.accountReadFailureStatus = 429;
@@ -41,10 +46,16 @@ test('F7 known gap: failed refresh with a stale retained account should not with
   await expect(page.locator('.stale-note')).toBeVisible();
   await expect(page.locator('.balance-tip')).toContainText('$1,000');
   await submit(page).click();
+  await expect(page.locator('.error-tip')).toContainText('Could not confirm the latest balance, so nothing was sent. Try again.');
+  await expect(amount(page)).toHaveValue('10');
+  await expect(page.locator('.balance-tip')).toContainText('$1,000');
+  expect(hl.withdrawals).toHaveLength(0);
+  hl.accountReadFailureStatus = null;
+  await submit(page).click();
   await expectToast(page, 'Withdrawal initiated');
   await expect(amount(page)).toHaveValue('');
-  test.fail(true, 'README F7/7.4: refreshAccount retains a stale account after the read failed');
-  expect(hl.withdrawals).toHaveLength(0);
+  await expect(page.locator('.stale-note')).toBeVisible();
+  expect(hl.withdrawals).toHaveLength(1);
 });
 
 test('F8 leaving during deposit preparation cannot send the abandoned amount', async ({ page, hl }) => {

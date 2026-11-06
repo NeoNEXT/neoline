@@ -22,12 +22,14 @@ import { PerpsBroadcastStatusUnknownError } from '@/app/core/services/perps/perp
 import { PerpsFundingComponent } from './perps-funding.component';
 import { PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS } from '@popup/_lib/perps';
 import { parsePerpsAccount } from '@/app/core/services/perps/perps-account-state';
+import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
+import { fakePerpsDataChannel } from '@/app/core/services/perps/perps-data-channel.fake';
 
 /**
  * 提现的定价来自报价而不是常量，所以这些测试会写明它们据以计算的那份报价。取 1 USDC 是为了
  * 让算术一目了然；真实数字是合约在当时所说的那个。
  */
-const QUOTE = { feeExact: '1' };
+const QUOTE = { feeExact: '1', gasFeeHypeExact: '0', gasFeeUsdcExact: '0' };
 
 /**
  * 这些测试里准备入金总是失败，而且失败会被上报而不是吞掉，所以组件需要一个上报的去处。
@@ -102,8 +104,11 @@ class TranslateStubPipe implements PipeTransform {
   }
 }
 
-const writesStub = () =>
-  jasmine.createSpyObj('PerpsExchangeWriteService', ['withdraw']);
+const writesStub = () => {
+  const writes = jasmine.createSpyObj('PerpsExchangeWriteService', ['withdraw', 'ensureUnifiedAccount']);
+  writes.ensureUnifiedAccount.and.returnValue(of(null));
+  return writes;
+};
 
 describe('PerpsFundingComponent balance line', () => {
   let fixture: ComponentFixture<PerpsFundingComponent>;
@@ -147,6 +152,7 @@ describe('PerpsFundingComponent balance line', () => {
     fixture = TestBed.createComponent(PerpsFundingComponent);
     component = fixture.componentInstance;
     component.tab = 'withdraw';
+    component.withdrawQuote = { ...QUOTE };
   });
 
   afterEach(() => fixture.destroy());
@@ -192,6 +198,18 @@ describe('PerpsFundingComponent balance line', () => {
     expect(balanceLine()).toContain('N/A');
     expect(balanceLine()).not.toContain('$N/A');
   });
+
+  it('does not display withdrawal gas separately and retains the MAX reserve', () => {
+    component.account = { abstractionMode: 'disabled', withdrawableExact: '100', spotHypeAvailableExact: '0' } as any;
+    component.withdrawQuote = { ...QUOTE, gasFeeHypeExact: '0.0002', gasFeeUsdcExact: '0.008' };
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.detail-rows').textContent).not.toContain('perpsNetworkFee');
+    expect(component.withdrawableExact).toBe('99.992');
+    component.account.spotHypeAvailableExact = '0.0002';
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.detail-rows').textContent).not.toContain('perpsNetworkFee');
+    expect(component.withdrawableExact).toBe('100');
+  });
 });
 
 describe('PerpsFundingComponent amount boundaries', () => {
@@ -213,6 +231,42 @@ describe('PerpsFundingComponent amount boundaries', () => {
     );
     (component as any).depositFee = { protocolFeeBps: 0, forwardFeeExact: '0.2' };
     component.withdrawQuote = { ...QUOTE };
+  });
+
+  for (const mode of ['disabled', 'unifiedAccount', 'portfolioMargin']) {
+    it(`reserves USDC for gas only when transferable HYPE is insufficient: ${mode}`, () => {
+      component.tab = 'withdraw';
+      component.withdrawQuote = { ...QUOTE, gasFeeHypeExact: '0.0002', gasFeeUsdcExact: '0.008' };
+      component.account = {
+        abstractionMode: mode, unified: mode !== 'disabled', withdrawableExact: '100',
+        spotUsdcExact: '100', spotUsdcHoldExact: '0',
+      } as any;
+      for (const available of ['0', '0.00019999', '0.0002', '1000']) {
+        component.account.spotHypeAvailableExact = available;
+        component.setMax();
+        const enough = new BigNumber(available).gte('0.0002');
+        expect(component.amount).toBe(enough ? '100' : '99.992');
+        expect(component.withdrawGasReserveExact).toBe(enough ? '0' : '0.008');
+      }
+      component.amount = '50';
+      expect(component.withdrawReceiveExact).toBe('49');
+    });
+  }
+
+  it('leaves MAX unknown when the HYPE balance or gas quote is unknown', () => {
+    component.tab = 'withdraw';
+    component.account = { abstractionMode: 'disabled', withdrawableExact: '100' } as any;
+    component.withdrawQuote = { ...QUOTE, gasFeeHypeExact: '0.0002', gasFeeUsdcExact: '0.008' };
+    expect(component.withdrawableExact).toBeNull();
+    expect(component.maxAmountKnown).toBeFalse();
+    component.account.spotHypeAvailableExact = '0';
+    component.withdrawQuote.gasFeeUsdcExact = null;
+    expect(component.maxAmountKnown).toBeFalse();
+    component.account.spotHypeAvailableExact = '0.0002';
+    expect(component.withdrawableExact).toBe('100');
+    component.withdrawQuote = null;
+    expect(component.withdrawableExact).toBeNull();
+    expect(component.maxAmountKnown).toBeFalse();
   });
 
   it('uses the exact token balance for deposit MAX', () => {
@@ -490,7 +544,7 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
     );
     hyperliquid.subscribe.and.returnValue(of());
     hyperliquid.watchConnectionState.and.returnValue(of('live'));
-    writes = jasmine.createSpyObj('PerpsExchangeWriteService', ['withdraw']);
+    writes = writesStub();
     writes.withdraw.and.returnValue(of({}));
     chrome = jasmine.createSpyObj('ChromeService', ['getPassword']);
     chrome.getPassword.and.returnValue(Promise.resolve('pw'));
@@ -528,6 +582,79 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
 
     expect(component.refreshFailed).toBeTrue();
     expect(component.submitting).toBeFalse();
+    expect(chrome.getPassword).not.toHaveBeenCalled();
+    expect(writes.withdraw).not.toHaveBeenCalled();
+  });
+
+  it('stops on a failed REST refresh with a retained stale balance and permits a successful retry while WS stays stale', async () => {
+    const channel = fakePerpsDataChannel();
+    hyperliquid.getAccount.and.returnValue(of(account('100')));
+    const states = new PerpsAccountStateService({
+      enabledDexes: [''], watchAccountMode: () => of('default'),
+      getAccount: hyperliquid.getAccount,
+    } as any, channel);
+    Object.assign(component as any, { accountStates: states });
+    (component as any).watchAccountState('0xabc');
+    component.amount = '50';
+    component.connectionState = 'stale';
+    channel.setConnectionState('stale');
+    hyperliquid.getAccount.and.returnValue(throwError(() => new Error('offline')));
+    try {
+      await component.submit();
+      expect(component.account.withdrawableExact).toBe('100');
+      expect(component.amount).toBe('50');
+      expect(component.refreshFailed).toBeTrue();
+      expect(component.disabledReason).toBe('perpsRefreshFailed');
+      expect(chrome.getPassword).not.toHaveBeenCalled();
+      expect(writes.ensureUnifiedAccount).not.toHaveBeenCalled();
+      expect(writes.withdraw).not.toHaveBeenCalled();
+      hyperliquid.getAccount.and.returnValue(of(account('90')));
+      await component.submit();
+      expect(component.refreshFailed).toBeFalse();
+      expect(component.connectionState).toBe('stale');
+      expect(writes.withdraw).toHaveBeenCalledOnceWith('0xkey', '0xabc', '50', { fromSpot: false });
+    } finally {
+      component.ngOnDestroy();
+    }
+  });
+
+  it('does not send a withdrawal when the post-migration refresh returns a retained stale account', async () => {
+    component.amount = '50';
+    const previous = component.account;
+    const refresh = jasmine.createSpy('refreshAccount').and.returnValues(
+      of({ availability: 'stale', account: previous, refreshFailed: false }),
+      of({ availability: 'stale', account: previous, refreshFailed: true })
+    );
+    Object.assign(component as any, { accountStates: { refreshAccount: refresh } });
+    writes.ensureUnifiedAccount.and.returnValue(of('unifiedAccount'));
+    await component.submit();
+    expect(writes.ensureUnifiedAccount).toHaveBeenCalledOnceWith('0xkey');
+    expect(component.amount).toBe('50');
+    expect(component.refreshFailed).toBeTrue();
+    expect(component.disabledReason).toBe('perpsRefreshFailed');
+    expect(writes.withdraw).not.toHaveBeenCalled();
+  });
+
+  it('reprices gas before submitting MAX and asks for review when the ceiling falls', async () => {
+    component.setMax();
+    hyperliquid.getAccount.and.returnValue(of({ ...account('100'), spotHypeAvailableExact: '0' }));
+    spyOn((component as any).feeQuote, 'withdrawQuote').and.resolveTo({
+      ...QUOTE, gasFeeHypeExact: '0.0002', gasFeeUsdcExact: '0.008',
+    });
+    await component.submit();
+    expect(component.amount).toBe('99.992');
+    expect(component.balanceMovedUnderInput).toBeTrue();
+    expect(chrome.getPassword).not.toHaveBeenCalled();
+    expect(writes.withdraw).not.toHaveBeenCalled();
+  });
+
+  it('does not sign using a previous gas quote when the new quote fails', async () => {
+    component.amount = '50';
+    hyperliquid.getAccount.and.returnValue(of(account('100')));
+    spyOn((component as any).feeQuote, 'withdrawQuote').and.rejectWith(new Error('gas unavailable'));
+    await component.submit();
+    expect(component.withdrawQuote).toBeNull();
+    expect(component.disabledReason).toBe('perpsFeeQuoteUnknown');
     expect(chrome.getPassword).not.toHaveBeenCalled();
     expect(writes.withdraw).not.toHaveBeenCalled();
   });
@@ -615,6 +742,51 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
     expect(component.refreshFailed).toBeFalse();
     expect(component.balanceMovedUnderInput).toBeFalse();
     expect(writes.withdraw).toHaveBeenCalledTimes(1);
+  });
+
+  it('refreshes after migration and debits the new spot balance', async () => {
+    component.amount = '50';
+    let migrated = false;
+    hyperliquid.getAccount.and.callFake(() => of(migrated ? {
+      ...account('0'), abstractionMode: 'unifiedAccount', unified: true,
+      spotUsdcExact: '90', spotUsdcHoldExact: '10',
+    } : account('100')));
+    writes.ensureUnifiedAccount.and.callFake(() => {
+      migrated = true;
+      return of('unifiedAccount');
+    });
+    await component.submit();
+    expect(writes.ensureUnifiedAccount).toHaveBeenCalledOnceWith('0xkey');
+    expect(hyperliquid.getAccount).toHaveBeenCalledTimes(3);
+    expect(component.withdrawableExact).toBe('80');
+    expect(writes.withdraw).toHaveBeenCalledOnceWith('0xkey', '0xabc', '50', { fromSpot: true });
+  });
+
+  it('rechecks MAX against the post-migration balance before withdrawing', async () => {
+    component.setMax();
+    writes.ensureUnifiedAccount.and.returnValue(of('unifiedAccount'));
+    hyperliquid.getAccount.and.returnValues(of(account('100')), of({
+      ...account('0'), abstractionMode: 'unifiedAccount', unified: true,
+      spotUsdcExact: '90', spotUsdcHoldExact: '10',
+    }));
+    await component.submit();
+    expect(component.amount).toBe('80');
+    expect(component.balanceMovedUnderInput).toBeTrue();
+    expect(writes.withdraw).not.toHaveBeenCalled();
+  });
+
+  it('does not withdraw if migration or its account refresh fails', async () => {
+    component.amount = '50';
+    hyperliquid.getAccount.and.returnValue(of(account('100')));
+    writes.ensureUnifiedAccount.and.returnValue(throwError(() => new Error('Migration failed')));
+    await component.submit();
+    expect(writes.withdraw).not.toHaveBeenCalled();
+    expect(global.snackBarTip).toHaveBeenCalledWith('txFailed', 'Migration failed');
+    writes.ensureUnifiedAccount.and.returnValue(of('unifiedAccount'));
+    hyperliquid.getAccount.and.returnValues(of(account('100')), throwError(() => new Error('offline')));
+    await component.submit();
+    expect(component.refreshFailed).toBeTrue();
+    expect(writes.withdraw).not.toHaveBeenCalled();
   });
 
   // 从未到达的响应不是拒绝。把它报告成失败，
@@ -784,7 +956,7 @@ describe('PerpsFundingComponent page fees', () => {
     depositFee = jasmine.createSpy('depositFeeRate').and.resolveTo(
       { protocolFeeBps: 0, forwardFeeExact: '0.2' }
     );
-    withdrawFee = jasmine.createSpy('withdrawQuote').and.resolveTo({ feeExact: '0.3' });
+    withdrawFee = jasmine.createSpy('withdrawQuote').and.resolveTo({ ...QUOTE, feeExact: '0.3' });
     component = new PerpsFundingComponent(
       { snapshot: { queryParams: {} } } as any,
       { select: () => of({ currentWallet: null }) } as any,
@@ -965,7 +1137,7 @@ describe('PerpsFundingComponent single submission', () => {
     chrome.getPassword.and.resolveTo('pw');
     wallet = jasmine.createSpyObj('wallet', ['getPrivateKey']);
     wallet.getPrivateKey.and.resolveTo('0xkey');
-    writes = jasmine.createSpyObj('writes', ['withdraw']);
+    writes = writesStub();
     writes.withdraw.and.returnValue(of({}));
     states = {
       refreshAccount: jasmine.createSpy('refresh').and.returnValue(of({ account })),
@@ -978,7 +1150,7 @@ describe('PerpsFundingComponent single submission', () => {
       feeQuoteStub(), { watchConnectionState: () => of('live') } as any, writes);
     Object.assign(component, { address, wallet: accountStore.value.currentWallet, account,
       accountLoading: false, walletBalanceExact: '100', nativeBalanceExact: '1', amount: '10',
-      withdrawQuote: { feeExact: '0.2' }, depositFee: { protocolFeeBps: 0, forwardFeeExact: '0.2' } });
+      withdrawQuote: { ...QUOTE, feeExact: '0.2' }, depositFee: { protocolFeeBps: 0, forwardFeeExact: '0.2' } });
   });
 
   afterEach(() => component.ngOnDestroy());

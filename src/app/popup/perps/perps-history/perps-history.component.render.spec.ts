@@ -434,7 +434,7 @@ describe('PerpsHistoryComponent 渲染与接线', () => {
       expect(text(rows()[1], '.fill-result')).toBe('brandNewStatus');
     });
 
-    it('状态按 MetaMask 翻译，未知状态保留原文且均不使用盈亏颜色', () => {
+    it('已知状态使用本地化文案，未知状态保留原文且均不使用盈亏颜色', () => {
       const statuses = [
         'filled', 'open', 'canceled', 'scheduledCancel', 'rejected', 'triggered', 'queued',
         'marginCanceled', 'siblingFilledCanceled', 'reduceOnlyCanceled',

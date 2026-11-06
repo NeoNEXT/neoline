@@ -81,7 +81,7 @@
 | 源链 ETH | `nativeBalanceExact(config,address)` → getBalance | 同一次余额流程在 USDC 请求结束后读取；两种余额失败分别记 null |
 | 入金手续费 | `loadFees()` → `depositFeeRate()` | 进入页面读取并保存 Fast 档协议费基点和固定转发费；改金额、比例/MAX、切页签、准备及发送均在本地复用，失败时才手动补读 |
 | 入金网络费 | `authorizeDeposit()` → `depositFeeExact()` | 有效 USDC 授权生成后估算真实调用，只返回以 ETH 计的费用数字；确认期间每 30 秒更新展示，发送时重新估算 gas 和读取费率 |
-| 提现手续费 | `loadFees()` → `withdrawQuote()` → HyperEVM 合约只读调用 | 进入资金页读取并保存 `withdrawQuote`；改金额、切页签及提交不再询价，失败时才手动补读 |
+| 提现手续费 | `loadFees()` → `withdrawQuote()` → HyperEVM 合约只读调用 | 进入资金页读取并保存 `withdrawQuote`；改金额、切页签不询价，提交前重取通道费与 gas；HYPE 不足时预留 gas 的 USDC 等值 |
 | 连接状态 | `channel.watchConnectionState()` | 只有提现页显示 stale 提示；连接正常不等于余额或报价一定最新 |
 
 HyperCore 标准账户快照包含 clearinghouseState、spotClearinghouseState 与账户模式；统一/组合保证金账户依赖现货 USDC。读取失败与正常空账户分开处理。
@@ -122,7 +122,7 @@ flowchart TD
 
 ### 2.3 提现：页面费用 → 余额复核 → 签名的交易所操作
 
-进入页面时 `loadFees()` 取得 `withdrawQuote` → 点击 `submitFunding()` → 直接 `submit()` → `refreshAccount(address)` → 检查余额并确定 `fromSpot` → `getPassword/getPrivateKey` → `writes.withdraw(privateKey,address,amount,{fromSpot})` → 签 `sendToEvmWithData` → POST `/exchange`。金额下限和预计收到使用本页保存的手续费，提交中不再调用 `withdrawQuote()`。
+进入页面时 `loadFees()` 取得 `withdrawQuote` → 点击 `submitFunding()` → 直接 `submit()` → `refreshAccount(address)` 与 `withdrawQuote()` → 检查余额并确定 `fromSpot` → `getPassword/getPrivateKey` → `ensureUnifiedAccount()`，必要时刷新账户并复核余额和 `fromSpot` → `writes.withdraw(privateKey,address,amount,{fromSpot})` → 签 `sendToEvmWithData` → POST `/exchange`。金额下限和预计收到使用本页保存的手续费；提交前重新报价，REST 刷新失败时不发送。
 
 关键 payload 为 `token=USDC`、规范化金额文本、`sourceDex=''` 或 spot、`destinationRecipient=本人地址的小写形式`、`addressEncoding=hex`、`destinationChainId=3`、`gasLimit=200000`、`data=0x`、nonce，以及 Mainnet/Testnet 标识。这里 destinationChainId 是 CCTP domain，不是 42161/421614。data 为空启用默认转发路径。
 
@@ -223,11 +223,11 @@ flowchart TD
 | 编辑草案 | 入金校验通过可点击继续，提现可直接提交；手动改金额清预设、刷新警告和旧入金准备，用缓存费率即时计算，不清空已知费用 |
 | 入金准备中 | confirming=false、preparingDeposit=true；本地计算手续费、取私钥、签授权并估 gas；金额、预设和提交按钮禁用 |
 | 入金等待确认 | confirming=true；锁定金额及预设，弹窗展示预算，每 30 秒重新估算 gas；刷新期间 preparingDeposit=true、网络费循环淡闪且确认按钮禁用，成功后更新预算并停止动画 |
-| 提现提交 | 使用已读取的 withdrawQuote 直接进入 submit；没有确认弹窗或另一次费用请求 |
+| 提现提交 | 使用已读取的 withdrawQuote 直接进入 submit；没有确认弹窗，提交前重取报价 |
 | 入金 gas 不足 | 准备结束停止提交，清本次授权/报价，但保留页面费率与网络费不足原因；不是已广播失败 |
 | 离页/切页签 | confirming=false，清入金准备并使旧准备失效；销毁还使在途费用响应失效，不发送撤销授权交易 |
-| 提交中 | submitting=true，入金弹窗保留并禁用确认/取消；刷新余额、解锁和发送共用此标记，金额输入禁用；不重新读取手续费 |
-| 本页识别到余额刷新失败 | submitting=false、refreshFailed=true，不继续发送；源余额未知时清入金确认。共享服务保留 stale 旧账户时不能识别该失败，见 F7 |
+| 提交中 | submitting=true，入金弹窗保留并禁用确认/取消；刷新余额、解锁和发送共用此标记，金额输入禁用；提现提交前重新读取手续费 |
+| 本页识别到余额刷新失败 | submitting=false、refreshFailed=true，不继续发送；源余额未知时清入金确认。共享服务保留 stale 旧账户时仍按本次 REST 结果判断，见 F7 |
 | 余额降到输入以下 | submitting=false，balanceMovedUnderInput=true；手动金额不缩减，MAX 可下调后等待再次操作 |
 | 入金已广播 | 清授权、金额和预设，submitting=false；提示已发起，然后按哈希等回执。等待期间可以发起另一笔新的意图 |
 | 入金广播答复不确定 | 提示状态未知，清表单及授权，仍按原哈希等回执；组件不会自动重新准备或发送 |
@@ -276,7 +276,7 @@ POST `/exchange` 没有显式 timeout。通用响应解析拒绝顶层 err 和�
 | 账户失败重试 | 有观察者时按指数退避重读；普通失败从 1 秒、429 从 10 秒起，上限 60 秒；不是组件自行轮询 HyperCore 余额 |
 | WS 重连 | 通道恢复订阅，账户数据集补快照；30 秒 ping/10 秒 pong 超时，重连延迟 1、2、4…秒，上限 30 秒 |
 | 源链轮询 | 两个页签都维持每 15 秒 USDC/ETH 读取，submitting 时跳过新一轮；已在途轮询不取消，同地址并发返回没有请求代次排序 |
-| 提交前刷新 | 提现调 refreshAccount，入金读源余额；无法取得所需余额时停止。共享账户状态不含 refreshFailed，刷新失败但保留旧 account 时仍可能提现，是 F7 已知缺口 |
+| 提交前刷新 | 提现调 refreshAccount，入金读源余额；无法取得所需余额时停止。按 refreshFailed 检查本次 REST 结果，失败时保留输入且不提现；REST 成功时不因 WS stale 阻止 |
 | 模式变化 | webData3 更新模式；refreshAccount 若遇模式变化，等待新模式快照，再确定 sourceDex；真实模式切换与提现仍需联调 |
 | 费用复用 | 进入页面并行读取两侧费用，页面内复用；改金额只本地计算。准备好的入金报价与授权金额配对，发送不重读费用；费用展示不是实际回执 |
 | 写后刷新 | 提现接受/未知时刷新账户；入金回执结算后刷新账户及源余额；WS 和 15 秒轮询可继续反映后续变化 |
@@ -365,8 +365,8 @@ F1–F13 已按自动化方案扩展测试，当前资金浏览器测试保留 F
 | F4 入金费用 | 模拟 bp=0/1.4、转发费最小单位 200000；再缺 Fast 档或给非法费 | 只计算协议费及转发费，feeExact 同时用于显示和 CCTP maxFee；不查询新账户费；失败不回退免费；费用吞掉金额仍为已知缺口 |
 | F5 入金授权和目标 | 点击存入并延迟授权/gas，解码签名及 calldata；离页再进入 | 授权金额/域/to/有效期正确；mintRecipient 与 caller 为配对 forwarder；hook 为本人和 dex=0；无独立 approve/提前广播 |
 | F6 gas | 用精确相等、少一个最小单位及未知 ETH 余额；确认后再提高模拟 gas | 已知不足阻止；未知不被报零；确认期间每 30 秒更新 gas，重算开始时播放动画，成功更新后停止；弹窗只展示费用估算，开始发送后停止定时器并重新估算 gas，不要求签名预算与展示一致 |
-| F7 刷新与 MAX | 提交准备期间减少余额，分别用手填和 MAX；使刷新失败或返回 stale 旧账户 | 手填不改、MAX 下调后停止；读取失败且没有可用账户时停止；stale 保留旧账户时仍可能提现，保留预期失败用例 |
-| F8 页面费用复用 | 进入页面读取费用后修改金额、比例/MAX、切页签，再改变接口替身费率并提交；准备中离页重开 | 每侧成功费用仅请求一次；页面计算及发送使用入口费率，提交无二次询价/费用变化确认；旧入金准备不能发送 |
+| F7 刷新与 MAX | 提交准备期间减少余额，分别用手填和 MAX；使刷新失败或返回 stale 旧账户 | 手填不改、MAX 下调后停止；REST 读取失败时停止，即使保留 stale 旧账户也不提现；REST 恢复后可重试 |
+| F8 页面费用复用 | 进入页面读取费用后修改金额、比例/MAX、切页签，再改变接口替身费率并提交；准备中离页重开 | 入金成功费用仅请求一次；提现提交前重取报价并校验 gas 预留，余额不足则停止；旧入金准备不能发送 |
 | F9 入金广播 | 模拟接受后丢响应、端点轮换、already known、后续 nonce 拒绝 | 各次广播字节/哈希相同；未知后查询原哈希，无第二笔入金；真实源链以 receipt.status 判成功 |
 | F10 入金后续 | 给 confirmed、reverted、无回执；关闭再打开 | 提示区分正确；源链成功不宣称最终到账；记录页面关闭后没有持久恢复，另核对目标 mint/HyperCore 账本 |
 | F11 提现 payload | 标准/统一账户分别提交提现，检查 action 与签名域 | sourceDex 为 ''/spot，目标本人、domain=3、data=0x；不是目的 EVM chainId；没有另签目的链交易 |
@@ -384,8 +384,8 @@ F15–F16 承接旧迁移方案中未完成的验收项，本次未执行。F15 
 1. **资金追踪能力有明确边界。** 本页未持久化公开追踪记录，未实现广播后追踪记录保存失败提示、无法唯一归因的入账标记或跨重启待入账列表。当前只有内存授权和一次源链回执等待；不能写成完整资金追踪系统。
 2. **入金准备会先签授权。** 点击继续后先刷新余额，再签授权并估算；确认后再次刷新余额并重新授权，刷新失败不继续发送。授权签名本身不产生源链交易。
 3. **钱包与生命周期隔离不完整。** 钱包、地址、配置、金额、页签变化及销毁会使本次准备失效，准备和发送以 submissionSeq 丢弃失效操作。确认状态只保存费用，最终发送重新授权。已经广播的调用不能因离页撤回，且不跨窗口协调。
-4. **费用是页面快照。** loadFees 以 destroyed 和配置引用防止旧响应覆盖，成功费用在本页不再刷新，也不设 TTL；只有失败费用可手动补读。实际通道费变动不会触发涨价确认，页面估算不保证等于最终扣费。
-5. **提交前刷新不一定代表取得新事实。** 数据集可能合并已有在途请求，断线读取失败可保留旧 account，本页不能识别这次失败并仍可能提现，这是 F7 已知缺口；账户模式还有独立缓存。
+4. **费用是页面快照。** loadFees 以 destroyed 和配置引用防止旧响应覆盖，入金成功费用在本页不再刷新，也不设 TTL；只有失败费用可手动补读，提现提交前重新报价。实际通道费变动不会触发涨价确认，页面估算不保证等于最终扣费。
+5. **提交前刷新不一定代表取得新事实。** 数据集可能合并已有在途请求，断线读取失败可保留旧 account，本页按 refreshFailed 检查最近一次 REST 结果，失败不提现；账户模式跟随 webData3 更新。
 6. **估算与最低额仍需边界验收。** ETH 预算在确认期间每 30 秒更新，发送前复核余额；ETH 未知时停止，不额外做本地授权有效期检查。入金报价吞掉金额和报价异常值仍缺完整 UI 阻断。两倍提现下限只能作为产品缓冲，不能证明未来扣费上限或回滚退款。
 7. **未知结果处理没有全局防重保证。** 提现 unknown 后解除 submitting 且保留金额，入金广播后也解除 submitting；当前只避免同一次发送自动生成另一笔意图，不跨窗口协调，不持久化，也不自动判断最终到账。
 8. **本地测试不替代部署证据。** 本次未验证费用 getter 的实时值/所有异常数值、真实签名被服务端接受、目标链异常后资金回补、完整跨链到账或所有账户模式的真实可提限制。F1–F13 的本地证据与缺口见[验收映射][funding-e2e]；F14–F17 仍待真实测试网执行。

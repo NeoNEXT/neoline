@@ -16,6 +16,36 @@ const clearinghouse = {
 const spot = { balances: [{ coin: 'USDC', token: 0, total: '1000', hold: '40' }] };
 
 describe('Perps account mode balances', () => {
+  it('reads transferable spot HYPE without adding its value to USDC equity', () => {
+    const value = parsePerpsAccount(clearinghouse, { balances: [
+      ...spot.balances, { coin: 'HYPE', total: '1000', hold: '900', spotHold: '999.9998' },
+    ] }, 'portfolioMargin');
+    expect(value.spotHypeAvailableExact).toBe('0.0002');
+    expect(value.totalBalanceExact).toBe('1000');
+    expect(value.availableBalanceExact).toBe('960');
+  });
+
+  it('updates spot HYPE from spot frames and preserves it across perps frames', () => {
+    const initial = parsePerpsAccount(clearinghouse, spot, 'disabled');
+    const updated = updatePerpsAccountFromSpotState(initial, { spotState: { balances: [
+      ...spot.balances, { coin: 'HYPE', total: '1.23456789', hold: '0.2' },
+    ] } });
+    expect(updated.spotHypeAvailableExact).toBe('1.03456789');
+    const afterPerps = updatePerpsAccountFromClearinghouseState(updated, clearinghouse);
+    expect(afterPerps.spotHypeAvailableExact).toBe('1.03456789');
+  });
+
+  it('distinguishes absent HYPE from an unread spot balance and clamps locked HYPE to zero', () => {
+    expect(parsePerpsAccount(clearinghouse, spot, 'disabled').spotHypeAvailableExact).toBe('0');
+    expect(parsePerpsAccount(clearinghouse, null, 'disabled').spotHypeAvailableExact).toBeNull();
+    expect(parsePerpsAccount(clearinghouse, { balances: [{
+      coin: 'HYPE', total: '1', hold: 'bad',
+    }] }, 'disabled').spotHypeAvailableExact).toBeNull();
+    expect(parsePerpsAccount(clearinghouse, { balances: [{
+      coin: 'HYPE', total: '1', hold: '2',
+    }] }, 'disabled').spotHypeAvailableExact).toBe('0');
+  });
+
   it('preserves unknown amounts through updates and aggregation without losing positions', () => {
     const initial = parsePerpsAccount(clearinghouse, spot, 'unknown');
     const afterSpot = updatePerpsAccountFromSpotState(initial, spot);

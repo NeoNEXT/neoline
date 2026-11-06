@@ -779,7 +779,10 @@ describe('applying leverage to an existing position', () => {
     });
     value.facts = facts({ account: state(2) });
     value.leverage = 3;
-    const writes = { updateLeverage: jasmine.createSpy().and.returnValue(of({ status: 'ok' })) };
+    const writes = {
+      ensureUnifiedAccount: jasmine.createSpy().and.returnValue(of(null)),
+      updateLeverage: jasmine.createSpy().and.returnValue(of({ status: 'ok' })),
+    };
     const accounts = { refreshAccount: jasmine.createSpy().and.returnValue(of(state(3))) };
     const global = { snackBarTip: jasmine.createSpy() };
     Object.assign(value as any, {
@@ -794,6 +797,7 @@ describe('applying leverage to an existing position', () => {
   it('writes 3x without an order and refreshes the position', async () => {
     const { value, writes, accounts } = setup();
     await value.applyLeverage();
+    expect(writes.ensureUnifiedAccount).toHaveBeenCalledWith('key');
     expect(writes.updateLeverage).toHaveBeenCalledWith('key', 0, 3, 25, 'isolated');
     expect(accounts.refreshAccount).toHaveBeenCalledWith('0xabc', '');
     expect(value.position.leverage).toBe(3);

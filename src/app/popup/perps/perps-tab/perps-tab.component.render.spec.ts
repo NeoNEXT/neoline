@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { BehaviorSubject, of } from 'rxjs';
 
+import { ChromeService, EvmWalletService } from '@/app/core';
+import { PerpsExchangeWriteService } from '@/app/core/services/perps/perps-exchange-write.service';
 import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
 import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
@@ -110,6 +112,9 @@ describe('PerpsTabComponent 渲染与接线', () => {
         ...PERPS_FORMAT_PIPES,
       ],
       providers: [
+        { provide: ChromeService, useValue: { getPassword: () => Promise.resolve(undefined) } },
+        { provide: EvmWalletService, useValue: {} },
+        { provide: PerpsExchangeWriteService, useValue: { unifiedAccountEnabled: true } },
         { provide: Router, useValue: { navigateByUrl } },
         {
           provide: Store,

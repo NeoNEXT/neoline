@@ -56,14 +56,12 @@ export enum EvmTransactionType {
    */
   smart = "smart",
   /**
-   * A transaction swapping one token for another through MetaMask Swaps.
+   * A transaction swapping one token for another.
    */
   swap = "swap",
   /**
-   * Similar to the approve type, a swap approval is a special case of ERC20
-   * approve method that requests an allowance of the token to spend on behalf
-   * of the user for the MetaMask Swaps contract. The first swap for any token
-   * will have an accompanying swapApproval transaction.
+   * An ERC20 approval that allows a swap contract to spend tokens on behalf
+   * of the user.
    */
   swapApproval = "swapApproval",
   /**

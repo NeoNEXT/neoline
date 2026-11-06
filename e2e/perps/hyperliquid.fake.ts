@@ -143,6 +143,10 @@ export class FakeHyperliquid {
         }, (body.dex || '') !== this.dex ? [] : [this.context()]];
       }
       case 'clearinghouseState': return this.account(body.dex);
+      case 'spotMetaAndAssetCtxs': return [{
+        tokens: [{ name: 'USDC', index: 0 }, { name: 'HYPE', index: 107 }],
+        universe: [{ name: '@107', index: 107, tokens: [107, 0] }],
+      }, [{ markPx: '40' }]];
       case 'spotClearinghouseState': return { balances: this.spotBalances ??
         (['unifiedAccount', 'portfolioMargin'].includes(this.accountMode)
           ? [{ coin: 'USDC', token: 0, total: this.spotTotal, hold: this.spotHold, entryNtl: '0' }] : []) };
@@ -325,6 +329,11 @@ export class FakeHyperliquid {
       if (url.hostname === 'mainnet-1.rpc.banelabs.org' && request.method() === 'POST') {
         const body = request.postDataJSON();
         const rpc = (item: Payload) => {
+          if (item.method === 'eth_call' &&
+              item.params[0].to.toLowerCase() === '0xc28736dc83f4fd43d6fb832fd93c3ee7bb26828f' &&
+              item.params[0].data.toLowerCase() === `0x70a08231${this.user.slice(2).padStart(64, '0')}`) {
+            return { jsonrpc: '2.0', id: item.id, result: `0x${'0'.repeat(64)}` };
+          }
           if (!['eth_getBalance', 'eth_blockNumber'].includes(item.method)) { throw new Error(`Unmocked RPC: ${item.method}`); }
           return { jsonrpc: '2.0', id: item.id, result: '0x0' };
         };

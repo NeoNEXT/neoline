@@ -14,6 +14,8 @@ import {
   PERPS_CHAIN_RETRY_BASE_MS,
   PERPS_DEPOSIT_CONFIG,
   PERPS_HYPEREVM_CONFIG,
+  HYPERLIQUID_API,
+  PERPS_CORE_TO_EVM_GAS_LIMIT,
   resolvePerpsTestnet,
 } from '@popup/_lib/perps';
 import {
@@ -49,12 +51,16 @@ interface CctpFeeEntry {
 /**
  * 某个时点读到的手续费，绝不是常量。
  *
- * 进入资金页时读取：入金费率由 Circle HTTP 返回，提现手续费由合约返回。
+ * 进入资金页时读取，提现提交前重读：通道费由合约返回，gas 使用 HyperEVM gasPrice 和现货 HYPE markPx。
  * 报价用于预计到账计算，最终扣费和到账仍以实际执行结果为准。
  */
 export interface PerpsFeeQuote {
   /** 当前通道的手续费报价，用于展示及预计收到计算。 */
   feeExact: string;
+  /** Core→EVM gas 预算，单位 HYPE。 */
+  gasFeeHypeExact: string;
+  /** gas 的 USDC 等值；仅在可转 HYPE 不足时从 MAX 中预留。 */
+  gasFeeUsdcExact: string | null;
 }
 
 export interface PerpsDepositFeeRate {
@@ -124,9 +130,14 @@ export class PerpsFeeQuoteService {
       [true, destinationDomain]
     );
 
-    const raw = await this.rpc.withEndpoint(evm, (provider) =>
-      provider.call({ to: evm.coreDepositWallet, data })
-    );
+    const api = this.isTestnet ? HYPERLIQUID_API.testnet : HYPERLIQUID_API.mainnet;
+    const [raw, gasPrice, spot] = await Promise.all([
+      this.rpc.withEndpoint(evm, (provider) => provider.call({ to: evm.coreDepositWallet, data })),
+      this.rpc.withEndpoint(evm, (provider) => provider.send('eth_gasPrice', [])),
+      this.withRetry(() => firstValueFrom(this.http.post<any>(
+        api.info, { type: 'spotMetaAndAssetCtxs' }
+      ).pipe(timeout(PERPS_CHAIN_REQUEST_TIMEOUT_MS)))).catch(() => null),
+    ]);
 
     let fee: bigint;
     try {
@@ -143,7 +154,21 @@ export class PerpsFeeQuoteService {
 
     // 合约自己算出它的 `maxFee`，而这就是那个数，所以这里通道费和 CCTP 上限是同一个东西。
     const feeExact = ethers.formatUnits(fee, USDC_DECIMALS);
-    return { feeExact };
+    const [meta, contexts] = spot ?? [];
+    const hype = meta?.tokens?.find((token) => token.name === 'HYPE');
+    const pair = meta?.universe?.findIndex((market) =>
+      market.tokens[0] === hype?.index && market.tokens[1] === 0);
+    const markPrice = new BigNumber(contexts?.[pair]?.markPx ?? NaN);
+    const gasFee = new BigNumber(ethers.formatUnits(BigInt(gasPrice) * BigInt(PERPS_CORE_TO_EVM_GAS_LIMIT), 18));
+    if (!gasFee.isFinite() || gasFee.isNegative()) {
+      throw new PerpsChainError('rejected', 'HyperEVM withdrawal gas quote is unavailable');
+    }
+    return {
+      feeExact,
+      gasFeeHypeExact: gasFee.toFixed(),
+      gasFeeUsdcExact: markPrice.isFinite() && markPrice.isGreaterThan(0)
+        ? gasFee.times(markPrice).toFixed() : null,
+    };
   }
 
   /**
@@ -152,7 +177,7 @@ export class PerpsFeeQuoteService {
    * 低于报价的一倍，目的链会 revert，而且是在 HyperCore 已经扣款之后才 revert。第二倍
    * 留出的是「读到报价」到「合约据此执行」之间的余量，在这段时间里 owner 可以上调费用。
    */
-  minWithdrawExact(quote: PerpsFeeQuote): string {
+  minWithdrawExact(quote: Pick<PerpsFeeQuote, 'feeExact'>): string {
     return new BigNumber(quote.feeExact).times(2).toFixed();
   }
 
@@ -168,7 +193,7 @@ export class PerpsFeeQuoteService {
         if (!isRetriable(error)) {
           throw new PerpsChainError(
             'rejected',
-            (error as Error)?.message || 'Circle refused the fee request'
+            (error as Error)?.message || 'Fee quote request was refused'
           );
         }
         if (attempt < PERPS_CHAIN_MAX_RETRIES) {
@@ -178,7 +203,7 @@ export class PerpsFeeQuoteService {
     }
     throw new PerpsChainError(
       'unavailable',
-      (lastError as Error)?.message || 'Circle did not answer the fee request'
+      (lastError as Error)?.message || 'Fee quote request did not complete'
     );
   }
 

@@ -51,6 +51,9 @@ export const HYPERLIQUID_API = {
   },
 };
 
+/** Perps 初始化及操作前，允许已解锁的软件钱包将 Standard 账户迁移为 Unified。 */
+export const PERPS_UNIFIED_ACCOUNT_ENABLED = true;
+
 /**
  * NeoLine 在 Hyperliquid 标准永续 DEX 之外另行开放的 HIP-3 DEX。
  *
@@ -330,9 +333,8 @@ export const PERPS_WALLET_BALANCE_POLL_MS = 15000;
 /**
  * 入金链公共端点的韧性策略。
  *
- * 这些数字沿用 MetaMask 自己的 `RpcService`：以指数退避重试四次后放弃某个端点。它的可重试
- * 集合在入金链服务里被复现：只重试临时性的传输故障，绝不重试业务错误，而且只要浏览器报告
- * 自己离线，就什么都不重试。
+ * 临时性的传输故障按指数退避重试，最多四次后放弃当前端点。
+ * 业务错误和浏览器离线时不重试。
  */
 export const PERPS_CHAIN_MAX_RETRIES = 4;
 export const PERPS_CHAIN_RETRY_BASE_MS = 250;
@@ -682,6 +684,8 @@ export interface PerpsAccount {
   spotUsdcHoldExact: string;
   /** API 的 USDC spotHold；缺失时提现回退到 hold。 */
   spotUsdcSpotHoldExact?: string | null;
+  /** HyperCore spot 可转 HYPE，仅用于提现 gas 判断，不计入 USDC 权益。 */
+  spotHypeAvailableExact?: string | null;
   positions: PerpsPosition[];
 }
 
@@ -743,13 +747,15 @@ export interface PerpsAccountState<T> {
   availability: PerpsAccountAvailability;
   account: T | null;
   missingDexes: string[];
+  /** 最近一次 REST 快照读取是否失败；独立于 WS 连接状态，保留旧值或收到 WS 帧不代表刷新成功。 */
+  refreshFailed?: boolean;
   /** 最新一份可信快照或帧的客户端时间。 */
   updatedAt: number | null;
 }
 
 /**
- * unifiedAccount 为主支持模式；default/disabled 按标准账户兼容。
- * dexAbstraction 为遗留自动划转模式；portfolioMargin 仅兼容 USDC 基础操作，
+ * unifiedAccount 为主支持模式；default/disabled 在软件钱包初始化及可签名操作前尝试迁移。
+ * dexAbstraction 已退役，读取入口按 unknown 处理；portfolioMargin 仅兼容 USDC 基础操作，
  * 不代表完整组合估值。unknown 是本地读取失败状态，不是协议返回值。
  */
 export type PerpsAccountMode =

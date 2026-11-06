@@ -3,18 +3,20 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
 import { stringify as stringifyLosslessJson } from 'lossless-json';
-import { Observable, Subject, forkJoin, from, of, throwError } from 'rxjs';
-import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { Observable, Subject, defer, forkJoin, from, of, throwError } from 'rxjs';
+import { catchError, finalize, map, shareReplay, switchMap, tap } from 'rxjs/operators';
 
 import {
   HYPERLIQUID_API,
   PerpsExchangeResponse,
+  PerpsAccountMode,
   PerpsMarginMode,
   PerpsOrderExecutionResult,
   PERPS_BUILDER_ADDRESS,
   PERPS_BUILDER_FEE_TENTHS_BPS,
   PERPS_BUILDER_MAX_FEE_RATE,
   PERPS_DEPOSIT_CONFIG,
+  PERPS_UNIFIED_ACCOUNT_ENABLED,
   perpsFiniteDecimal,
   resolvePerpsTestnet,
 } from '@popup/_lib/perps';
@@ -61,8 +63,8 @@ export interface PerpsWithdrawSource {
  *（Execution Result）。调用方交给它一个已经规范化的 action，拿回一个可判定的结果 ——
  * 或者执行状态未知（Execution Status Unknown），而后者不等于失败。
  *
- * 提现是被告知该扣哪个余额，而不是自己去查用户账户；启用 builder 时只读它的收费资格与
- * 用户授权额度。本模块只欠账户那一侧一件事：`wrote()`，它宣告「你手上的事实现在过期了」。这是一个通知，而且
+ * 提现的扣款来源由调用方刷新账户后决定；账户迁移和 builder 授权读取各自的前置条件。
+ * `wrote()` 宣告「你手上的事实现在过期了」，模式检查结果另由 accountModeChanges() 通知。这是一个通知，而且
  * 会一直只是通知 —— 没有本地订单状态机，没有跨窗口仲裁，也不持久化交易意图
  *（ADR-0003、ADR-0006）。
  */
@@ -75,6 +77,8 @@ export class PerpsExchangeWriteService {
   private readonly nonces = new PerpsNonceAllocator();
   /** 本次会话已经确认过 builder 费用授权的那些账户。 */
   private readonly builderFeeApproved = new Set<string>();
+  private readonly unifiedAccountRequests = new Map<string, Observable<PerpsAccountMode>>();
+  private readonly accountMode$ = new Subject<{ user: string; accountMode: PerpsAccountMode }>();
   private readonly wrote$ = new Subject<void>();
 
   constructor(private http: HttpClient) {}
@@ -91,6 +95,37 @@ export class PerpsExchangeWriteService {
    */
   wrote(): Observable<void> {
     return this.wrote$.asObservable();
+  }
+
+  accountModeChanges(): Observable<{ user: string; accountMode: PerpsAccountMode }> {
+    return this.accountMode$.asObservable();
+  }
+
+  get unifiedAccountEnabled(): boolean {
+    return PERPS_UNIFIED_ACCOUNT_ENABLED;
+  }
+
+  /** 仅在调用方已取得可用私钥时调用；不降级 Unified/PM，不迁移未知或已退役模式。 */
+  ensureUnifiedAccount(privateKey: string): Observable<PerpsAccountMode | null> {
+    return defer(() => {
+      if (!this.unifiedAccountEnabled) { return of(null); }
+      const user = ethers.computeAddress(privateKey).toLowerCase();
+      let request = this.unifiedAccountRequests.get(user);
+      if (!request) {
+        request = this.postInfo<PerpsAccountMode>({ type: 'userAbstraction', user }).pipe(
+          switchMap((mode) => mode === 'default' || mode === 'disabled'
+            ? this.signedL1Action(
+              privateKey, { type: 'agentSetAbstraction', abstraction: 'u' }
+            ).pipe(map(() => 'unifiedAccount' as PerpsAccountMode))
+            : of(mode === 'unifiedAccount' || mode === 'portfolioMargin' ? mode : 'unknown' as PerpsAccountMode)),
+          tap((accountMode) => this.accountMode$.next({ user, accountMode })),
+          finalize(() => this.unifiedAccountRequests.delete(user)),
+          shareReplay({ bufferSize: 1, refCount: true })
+        );
+        this.unifiedAccountRequests.set(user, request);
+      }
+      return request;
+    });
   }
 
   //#region builder 费用

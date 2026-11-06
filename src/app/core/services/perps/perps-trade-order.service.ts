@@ -6,6 +6,7 @@ import { map, switchMap } from 'rxjs/operators';
 
 import {
   PerpsAccount,
+  PerpsAccountMode,
   PerpsAccountState,
   PerpsActiveAssetData,
   PerpsExchangeResponse,
@@ -24,6 +25,7 @@ import { PerpsOrder, PerpsTradeOrderError } from './perps-trade-order';
 import { protectionPrice, validProtection } from '@popup/_lib/perps-protection';
 
 interface PerpsOrderExchange {
+  ensureUnifiedAccount(privateKey: string): Observable<PerpsAccountMode | null>;
   submitOrder(
     privateKey: string,
     order: PerpsOrder
@@ -76,7 +78,8 @@ export class PerpsTradeOrderService {
     return defer(() => {
       this.validateIntent(intent);
       const address = this.signerAddress(privateKey);
-      return this.resolveSize(address, intent).pipe(
+      return this.exchange.ensureUnifiedAccount(privateKey).pipe(
+        switchMap(() => this.resolveSize(address, intent)),
         switchMap((sizeExact) => {
           const order = this.buildOrder(intent, sizeExact);
           const submit = () =>

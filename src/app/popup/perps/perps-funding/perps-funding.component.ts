@@ -242,6 +242,23 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
    * PM 的 hold 可包含借贷能力，不能将其直接换算成可提现额。
    */
   get withdrawableExact(): string {
+    const base = this.baseWithdrawableExact;
+    const reserve = this.withdrawGasReserveExact;
+    return base === null || reserve === null ? null
+      : BigNumber.maximum(0, new BigNumber(base).minus(reserve)).toFixed();
+  }
+
+  /** HYPE 足够时不预留 USDC；不足时预留整笔 gas 的 USDC 等值。 */
+  get withdrawGasReserveExact(): string | null {
+    if (!this.withdrawQuote) { return null; }
+    const gas = new BigNumber(this.withdrawQuote.gasFeeHypeExact);
+    if (gas.isZero()) { return '0'; }
+    const available = this.account?.spotHypeAvailableExact;
+    if (available == null) { return null; }
+    return new BigNumber(available).gte(gas) ? '0' : this.withdrawQuote.gasFeeUsdcExact;
+  }
+
+  private get baseWithdrawableExact(): string {
     const account = this.account;
     if (!account || account.abstractionMode === 'unknown') {
       return null;
@@ -315,7 +332,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     return this.withdrawQuote?.feeExact ?? null;
   }
 
-  /** 入金用本页费率按当前金额计算；提现用进入页面时读到的报价。 */
+  /** 入金用本页费率计算；提现展示最近一次报价，提交前重读。 */
   get confirmFeeExact(): string | null {
     return this.isDeposit
       ? this.depositConfirmedFeeExact ?? this.currentDepositFee
@@ -456,11 +473,11 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     if (this.accountLoadError) {
       return 'perpsLoadFailed';
     }
-    if (!this.maxAmountKnown) {
-      return this.isDeposit ? 'perpsBalanceUnknown' : 'perpsWithdrawableUnknown';
-    }
     if (this.isDeposit ? !this.depositFee : !this.withdrawQuote) {
       return this.feesLoading ? '' : 'perpsFeeQuoteUnknown';
+    }
+    if (!this.maxAmountKnown) {
+      return this.isDeposit ? 'perpsBalanceUnknown' : 'perpsWithdrawableUnknown';
     }
     if (this.refreshFailed) {
       return 'perpsRefreshFailed';
@@ -711,9 +728,16 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
             throw new Error('Source balance unavailable');
           }
         } else {
-          const state = await firstValueFrom(this.accountStates.refreshAccount(address));
+          const [state, quote] = await Promise.all([
+            firstValueFrom(this.accountStates.refreshAccount(address)),
+            this.feeQuote.withdrawQuote().catch((error) => {
+              if (seq === this.submissionSeq) { this.withdrawQuote = null; }
+              throw error;
+            }),
+          ]);
           if (seq !== this.submissionSeq) { return; }
-          if (!state.account) {
+          this.withdrawQuote = quote;
+          if (state.refreshFailed || !state.account) {
             throw new Error('Account refresh failed');
           }
           this.account = state.account;
@@ -763,6 +787,29 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
         if (seq === this.submissionSeq) { this.submitting = false; }
         await this.trackDeposit(config, hash, address);
       } else {
+        const mode = await firstValueFrom(this.writes.ensureUnifiedAccount(privateKey));
+        if (seq !== this.submissionSeq) { return; }
+        if (mode !== null) {
+          try {
+            const state = await firstValueFrom(this.accountStates.refreshAccount(address));
+            if (seq !== this.submissionSeq) { return; }
+            if (state.refreshFailed || !state.account) { throw new Error('Account refresh failed after migration'); }
+            this.account = state.account;
+            if (!this.maxAmountKnown) { throw new Error('Withdrawal source unavailable'); }
+            fromSpot = !!state.account.unified;
+          } catch (error) {
+            if (seq === this.submissionSeq) { this.refreshFailed = true; }
+            return;
+          }
+          if (this.exceedsBalance) {
+            this.balanceMovedUnderInput = true;
+            if (wasMax && this.maxAmountKnown) {
+              this.amount = this.floorAmount(this.maxAmountExact);
+              this.activePreset = -1;
+            }
+            return;
+          }
+        }
         try {
           await firstValueFrom(this.writes.withdraw(privateKey, address, amount, { fromSpot }));
         } catch (error) {

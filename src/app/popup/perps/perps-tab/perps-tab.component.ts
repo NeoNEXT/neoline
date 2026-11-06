@@ -2,12 +2,16 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import BigNumber from 'bignumber.js';
-import { Unsubscribable } from 'rxjs';
+import { Unsubscribable, from } from 'rxjs';
+import { filter, switchMap, take } from 'rxjs/operators';
 
 import { AppState } from '@/app/reduers';
+import { ChromeService, EvmWalletService } from '@/app/core';
+import { EvmWalletJSON } from '@popup/_lib/evm';
 import { PerpsMarketDatasetService } from '@app/core/services/perps/perps-market-dataset.service';
 import { PerpsDataChannel } from '@app/core/services/perps/perps-data-channel.service';
 import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
+import { PerpsExchangeWriteService } from '@/app/core/services/perps/perps-exchange-write.service';
 import {
   PerpsAccountAvailability,
   PerpsAggregatedAccount,
@@ -46,6 +50,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
 
   private accountSub: Unsubscribable;
   private accountStateSub: Unsubscribable;
+  private accountInitializationSub: Unsubscribable;
   private connectionSub: Unsubscribable;
   private feedAtSub: Unsubscribable;
 
@@ -54,17 +59,25 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     private store: Store<AppState>,
     private markets$: PerpsMarketDatasetService,
     private accountStates: PerpsAccountStateService,
-    private channel: PerpsDataChannel
+    private channel: PerpsDataChannel,
+    private chrome: ChromeService,
+    private evmWallet: EvmWalletService,
+    private writes: PerpsExchangeWriteService
   ) {}
 
   ngOnInit() {
     this.accountSub = this.store.select('account').subscribe((state) => {
       const address = state.currentWallet?.accounts[0]?.address;
-      if (address && address !== this.address) {
+      if (address !== this.address) {
+        this.accountInitializationSub?.unsubscribe();
+        this.accountStateSub?.unsubscribe();
         this.address = address;
         this.account = undefined;
         this.accountAvailability = 'loading';
-        this.watchAccountState(address);
+        if (address) {
+          this.watchAccountState(address);
+          this.initializeAccount(state.currentWallet as EvmWalletJSON);
+        }
       }
     });
 
@@ -74,8 +87,29 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.accountSub?.unsubscribe();
     this.accountStateSub?.unsubscribe();
+    this.accountInitializationSub?.unsubscribe();
     this.connectionSub?.unsubscribe();
     this.feedAtSub?.unsubscribe();
+  }
+
+  /** 软件钱包使用已有登录会话初始化 Unified；无需签名的模式不解密私钥。 */
+  private initializeAccount(wallet: EvmWalletJSON) {
+    const extra = wallet.accounts[0]?.extra;
+    if (!this.writes.unifiedAccountEnabled || extra?.ledgerSLIP44 || extra?.qrBasedXFP) {
+      return;
+    }
+    this.accountInitializationSub = this.accountStates.watchAggregatedAccount(this.address).pipe(
+      filter((state) => !!state.account && state.account.abstractionMode !== 'unknown'),
+      take(1),
+      filter((state) => ['default', 'disabled'].includes(state.account?.abstractionMode)),
+      switchMap(() => from(this.chrome.getPassword())),
+      filter((password) => !!password),
+      switchMap((password) => from(this.evmWallet.getPrivateKey(wallet, password))),
+      switchMap((privateKey) => this.writes.ensureUnifiedAccount(privateKey))
+    ).subscribe({
+      // 初始化失败不影响只读展示；后续交易或提现会重新检查并报告失败。
+      error: () => {},
+    });
   }
 
   /**
