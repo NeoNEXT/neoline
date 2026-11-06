@@ -84,6 +84,22 @@ const subscriptions = (socket: FakeSocket) =>
   socket.sent.filter((m) => m.method === 'subscribe').map((m) => m.subscription);
 
 describe('PerpsDataChannel routing', () => {
+  it('routes webData3 by the address nested in userState', () => {
+    const { channel, sockets } = build();
+    const first = jasmine.createSpy('first');
+    const second = jasmine.createSpy('second');
+    channel.subscribe({ type: 'webData3', user: '0xaaa' }).subscribe(first);
+    channel.subscribe({ type: 'webData3', user: '0xbbb' }).subscribe(second);
+    sockets[0].accept();
+    sockets[0].deliver({
+      channel: 'webData3',
+      data: { userState: { user: '0xAAA', serverTime: 100, abstraction: 'unifiedAccount' } },
+    });
+    sockets[0].deliver({ channel: 'webData3', data: { userState: {} } });
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).not.toHaveBeenCalled();
+  });
+
   it('routes spotState updates to the matching user only', () => {
     const { channel, sockets } = build();
     const first = jasmine.createSpy('first');

@@ -5,6 +5,7 @@ import { Observable, of, Subject, throwError } from 'rxjs';
 import { ethers } from 'ethers';
 import { PERPS_DEPOSIT_CONFIG, PerpsUserFeeRates } from '@popup/_lib/perps';
 import { HyperliquidService } from './hyperliquid.service';
+import { PerpsAccountStateService } from './perps-account-state.service';
 import { fakePerpsDataChannel } from './perps-data-channel.fake';
 import { SNAPSHOT_TTL_MS } from './perps-market-dataset.service';
 import { composeOrder } from '@popup/perps/perps-order/perps-order-composition';
@@ -34,7 +35,7 @@ describe('HyperliquidService accounts and fees', () => {
       crossMarginSummary: { accountValue: '116' }, crossMaintenanceMarginUsed: '9', assetPositions: [],
     } });
     rest.next({ crossMarginSummary: { accountValue: '60' }, crossMaintenanceMarginUsed: '0', assetPositions: [] });
-    expect(values.map((value) => value.equityExact)).toEqual(['116']);
+    expect(values.map((value) => value?.equityExact ?? null)).toEqual([null, '116']);
     subscription.unsubscribe();
   });
 
@@ -60,21 +61,21 @@ describe('HyperliquidService accounts and fees', () => {
     ] };
     const allDexs = { type: 'allDexsClearinghouseState', user: '0xabc' };
     channel.push(allDexs, snapshot);
-    expect(values[0]).toEqual({
+    expect(values[1]).toEqual({
       equityExact: '116', maintenanceMarginExact: '5',
       positions: [{ coin: 'ETH', sziExact: '1', positionValueExact: '100' }],
     });
     channel.push({ type: 'spotState', user: '0xabc' }, { spotState: { balances: [{ token: 0, total: '140' }] } });
-    expect(values[1].equityExact).toBe('120');
+    expect(values[2].equityExact).toBe('120');
     channel.push(allDexs, { clearinghouseStates: [null] });
-    expect(values[2]).toBeNull();
+    expect(values[3]).toBeNull();
     channel.push(allDexs, snapshot);
-    expect(values[3].equityExact).toBe('120');
+    expect(values[4].equityExact).toBe('120');
     expect(failed).not.toHaveBeenCalled();
     expect(http.post.calls.allArgs().filter((args) => (args[1] as any).type === 'meta').length).toBe(3);
     subscription.unsubscribe();
     channel.push(allDexs, snapshot);
-    expect(values.length).toBe(4);
+    expect(values.length).toBe(5);
   });
 
   it('filters both spot coin formats from REST and live activity', () => {
@@ -313,6 +314,7 @@ describe('HyperliquidService accounts and fees', () => {
               totalMarginUsed: '0',
               totalNtlPos: '0',
             },
+            crossMarginSummary: { accountValue: '9007199254740993.000001', totalMarginUsed: '0' },
             withdrawable: '9007199254740993.000001',
             assetPositions: [],
           });
@@ -355,6 +357,7 @@ describe('HyperliquidService accounts and fees', () => {
               totalMarginUsed: '0.96',
               totalNtlPos: '19.215',
             },
+            crossMarginSummary: { accountValue: '1.90', totalMarginUsed: '0.96' },
             crossMaintenanceMarginUsed: '0.48',
             withdrawable: '0',
             assetPositions: [],
@@ -378,6 +381,116 @@ describe('HyperliquidService accounts and fees', () => {
     }) as any);
   }
 
+  it('shares live account modes and ignores stale frames and late REST', () => {
+    const rest = new Subject<any>();
+    http.post.and.returnValue(rest);
+    const first = [];
+    const second = [];
+    const a = service.watchAccountMode('0xABC').subscribe((mode) => first.push(mode));
+    const b = service.watchAccountMode('0xabc').subscribe((mode) => second.push(mode));
+    const push = (serverTime: number, abstraction?: string) => channel.push(
+      { type: 'webData3', user: '0xabc' },
+      { userState: { user: '0xABC', serverTime, abstraction } }
+    );
+    push(100, 'unifiedAccount');
+    rest.next('disabled');
+    push(99, 'disabled');
+    push(100, 'portfolioMargin');
+    push(101, 'unifiedAccount');
+    push(102, 'portfolioMargin');
+    push(103);
+    expect(first).toEqual(['unifiedAccount', 'portfolioMargin', 'disabled']);
+    expect(second).toEqual(first);
+    expect(http.post).toHaveBeenCalledTimes(1);
+    expect(rest.observers.length).toBe(0);
+    a.unsubscribe();
+    b.unsubscribe();
+  });
+
+  it('bootstraps a fresh mode after all observers leave', () => {
+    http.post.and.returnValues(of('disabled'), of('unifiedAccount'));
+    const modes = [];
+    service.watchAccountMode('0xabc').subscribe((mode) => modes.push(mode)).unsubscribe();
+    service.watchAccountMode('0xabc').subscribe((mode) => modes.push(mode)).unsubscribe();
+    expect(modes).toEqual(['disabled', 'unifiedAccount']);
+    expect(http.post).toHaveBeenCalledTimes(2);
+  });
+
+  it('switches account snapshots on live mode changes and excludes a late old snapshot', () => {
+    spyOnProperty(service, 'enabledDexes', 'get').and.returnValue(['']);
+    mockAccountRequests('disabled', '0.96');
+    const states = new PerpsAccountStateService(service, channel);
+    const seen = [];
+    const subscription = states.watchAggregatedAccount('0xabc').subscribe((state) => seen.push(state));
+    expect(seen[seen.length - 1].account.abstractionMode).toBe('disabled');
+    const late = new Subject<any>();
+    // 让一次标准账户刷新跨过模式切换，新的统一账户快照先完成。
+    http.post.and.callFake(((_url, body) => {
+      if (body.type === 'clearinghouseState') { return late; }
+      return of({ balances: [{ coin: 'USDC', token: 0, total: '998.97', hold: '0.96' }] });
+    }) as any);
+    let refreshed;
+    states.refreshAccount('0xabc').subscribe((state) => { refreshed = state; });
+    mockAccountRequests('disabled', '0.96');
+    channel.push({ type: 'webData3', user: '0xabc' }, {
+      userState: { user: '0xabc', serverTime: 100, abstraction: 'unifiedAccount' },
+    });
+    expect(seen[seen.length - 1].account.abstractionMode).toBe('unifiedAccount');
+    expect(seen[seen.length - 1].account.totalBalanceExact).toBe('998.97');
+    expect(refreshed.account.abstractionMode).toBe('unifiedAccount');
+    channel.push({ type: 'spotState', user: '0xabc' }, {
+      user: '0xabc', spotState: { balances: [{ token: 0, total: '1000', hold: '20', spotHold: '30' }] },
+    });
+    expect(seen[seen.length - 1].account.availableBalanceExact).toBe('980');
+    expect(seen[seen.length - 1].account.spotUsdcSpotHoldExact).toBe('30');
+    channel.push({ type: 'webData3', user: '0xabc' }, {
+      userState: { user: '0xabc', serverTime: 101, abstraction: 'portfolioMargin' },
+    });
+    expect(seen[seen.length - 1].account.abstractionMode).toBe('portfolioMargin');
+    expect(seen[seen.length - 1].account.unified).toBeTrue();
+    channel.push({ type: 'webData3', user: '0xabc' }, {
+      userState: { user: '0xabc', serverTime: 102, abstraction: 'disabled' },
+    });
+    expect(seen[seen.length - 1].account.abstractionMode).toBe('disabled');
+    expect(seen[seen.length - 1].account.totalBalanceExact).toBe('1.9');
+    late.next({ marginSummary: { accountValue: '3' }, withdrawable: '2', assetPositions: [] });
+    late.complete();
+    expect(seen[seen.length - 1].account.totalBalanceExact).toBe('1.9');
+    expect(refreshed.account.abstractionMode).toBe('unifiedAccount');
+    subscription.unsubscribe();
+  });
+
+  it('rebuilds the cross pool on mode changes and drops updates from its old path', () => {
+    http.post.and.callFake(((_url, body) => {
+      if (body.type === 'userAbstraction') { return of('disabled'); }
+      if (body.type === 'spotClearinghouseState') { return of({ balances: [{ token: 0, total: '100' }] }); }
+      if (body.type === 'meta') { return of({ collateralToken: 0 }); }
+      return of({ crossMarginSummary: { accountValue: '20' }, crossMaintenanceMarginUsed: '1', assetPositions: [] });
+    }) as any);
+    const seen = [];
+    const subscription = service.watchCrossMarginAccount('0xabc').subscribe((pool) => seen.push(pool));
+    expect(seen[seen.length - 1].equityExact).toBe('20');
+    const mode = (serverTime, abstraction) => channel.push({ type: 'webData3', user: '0xabc' }, {
+      userState: { user: '0xabc', serverTime, abstraction },
+    });
+    mode(100, 'unifiedAccount');
+    expect(seen[seen.length - 1]).toBeNull();
+    const length = seen.length;
+    channel.push({ type: 'clearinghouseState', user: '0xabc', dex: '' }, {
+      clearinghouseState: { crossMarginSummary: { accountValue: '999' }, assetPositions: [] },
+    });
+    expect(seen.length).toBe(length);
+    channel.push({ type: 'allDexsClearinghouseState', user: '0xabc' }, {
+      clearinghouseStates: [['', { crossMaintenanceMarginUsed: '1', assetPositions: [] }]],
+    });
+    expect(seen[seen.length - 1].equityExact).toBe('100');
+    mode(101, 'portfolioMargin');
+    expect(seen[seen.length - 1]).toBeNull();
+    mode(102, 'disabled');
+    expect(seen[seen.length - 1].equityExact).toBe('20');
+    subscription.unsubscribe();
+  });
+
   it('uses spot USDC as unified account equity without adding per-DEX equity', (done) => {
     mockAccountRequests('unifiedAccount', '0.96');
 
@@ -398,7 +511,7 @@ describe('HyperliquidService accounts and fees', () => {
     service.getAccount('0xABC').subscribe((account) => {
       expect(account.unified).toBeFalse();
       expect(account.totalBalanceExact).toBe('1.9');
-      expect(account.availableBalanceExact).toBe('0');
+      expect(account.availableBalanceExact).toBe('0.94');
       expect(account.spotUsdcExact).toBe('998.97');
       done();
     });
@@ -479,6 +592,7 @@ describe('HyperliquidService accounts and fees', () => {
       if (body.type === 'clearinghouseState') {
         return of({
           marginSummary: { accountValue: '5' },
+          crossMarginSummary: { accountValue: '5', totalMarginUsed: '1' },
           withdrawable: '4',
           assetPositions: [],
         });
@@ -599,7 +713,7 @@ describe('HyperliquidService accounts and fees', () => {
     expect(http.post).toHaveBeenCalledTimes(3);
   });
 
-  it('refreshes only clearinghouseState after the account cache expires', fakeAsync(() => {
+  it('bootstraps the mode again when a standalone account cache expires', fakeAsync(() => {
     mockAccountRequests('unifiedAccount', '0.96');
 
     service.getAccount('0xABC').subscribe();
@@ -614,6 +728,7 @@ describe('HyperliquidService accounts and fees', () => {
       'spotClearinghouseState',
       'userAbstraction',
       'clearinghouseState',
+      'userAbstraction',
     ]);
   }));
 
@@ -632,6 +747,7 @@ describe('HyperliquidService accounts and fees', () => {
       'userAbstraction',
       'clearinghouseState',
       'spotClearinghouseState',
+      'userAbstraction',
     ]);
   });
 

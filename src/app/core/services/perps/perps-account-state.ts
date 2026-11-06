@@ -14,23 +14,26 @@ const isUnifiedMode = (mode: PerpsAccountMode): boolean =>
 const parseSpotUsdc = (spot: any) => {
   // 快照成功但列表里没有 USDC，是一笔权威的零。快照本身缺失，或行内字段非法，才是未知。
   if (!spot || !Array.isArray(spot.balances)) {
-    return { totalExact: null, holdExact: null, freeExact: null };
+    return { totalExact: null, holdExact: null, spotHoldExact: undefined, freeExact: null };
   }
   const balance = spot.balances.find(
     (item) => item.coin === 'USDC' || item.token === 0
   );
   if (!balance) {
-    return { totalExact: '0', holdExact: '0', freeExact: '0' };
+    return { totalExact: '0', holdExact: '0', spotHoldExact: undefined, freeExact: '0' };
   }
   const totalExact = perpsFiniteDecimal(balance.total);
   const holdExact = perpsFiniteDecimal(balance.hold);
+  const spotHoldExact = balance.spotHold === undefined
+    ? undefined
+    : perpsFiniteDecimal(balance.spotHold);
   const freeExact = totalExact === null || holdExact === null
     ? null
     : BigNumber.maximum(
       0,
       new BigNumber(totalExact).minus(holdExact)
     ).toFixed();
-  return { totalExact, holdExact, freeExact };
+  return { totalExact, holdExact, spotHoldExact, freeExact };
 };
 
 const emptyAccount = (): PerpsAccount => ({
@@ -60,6 +63,7 @@ export function parsePerpsAccount(
   const {
     totalExact: spotUsdcExact,
     holdExact: spotUsdcHoldExact,
+    spotHoldExact: spotUsdcSpotHoldExact,
     freeExact: freeSpotUsdcExact,
   } = parseSpotUsdc(spot);
   if (!response || !response.marginSummary) {
@@ -70,10 +74,11 @@ export function parsePerpsAccount(
       dex,
       accountValueExact: modeKnown ? (unified ? spotUsdcExact : '0') : null,
       totalBalanceExact: modeKnown ? (unified ? spotUsdcExact : '0') : null,
-      availableBalanceExact: modeKnown ? (unified ? freeSpotUsdcExact : '0') : null,
+      availableBalanceExact: modeKnown && unified ? freeSpotUsdcExact : null,
       withdrawableExact: modeKnown ? '0' : null,
       spotUsdcExact,
       spotUsdcHoldExact,
+      spotUsdcSpotHoldExact,
     };
   }
 
@@ -119,11 +124,23 @@ export function parsePerpsAccount(
       : spotUsdcExact
     : perDexAccountValueExact;
   const withdrawableExact = perpsFiniteDecimal(response.withdrawable);
+  const crossAccountValueExact = perpsFiniteDecimal(
+    response.crossMarginSummary?.accountValue
+  );
+  const crossMarginUsedExact = perpsFiniteDecimal(
+    response.crossMarginSummary?.totalMarginUsed
+  );
+  const freeCrossMarginExact = crossAccountValueExact === null || crossMarginUsedExact === null
+    ? null
+    : BigNumber.maximum(
+        0,
+        new BigNumber(crossAccountValueExact).minus(crossMarginUsedExact)
+      ).toFixed();
   const availableBalanceExact = unified
     ? dex
       ? '0'
       : freeSpotUsdcExact
-    : withdrawableExact;
+    : freeCrossMarginExact;
   return {
     unified,
     abstractionMode: mode,
@@ -138,6 +155,7 @@ export function parsePerpsAccount(
     availableBalanceExact: modeKnown ? availableBalanceExact : null,
     spotUsdcExact,
     spotUsdcHoldExact,
+    spotUsdcSpotHoldExact,
     positions,
   };
 }
@@ -154,6 +172,7 @@ export function updatePerpsAccountFromSpotState(
   const {
     totalExact: spotUsdcExact,
     holdExact: spotUsdcHoldExact,
+    spotHoldExact: spotUsdcSpotHoldExact,
     freeExact: freeSpotUsdcExact,
   } = parseSpotUsdc(spot);
   return {
@@ -169,6 +188,7 @@ export function updatePerpsAccountFromSpotState(
       : account.availableBalanceExact,
     spotUsdcExact,
     spotUsdcHoldExact,
+    spotUsdcSpotHoldExact,
   };
 }
 
@@ -190,6 +210,7 @@ export function updatePerpsAccountFromClearinghouseState(
             token: 0,
             total: account.spotUsdcExact,
             hold: account.spotUsdcHoldExact,
+            spotHold: account.spotUsdcSpotHoldExact,
           },
         ],
       };
@@ -229,6 +250,12 @@ export function aggregatePerpsAccounts(
         )
       ).toFixed()
     : null;
+  const withdrawalHoldExact = canonical?.spotUsdcSpotHoldExact === undefined
+    ? canonical?.spotUsdcHoldExact
+    : canonical.spotUsdcSpotHoldExact;
+  const withdrawableSpotExact = canonical?.spotUsdcExact != null && withdrawalHoldExact != null
+    ? BigNumber.maximum(0, new BigNumber(canonical.spotUsdcExact).minus(withdrawalHoldExact)).toFixed()
+    : null;
 
   return {
     unified,
@@ -247,7 +274,7 @@ export function aggregatePerpsAccounts(
     totalNtlPosExact: sumKnown((account) => account.totalNtlPosExact),
     withdrawableExact: modeKnown
       ? unified
-        ? freeSpotExact
+        ? withdrawableSpotExact
         : sumKnown((account) => account.withdrawableExact)
       : null,
     availableBalanceExact: modeKnown
@@ -257,6 +284,7 @@ export function aggregatePerpsAccounts(
       : null,
     spotUsdcExact: canonical?.spotUsdcExact ?? null,
     spotUsdcHoldExact: canonical?.spotUsdcHoldExact ?? null,
+    spotUsdcSpotHoldExact: canonical?.spotUsdcSpotHoldExact,
     positions: snapshots.reduce(
       (all, account) => all.concat(account.positions || []),
       [] as PerpsPosition[]

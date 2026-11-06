@@ -44,11 +44,11 @@ NeoX 在这里是钱包类型约束。Hyperliquid 使用哪个网络由 `environ
 flowchart TD
   A[Store account：当前钱包地址] --> B[PerpsTabComponent.watchAccountState]
   B --> C[PerpsAccountStateService.watchAggregatedAccount]
-  C --> D[按 user + dex 共享的 PerpsDataset]
+  C --> D[按 user + dex + 模式版本共享的 PerpsDataset]
   D --> E[HyperliquidService.getAccount]
   E --> F[POST /info：clearinghouseState]
   E --> G[标准条目读取 spotClearinghouseState]
-  E --> H[读取 userAbstraction]
+  E --> H[读取 userAbstraction 初值，订阅 webData3]
   F --> I[parsePerpsAccount]
   G --> I
   H --> I
@@ -61,8 +61,8 @@ flowchart TD
 
 1. `ngOnInit()` 订阅 `store.select('account')`，读取 `currentWallet.accounts[0].address`。
 2. 新地址到达后，清空本页账户、设为 `loading`、退订旧账户，再订阅新地址；回调还检查地址是否仍与当前页面一致。
-3. `watchAggregatedAccount()` 对 `enabledDexes` 分别调用 `watchAccount()`，地址转成小写，按 `user:dex` 隔离数据。
-4. 初次读取调用 `getAccount(user, true, dex)`，请求该 DEX 的 `clearinghouseState`；标准 DEX 条目额外读取账户级现货状态，避免跨 DEX 重复计入 USDC。账户模式来自 `userAbstraction`。
+3. `watchAggregatedAccount()` 对 `enabledDexes` 分别调用 `watchAccount()`，地址转成小写，按地址、DEX 和模式版本隔离数据。
+4. 初次读取调用 `getAccount(user, true, dex)`，请求该 DEX 的 `clearinghouseState`；标准 DEX 条目额外读取账户级现货状态，避免跨 DEX 重复计入 USDC。账户模式由 `userAbstraction` 提供初值，再跟随 `webData3` 更新；模式变化后重新取快照。
 5. 快照经 `parsePerpsAccount()` 生成精确字符串模型；`clearinghouseState` 和 `spotState` 推送更新这份模型；聚合器合并仓位和金额，并保留 `missingDexes`。
 6. Tab 根据聚合结果更新模板，不自行从盈亏推算账户余额。
 
@@ -105,7 +105,7 @@ flowchart TD
 | 字段/规则 | 来源、计算与单位 |
 | --- | --- |
 | 标准账户价值 | 聚合已读取 DEX 的 `marginSummary.accountValue`，单位为本产品支持市场的 USD/USDC 金额。`default`、`disabled`、`dexAbstraction` 进入非统一模式兼容分支；模式范围见[功能地图](../perps-feature-map.zh-CN.md#7-当前功能边界与容易误读的地方) |
-| 标准账户可用保证金 | 聚合各 DEX 的 `withdrawable`；这是本页展示口径，不代表任意市场、任意方向都能用这笔汇总金额下单 |
+| 标准账户可用保证金 | 聚合各 DEX 的 `max(crossMarginSummary.accountValue - crossMarginSummary.totalMarginUsed, 0)`，字段缺失或非法时为 null；这是本页展示口径，不代表任意市场、任意方向都能用这笔汇总金额下单 |
 | 统一/组合保证金账户余额 | 只读取标准条目持有的现货 USDC `total` 一次，不累加各 DEX 的 `accountValue`；标题为 USDC 余额 |
 | 统一/组合保证金可用值 | `max(0, spot USDC total - hold)`，单位 USDC；不计算其他抵押资产的价值、抵押折扣或完整组合保证金风险 |
 | 标准模式现货余额 | 单列 `spotUsdcExact`，不并入永续权益；页面不提供现货与永续之间的内部划转 |
@@ -190,7 +190,7 @@ flowchart TD
 | 某个 DEX 缺失 | 保留成功读取部分、标记不完整；账户级出入金入口禁用，已知仓位卡仍可点击 | 账户服务和市场服务分别判断完整性，不能用行情成功推断账户成功 |
 | WS 断网/半开连接 | 连接标 stale，保留可用旧值；重连后恢复订阅并补快照 | 30 秒发 ping，10 秒无 pong 主动断开；重连退避 1、2、4…秒，上限 30 秒 |
 | HTTP 请求一直无返回 | 本页没有独立超时 UI；`HyperliquidService.post()`、`postExchange()` 没有显式 `timeout` | 自动重试依赖请求实际进入错误分支；WS 心跳超时不能当成 HTTP 超时保证 |
-| 账户模式读取失败 | 模式降级为 `unknown`，总额保持未知，仍保留可读取仓位 | 模式缓存为 30 分钟，失败不作为有效模式缓存；未知模式不满足空账户引导条件 |
+| 账户模式读取失败 | 模式降级为 `unknown`，总额保持未知，仍保留可读取仓位 | REST 初值失败可由后续 webData3 模式帧恢复；未知模式不满足空账户引导条件 |
 | 拒签/解锁失败 | Tab 不签名；下单页取密码/私钥抛错时结束提交态并提示 `verifyFailed`。Ledger/二维码钱包由 `perpsSigningUnavailable` 提前阻止 | 当前没有独立“用户拒签”状态码；真实取消弹窗路径需用实际钱包人工验证 |
 | 余额/保证金不足 | Tab 只展示数值，不把零余额当加载失败；下单页按数量/容量拦截，资金页提交前刷新余额，余额下降时退回重新确认 | 最终仍可能由交易场所拒绝；本页汇总余额不是跨 DEX 可自由使用的统一额度 |
 | 重复点击 | Tab 入口只导航。下单页用 `beginSubmit` 与 `gateOpen` 拦截并发提交；资金页用 `canSubmit` / `submitting` 控制 | 下单闸门只在当前页面进程内有效，不承诺跨窗口或重启后的防重 |
@@ -208,7 +208,7 @@ flowchart TD
 | 订阅隔离 | 账户按 user/DEX 寻址，行情按 DEX/资产原始下标寻址；无法识别频道或无效 JSON 帧被丢弃 |
 | 重连补偿 | 数据通道恢复所有活跃订阅；数据集发现 `stale → live` 后重新取快照。若已有请求未完成，则排队补一次重连读取 |
 | 市场集合缓存 | 完整快照 TTL 为 120 秒，新订阅或 `getMarkets()` 检查时决定是否重取；价格帧不能延长集合快照 TTL。不完整集合另走失败重试 |
-| 请求缓存 | 注册表缓存 6 小时、账户模式 30 分钟；账户读取服务有 3 秒缓存，但账户数据集读取使用 `force=true`。缓存时长不等于轮询周期 |
+| 请求缓存 | 注册表缓存 6 小时；账户模式按地址共享实时流，最后观察者退出后释放；账户读取服务有 3 秒缓存，模式变化时清理，账户数据集读取使用 `force=true`。缓存时长不等于轮询周期 |
 | 写入后刷新 | 写服务的 `wrote()` 清除读取服务的账户/现货缓存；订单页面还主动刷新对应 DEX，资金页主动刷新标准 DEX。缓存失效本身不会立即向 Tab 发布新账户 |
 | 返回本页 | 成交返回时重新订阅。仍存活的数据集可直接给出共享状态；无人持有、已回收的账户条目会重新取快照 |
 | 列表稳定性 | 数值更新约 250ms 合并重绘；进入、搜索、排序或市场集合变化才重新生成行序，普通行情帧不改变顺序及翻页位置 |

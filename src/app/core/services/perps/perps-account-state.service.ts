@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { EMPTY, Observable, combineLatest, forkJoin, merge, of } from 'rxjs';
-import { catchError, map, shareReplay } from 'rxjs/operators';
+import { catchError, map, shareReplay, startWith, switchMap, take } from 'rxjs/operators';
 
 import {
   PerpsAccount,
+  PerpsAccountMode,
   PerpsAccountState,
   PerpsAggregatedAccount,
   PerpsConnectionState,
@@ -22,6 +23,7 @@ import {
  */
 interface PerpsAccountSource {
   readonly enabledDexes: string[];
+  watchAccountMode(address: string): Observable<PerpsAccountMode>;
   getAccount(
     address: string,
     force?: boolean,
@@ -33,6 +35,8 @@ interface PerpsAccountSource {
 interface PerpsAccountKey {
   user: string;
   dex: string;
+  mode: PerpsAccountMode;
+  revision: number;
 }
 
 interface AccountRetry {
@@ -45,8 +49,8 @@ const RETRY_BASE_MS = 1000;
 const RATE_LIMITED_BASE_MS = 10000;
 const RETRY_CAP_MS = 60000;
 
-function accountKey({ user, dex }: PerpsAccountKey): string {
-  return `${user}:dex=${dex}`;
+function accountKey({ user, dex, mode, revision }: PerpsAccountKey): string {
+  return `${user}:dex=${dex}:mode=${mode}:${revision}`;
 }
 
 type AccountFrame =
@@ -86,6 +90,7 @@ export class PerpsAccountStateService {
    */
   private connectionState: PerpsConnectionState = 'connecting';
   private readonly retries = new Map<string, AccountRetry>();
+  private readonly accountModes = new Map<string, { mode: PerpsAccountMode; revision: number }>();
 
   constructor(hyperliquid: HyperliquidService, channel: PerpsDataChannel) {
     this.source = hyperliquid;
@@ -127,26 +132,30 @@ export class PerpsAccountStateService {
     address: string,
     dex = ''
   ): Observable<PerpsAccountState<PerpsAccount>> {
-    const key = { user: address.toLowerCase(), dex };
-    return new Observable<PerpsAccountState<PerpsAccount>>((observer) => {
-      const id = accountKey(key);
-      const retry = this.retries.get(id) || { observers: 0, attempts: 0 };
-      retry.observers += 1;
-      this.retries.set(id, retry);
-      const subscription = this.dataset.watch(key).subscribe(observer);
-      // 这个地址还什么都没读过，所以刚订上来的观察者欠他第一次读取。
-      if (this.dataset.peek(key).availability === 'loading') {
-        this.dataset.refresh(key).subscribe({ error: () => undefined });
-      }
-      return () => {
-        subscription.unsubscribe();
-        retry.observers -= 1;
-        if (retry.observers === 0) {
-          clearTimeout(retry.timer);
-          this.retries.delete(id);
+    const user = address.toLowerCase();
+    return this.source.watchAccountMode(user).pipe(switchMap((mode) => {
+      // 模式改变即切到另一份快照，旧模式的在途读取只会更新旧条目。
+      const key = this.keyForMode(user, dex, mode);
+      return new Observable<PerpsAccountState<PerpsAccount>>((observer) => {
+        const id = accountKey(key);
+        const retry = this.retries.get(id) || { observers: 0, attempts: 0 };
+        retry.observers += 1;
+        this.retries.set(id, retry);
+        const subscription = this.dataset.watch(key).subscribe(observer);
+        // 这个地址还什么都没读过，所以刚订上来的观察者欠他第一次读取。
+        if (this.dataset.peek(key).availability === 'loading') {
+          this.dataset.refresh(key).subscribe({ error: () => undefined });
         }
-      };
-    });
+        return () => {
+          subscription.unsubscribe();
+          retry.observers -= 1;
+          if (retry.observers === 0) {
+            clearTimeout(retry.timer);
+            this.retries.delete(id);
+          }
+        };
+      });
+    }), startWith(LOADING));
   }
 
   /** 重新取一次单个 DEX 的快照，折叠进同一份实时状态。 */
@@ -154,7 +163,21 @@ export class PerpsAccountStateService {
     address: string,
     dex = ''
   ): Observable<PerpsAccountState<PerpsAccount>> {
-    return this.dataset.refresh({ user: address.toLowerCase(), dex });
+    const user = address.toLowerCase();
+    return this.source.watchAccountMode(user).pipe(
+      switchMap((mode) => this.dataset.refresh(this.keyForMode(user, dex, mode))),
+      take(1)
+    );
+  }
+
+  private keyForMode(user: string, dex: string, mode: PerpsAccountMode): PerpsAccountKey {
+    let current = this.accountModes.get(user);
+    if (current?.mode !== mode) {
+      // 切回原模式时也不能复用切换前仍未返回的读取。
+      current = { mode, revision: (current?.revision ?? 0) + 1 };
+      this.accountModes.set(user, current);
+    }
+    return { user, dex, ...current };
   }
 
   /** 所有已启用的 DEX，与其他页面共用同一批单 DEX 数据流。 */

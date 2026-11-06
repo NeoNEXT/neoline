@@ -21,6 +21,7 @@ import { PerpsFeeQuoteService } from '@/app/core/services/perps/perps-fee-quote.
 import { PerpsBroadcastStatusUnknownError } from '@/app/core/services/perps/perps-rpc';
 import { PerpsFundingComponent } from './perps-funding.component';
 import { PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS } from '@popup/_lib/perps';
+import { parsePerpsAccount } from '@/app/core/services/perps/perps-account-state';
 
 /**
  * 提现的定价来自报价而不是常量，所以这些测试会写明它们据以计算的那份报价。取 1 USDC 是为了
@@ -335,6 +336,37 @@ describe('PerpsFundingComponent amount boundaries', () => {
     expect(component.amount).toBe('900');
   });
 
+  it('does not offer the mainnet PM borrowable balance as withdrawal MAX', () => {
+    component.tab = 'withdraw';
+    component.accountLoading = false;
+    component.account = parsePerpsAccount({ marginSummary: {}, assetPositions: [] }, {
+      balances: [{ coin: 'USDC', token: 0,
+        total: '-32076737.2488308251', hold: '-34634639.2030168176',
+        spotHold: '-32076737.2488308251' }],
+    }, 'portfolioMargin');
+
+    component.amount = '1';
+    expect(component.withdrawableExact).toBe('0');
+    expect(component.exceedsBalance).toBeTrue();
+    expect(component.canSubmit).toBeFalse();
+    component.setMax();
+    expect(component.amount).toBe('0');
+    expect(component.canSubmit).toBeFalse();
+  });
+
+  it('uses an explicit zero spotHold and floors a positive PM MAX to six decimals', () => {
+    component.tab = 'withdraw';
+    component.accountLoading = false;
+    component.account = parsePerpsAccount({ marginSummary: {}, assetPositions: [] }, {
+      balances: [{ coin: 'USDC', token: 0, total: '12.3456789', hold: '-100', spotHold: '0' }],
+    }, 'portfolioMargin');
+
+    component.setMax();
+    expect(component.amount).toBe('12.345678');
+    expect(component.exceedsBalance).toBeFalse();
+    expect(component.canSubmit).toBeTrue();
+  });
+
   it('leaves a standard account spot balance out of the withdrawal ceiling', () => {
     component.tab = 'withdraw';
     // 标准账户把现货和永续当作两个独立钱包：那笔现货 USDC 在被划转之前一直搁浅，
@@ -345,6 +377,7 @@ describe('PerpsFundingComponent amount boundaries', () => {
       withdrawableExact: '40',
       spotUsdcExact: '100',
       spotUsdcHoldExact: '0',
+      spotUsdcSpotHoldExact: '100',
     } as any;
     component.accountLoading = false;
 

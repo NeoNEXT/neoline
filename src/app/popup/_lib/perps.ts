@@ -647,7 +647,7 @@ export interface PerpsActiveAssetData {
 
 export interface PerpsAccount {
   /**
-   * 该地址是否运行统一账户（或组合保证金账户），由 `userAbstraction` 上报。在统一账户下，
+   * 该地址是否运行统一账户（或组合保证金账户），由 `webData3` 实时更新、`userAbstraction` 提供初值。在统一账户下，
    * 现货 USDC 余额就是全仓抵押品，而永续清算所的数字「无意义」（依据 Hyperliquid 文档）。
    * 在标准账户（`default`/`disabled`）下，现货和永续是两个独立钱包，所以现货 USDC 在通过
    * `usdClassTransfer` 划进永续之前撑不起任何仓位。
@@ -664,13 +664,13 @@ export interface PerpsAccount {
   totalMarginUsedExact: string;
   totalNtlPosExact: string;
   /**
-   * 永续清算所自己的 `withdrawable`：对标准账户来说它是自由抵押品，而对统一账户来说，无论有
-   * 多少资金它都是 0。因此提现上限必须经由账户模式来读，而不能直接取这个值。
+   * 永续清算所自己的 `withdrawable`：标准账户的可转出金额。
+   * 统一/组合账户的提现上限改读现货 USDC，不能直接取该值。
    */
   withdrawableExact: string | null;
   /**
-   * 可用于下单或提现的自由抵押品。统一账户/组合保证金账户会把空闲的现货 USDC 折算进来；
-   * 标准账户仍然只算永续。
+   * 本地可用 USDC 展示值，统一/组合账户按 total-hold 计算；不等同于可提现额。
+   * 标准账户按 crossMarginSummary 的权益减已占保证金计算，下单容量以 activeAssetData 为准。
    */
   availableBalanceExact: string | null;
   /**
@@ -678,8 +678,10 @@ export interface PerpsAccount {
    * 一个必须先划进永续才能用于交易的独立钱包，因此绝不能把它折算进永续权益。
    */
   spotUsdcExact: string;
-  /** 现货 USDC 中被占作保证金的部分（它的 hold）；在统一账户下才有意义。 */
+  /** API 的 USDC hold；PM 下可包含借贷口径，不能直接用于提现。 */
   spotUsdcHoldExact: string;
+  /** API 的 USDC spotHold；缺失时提现回退到 hold。 */
+  spotUsdcSpotHoldExact?: string | null;
   positions: PerpsPosition[];
 }
 
@@ -715,6 +717,7 @@ export interface PerpsAggregatedAccount {
    */
   spotUsdcExact: string | null;
   spotUsdcHoldExact: string | null;
+  spotUsdcSpotHoldExact?: string | null;
   /** 跨所有 DEX 的全部持仓；每一个都带着它所属的 DEX。 */
   positions: PerpsPosition[];
   /**

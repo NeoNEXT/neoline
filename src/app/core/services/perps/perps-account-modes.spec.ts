@@ -40,6 +40,7 @@ const clearinghouse = (
     totalMarginUsed: '0',
     totalNtlPos: '0',
   },
+  crossMarginSummary: { accountValue, totalMarginUsed: '0' },
   withdrawable,
   assetPositions: positions.map((position) => ({ position })),
 });
@@ -60,7 +61,7 @@ const BOOKS: AddressBook[] = [
       { coin: 'xyz:TSLA', szi: '-2' },
     ],
     equity: '150',
-    available: '120',
+    available: '150',
     spot: '20',
     separateSpot: true,
     unifiedLabel: false,
@@ -98,7 +99,7 @@ const BOOKS: AddressBook[] = [
     spotHold: '1',
     positions: [{ coin: 'ETH', szi: '0.5' }],
     equity: '230',
-    available: '70',
+    available: '230',
     spot: '7',
     separateSpot: true,
     unifiedLabel: false,
@@ -136,7 +137,7 @@ const BOOKS: AddressBook[] = [
     spotHold: '0',
     positions: [{ coin: 'xyz:TSLA', szi: '-1' }],
     equity: '11',
-    available: '5',
+    available: '11',
     spot: '3',
     separateSpot: true,
     unifiedLabel: false,
@@ -273,8 +274,11 @@ describe('Perps account modes by address', () => {
     const channels = new Map<string, Subject<any>>();
     const source = jasmine.createSpyObj(
       'PerpsAccountSource',
-      ['getAccount', 'subscribe', 'watchConnectionState'],
+      ['getAccount', 'watchAccountMode', 'subscribe', 'watchConnectionState'],
       { enabledDexes: ['', 'xyz'] }
+    );
+    source.watchAccountMode.and.callFake((address: string) =>
+      of(BOOKS.find((book) => book.address === address.toLowerCase()).mode)
     );
     source.watchConnectionState.and.returnValue(
       new BehaviorSubject<PerpsConnectionState>('live')

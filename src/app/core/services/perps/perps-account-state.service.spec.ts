@@ -37,7 +37,7 @@ const clearinghouse = (value: string, dex = '') => ({
       totalMarginUsed: '3',
       totalNtlPos: '30',
     },
-    crossMarginSummary: { accountValue: value },
+    crossMarginSummary: { accountValue: value, totalMarginUsed: '3' },
     crossMaintenanceMarginUsed: '1',
     withdrawable: value,
     assetPositions: [],
@@ -58,10 +58,11 @@ describe('PerpsAccountStateService', () => {
     channels = new Map();
     source = jasmine.createSpyObj(
       'PerpsAccountSource',
-      ['getAccount', 'subscribe', 'watchConnectionState'],
+      ['getAccount', 'watchAccountMode', 'subscribe', 'watchConnectionState'],
       { enabledDexes: ['', 'xyz'] }
     );
     source.getAccount.and.returnValue(of(account()));
+    source.watchAccountMode.and.returnValue(of('default'));
     source.watchConnectionState.and.returnValue(connection);
     source.subscribe.and.callFake((subscription: any) => {
       const key = channelKey(subscription);
@@ -109,6 +110,8 @@ describe('PerpsAccountStateService', () => {
 
     expect(seen[seen.length - 1].availability).toBe('live');
     expect(seen[seen.length - 1].account.accountValueExact).toBe('25');
+    expect(seen[seen.length - 1].account.availableBalanceExact).toBe('22');
+    expect(seen[seen.length - 1].account.withdrawableExact).toBe('25');
   });
 
   it('shares concurrent authoritative refreshes', () => {
@@ -118,7 +121,8 @@ describe('PerpsAccountStateService', () => {
 
     const first = service.refreshAccount('0xabc');
     const second = service.refreshAccount('0xABC');
-    expect(first).toBe(second);
+    first.subscribe();
+    second.subscribe();
     expect(source.getAccount).toHaveBeenCalledTimes(1);
 
     snapshot.next(account());

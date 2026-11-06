@@ -76,7 +76,7 @@
 | --- | --- | --- |
 | 钱包/地址 | `Store.select('account')` → 首个账户地址 | 地址或资金配置变化时重订账户并重启余额轮询 |
 | HyperCore 账户 | `watchAccount(address)`，默认 dex='' → `getAccount()` | 首次 REST，后续 clearinghouseState 与 spotState；不读取首页的跨 DEX 聚合账户 |
-| 账户模式 | `/info userAbstraction` | 读取服务缓存 30 分钟；force 刷新余额不等于必定重取账户模式 |
+| 账户模式 | REST `userAbstraction` 初值 + WS `webData3` | 按地址共享实时模式；模式变化时清账户/现货缓存并重取快照 |
 | 源链 USDC | `tokenBalanceExact(config,address)` → USDC.balanceOf | 进入页面立即读取，此后每 15 秒；提交前、手动重试及入金回执后另读 |
 | 源链 ETH | `nativeBalanceExact(config,address)` → getBalance | 同一次余额流程在 USDC 请求结束后读取；两种余额失败分别记 null |
 | 入金手续费 | `loadFees()` → `depositFeeRate()` | 进入页面读取并保存 Fast 档协议费基点和固定转发费；改金额、比例/MAX、切页签、准备及发送均在本地复用，失败时才手动补读 |
@@ -143,7 +143,7 @@ flowchart TD
 | 输入/签名金额 | 保持十进制文本，BigNumber 规范化；UI 两个方向均最多 6 位小数；源链 parseUnits(A,6) 转整数，不经过 Number |
 | 入金上限 | 当前配置源链的 USDC balanceOf，未知为 null；不读取 NeoX 当前网络的 USDC 余额 |
 | 标准及非 unified 模式提现 | 标准 DEX 的 withdrawableExact；不加上其他 HIP-3 DEX 可提额，也不加独立现货余额 |
-| unifiedAccount / portfolioMargin 提现 | `max(spotUsdcExact - spotUsdcHoldExact, 0)`，从 spot 扣款；本页只处理 USDC，不折算 HYPE 等其他抵押品 |
+| unifiedAccount / portfolioMargin 提现 | `max(total - (spotHold ?? hold), 0)`，从 spot 扣款；本页只处理 USDC，不折算 HYPE 等其他抵押品 |
 | dexAbstraction | 协议已停用，API 仍保留返回值；本地兼容标准 DEX withdrawable/sourceDex='' 路径，不切换模式 |
 | unknown 模式 | 可提余额为 null，阻止提现；入金使用独立源链余额，不单因模式 unknown 被禁用，但仍要求账户数据存在 |
 | 百分比 | `floor_6(当前上限×25%或50%)`；MAX=`floor_6(当前上限)`，不预扣通道费，费用从输入总额中扣 |
@@ -154,7 +154,7 @@ flowchart TD
 
 例如 unified 账户 spot total=12.3456789、hold=2，则本地计算的上限为 10.3456789，MAX 为 10.345678；若 F=0.2，预计收到 10.145678 USDC。费用翻倍下限为 0.4，不意味着所有网络始终收 0.2。
 
-上述 `total-hold` 是当前实现使用的本地 USDC 上限，并非已证明适用于所有账户的最大可提额。2026-09-28 重新核对 [Margining][p-margining]、[Portfolio margin][p-portfolio] 和 [Circle 提现指南][p-withdraw]：提现受转出保证金限制，组合保证金还涉及多资产与借款；这些正文未给出 `total-hold` 在所有场景都等于最大可提额的保证。真实账户边界按 F17 验证，尚无依据替换为另一条通用公式。
+上述提现上限是当前实现使用的本地 USDC 上限，并非已证明适用于所有账户的最大可提额。2026-09-28 重新核对 [Margining][p-margining]、[Portfolio margin][p-portfolio] 和 [Circle 提现指南][p-withdraw]：提现受转出保证金限制，组合保证金还涉及多资产与借款；这些正文未给出 `total-hold` 在所有场景都等于最大可提额的保证。真实账户边界按 F17 验证，尚无依据替换为另一条通用公式。
 
 提交前余额低于输入时，手动金额保持原值并停止；若先前选的是 MAX，更新为新的向下量化余额后停止，等待再次操作。余额上涨不自动增加用户已经输入的金额，25%/50% 也不在此重新计算。
 
@@ -277,7 +277,7 @@ POST `/exchange` 没有显式 timeout。通用响应解析拒绝顶层 err 和�
 | WS 重连 | 通道恢复订阅，账户数据集补快照；30 秒 ping/10 秒 pong 超时，重连延迟 1、2、4…秒，上限 30 秒 |
 | 源链轮询 | 两个页签都维持每 15 秒 USDC/ETH 读取，submitting 时跳过新一轮；已在途轮询不取消，同地址并发返回没有请求代次排序 |
 | 提交前刷新 | 提现调 refreshAccount，入金读源余额；无法取得所需余额时停止。共享账户状态不含 refreshFailed，刷新失败但保留旧 account 时仍可能提现，是 F7 已知缺口 |
-| 模式缓存 | refreshAccount(force=true) 刷清算所/现货，但 userAbstraction 仍可能命中 30 分钟缓存；发送 sourceDex 是否跟上外部模式切换需联调 |
+| 模式变化 | webData3 更新模式；refreshAccount 若遇模式变化，等待新模式快照，再确定 sourceDex；真实模式切换与提现仍需联调 |
 | 费用复用 | 进入页面并行读取两侧费用，页面内复用；改金额只本地计算。准备好的入金报价与授权金额配对，发送不重读费用；费用展示不是实际回执 |
 | 写后刷新 | 提现接受/未知时刷新账户；入金回执结算后刷新账户及源余额；WS 和 15 秒轮询可继续反映后续变化 |
 | 成功判定 | 当前本页只确认源链交易结果或交易所接受，不按余额差额匹配某笔跨链款项，也不追踪 attestation、forwarder 或目的链 mint |
@@ -360,7 +360,7 @@ F1–F13 已按自动化方案扩展测试，当前资金浏览器测试保留 F
 | 编号 | 操作步骤 | 验收条件/需核对结果 |
 | --- | --- | --- |
 | F1 网络与入口 | 分别从首页进入存入/提现，用 Neo2/Neo3 访问；核对构建主网/测试网 | 页签正确，链守卫生效；源链、USDC、forwarder 和 Hyperliquid 网络配对，不受 NeoX 网络选择误导 |
-| F2 账户模式 | 标准/统一/portfolioMargin/unknown 设置不同 perps、spot total、hold 和 HIP-3 余额 | 标准只读标准 DEX withdrawable；统一/PM 为 max(total-hold,0)；不合并其他币或池；unknown 不提现 |
+| F2 账户模式 | 标准/统一/portfolioMargin/unknown 设置不同 perps、spot total、hold 和 HIP-3 余额 | 标准只读标准 DEX withdrawable；统一/PM 为 max(total-(spotHold ?? hold),0)；不合并其他币或池；unknown 不提现 |
 | F3 精确金额 | 输入 7 位小数、设置小数尾数 MAX、25%/50%，并检查签名参数 | 输入截到 6 位；MAX/比例向下取，不经 Number 丢最小单位；摘要显示精度不改变提交值 |
 | F4 入金费用 | 模拟 bp=0/1.4、转发费最小单位 200000；再缺 Fast 档或给非法费 | 只计算协议费及转发费，feeExact 同时用于显示和 CCTP maxFee；不查询新账户费；失败不回退免费；费用吞掉金额仍为已知缺口 |
 | F5 入金授权和目标 | 点击存入并延迟授权/gas，解码签名及 calldata；离页再进入 | 授权金额/域/to/有效期正确；mintRecipient 与 caller 为配对 forwarder；hook 为本人和 dex=0；无独立 approve/提前广播 |

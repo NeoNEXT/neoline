@@ -14,7 +14,7 @@ import {
   toArray,
   timeout,
 } from 'rxjs';
-import { map, catchError, shareReplay, filter, takeUntil } from 'rxjs/operators';
+import { map, catchError, shareReplay, filter, takeUntil, take, tap, share, distinctUntilChanged, startWith } from 'rxjs/operators';
 
 import {
   HYPERLIQUID_API,
@@ -79,10 +79,9 @@ export class HyperliquidService {
    * - DEX 注册表不携带价格，比任何一份市场快照都活得久；
    * - 现货状态一直保留到下一次 websocket 更新；
    * - 合并后的账户快照用来吸收短促的导航/请求突发；
-   * - 账户抽象模式刷新得很不频繁。
+   * - 账户模式由 webData3 持续更新，REST 只提供订阅初值。
    */
   private readonly accountCacheMs = 3000;
-  private readonly accountModeCacheMs = 30 * 60 * 1000;
   private readonly dexRegistryCacheMs = 6 * 60 * 60 * 1000;
   private readonly userFeeCacheMs = 5 * 60 * 1000;
   private readonly activeAssetTimeoutMs = 10000;
@@ -95,10 +94,7 @@ export class HyperliquidService {
     { expiresAt: number; request: Observable<PerpsAccount> }
   >();
   private spotStateCache = new Map<string, Observable<any>>();
-  private accountModeCache = new Map<
-    string,
-    { expiresAt: number; request: Observable<PerpsAccountMode> }
-  >();
+  private readonly accountModeStreams = new Map<string, Observable<PerpsAccountMode>>();
   private userFeeCache = new Map<
     string,
     { expiresAt: number; request: Observable<PerpsUserFeeRates> }
@@ -283,7 +279,7 @@ export class HyperliquidService {
             map((spot) => ({ spot, error: null })),
             catchError((error) => of({ spot: null, error }))
           ),
-      this.getAccountMode(user),
+      this.watchAccountMode(user).pipe(take(1)),
     ]).pipe(
       map(([perps, { spot, error }, mode]) => {
         // 统一账户的抵押品来自现货；读取失败不能被解释成零余额。
@@ -419,7 +415,7 @@ export class HyperliquidService {
   /** 完整抵押池只为全仓预估订阅，跨 DEX 快照不能被本产品的市场白名单裁剪。 */
   watchCrossMarginAccount(address: string, dex = ''): Observable<PerpsCrossMarginAccount | null> {
     const user = address.toLowerCase();
-    return this.getAccountMode(user).pipe(switchMap((mode) => {
+    return this.watchAccountMode(user).pipe(switchMap((mode) => {
       if (mode === 'default' || mode === 'disabled') {
         const updates = this.channel.subscribe({ type: 'clearinghouseState', user, dex }).pipe(
           map((data) => data?.clearinghouseState)
@@ -429,7 +425,7 @@ export class HyperliquidService {
             catchError(() => of(null)), takeUntil(updates)
           ),
           updates
-        ).pipe(map((state) => crossMarginAccount(mode, dex, [[dex, state]], null)));
+        ).pipe(map((state) => crossMarginAccount(mode, dex, [[dex, state]], null)), startWith(null));
       }
       // Portfolio Margin 还涉及多资产折扣和借贷，不能冒用统一账户的抵押池公式。
       if (mode !== 'unifiedAccount') { return of(null); }
@@ -453,7 +449,7 @@ export class HyperliquidService {
         return forkJoin([...dexes].map((name) => this.getCollateralToken(name).pipe(
           map((token) => [name, token] as const)
         ))).pipe(map((entries) => crossMarginAccount(mode, dex, states, spot, Object.fromEntries(entries))));
-      }));
+      }), startWith(null));
     }));
   }
 
@@ -480,40 +476,49 @@ export class HyperliquidService {
     return entry.request;
   }
 
-  /**
-   * 账户抽象模式很少变化。最多每 30 分钟刷新一次，
-   * 而地址与网络的变化会立即让它失效。
-   */
-  private getAccountMode(user: string): Observable<PerpsAccountMode> {
-    const now = Date.now();
-    const cached = this.accountModeCache.get(user);
-    if (cached?.expiresAt > now) {
-      return cached.request;
+  /** 按地址共享模式订阅；第一帧实时状态到达后取消尚未完成的 REST 初值。 */
+  watchAccountMode(address: string): Observable<PerpsAccountMode> {
+    const user = address.toLowerCase();
+    let stream = this.accountModeStreams.get(user);
+    if (!stream) {
+      stream = defer(() => {
+        let serverTime = -1;
+        let previousMode: PerpsAccountMode;
+        const parseMode = (mode: PerpsAccountMode): PerpsAccountMode =>
+          ['default', 'disabled', 'dexAbstraction', 'unifiedAccount', 'portfolioMargin'].includes(mode)
+            ? mode : 'unknown';
+        const updates = this.channel.subscribe({ type: 'webData3', user }).pipe(
+          map((data) => data?.userState),
+          filter((state) => state?.user?.toLowerCase() === user &&
+            Number.isFinite(state.serverTime) && state.serverTime > serverTime),
+          tap((state) => { serverTime = state.serverTime; }),
+          // 官网将未携带 abstraction 的账户按非统一模式处理。
+          map((state) => parseMode(state.abstraction ?? 'disabled')),
+          share()
+        );
+        return merge(
+          this.post<PerpsAccountMode>({ type: 'userAbstraction', user }).pipe(
+            map(parseMode),
+            catchError(() => of('unknown' as PerpsAccountMode)),
+            takeUntil(updates)
+          ),
+          updates
+        ).pipe(
+          distinctUntilChanged(),
+          tap((mode) => {
+            if (previousMode !== undefined && previousMode !== mode) {
+              for (const key of this.accountCache.keys()) {
+                if (key.startsWith(`${user}:dex=`)) { this.accountCache.delete(key); }
+              }
+              this.spotStateCache.delete(user);
+            }
+            previousMode = mode;
+          })
+        );
+      }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+      this.accountModeStreams.set(user, stream);
     }
-    const request = this.post<PerpsAccountMode>({
-      type: 'userAbstraction',
-      user,
-    }).pipe(
-      map((mode) => {
-        if (!['default', 'disabled', 'dexAbstraction', 'unifiedAccount', 'portfolioMargin'].includes(mode)) {
-          throw new Error('Unknown account abstraction mode');
-        }
-        return mode;
-      }),
-      // 失败时取保守值：未知模式绝不能把现货折算成抵押品。
-      catchError(() => {
-        if (this.accountModeCache.get(user)?.request === request) {
-          this.accountModeCache.delete(user);
-        }
-        return of('unknown' as PerpsAccountMode);
-      }),
-      shareReplay({ bufferSize: 1, refCount: false })
-    );
-    this.accountModeCache.set(user, {
-      expiresAt: now + this.accountModeCacheMs,
-      request,
-    });
-    return request;
+    return stream;
   }
 
   private toFiniteNumber(value: any): number {

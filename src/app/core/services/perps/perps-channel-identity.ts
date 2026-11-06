@@ -64,6 +64,7 @@ const CHANNELS: Record<string, ChannelSpec> = {
         : null,
   },
   spotState: { identify: byUser },
+  webData3: { identify: (data) => byUser(data?.userState) },
   clearinghouseState: { dexScoped: true, identify: byUser },
   allDexsClearinghouseState: { identify: byUser },
   openOrders: { dexScoped: true, identify: byUser },

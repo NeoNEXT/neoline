@@ -238,9 +238,8 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 提现表单当前使用的本地上限：标准账户取永续 withdrawable，统一/组合账户取现货 USDC total-hold。
-   * 后者尚未证明等于所有持仓、冻结和借款场景下的最大可提额，不能把 hold 等同于完整保证金要求。
-   * 待核对的真实账户边界见本页 README 第 3.1 节和 F17。
+   * 标准账户取永续 withdrawable；统一/组合账户优先扣 spotHold，缺失时回退 hold。
+   * PM 的 hold 可包含借贷能力，不能将其直接换算成可提现额。
    */
   get withdrawableExact(): string {
     const account = this.account;
@@ -250,12 +249,13 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     if (!account.unified) {
       return account.withdrawableExact ?? null;
     }
-    if (account.spotUsdcExact == null || account.spotUsdcHoldExact == null) {
+    const hold = account.spotUsdcSpotHoldExact === undefined
+      ? account.spotUsdcHoldExact
+      : account.spotUsdcSpotHoldExact;
+    if (account.spotUsdcExact == null || hold == null) {
       return null;
     }
-    const free = new BigNumber(account.spotUsdcExact).minus(
-      account.spotUsdcHoldExact
-    );
+    const free = new BigNumber(account.spotUsdcExact).minus(hold);
     if (!free.isFinite()) {
       return null;
     }
