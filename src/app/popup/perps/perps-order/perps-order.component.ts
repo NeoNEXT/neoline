@@ -88,6 +88,7 @@ const UNAVAILABLE_MESSAGES: Record<PerpsOrderUnavailableCode, string> = {
   'market-missing': 'perpsMarketNotFound',
   'market-error': 'perpsLoadFailed',
   'cross-margin-unavailable': 'perpsCrossMarginUnavailable',
+  'unified-account-required': 'perpsUnifiedAccountRequired',
   'margin-mode-mismatch': 'perpsMarginModeLocked',
   'holding-long': 'perpsHoldingLongChooseExit',
   'holding-short': 'perpsHoldingShortChooseExit',
@@ -1141,6 +1142,11 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         return;
       }
       const checked = this.composition;
+      if (checked.availability?.code === 'unified-account-required') {
+        this.global.snackBarTip('perpsUnifiedAccountRequired');
+        this.lifecycle.settled();
+        return;
+      }
       if (checked.availability?.code === 'invalid-protection') {
         this.reportInvalidProtection();
         this.lifecycle.settled();
@@ -1188,6 +1194,10 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
           }
           this.lifecycle.settled();
           if (error instanceof PerpsTradeOrderError) {
+            if (error.code === 'unified-account-required') {
+              this.global.snackBarTip('perpsUnifiedAccountRequired');
+              return;
+            }
             if (error.code === 'capacity-unavailable' || error.code === 'insufficient-margin') {
               this.global.snackBarTip(UNAVAILABLE_MESSAGES[error.code]);
               this.loadActiveAssetData();

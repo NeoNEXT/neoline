@@ -78,12 +78,27 @@ export class PerpsTradeOrderService {
     return defer(() => {
       this.validateIntent(intent);
       const address = this.signerAddress(privateKey);
+      const checkHip3Cross = this.setsLeverage(intent) &&
+        intent.market.dex !== '' && intent.marginMode === 'cross';
+      const validateMode = (mode: PerpsAccountMode) => {
+        if (checkHip3Cross && mode === 'dexAbstraction') {
+          throw new PerpsTradeOrderError(
+            'unified-account-required',
+            'This account mode does not support adding HIP-3 cross-margin exposure'
+          );
+        }
+      };
       return this.exchange.ensureUnifiedAccount(privateKey).pipe(
+        switchMap((mode) => checkHip3Cross && mode === null
+          ? this.capacityData.getAccountMode(address) : of(mode)),
+        map((mode) => validateMode(mode)),
         switchMap(() => this.resolveSize(address, intent)),
         switchMap((sizeExact) => {
           const order = this.buildOrder(intent, sizeExact);
           const submit = () =>
-            this.exchange.submitOrder(privateKey, order).pipe(
+            (checkHip3Cross ? this.capacityData.getAccountMode(address) : of(null)).pipe(
+              map((mode) => validateMode(mode)),
+              switchMap(() => this.exchange.submitOrder(privateKey, order)),
               map((result) => ({ kind: 'order-submitted', result } as const))
             );
           if (!this.setsLeverage(intent)) {

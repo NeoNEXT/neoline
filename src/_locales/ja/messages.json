@@ -2237,6 +2237,9 @@
   "perpsCrossMarginUnavailable": {
     "message": "この市場は分離マージンのみ対応しています。"
   },
+  "perpsUnifiedAccountRequired": {
+    "message": "このアカウントモードでは HIP-3 のクロスポジションを新規作成・拡大できません。"
+  },
   "perpsMarginModeLocked": {
     "message": "証拠金モードは現在のポジションに従います。切り替えるにはポジションを決済してください。"
   },

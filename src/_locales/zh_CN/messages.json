@@ -2237,6 +2237,9 @@
   "perpsCrossMarginUnavailable": {
     "message": "该市场仅支持逐仓保证金。"
   },
+  "perpsUnifiedAccountRequired": {
+    "message": "此账户模式不支持 HIP-3 全仓新增仓位。"
+  },
   "perpsMarginModeLocked": {
     "message": "保证金模式沿用当前持仓，平仓后可切换。"
   },

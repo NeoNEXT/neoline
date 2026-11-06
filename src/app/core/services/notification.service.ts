@@ -56,6 +56,7 @@ interface NotificationContent {
   perpsWithdrawSubmitted: string;
   perpsWithdrawStatusUnknown: string;
   perpsSigningUnavailable: string;
+  perpsUnifiedAccountRequired: string;
   perpsRefreshFailed: string;
 }
 
@@ -133,6 +134,8 @@ export class NotificationService {
       'The exchange did not return a result, so it is unknown whether this withdrawal ran. Check your balance and the Hyperliquid ledger before sending it again.',
     perpsSigningUnavailable:
       'This wallet does not support Hyperliquid typed-data signing yet.',
+    perpsUnifiedAccountRequired:
+      'This account mode does not support adding HIP-3 cross-margin exposure.',
     perpsRefreshFailed:
       'Could not confirm the latest balance, so nothing was sent. Try again.',
   };
@@ -197,6 +200,8 @@ export class NotificationService {
     perpsWithdrawStatusUnknown:
       '交易所未返回结果，本次提款是否已执行无法判定。请先核对余额与 Hyperliquid 账本，再决定是否重新发起。',
     perpsSigningUnavailable: '该钱包暂不支持 Hyperliquid 类型化数据签名。',
+    perpsUnifiedAccountRequired:
+      '此账户模式不支持 HIP-3 全仓新增仓位。',
     perpsRefreshFailed: '无法取得最新余额，未发起任何操作，请重试。',
   };
   private JA: NotificationContent = {
@@ -266,6 +271,8 @@ export class NotificationService {
       '取引所から結果が返らなかったため、この出金が実行されたかどうかは不明です。残高と Hyperliquid の台帳を確認してから、再送するか判断してください。',
     perpsSigningUnavailable:
       'このウォレットはHyperliquidの型付きデータ署名にまだ対応していません。',
+    perpsUnifiedAccountRequired:
+      'このアカウントモードでは HIP-3 のクロスポジションを新規作成・拡大できません。',
     perpsRefreshFailed:
       '最新の残高を確認できなかったため、何も送信していません。再試行してください。',
   };
@@ -336,6 +343,8 @@ export class NotificationService {
       '거래소가 결과를 반환하지 않아 이 출금이 실행되었는지 알 수 없습니다. 잔액과 Hyperliquid 장부를 확인한 뒤 다시 보낼지 결정하세요.',
     perpsSigningUnavailable:
       '이 지갑은 아직 Hyperliquid 형식화 데이터 서명을 지원하지 않습니다.',
+    perpsUnifiedAccountRequired:
+      '이 계정 모드에서는 HIP-3 교차 포지션을 새로 열거나 늘릴 수 없습니다.',
     perpsRefreshFailed:
       '최신 잔액을 확인하지 못해 아무것도 전송하지 않았습니다. 다시 시도하세요.',
   };

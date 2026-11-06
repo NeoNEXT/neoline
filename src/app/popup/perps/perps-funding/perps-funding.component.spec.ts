@@ -20,7 +20,7 @@ import { PerpsDepositChainService } from '@/app/core/services/perps/perps-deposi
 import { PerpsFeeQuoteService } from '@/app/core/services/perps/perps-fee-quote.service';
 import { PerpsBroadcastStatusUnknownError } from '@/app/core/services/perps/perps-rpc';
 import { PerpsFundingComponent } from './perps-funding.component';
-import { PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS } from '@popup/_lib/perps';
+import { PERPS_DEPOSIT_RECEIPT_TIMEOUT_MS, PERPS_WALLET_BALANCE_POLL_MS } from '@popup/_lib/perps';
 import { parsePerpsAccount } from '@/app/core/services/perps/perps-account-state';
 import { PerpsAccountStateService } from '@/app/core/services/perps/perps-account-state.service';
 import { fakePerpsDataChannel } from '@/app/core/services/perps/perps-data-channel.fake';
@@ -733,6 +733,19 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
     expect(writes.withdraw).not.toHaveBeenCalled();
   });
 
+  it('keeps dexAbstraction and withdraws from perps after the mode check skips migration', async () => {
+    component.amount = '50';
+    hyperliquid.getAccount.and.returnValue(of({
+      ...account('100'), abstractionMode: 'dexAbstraction',
+      spotUsdcExact: '1000', spotUsdcHoldExact: '0',
+    }));
+    writes.ensureUnifiedAccount.and.returnValue(of('dexAbstraction'));
+    await component.submit();
+    expect(component.account.abstractionMode).toBe('dexAbstraction');
+    expect(component.withdrawableExact).toBe('100');
+    expect(writes.withdraw).toHaveBeenCalledOnceWith('0xkey', '0xabc', '50', { fromSpot: false });
+  });
+
   it('proceeds when the refreshed balance still covers the amount', async () => {
     component.amount = '50';
     hyperliquid.getAccount.and.returnValue(of(account('100')));
@@ -775,13 +788,54 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
     expect(writes.withdraw).not.toHaveBeenCalled();
   });
 
-  it('does not withdraw if migration or its account refresh fails', async () => {
+  for (const actualMode of ['disabled', 'unifiedAccount'] as const) {
+    it(`continues after a migration error using the refreshed ${actualMode} withdrawal source`, async () => {
+      spyOn(console, 'warn');
+      const key = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
+      const address = '0x70997970c51812dc3a010c7d01b50e0d17dc79c8';
+      let mode = 'disabled';
+      const http = { post: (_url, body) => {
+        if (body.type === 'userAbstraction') { return of(mode); }
+        if (body.type === 'clearinghouseState') { return of({
+          marginSummary: { accountValue: '100', totalMarginUsed: '0', totalNtlPos: '0' },
+          crossMarginSummary: { accountValue: '100', totalMarginUsed: '0' },
+          withdrawable: '100', assetPositions: [],
+        }); }
+        if (body.type === 'spotClearinghouseState') { return of({ balances: [{
+          coin: 'USDC', token: 0, total: '90', hold: '10',
+        }] }); }
+        if (body.action?.type === 'agentSetAbstraction') {
+          mode = actualMode;
+          return actualMode === 'disabled'
+            ? of({ status: 'err', response: 'Migration rejected' })
+            : throwError(() => new PerpsExecutionStatusUnknownError());
+        }
+        throw new Error('Unexpected request');
+      } };
+      const channel = fakePerpsDataChannel();
+      const writer = new PerpsExchangeWriteService(http as any);
+      const data = new HyperliquidService(http as any, channel, writer);
+      const states = new PerpsAccountStateService(data, channel);
+      const withdraw = spyOn(writer, 'withdraw').and.returnValue(of({ status: 'ok' } as any));
+      Object.assign(component as any, { accountStates: states, writes: writer, address });
+      evmWallet.getPrivateKey.and.resolveTo(key);
+      (component as any).watchAccountState(address);
+      component.amount = '50';
+      await component.submit();
+      expect(console.warn).toHaveBeenCalledTimes(1);
+      expect(withdraw).toHaveBeenCalledOnceWith(key, address, '50', { fromSpot: actualMode === 'unifiedAccount' });
+      expect(global.snackBarTip).toHaveBeenCalledOnceWith('perpsWithdrawSubmitted');
+      component.ngOnDestroy();
+    });
+  }
+
+  it('does not withdraw if the account mode check or account refresh fails', async () => {
     component.amount = '50';
     hyperliquid.getAccount.and.returnValue(of(account('100')));
-    writes.ensureUnifiedAccount.and.returnValue(throwError(() => new Error('Migration failed')));
+    writes.ensureUnifiedAccount.and.returnValue(throwError(() => new Error('Account mode unavailable')));
     await component.submit();
     expect(writes.withdraw).not.toHaveBeenCalled();
-    expect(global.snackBarTip).toHaveBeenCalledWith('txFailed', 'Migration failed');
+    expect(global.snackBarTip).toHaveBeenCalledWith('txFailed', 'Account mode unavailable');
     writes.ensureUnifiedAccount.and.returnValue(of('unifiedAccount'));
     hyperliquid.getAccount.and.returnValues(of(account('100')), throwError(() => new Error('offline')));
     await component.submit();
@@ -1154,6 +1208,76 @@ describe('PerpsFundingComponent single submission', () => {
   });
 
   afterEach(() => component.ngOnDestroy());
+
+  it('pauses polling while the preparation balance refresh is pending', fakeAsync(() => {
+    (component as any).startBalancePolling(address);
+    tick();
+    let finish: (balance: string) => void;
+    chain.tokenBalanceExact.and.returnValue(new Promise<string>(resolve => finish = resolve));
+    component.amount = '50';
+    void component.submitFunding();
+    tick(PERPS_WALLET_BALANCE_POLL_MS);
+
+    expect(chain.tokenBalanceExact).toHaveBeenCalledTimes(2);
+    finish('10');
+    tick();
+    expect(component.balanceMovedUnderInput).toBeTrue();
+    expect(wallet.getPrivateKey).not.toHaveBeenCalled();
+    component.ngOnDestroy();
+  }));
+
+  for (const balance of ['tokenBalanceExact', 'nativeBalanceExact']) {
+    for (const outcome of ['success', 'failure']) {
+      it(`ignores a polling ${balance} ${outcome} after the pre-submit refresh`, async () => {
+        component.amount = '50';
+        await component.submitFunding();
+        let finish: () => void;
+        const pending = new Promise<string>((resolve, reject) => {
+          finish = () => outcome === 'success' ? resolve('100') : reject(new Error('offline'));
+        });
+        const refreshed = balance === 'tokenBalanceExact' ? '10' : '0';
+        chain[balance].and.returnValues(pending, Promise.resolve(refreshed));
+        (component as any).startBalancePolling(address);
+        await settle();
+
+        await component.submit();
+        finish();
+        await settle();
+
+        expect(component.walletBalanceExact).toBe(balance === 'tokenBalanceExact' ? '10' : '100');
+        expect(component.nativeBalanceExact).toBe(balance === 'nativeBalanceExact' ? '0' : '1');
+        component.setMax();
+        expect(component.amount).toBe(balance === 'tokenBalanceExact' ? '10' : '100');
+        expect(wallet.getPrivateKey).toHaveBeenCalledTimes(1);
+        expect(chain.sendDeposit).not.toHaveBeenCalled();
+      });
+    }
+  }
+
+  it('keeps the pre-submit USDC balance when an older poll finishes while ETH is pending', async () => {
+    component.amount = '50';
+    await component.submitFunding();
+    let finishToken: (balance: string) => void;
+    let finishNative: (balance: string) => void;
+    chain.tokenBalanceExact.and.returnValues(
+      new Promise<string>(resolve => finishToken = resolve), Promise.resolve('10')
+    );
+    chain.nativeBalanceExact.and.returnValues(
+      new Promise<string>(resolve => finishNative = resolve), Promise.resolve('1')
+    );
+    (component as any).startBalancePolling(address);
+    const pending = component.submit();
+    await settle();
+    finishToken('100');
+    await settle();
+    finishNative('1');
+    await pending;
+
+    expect(component.walletBalanceExact).toBe('10');
+    expect(component.balanceMovedUnderInput).toBeTrue();
+    expect(wallet.getPrivateKey).toHaveBeenCalledTimes(1);
+    expect(chain.sendDeposit).not.toHaveBeenCalled();
+  });
 
   it('keeps confirmation closed until preparation finishes', async () => {
     let finish: (balance: string) => void;

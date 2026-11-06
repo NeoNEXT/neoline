@@ -101,6 +101,7 @@ export type PerpsOrderUnavailableCode =
   | 'market-missing'
   | 'market-error'
   | 'cross-margin-unavailable'
+  | 'unified-account-required'
   | 'margin-mode-mismatch'
   | 'holding-long'
   | 'holding-short'
@@ -717,6 +718,10 @@ function orderUnavailable(params: {
   }
   if (!closeMode && marginMode === 'cross' && market?.marginMode) {
     return reason('cross-margin-unavailable');
+  }
+  if (!closeMode && marginMode === 'cross' && market?.dex &&
+      account?.abstractionMode === 'dexAbstraction') {
+    return reason('unified-account-required');
   }
   if (!closeMode && position && position.leverageType !== marginMode) {
     return reason('margin-mode-mismatch');

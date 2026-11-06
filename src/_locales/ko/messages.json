@@ -2237,6 +2237,9 @@
   "perpsCrossMarginUnavailable": {
     "message": "이 시장은 격리 증거금만 지원합니다."
   },
+  "perpsUnifiedAccountRequired": {
+    "message": "이 계정 모드에서는 HIP-3 교차 포지션을 새로 열거나 늘릴 수 없습니다."
+  },
   "perpsMarginModeLocked": {
     "message": "증거금 모드는 현재 포지션을 따릅니다. 모드를 변경하려면 포지션을 종료하세요."
   },

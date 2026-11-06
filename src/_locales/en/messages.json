@@ -2237,6 +2237,9 @@
   "perpsCrossMarginUnavailable": {
     "message": "This market only supports isolated margin."
   },
+  "perpsUnifiedAccountRequired": {
+    "message": "This account mode does not support adding HIP-3 cross-margin exposure."
+  },
   "perpsMarginModeLocked": {
     "message": "Margin mode follows the existing position. Close the position before switching modes."
   },

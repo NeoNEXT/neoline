@@ -3,6 +3,7 @@ import { fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
 
 import { PerpsAccount } from '@popup/_lib/perps';
 import { NotificationService } from '@/app/core';
+import { PerpsTradeOrderError } from '@/app/core/services/perps/perps-trade-order';
 
 import { PerpsOrderComponent } from './perps-order.component';
 import { PerpsOrderFacts } from './perps-order-composition';
@@ -504,11 +505,11 @@ describe('PerpsOrderComponent 提示文案', () => {
   ];
 
   /** 走一遍提交，把这个结果状态实际弹出去的那个 key 取回来。 */
-  async function keyRaisedBy(status: string): Promise<string> {
+  async function keyRaisedBy(status: string, error?: PerpsTradeOrderError): Promise<string> {
     const global = jasmine.createSpyObj('GlobalService', ['snackBarTip']);
     const tradeOrders = {
       submit: () =>
-        of({
+        error ? throwError(() => error) : of({
           kind: 'order-submitted',
           result: {
             status,
@@ -592,6 +593,15 @@ describe('PerpsOrderComponent 提示文案', () => {
 
     expect(notification.content.perpsLeverageUpdateFailed).toBeTruthy();
   });
+
+  it('reports a fresh legacy HIP-3 restriction with translated wording', async () => {
+    const key = await keyRaisedBy('rejected', new PerpsTradeOrderError('unified-account-required', ''));
+    expect(key).toBe('perpsUnifiedAccountRequired');
+    for (const lang of ['en', 'zh_CN', 'ja', 'ko']) {
+      const notification = new NotificationService({ langSub: new BehaviorSubject(lang) } as any);
+      expect(notification.content[key]).toContain('HIP-3');
+    }
+  });
 });
 
 
@@ -602,6 +612,7 @@ describe('PerpsOrderComponent asynchronous submission', () => {
   let router: jasmine.SpyObj<any>;
   let wallets: BehaviorSubject<any>;
   let writes: jasmine.SpyObj<any>;
+  let global: jasmine.SpyObj<any>;
 
   beforeEach(() => {
     wallets = new BehaviorSubject({
@@ -614,12 +625,13 @@ describe('PerpsOrderComponent asynchronous submission', () => {
     writes = jasmine.createSpyObj('Writes', ['getOrderStatus']);
     writes.builderAddress = '';
     writes.getOrderStatus.and.returnValue(of({ status: 'order' }));
+    global = jasmine.createSpyObj('GlobalService', ['snackBarTip']);
     const f = facts();
     value = new PerpsOrderComponent(
       { snapshot: { params: { coin: 'ETH' }, queryParams: {} } } as any,
       router,
       { select: () => wallets } as any,
-      { snackBarTip: () => {} } as any,
+      global,
       {
         watchActiveAssetData: () => of(f.activeAssetData),
         getUserFeeRates: () => of(f.feeRates),
@@ -639,6 +651,29 @@ describe('PerpsOrderComponent asynchronous submission', () => {
   });
 
   afterEach(() => value.ngOnDestroy());
+
+  it('updates the page and stops submission when HIP-3 mode becomes legacy during unlock', async () => {
+    const f = facts({
+      coin: 'xyz:ETH',
+      market: { status: 'ready', market: ethMarket({ key: 'xyz:ETH', coin: 'xyz:ETH', dex: 'xyz' }) },
+    });
+    f.account.account = { positions: [], abstractionMode: 'unifiedAccount' } as PerpsAccount;
+    f.activeAssetData.coin = 'xyz:ETH';
+    f.activeAssetData.leverage.type = 'cross';
+    value.facts = f;
+    value.marginMode = 'cross';
+    const pending = value.submit();
+    await Promise.resolve();
+    value.facts = { ...f, account: { ...f.account, account: {
+      ...f.account.account, abstractionMode: 'dexAbstraction',
+    } } };
+    expect(value.orderUnavailableReason).toBe('perpsUnifiedAccountRequired');
+    expect(value.canSubmit).toBeFalse();
+    unlock('private-key');
+    await pending;
+    expect(trades).not.toHaveBeenCalled();
+    expect(global.snackBarTip).toHaveBeenCalledWith('perpsUnifiedAccountRequired');
+  });
 
   it('keeps the click-time reference price and submitted size while unlocking', async () => {
     // 以点击下单时的价格固定 IOC 边界，解锁期间不随行情变化。

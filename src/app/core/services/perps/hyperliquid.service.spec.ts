@@ -27,6 +27,16 @@ describe('HyperliquidService accounts and fees', () => {
     service = new HyperliquidService(http, channel, writes());
   });
 
+  it('reads a fresh account mode for each submission check', () => {
+    http.post.and.returnValues(of('unifiedAccount') as any, of('dexAbstraction') as any);
+    const modes = [];
+    service.getAccountMode('0xABC').subscribe((mode) => modes.push(mode));
+    service.getAccountMode('0xABC').subscribe((mode) => modes.push(mode));
+    expect(modes).toEqual(['unifiedAccount', 'dexAbstraction']);
+    expect(http.post).toHaveBeenCalledTimes(2);
+    expect(http.post.calls.mostRecent().args[1]).toEqual({ type: 'userAbstraction', user: '0xabc' });
+  });
+
   it('does not let a late REST snapshot replace live cross equity', () => {
     const rest = new Subject<any>();
     http.post.and.callFake(((_url, body) => body.type === 'userAbstraction' ? of('default') : rest) as any);
@@ -495,14 +505,18 @@ describe('HyperliquidService accounts and fees', () => {
     subscription.unsubscribe();
   });
 
-  it('treats the retired dexAbstraction mode as unknown in REST and websocket data', () => {
+  it('preserves dexAbstraction in REST and live mode changes', () => {
     http.post.and.returnValue(of('dexAbstraction') as any);
     const modes = [];
     const subscription = service.watchAccountMode('0xabc').subscribe((mode) => modes.push(mode));
+    expect(modes).toEqual(['dexAbstraction']);
     channel.push({ type: 'webData3', user: '0xabc' }, {
-      userState: { user: '0xabc', serverTime: 100, abstraction: 'dexAbstraction' },
+      userState: { user: '0xabc', serverTime: 100, abstraction: 'disabled' },
     });
-    expect(modes).toEqual(['unknown']);
+    channel.push({ type: 'webData3', user: '0xabc' }, {
+      userState: { user: '0xabc', serverTime: 101, abstraction: 'dexAbstraction' },
+    });
+    expect(modes).toEqual(['dexAbstraction', 'disabled', 'dexAbstraction']);
     subscription.unsubscribe();
   });
 
@@ -1048,7 +1062,7 @@ describe('HyperliquidService 成交历史', () => {
 });
 
 describe('HyperliquidService 资金费历史', () => {
-  it('拉取 userFunding 全量历史并丢掉现货币种', () => {
+  it('拉取 userFunding 最近窗口并丢掉现货币种', () => {
     const http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
     const rows = ['ETH', 'xyz:NEO', '@107', 'PURR/USDC'].map((coin, i) => ({
       time: i,
@@ -1064,10 +1078,40 @@ describe('HyperliquidService 资金费历史', () => {
 
     expect(http.post).toHaveBeenCalledWith(
       jasmine.any(String),
-      { type: 'userFunding', user: '0xabc', startTime: 0 },
+      { type: 'userFunding', user: '0xabc' },
       jasmine.any(Object)
     );
   });
+});
+
+describe('HyperliquidService 历史窗口', () => {
+  for (const type of ['userFunding', 'userNonFundingLedgerUpdates']) {
+    it(`${type} 在历史超过单页上限时仍取得最新记录`, () => {
+      const http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
+      const rows = Array.from({ length: 501 }, (_, index) => ({
+        time: index + 1,
+        hash: `history-${index}`,
+        delta: type === 'userFunding'
+          ? { type: 'funding', coin: 'ETH', usdc: '0.01' }
+          : { type: 'deposit', usdc: '1' },
+      }));
+      http.post.and.callFake(((_url, body) => of(
+        body.startTime === 0 ? rows.slice(0, 500) : rows.slice(-500)
+      )) as any);
+      const service = new HyperliquidService(http, fakePerpsDataChannel(), writes());
+      const request: Observable<{ time: number }[]> = type === 'userFunding'
+        ? service.getUserFunding('0xABC') : service.getLedgerUpdates('0xABC');
+      let times: number[];
+      request.subscribe((updates) => times = updates.map((row) => row.time));
+
+      expect(times.length).toBe(500);
+      expect(times).toContain(501);
+      expect(times).not.toContain(1);
+      expect(http.post).toHaveBeenCalledOnceWith(
+        jasmine.any(String), { type, user: '0xabc' }, jasmine.any(Object)
+      );
+    });
+  }
 });
 
 describe('HyperliquidService CCTP 历史关联', () => {

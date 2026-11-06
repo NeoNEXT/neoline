@@ -116,8 +116,16 @@ export class PerpsExchangeWriteService {
           switchMap((mode) => mode === 'default' || mode === 'disabled'
             ? this.signedL1Action(
               privateKey, { type: 'agentSetAbstraction', abstraction: 'u' }
-            ).pipe(map(() => 'unifiedAccount' as PerpsAccountMode))
-            : of(mode === 'unifiedAccount' || mode === 'portfolioMargin' ? mode : 'unknown' as PerpsAccountMode)),
+            ).pipe(
+              map(() => 'unifiedAccount' as PerpsAccountMode),
+              catchError((error) => {
+                console.warn('Perps account migration failed; rechecking account mode', error);
+                return this.postInfo<PerpsAccountMode>({ type: 'userAbstraction', user });
+              })
+            )
+            : of(mode)),
+          map((mode) => ['default', 'disabled', 'unifiedAccount', 'portfolioMargin', 'dexAbstraction'].includes(mode)
+            ? mode : 'unknown' as PerpsAccountMode),
           tap((accountMode) => this.accountMode$.next({ user, accountMode })),
           finalize(() => this.unifiedAccountRequests.delete(user)),
           shareReplay({ bufferSize: 1, refCount: true })

@@ -17,6 +17,7 @@ export type PerpsTradeOrderErrorCode =
   | 'invalid-intent'
   | 'position-changed'
   | 'account-unavailable'
+  | 'unified-account-required'
   /** 杠杆写入被拒绝，因此订单从未发出。 */
   | 'leverage-write';
 

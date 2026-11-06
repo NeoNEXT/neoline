@@ -477,6 +477,13 @@ export class HyperliquidService {
     return entry.request;
   }
 
+  getAccountMode(address: string): Observable<PerpsAccountMode> {
+    return this.post<PerpsAccountMode>({
+      type: 'userAbstraction',
+      user: address.toLowerCase(),
+    });
+  }
+
   /** 按地址共享模式订阅；第一帧实时状态到达后取消尚未完成的 REST 初值。 */
   watchAccountMode(address: string): Observable<PerpsAccountMode> {
     const user = address.toLowerCase();
@@ -487,7 +494,7 @@ export class HyperliquidService {
         let previousMode: PerpsAccountMode;
         let confirmedMode: PerpsAccountMode;
         const parseMode = (mode: PerpsAccountMode): PerpsAccountMode =>
-          ['default', 'disabled', 'unifiedAccount', 'portfolioMargin'].includes(mode)
+          ['default', 'disabled', 'dexAbstraction', 'unifiedAccount', 'portfolioMargin'].includes(mode)
             ? mode : 'unknown';
         const confirmations = this.writes.accountModeChanges().pipe(
           filter((change) => change.user === user),
@@ -634,13 +641,13 @@ export class HyperliquidService {
   }
 
   /**
-   * 跨桥出入金以及转账。资金费支付在另一个端点上，这里刻意不含它们。
+   * 最近窗口内的跨桥出入金以及转账。省略 startTime，避免从 0 查询只返回最旧一页。
+   * 资金费支付在另一个端点上，这里刻意不含它们。
    */
   getLedgerUpdates(address: string): Observable<PerpsLedgerUpdate[]> {
     return this.post<PerpsLedgerUpdate[]>({
       type: 'userNonFundingLedgerUpdates',
       user: address.toLowerCase(),
-      startTime: 0,
     }).pipe(
       map((res) => (Array.isArray(res) ? res : [])),
       switchMap((updates) => {
@@ -684,15 +691,15 @@ export class HyperliquidService {
   }
 
   /**
-   * 资金费支付历史。与出入金不是同一个端点：`userNonFundingLedgerUpdates` 刻意不含它们。
+   * 最近窗口内的资金费支付历史；省略 startTime，避免只返回最旧一页。
+   * 与出入金不是同一个端点：`userNonFundingLedgerUpdates` 刻意不含它们。
    *
-   * 来源：Info endpoint 的 `{"type":"userFunding","user":addr,"startTime":0}`。
+   * 来源：Info endpoint 的 `{"type":"userFunding","user":addr}`。
    */
   getUserFunding(address: string): Observable<PerpsFundingUpdate[]> {
     return this.post<PerpsFundingUpdate[]>({
       type: 'userFunding',
       user: address.toLowerCase(),
-      startTime: 0,
     }).pipe(
       map((res) =>
         (Array.isArray(res) ? res : []).filter((row) =>

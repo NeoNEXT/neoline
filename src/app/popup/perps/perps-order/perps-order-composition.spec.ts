@@ -201,6 +201,63 @@ describe('composeOrder 购买力', () => {
       expect(reason(f, input({ marginMode: 'isolated' }))).toBeNull();
     });
   }
+
+  it('shows the Unified requirement for legacy HIP-3 cross opening and adding, even before an amount is entered', () => {
+    const f = facts({
+      coin: 'xyz:ETH',
+      market: { status: 'ready', market: ethMarket({ key: 'xyz:ETH', coin: 'xyz:ETH', dex: 'xyz' }) },
+      account: { ...withPositions(), account: account({ abstractionMode: 'dexAbstraction' }) },
+    });
+    const order = input({ marginMode: 'cross' });
+    expect(reason(f, order)).toBe('unified-account-required');
+    const opening = composeOrder(f, { ...order, amount: '100' });
+    expect(opening.submittable || opening.preparable).toBeFalse();
+    expect(opening.intent).toBeNull();
+    f.account.account = account({ abstractionMode: 'dexAbstraction', positions: [ethPosition({
+      key: 'xyz:ETH', coin: 'xyz:ETH', dex: 'xyz', isLong: true, sziExact: '1',
+    })] });
+    expect(reason(f, { ...order, amount: '100' })).toBe('unified-account-required');
+  });
+
+  for (const [mode, dex, marginMode] of [
+    ['dexAbstraction', '', 'cross'],
+    ['dexAbstraction', 'xyz', 'isolated'],
+    ['unifiedAccount', 'xyz', 'cross'],
+    ['portfolioMargin', 'xyz', 'cross'],
+  ] as const) {
+    it(`allows ${mode} ${dex || 'main'} ${marginMode} opening with venue capacity`, () => {
+      const coin = dex ? 'xyz:ETH' : 'ETH';
+      const data = capacity(coin, 100, '100', '10', 2);
+      data.leverage.type = marginMode;
+      const f = facts({
+        coin,
+        market: { status: 'ready', market: ethMarket({ key: dex ? coin : 'hl:ETH', coin, dex }) },
+        account: { ...withPositions(), account: account({ abstractionMode: mode }) },
+        activeAssetData: data,
+      });
+      expect(composeOrder(f, input({ marginMode, amount: '100', leverage: 2 })).submittable).toBeTrue();
+    });
+  }
+
+  for (const amount of ['50', '100']) {
+    it(`preserves legacy HIP-3 cross reduce-only closing of ${amount} USD`, () => {
+      const f = facts({
+        coin: 'xyz:ETH',
+        market: { status: 'ready', market: ethMarket({ key: 'xyz:ETH', coin: 'xyz:ETH', dex: 'xyz' }) },
+        account: {
+          ...withPositions(),
+          account: account({ abstractionMode: 'dexAbstraction', positions: [ethPosition({
+            key: 'xyz:ETH', coin: 'xyz:ETH', dex: 'xyz', isLong: true,
+            sziExact: '1', positionValueExact: '100',
+          })] }),
+        },
+      });
+      const closing = composeOrder(f, input({ mode: 'close', side: 'short', marginMode: 'cross', amount }));
+      expect(closing.submittable).toBeTrue();
+      expect(closing.intent.operation).toBe(amount === '100' ? 'close' : 'reduce');
+    });
+  }
+
   it('keeps venue collateral exact through Max amount and submitted size', () => {
     const f = facts({
       market: priced('ETH', 0.01, 4),

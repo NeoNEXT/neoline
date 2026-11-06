@@ -33,6 +33,7 @@ describe('PerpsExchangeWriteService account migration', () => {
   beforeEach(() => {
     http = jasmine.createSpyObj<HttpClient>('HttpClient', ['post']);
     service = new PerpsExchangeWriteService(http);
+    spyOn(console, 'warn');
   });
 
   for (const mode of ['default', 'disabled']) {
@@ -68,7 +69,7 @@ describe('PerpsExchangeWriteService account migration', () => {
       service.wrote().subscribe(wrote);
       let migrated;
       service.ensureUnifiedAccount(PRIVATE_KEY).subscribe((value) => migrated = value);
-      expect(migrated).toBe(mode === 'unifiedAccount' || mode === 'portfolioMargin' ? mode : 'unknown');
+      expect(migrated).toBe(mode === 'unexpected' ? 'unknown' : mode);
       expect(changed).toHaveBeenCalledOnceWith({ user: SIGNER.toLowerCase(), accountMode: migrated });
       expect(wrote).not.toHaveBeenCalled();
       expect(http.post).toHaveBeenCalledTimes(1);
@@ -103,22 +104,53 @@ describe('PerpsExchangeWriteService account migration', () => {
     expect(http.post).toHaveBeenCalledTimes(3);
   }));
 
-  it('does not retry an unknown migration result or publish success, and rechecks on the next action', fakeAsync(() => {
-    http.post.and.callFake(((_url, body) => body.type === 'userAbstraction' ? of('default')
-      : throwError(() => new HttpErrorResponse({ status: 0 }))) as any);
+  it('rechecks an unknown migration result without resending and uses the actual unified mode', fakeAsync(() => {
+    http.post.and.returnValues(of('default'), throwError(() => new HttpErrorResponse({ status: 0 })),
+      of('unifiedAccount'));
     const changed = jasmine.createSpy('changed');
     const failed = jasmine.createSpy('failed');
     service.accountModeChanges().subscribe(changed);
     service.ensureUnifiedAccount(PRIVATE_KEY).subscribe({ error: failed });
     flushMicrotasks();
-    expect(http.post).toHaveBeenCalledTimes(2);
-    expect(failed).toHaveBeenCalledTimes(1);
-    expect(changed).not.toHaveBeenCalled();
+    expect(http.post).toHaveBeenCalledTimes(3);
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(failed).not.toHaveBeenCalled();
+    expect(changed).toHaveBeenCalledOnceWith({ user: SIGNER.toLowerCase(), accountMode: 'unifiedAccount' });
+    expect(http.post.calls.allArgs().filter((args) => !!args[1].action).length).toBe(1);
     http.post.and.returnValue(of('unifiedAccount') as any);
     let migrated;
     service.ensureUnifiedAccount(PRIVATE_KEY).subscribe((value) => migrated = value);
     expect(migrated).toBe('unifiedAccount');
-    expect(http.post).toHaveBeenCalledTimes(3);
+    expect(http.post).toHaveBeenCalledTimes(4);
+  }));
+
+  it('logs a rejected migration and returns the rechecked Standard mode', fakeAsync(() => {
+    http.post.and.returnValues(of('disabled'), of({ status: 'err', response: 'Migration rejected' }), of('disabled'));
+    const changed = jasmine.createSpy('changed');
+    const wrote = jasmine.createSpy('wrote');
+    service.accountModeChanges().subscribe(changed);
+    service.wrote().subscribe(wrote);
+    let mode;
+    service.ensureUnifiedAccount(PRIVATE_KEY).subscribe((value) => mode = value);
+    flushMicrotasks();
+    expect(mode).toBe('disabled');
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(changed).toHaveBeenCalledOnceWith({ user: SIGNER.toLowerCase(), accountMode: 'disabled' });
+    expect(wrote).not.toHaveBeenCalled();
+  }));
+
+  it('stops when the actual mode cannot be confirmed after a failed migration', fakeAsync(() => {
+    const failure = new Error('Mode unavailable');
+    http.post.and.returnValues(of('disabled'), throwError(() => new HttpErrorResponse({ status: 0 })),
+      throwError(() => failure));
+    const changed = jasmine.createSpy('changed');
+    const failed = jasmine.createSpy('failed');
+    service.accountModeChanges().subscribe(changed);
+    service.ensureUnifiedAccount(PRIVATE_KEY).subscribe({ error: failed });
+    flushMicrotasks();
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(failed).toHaveBeenCalledOnceWith(failure);
+    expect(changed).not.toHaveBeenCalled();
   }));
 
   it('does not sign when the account mode cannot be read', () => {

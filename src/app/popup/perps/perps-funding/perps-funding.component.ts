@@ -77,6 +77,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   preparingDeposit = false;
   private depositConfirmedFeeExact: string | null = null;
   private submissionSeq = 0;
+  private walletBalanceSeq = 0;
   private destroyed = false;
   /** 进入本页时读到的入金费率。改金额只在本地计算，不再请求。 */
   private depositFee: PerpsDepositFeeRate | null = null;
@@ -172,7 +173,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     clearInterval(this.balanceTimer);
     this.loadWalletBalance(address);
     this.balanceTimer = setInterval(() => {
-      if (this.address === address && !this.submitting) {
+      if (this.address === address && !this.submitting && !this.preparingDeposit) {
         this.loadWalletBalance(address);
       }
     }, PERPS_WALLET_BALANCE_POLL_MS);
@@ -188,8 +189,10 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
    * 都从那条链上读，而不是从用户当前选中的网络上读。
    */
   private async loadWalletBalance(address: string) {
+    const seq = ++this.walletBalanceSeq;
     const config = this.token;
-    const superseded = () => config !== this.token || address !== this.address;
+    const superseded = () => seq !== this.walletBalanceSeq ||
+      config !== this.token || address !== this.address;
     try {
       const balance = await this.depositChain.tokenBalanceExact(
         config,

@@ -755,7 +755,7 @@ export interface PerpsAccountState<T> {
 
 /**
  * unifiedAccount 为主支持模式；default/disabled 在软件钱包初始化及可签名操作前尝试迁移。
- * dexAbstraction 已退役，读取入口按 unknown 处理；portfolioMargin 仅兼容 USDC 基础操作，
+ * dexAbstraction 保留原值并跳过迁移，现货 USDC 不按统一抵押品合并；portfolioMargin 仅兼容 USDC 基础操作，
  * 不代表完整组合估值。unknown 是本地读取失败状态，不是协议返回值。
  */
 export type PerpsAccountMode =

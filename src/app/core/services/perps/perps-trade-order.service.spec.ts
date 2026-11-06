@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+import { fakeAsync, flushMicrotasks } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 
 import {
@@ -12,6 +13,7 @@ import {
   PerpsTradeSubmission,
 } from './perps-trade-order.service';
 import { PerpsOrder } from './perps-trade-order';
+import { PerpsExchangeWriteService } from './perps-exchange-write.service';
 
 const PRIVATE_KEY =
   '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
@@ -57,6 +59,9 @@ describe('PerpsTradeOrderService', () => {
     maxTradeSzs: ['1000000000000000000000000', '1000000000000000000000000'],
     ...overrides,
   });
+  const hip3Market = {
+    ...intent().market, key: 'xyz:ETH', coin: 'xyz:ETH', dex: 'xyz',
+  };
 
   beforeEach(() => {
     exchange = jasmine.createSpyObj('PerpsOrderExchange', [
@@ -79,7 +84,8 @@ describe('PerpsTradeOrderService', () => {
     accounts = jasmine.createSpyObj('PerpsOrderAccounts', [
       'refreshAccount',
     ]);
-    capacities = jasmine.createSpyObj('PerpsOrderCapacity', ['getActiveAssetData']);
+    capacities = jasmine.createSpyObj('PerpsOrderCapacity', ['getActiveAssetData', 'getAccountMode']);
+    capacities.getAccountMode.and.returnValue(of('unifiedAccount'));
     capacities.getActiveAssetData.and.callFake((_address, coin) => {
       const args = exchange.updateLeverage.calls.mostRecent().args;
       return of(capacity({ coin, leverage: { type: args[4], value: args[2] } }));
@@ -100,8 +106,8 @@ describe('PerpsTradeOrderService', () => {
     expect(exchange.submitOrder).toHaveBeenCalledTimes(1);
   });
 
-  it('does not dispatch an order when migration fails', () => {
-    const failure = new Error('Migration unavailable');
+  it('does not dispatch an order when the account mode cannot be confirmed', () => {
+    const failure = new Error('Account mode unavailable');
     exchange.ensureUnifiedAccount.and.returnValue(throwError(() => failure));
     let error;
     service.submit(PRIVATE_KEY, intent()).subscribe({ error: (value) => error = value });
@@ -109,6 +115,18 @@ describe('PerpsTradeOrderService', () => {
     expect(exchange.updateLeverage).not.toHaveBeenCalled();
     expect(exchange.submitOrder).not.toHaveBeenCalled();
   });
+
+  it('continues through capacity validation and order submission after a rejected migration', fakeAsync(() => {
+    spyOn(console, 'warn');
+    const replies = [of('disabled'), of({ status: 'err', response: 'Migration rejected' }), of('disabled')];
+    const writer = new PerpsExchangeWriteService({ post: () => replies.shift() } as any);
+    exchange.ensureUnifiedAccount.and.callFake((key) => writer.ensureUnifiedAccount(key));
+    service.submit(PRIVATE_KEY, intent()).subscribe();
+    flushMicrotasks();
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(capacities.getActiveAssetData).toHaveBeenCalledOnceWith(ADDRESS, 'ETH');
+    expect(exchange.submitOrder).toHaveBeenCalledTimes(1);
+  }));
 
   it('waits for a fresh capacity response after applying margin mode and leverage', () => {
     const modeWrite = new Subject<any>();
@@ -126,6 +144,97 @@ describe('PerpsTradeOrderService', () => {
     refreshed.complete();
     expect(exchange.submitOrder).toHaveBeenCalledTimes(1);
   });
+
+  for (const operation of ['open', 'increase', 'reverse'] as const) {
+    it(`blocks legacy HIP-3 cross ${operation} before changing leverage`, () => {
+      exchange.ensureUnifiedAccount.and.returnValue(of('dexAbstraction'));
+      const failed = jasmine.createSpy('failed');
+      service.submit(PRIVATE_KEY, intent({ market: hip3Market, marginMode: 'cross', operation }))
+        .subscribe({ error: failed });
+      expect(failed).toHaveBeenCalledWith(jasmine.objectContaining({ code: 'unified-account-required' }));
+      expect(exchange.updateLeverage).not.toHaveBeenCalled();
+      expect(exchange.submitOrder).not.toHaveBeenCalled();
+    });
+  }
+
+  it('checks legacy HIP-3 cross orders even when automatic migration is disabled', () => {
+    capacities.getAccountMode.and.returnValue(of('dexAbstraction'));
+    const failed = jasmine.createSpy('failed');
+    service.submit(PRIVATE_KEY, intent({ market: hip3Market, marginMode: 'cross' }))
+      .subscribe({ error: failed });
+    expect(capacities.getAccountMode).toHaveBeenCalledOnceWith(ADDRESS);
+    expect(failed).toHaveBeenCalledWith(jasmine.objectContaining({ code: 'unified-account-required' }));
+    expect(exchange.updateLeverage).not.toHaveBeenCalled();
+    expect(exchange.submitOrder).not.toHaveBeenCalled();
+  });
+
+  it('rechecks mode after the leverage and capacity requests before sending HIP-3 cross orders', () => {
+    exchange.ensureUnifiedAccount.and.returnValue(of('unifiedAccount'));
+    const refreshed = new Subject<any>();
+    capacities.getActiveAssetData.and.returnValue(refreshed);
+    const failed = jasmine.createSpy('failed');
+    service.submit(PRIVATE_KEY, intent({ market: hip3Market, marginMode: 'cross' }))
+      .subscribe({ error: failed });
+    expect(capacities.getAccountMode).not.toHaveBeenCalled();
+    capacities.getAccountMode.and.returnValue(of('dexAbstraction'));
+    refreshed.next(capacity({ coin: 'xyz:ETH', leverage: { type: 'cross', value: 5 } }));
+    refreshed.complete();
+    expect(capacities.getAccountMode).toHaveBeenCalledOnceWith(ADDRESS);
+    expect(failed).toHaveBeenCalledWith(jasmine.objectContaining({ code: 'unified-account-required' }));
+    expect(exchange.submitOrder).not.toHaveBeenCalled();
+  });
+
+  it('does not send HIP-3 cross orders when the final mode request fails', () => {
+    exchange.ensureUnifiedAccount.and.returnValue(of('unifiedAccount'));
+    const failure = new Error('Account mode unavailable');
+    capacities.getAccountMode.and.returnValue(throwError(() => failure));
+    const failed = jasmine.createSpy('failed');
+    service.submit(PRIVATE_KEY, intent({ market: hip3Market, marginMode: 'cross' }))
+      .subscribe({ error: failed });
+    expect(failed).toHaveBeenCalledWith(failure);
+    expect(exchange.submitOrder).not.toHaveBeenCalled();
+  });
+
+  for (const mode of ['default', 'disabled', 'unifiedAccount', 'portfolioMargin'] as const) {
+    it(`allows ${mode} HIP-3 cross orders after checking fresh mode`, () => {
+      exchange.ensureUnifiedAccount.and.returnValue(of(mode));
+      capacities.getAccountMode.and.returnValue(of(mode));
+      service.submit(PRIVATE_KEY, intent({ market: hip3Market, marginMode: 'cross' })).subscribe();
+      expect(capacities.getAccountMode).toHaveBeenCalledOnceWith(ADDRESS);
+      expect(exchange.submitOrder).toHaveBeenCalledTimes(1);
+    });
+  }
+
+  for (const market of [intent().market, hip3Market]) {
+    it(`allows legacy ${market.dex || 'main'} isolated orders without extra mode requests`, () => {
+      exchange.ensureUnifiedAccount.and.returnValue(of('dexAbstraction'));
+      service.submit(PRIVATE_KEY, intent({ market })).subscribe();
+      expect(exchange.submitOrder).toHaveBeenCalledTimes(1);
+      expect(capacities.getAccountMode).not.toHaveBeenCalled();
+    });
+  }
+
+  it('allows legacy main DEX cross orders without extra mode requests', () => {
+    exchange.ensureUnifiedAccount.and.returnValue(of('dexAbstraction'));
+    service.submit(PRIVATE_KEY, intent({ marginMode: 'cross' })).subscribe();
+    expect(exchange.submitOrder).toHaveBeenCalledTimes(1);
+    expect(capacities.getAccountMode).not.toHaveBeenCalled();
+  });
+
+  for (const operation of ['reduce', 'close'] as const) {
+    it(`allows a legacy HIP-3 cross ${operation} without opening mode or leverage checks`, () => {
+      exchange.ensureUnifiedAccount.and.returnValue(of('dexAbstraction'));
+      accounts.refreshAccount.and.returnValue(of({ account: account([{
+        key: hip3Market.key, coin: hip3Market.coin, sziExact: '2', leverageType: 'cross',
+      }]) }));
+      service.submit(PRIVATE_KEY, intent({
+        market: hip3Market, marginMode: 'cross', operation, side: 'short',
+      })).subscribe();
+      expect(exchange.submitOrder.calls.mostRecent().args[1].reduceOnly).toBeTrue();
+      expect(exchange.updateLeverage).not.toHaveBeenCalled();
+      expect(capacities.getAccountMode).not.toHaveBeenCalled();
+    });
+  }
 
   for (const [description, data, code] of [
     ['missing', null, 'capacity-unavailable'],
