@@ -54,14 +54,14 @@ test('F2 portfolio margin withdraws only free spot USDC', async ({ page, hl }) =
     { coin: 'USDC', token: 0, total: hl.spotTotal, hold: hl.spotHold, entryNtl: '0' },
     { coin: 'PURR', token: 1, total: '9000', hold: '0', entryNtl: '0' },
   ];
-  await openFunding(page, 'Withdraw', '$250.12');
+  await openFunding(page, 'Withdraw', '$250.11');
   await page.locator('.preset-row').getByText('Max', { exact: true }).click();
-  await expect(amount(page)).toHaveValue('250.123455');
+  await expect(amount(page)).toHaveValue('250.115455');
   await submit(page).click();
   await expect(amount(page)).toHaveValue('');
   await expect(page.locator('.balance-tip')).toContainText('$0');
   expect(hl.withdrawals).toHaveLength(1);
-  expect(hl.withdrawals[0].action).toMatchObject({ amount: '250.123455', sourceDex: 'spot' });
+  expect(hl.withdrawals[0].action).toMatchObject({ amount: '250.115455', sourceDex: 'spot' });
 });
 
 for (const mode of ['unknown', 'unifiedAccount']) {
@@ -75,7 +75,8 @@ for (const mode of ['unknown', 'unifiedAccount']) {
   });
 }
 
-test('F2 standard withdrawal excludes HIP-3 margin and spot USDC', async ({ page, hl }) => {
+test('F2 legacy withdrawal excludes HIP-3 margin and spot USDC', async ({ page, hl }) => {
+  hl.accountMode = 'dexAbstraction';
   hl.coin = 'xyz:ETH';
   hl.accountValue = '2000';
   hl.spotTotal = '3000';
@@ -222,7 +223,7 @@ for (const direction of ['Deposit', 'Withdraw'] as const) {
     await openFunding(page, direction, direction === 'Deposit' ? '500.12' : '$1,000');
     await amount(page).fill('400');
     hl.funding.tokenBalance = parseUnits('300.000001', 6);
-    hl.accountValue = '300.000001';
+    hl.spotTotal = '300.000001';
     await submit(page).click();
     await expect(page.locator('.error-tip')).toContainText('Your balance changed');
     await expect(sheet(page)).toHaveCount(0);
@@ -274,7 +275,7 @@ test('deposit uses the entry rate for gas estimation and sending without another
   expect(burn.maxFee).toBe(201400n);
 });
 
-test('withdrawal uses its loaded fee after a tab switch without another request', async ({ page, hl }) => {
+test('withdrawal refreshes the loaded fee before sending', async ({ page, hl }) => {
   await openFunding(page, 'Withdraw', '$1,000');
   await amount(page).fill('10');
   hl.funding.withdrawFee = '0.1';

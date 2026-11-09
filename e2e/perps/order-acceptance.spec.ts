@@ -63,7 +63,7 @@ test('O1 cross route keeps the requested margin mode through the signed write', 
   await expect(page.locator('.side-toggle .active-short')).toHaveText('Short');
   await submit(page).click();
   await expect(page).toHaveURL(/home\?tab=perps$/);
-  expect(hl.writes[0].action).toMatchObject({ type: 'updateLeverage', isCross: true });
+  expect(hl.writes[1].action).toMatchObject({ type: 'updateLeverage', isCross: true });
   expect(hl.orders[0].action.orders[0]).toMatchObject({ b: false, p: '97', s: '1' });
 });
 
@@ -101,17 +101,17 @@ test('O3 100% uses independent directional caps and distinguishes zero from mism
   await expect(submit(page)).toBeDisabled();
   hl.leverage = { type: 'cross', value: 2 };
   await hl.pushCapacity();
-  await expect(page.locator('.account-summary .available')).toContainText('N/A');
-  expect(hl.writes).toHaveLength(0);
+  await expect(page.locator('.account-summary .available')).toContainText('0 USDC');
+  expect(hl.writes.filter((item) => item.action.type !== 'agentSetAbstraction')).toHaveLength(0);
 });
 
 test('O3 missing capacity does not use the 1000 USDC account balance as a substitute', async ({ page, hl }) => {
   hl.capacityOverride = null;
   await ordinaryOrder(page);
   await amount(page).fill('100');
-  await expect(page.locator('.account-summary .available')).toContainText('N/A');
+  await expect(page.locator('.account-summary .available')).toContainText('0 USDC');
   await expect(submit(page)).toBeDisabled();
-  expect(hl.writes).toHaveLength(0);
+  expect(hl.writes.filter((item) => item.action.type !== 'agentSetAbstraction')).toHaveLength(0);
 });
 
 for (const [quantity, remaining, label] of [['1', '-1', 'Short 2x'], ['3', '1', 'Long 2x']]) {
@@ -149,7 +149,7 @@ test('O5 50% floors a tail position and 100% uses the refreshed exact size witho
   await page.locator('.submit-wrap').getByRole('button', { name: 'Close', exact: true }).click();
   await expect(page).toHaveURL(/home\?tab=perps$/);
   expect(hl.orders[1].action.orders[0]).toMatchObject({ s: '1.2345', b: false, r: true });
-  expect(hl.writes.map((item) => item.action.type)).toEqual(['order', 'order']);
+  expect(hl.writes.map((item) => item.action.type)).toEqual(['agentSetAbstraction', 'order', 'order']);
   await expect(page.locator('.position-card')).toHaveCount(0);
 });
 
@@ -170,7 +170,7 @@ for (const outcome of ['success', 'rejected', 'lost response']) {
       await expect(page.locator('simple-snack-bar')).toContainText('Leverage could not be set');
       await expect(leverage).toHaveValue('2');
     }
-    expect(hl.writes.map((item) => item.action.type)).toEqual(['updateLeverage']);
+    expect(hl.writes.map((item) => item.action.type)).toEqual(['agentSetAbstraction', 'updateLeverage']);
     expect(hl.leverage.value).toBe(outcome === 'rejected' ? 2 : 3);
     // A lost acknowledgement does not mean venue rollback. Reload to obtain a new snapshot.
     await page.goto('/#/popup/perps/market/ETH');
@@ -197,7 +197,7 @@ for (const scenario of [
     await expect(page).toHaveURL(/home\?tab=perps$/);
     expect(hl.infoRequests.some((item) => item.type === 'activeAssetData' && item.coin === 'xyz:XYZ100')).toBe(true);
     expect(hl.orders[0].action.orders[0]).toMatchObject({ a: 110000, s: '1' });
-    expect(hl.writes.map((item) => item.action.type)).toEqual(['updateLeverage', 'order']);
+    expect(hl.writes.map((item) => item.action.type)).toEqual(['agentSetAbstraction', 'updateLeverage', 'order']);
     await expect(page.locator('.position-card')).toContainText('XYZ100');
   });
 }

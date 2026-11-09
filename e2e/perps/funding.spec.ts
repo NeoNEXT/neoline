@@ -106,7 +106,7 @@ test('reverted deposit reports the source-chain failure without claiming a credi
   await expect(page.locator('.account-card .card-value')).toHaveText('$1,000');
 });
 
-test('withdrawal reuses the page fee and directly signs one action', async ({ page, wallet, hl }) => {
+test('withdrawal refreshes its quote and signs one withdrawal from Unified', async ({ page, wallet, hl }) => {
   await openFunding(page, 'Withdraw', '$1,000');
   await amount(page).fill('0.3');
   await expect(submit(page)).toBeDisabled();
@@ -121,11 +121,11 @@ test('withdrawal reuses the page fee and directly signs one action', async ({ pa
   await expect(page.locator('.balance-tip')).toContainText('$990');
   expect(hl.withdrawals).toHaveLength(1);
   expect(hl.funding.rpcRequests.filter((item) => item.method === 'eth_call' &&
-    item.params[0].to.toLowerCase() === fundingContracts.coreWallet.toLowerCase())).toHaveLength(1);
+    item.params[0].to.toLowerCase() === fundingContracts.coreWallet.toLowerCase())).toHaveLength(2);
   const request = hl.withdrawals[0];
   expect(request.action).toEqual({
     type: 'sendToEvmWithData', signatureChainId: '0x66eee', hyperliquidChain: 'Testnet',
-    token: 'USDC', amount: '10', sourceDex: '', destinationRecipient: wallet.address,
+    token: 'USDC', amount: '10', sourceDex: 'spot', destinationRecipient: wallet.address,
     addressEncoding: 'hex', destinationChainId: 3, gasLimit: 200000, data: '0x', nonce: request.nonce,
   });
   expect(recoverWithdrawalSigner(request).toLowerCase()).toBe(wallet.address);
@@ -151,7 +151,7 @@ test('MAX withdrawal stops when refreshed balance falls below the confirmed amou
   await openFunding(page, 'Withdraw', '$1,000');
   await page.locator('.preset-row').getByText('Max', { exact: true }).click();
   await expect(amount(page)).toHaveValue('1000');
-  hl.accountValue = '800';
+  hl.spotTotal = '800';
   await submit(page).click();
   await expect(sheet(page)).toHaveCount(0);
   await expect(amount(page)).toHaveValue('800');

@@ -28,7 +28,6 @@
     "build:crx:chrome": "npm run webpack -- --config extension/webpack.config.js --env platform=chrome",
     "build:crx:firefox": "npm run webpack -- --config extension/webpack.config.js --env platform=firefox",
     "webpack": "node --max_old_space_size=4096 node_modules/webpack/bin/webpack.js",
-    "postinstall": "node patch.js",
     "prepare": "husky install"
   },
   "private": true,

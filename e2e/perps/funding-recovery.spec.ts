@@ -93,7 +93,7 @@ for (const malformed of [false, true]) {
   test(`F13 abandoned page fee ${malformed ? 'failure' : 'quote'} cannot affect a later operation`, async ({ page, hl }) => {
     const old = hl.funding.holdNextWithdrawQuote(malformed);
     try {
-      await openFunding(page, 'Withdraw', '$1,000');
+      await openFunding(page, 'Withdraw', 'N/A');
       await old.received;
       await page.locator('.funding-header .back').click();
       hl.funding.withdrawFee = '0.4';
@@ -178,13 +178,13 @@ for (const refusals of [['nonce'], ['nonce', 'nonce'], ['balance']] as const) {
     expect(hl.withdrawals).toHaveLength(refusals[0] === 'nonce' ? 2 : 1);
     for (const request of hl.withdrawals) {
       expect(recoverWithdrawalSigner(request).toLowerCase()).toBe(wallet.address);
-      expect(request.action).toMatchObject({ amount: '10', sourceDex: '', destinationRecipient: wallet.address });
+      expect(request.action).toMatchObject({ amount: '10', sourceDex: 'spot', destinationRecipient: wallet.address });
     }
     if (refusals[0] === 'nonce') {
       expect(hl.withdrawals[1].nonce).toBeGreaterThan(hl.withdrawals[0].nonce);
       expect(hl.withdrawals[1].signature).not.toEqual(hl.withdrawals[0].signature);
     }
-    expect(hl.accountValue).toBe(succeeds ? '990' : '1000');
+    expect(hl.spotTotal).toBe(succeeds ? '990' : '1000');
     expect(hl.funding.broadcasts).toHaveLength(0);
   });
 }

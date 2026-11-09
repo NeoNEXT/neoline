@@ -120,6 +120,14 @@ export class FakeHyperliquid {
     };
   }
 
+  private spotState() {
+    return { balances: this.spotBalances ?? [
+      ...(['unifiedAccount', 'portfolioMargin'].includes(this.accountMode)
+        ? [{ coin: 'USDC', token: 0, total: this.spotTotal, hold: this.spotHold, entryNtl: '0' }] : []),
+      { coin: 'HYPE', token: 107, total: '1', hold: '0' },
+    ] };
+  }
+
   private answer(body: Payload): unknown {
     this.infoRequests.push(body);
     if (body.user && body.user.toLowerCase() !== this.user) { throw new Error('Unexpected account'); }
@@ -147,9 +155,7 @@ export class FakeHyperliquid {
         tokens: [{ name: 'USDC', index: 0 }, { name: 'HYPE', index: 107 }],
         universe: [{ name: '@107', index: 107, tokens: [107, 0] }],
       }, [{ markPx: '40' }]];
-      case 'spotClearinghouseState': return { balances: this.spotBalances ??
-        (['unifiedAccount', 'portfolioMargin'].includes(this.accountMode)
-          ? [{ coin: 'USDC', token: 0, total: this.spotTotal, hold: this.spotHold, entryNtl: '0' }] : []) };
+      case 'spotClearinghouseState': return this.spotState();
       case 'userAbstraction': return this.accountMode;
       case 'activeAssetData': return this.activeAssetData();
       case 'userFees': return this.fees;
@@ -238,6 +244,23 @@ export class FakeHyperliquid {
         this.writes.push(body);
         const signer = body.action.type === 'sendToEvmWithData' ? recoverWithdrawalSigner(body) : recoverSigner(body);
         if (signer.toLowerCase() !== this.user) { throw new Error('Invalid test-wallet signature'); }
+        if (body.action.type === 'agentSetAbstraction' && body.action.abstraction === 'u') {
+          const usdc = this.spotBalances?.find((balance) => balance.coin === 'USDC');
+          this.spotTotal = new BigNumber(usdc?.total ?? '0').plus(this.accountValue).toFixed();
+          this.spotHold = new BigNumber(usdc?.hold ?? '0')
+            .plus(new BigNumber(this.positionSize).abs().times(this.mark).div(this.leverage.value)).toFixed();
+          if (usdc) { usdc.total = this.spotTotal; usdc.hold = this.spotHold; }
+          else if (this.spotBalances) {
+            this.spotBalances.push({ coin: 'USDC', token: 0, total: this.spotTotal, hold: this.spotHold });
+          }
+          this.accountMode = 'unifiedAccount';
+          event.response = { status: 'ok', response: { type: 'default' } };
+          await route.fulfill({ headers: cors, json: event.response });
+          await pushFrame(this.page, { channel: 'webData3', data: { userState: {
+            user: this.user, serverTime: Date.now(), abstraction: this.accountMode,
+          } } });
+          return;
+        }
         if (body.action.type === 'sendToEvmWithData') {
           const failure = this.withdrawFailures.shift();
           if (failure === 'nonce' || failure === 'balance') {
@@ -291,6 +314,11 @@ export class FakeHyperliquid {
             throw new Error('Invalid reduce-only close');
           }
           this.positionSize = before.plus(change).toFixed();
+          if (this.accountMode === 'unifiedAccount') {
+            this.spotHold = new BigNumber(this.positionSize).abs().times(this.mark).div(this.leverage.value).toFixed();
+            const usdc = this.spotBalances?.find((balance) => balance.coin === 'USDC');
+            if (usdc) { usdc.hold = this.spotHold; }
+          }
           const statuses = [
             { filled: { totalSz: fillSize, avgPx: this.price, oid: 10001 } },
             ...body.action.orders.slice(1).map(() => this.protectionRejected
@@ -307,6 +335,9 @@ export class FakeHyperliquid {
           await pushFrame(this.page, { channel: 'clearinghouseState', data: {
             user: this.user, dex: this.dex, clearinghouseState: this.account(this.dex),
           } });
+          if (this.accountMode === 'unifiedAccount') {
+            await pushFrame(this.page, { channel: 'spotState', data: { user: this.user, spotState: this.spotState() } });
+          }
           return;
         }
       }

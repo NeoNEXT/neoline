@@ -80,7 +80,7 @@ test('M3 detail price, 24h change, volume, open interest, oracle and mark fallba
   await expect(page.locator('.price-block > .price')).toHaveText('N/A');
   // 详情页仍允许进入表单；是否能提交市价单由下单页在选择订单类型后判断。
   await expect(page.locator('.trade-actions .long')).toBeEnabled();
-  expect(hl.writes).toHaveLength(0);
+  expect(hl.writes.map((item) => item.action.type)).toEqual(['agentSetAbstraction']);
 });
 
 test('M4 interval controls send exact protocol values and reuse the saved preference after re-entry', async ({ page, hl }) => {
@@ -115,5 +115,5 @@ test('M11, M12 matching position changes detail actions to add/close routes with
   await expect(page.locator('.trade-actions .short')).toHaveText('Close');
   await page.locator('.trade-actions .long').click();
   await expect(page).toHaveURL(/\/popup\/perps\/order\/ETH\?add=1$/);
-  expect(hl.writes).toHaveLength(0);
+  expect(hl.writes.map((item) => item.action.type)).toEqual(['agentSetAbstraction']);
 });

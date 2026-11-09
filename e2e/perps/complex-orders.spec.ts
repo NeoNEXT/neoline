@@ -11,8 +11,8 @@ for (const side of ['long', 'short'] as const) {
     const submit = page.getByRole('button', { name: 'Place order', exact: true });
     await tp.fill(side === 'long' ? '90' : '110');
     await expect(submit).toBeDisabled();
-    await expect(page.locator('.error-tip')).toContainText('Enter at least one valid trigger price');
-    expect(hl.writes).toHaveLength(0);
+    await expect(page.locator('.error-tip')).toContainText('Enter valid trigger prices');
+    expect(hl.writes.map((item) => item.action.type)).toEqual(['agentSetAbstraction']);
     await tp.fill(side === 'long' ? '110' : '90');
     await sl.fill(side === 'long' ? '90' : '110');
     await expect(submit).toBeEnabled();
@@ -85,7 +85,7 @@ test('partial then full close sends opposite reduce-only orders and clears the p
   await expect(page).toHaveURL(/\/popup\/home\?tab=perps$/);
   await expect(page.locator('.position-card')).toHaveCount(0);
   await expect(page.locator('.account-card .card-margin')).toContainText('$1,000');
-  expect(hl.writes.map((item) => item.action.type)).toEqual(['order', 'order']);
+  expect(hl.writes.map((item) => item.action.type)).toEqual(['agentSetAbstraction', 'order', 'order']);
   expect(hl.orders[1].action.orders[0]).toMatchObject({ b: false, r: true, s: '1.5', p: '97' });
 });
 
@@ -96,7 +96,7 @@ test('capacity dropping after margin-mode synchronization prevents the order', a
   await expect(page.locator('simple-snack-bar')).toContainText('Insufficient');
   await expect(page.getByRole('button', { name: 'Place order', exact: true })).toBeDisabled();
   await expect(page).toHaveURL(/\/popup\/perps\/order\/ETH\?side=long$/);
-  expect(hl.writes.map((item) => item.action.type)).toEqual(['updateLeverage']);
+  expect(hl.writes.map((item) => item.action.type)).toEqual(['agentSetAbstraction', 'updateLeverage']);
 });
 
 test('rejected leverage change stops before sending an order', async ({ page, hl }) => {
@@ -105,5 +105,5 @@ test('rejected leverage change stops before sending an order', async ({ page, hl
   await page.getByRole('button', { name: 'Place order', exact: true }).click();
   await expect(page.locator('simple-snack-bar')).toContainText('Leverage could not be set, so no order was submitted');
   await expect(page.getByRole('button', { name: 'Place order', exact: true })).toBeEnabled();
-  expect(hl.writes.map((item) => item.action.type)).toEqual(['updateLeverage']);
+  expect(hl.writes.map((item) => item.action.type)).toEqual(['agentSetAbstraction', 'updateLeverage']);
 });

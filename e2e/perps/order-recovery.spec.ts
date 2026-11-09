@@ -98,7 +98,7 @@ test('O17 first isolated order waits for fresh capacity after setting acknowledg
   try {
     await openLongOrder(page);
     await page.getByRole('button', { name: 'Place order', exact: true }).click();
-    await expect.poll(() => hl.writes.length).toBe(1);
+    await expect.poll(() => hl.writes.length).toBe(2);
     await expect(page.getByRole('button', { name: 'Place order', exact: true })).toHaveAttribute('aria-busy', 'true');
     expect(hl.orders).toHaveLength(0);
     capacity.release();
@@ -125,7 +125,7 @@ for (const failure of ['missing', 'wrong mode', 'old leverage', 'insufficient'])
     await page.getByRole('button', { name: 'Place order', exact: true }).click();
     await expect(page.locator('simple-snack-bar')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Place order', exact: true })).toHaveAttribute('aria-busy', 'false');
-    expect(hl.writes.map((item) => item.action.type)).toEqual(['updateLeverage']);
+    expect(hl.writes.map((item) => item.action.type)).toEqual(['agentSetAbstraction', 'updateLeverage']);
     await expect(page).toHaveURL(/order\/ETH\?side=long$/);
   });
 }
