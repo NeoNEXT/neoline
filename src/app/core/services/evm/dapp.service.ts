@@ -182,12 +182,12 @@ export class EvmDappService {
         let symbol: string | undefined;
         let fiat: string | undefined;
         if (change.assetType === 'native') {
-          amount = calcTokenAmount(change.rawAmount, 18).toString(10);
+          amount = calcTokenAmount(change.rawAmount, 18).toFixed();
           symbol = nativeSymbol;
           fiat = await this.safeFiat(ETH_SOURCE_ASSET_HASH, amount);
         } else if (change.assetType === 'ERC-20') {
           const info = await this.getErc20DisplayInfo(change.contractAddress);
-          amount = calcTokenAmount(change.rawAmount, info.decimals).toString(10);
+          amount = calcTokenAmount(change.rawAmount, info.decimals).toFixed();
           symbol = info.symbol;
           fiat = await this.safeFiat(change.contractAddress, amount);
         } else {
@@ -414,7 +414,7 @@ export class EvmDappService {
       tokenData &&
       tokenValue &&
       tokenDecimals &&
-      calcTokenAmount(tokenValue, tokenDecimals).toString(10);
+      calcTokenAmount(tokenValue, tokenDecimals).toFixed();
 
     const decimals = tokenDecimals && Number(tokenDecimals?.toString(10));
 

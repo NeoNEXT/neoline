@@ -66,8 +66,7 @@ export function isEqualCaseInsensitive(
 }
 
 export function calcTokenAmount(value, decimals) {
-  const multiplier = Math.pow(10, Number(decimals || 0));
-  return new BigNumber(String(value)).div(multiplier);
+  return new BigNumber(String(value)).shiftedBy(-Number(decimals || 0));
 }
 
 /**
