@@ -41,6 +41,7 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
   oneKeyConnecting = false;
   oneKeyError = '';
   private destroyed = false;
+  private ledgerBusy = false;
 
   get oneKeySupported() {
     return this.oneKeyService.supportsWebUsb;
@@ -134,6 +135,8 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
   }
 
   private handleLedger() {
+    if (this.ledgerBusy) return;
+    this.ledgerBusy = true;
     this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
       switch (this.chainType) {
         case 'Neo2':
@@ -180,6 +183,8 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
             this.backWithSignedTx.emit();
             this.ledger.handleLedgerError(error);
           });
+      } else {
+        this.ledgerBusy = false;
       }
     });
   }

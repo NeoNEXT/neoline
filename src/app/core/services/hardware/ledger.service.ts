@@ -119,13 +119,16 @@ export class LedgerService {
   }
 
   getDeviceStatus(chainType: ChainType): Promise<any> {
+    const queue = this.sendQueue;
     return this.getAppName(chainType)
       .then(() => LedgerStatuses.READY)
       .catch((err) => {
         if (chainType === 'NeoX') {
           return LedgerStatuses[err] ? err : LedgerStatuses.APP_CLOSED;
         }
-        this.closeDevice();
+        if (this.sendQueue === queue) {
+          this.closeDevice();
+        }
         return LedgerStatuses[err] ? err : LedgerStatuses.APP_CLOSED;
       });
   }
@@ -397,6 +400,7 @@ export class LedgerService {
     }
   }
   private getPublicKey(addressIndex = 0, chainType: ChainType): Promise<any> {
+    const queue = this.sendQueue;
     return this.send('80040000', this.BIP44(addressIndex))
       .then((res) => res.toString('hex').substring(0, 130))
       .then((key) => {
@@ -405,14 +409,17 @@ export class LedgerService {
           : new wallet3.Account(key);
       })
       .catch((err) => {
-        this.closeDevice();
+        if (this.sendQueue === queue) {
+          this.closeDevice();
+        }
         throw LedgerStatuses[err] ? err : LedgerStatuses.APP_CLOSED;
       });
   }
 
   private send(params, msg): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.sendQueue.push(() => {
+      const queue = this.sendQueue;
+      const execute = () => {
         const data = Buffer.from(msg, 'hex');
         const [cla, ins, p1, p2] = params
           .match(/.{1,2}/g)
@@ -427,16 +434,17 @@ export class LedgerService {
           })
           .catch((err) => {
             if (
-              err.toString() === 'Error: could not read from HID device' ||
-              err.statusCode === 27911
+              this.sendQueue === queue &&
+              (err.toString() === 'Error: could not read from HID device' ||
+                err.statusCode === 27911)
             ) {
               this.closeDevice();
             }
-            this.ledgerInUse = false;
             reject(err);
             throw err;
           });
-      });
+      };
+      queue.push({ execute, reject });
       this.executeSend();
     });
   }
@@ -449,8 +457,11 @@ export class LedgerService {
       '@ledgerhq/hw-transport-webhid'
     );
     this.deviceInstance = await TransportWebHID.create();
-    this.deviceInstance.on('disconnect', () => {
-      this.closeDevice();
+    const device = this.deviceInstance;
+    device.on('disconnect', () => {
+      if (this.deviceInstance === device) {
+        this.closeDevice();
+      }
     });
     if (this.deviceInstance) {
       return this.deviceInstance;
@@ -460,7 +471,8 @@ export class LedgerService {
 
   private getAppName(chainType: ChainType): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.sendQueue.push(() => {
+      const queue = this.sendQueue;
+      const execute = () => {
         if (chainType === 'NeoX') {
           return this.getDevice()
             .then(async (device) => {
@@ -511,8 +523,9 @@ export class LedgerService {
           })
           .catch((err) => {
             if (
-              err.toString() === 'Error: could not read from HID device' ||
-              err.statusCode === 27911
+              this.sendQueue === queue &&
+              (err.toString() === 'Error: could not read from HID device' ||
+                err.statusCode === 27911)
             ) {
               this.closeDevice();
             }
@@ -532,7 +545,8 @@ export class LedgerService {
             }
             return;
           });
-      });
+      };
+      queue.push({ execute, reject });
       this.executeSend();
     });
   }
@@ -542,13 +556,16 @@ export class LedgerService {
       return;
     }
     this.ledgerInUse = true;
-    this.sendQueue[0]()
+    const request = this.sendQueue[0];
+    request.execute()
       .then((res) => {
+        if (this.sendQueue[0] !== request) return;
         this.sendQueue.shift();
         this.ledgerInUse = false;
         this.executeSend();
       })
       .catch((err) => {
+        if (this.sendQueue[0] !== request) return;
         this.sendQueue.shift();
         this.ledgerInUse = false;
         this.executeSend();
@@ -571,7 +588,10 @@ export class LedgerService {
   private closeDevice(): void {
     this.deviceInstance && this.deviceInstance.close();
     this.deviceInstance = null;
+    const requests = this.sendQueue;
     this.sendQueue = [];
+    this.ledgerInUse = false;
+    requests.forEach((request) => request.reject(LedgerStatuses.DISCONNECTED));
   }
   //#endregion
 }
