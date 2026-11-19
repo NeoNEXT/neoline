@@ -374,9 +374,10 @@ describe('PerpsOrderComponent live capacity', () => {
     value.leverage = 5;
     value.amount = '100';
     expect(value.canSubmit).toBeTrue();
-    expect(value.availableExact).toBeNull();
+    expect(value.availableExact).toBe('1000');
     expect(value.orderUnavailableReason).toBeNull();
     value.facts = facts({ activeAssetData: null });
+    expect(value.availableExact).toBeNull();
     expect(value.canSubmit).toBeFalse();
     expect(value.orderUnavailableReason).toBe('perpsLoadFailed');
   });

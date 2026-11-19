@@ -101,7 +101,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     this.accountInitializationSub = this.accountStates.watchAggregatedAccount(this.address).pipe(
       filter((state) => !!state.account && state.account.abstractionMode !== 'unknown'),
       take(1),
-      filter((state) => ['default', 'disabled'].includes(state.account?.abstractionMode)),
+      filter((state) => state.account?.abstractionMode === 'default'),
       switchMap(() => from(this.chrome.getPassword())),
       filter((password) => !!password),
       switchMap((password) => from(this.evmWallet.getPrivateKey(wallet, password))),
@@ -197,21 +197,6 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
       this.accountAvailability === 'loading' ||
       this.aggregateIncomplete
     );
-  }
-
-  /**
-   * 标准账户下放在永续之外的现货 USDC：余额是真的，但在被挪进永续之前它撑不起仓位，
-   * 而 NeoLine 不做这件事。所以它单独展示，而不是去抬高上面的永续权益。
-   */
-  get separateSpotUsdcExact(): string {
-    return this.account && !this.account.unified &&
-      this.account.abstractionMode !== 'unknown'
-      ? this.account.spotUsdcExact ?? '0'
-      : '0';
-  }
-
-  get hasSeparateSpotUsdc(): boolean {
-    return new BigNumber(this.separateSpotUsdcExact).isGreaterThan(0);
   }
 
   /** 屏幕上的数值是最后已知值，而不是实时值。 */

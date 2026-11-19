@@ -10,15 +10,7 @@ import {
 /** 美元金额按分输入、也按分提交。 */
 const AMOUNT_DECIMALS = 2;
 
-/**
- * 在交易场所的值到达之前，开仓表单先用的杠杆。
- *
- * 这是**缺省**，不是播种：缺省在「没有事实回答」时生效，播种在「事实回答了」时生效。
- * 过去它被写成一条播种规则，于是就需要「占位值可以被覆盖、用户值不能」这第二个概念，
- * 而那需要 `leverageSelected` 和 `initialLoad` 两个闩锁去表达 —— 其中 `initialLoad` 那条
- * 漏了平仓守卫，帧顺序一变就把持仓杠杆盖掉。分成缺省与播种之后，那个概念不再需要存在。
- */
-const DEFAULT_LEVERAGE = 2;
+const DEFAULT_LEVERAGE = 3;
 
 /**
  * 用户亲手给过值的字段。
@@ -53,7 +45,8 @@ export function seedForm(
   facts: PerpsOrderFacts,
   input: PerpsOrderInput,
   touched: ReadonlySet<PerpsOrderUserSetField>,
-  frozen: boolean
+  frozen: boolean,
+  pendingLeverage?: number
 ): Partial<PerpsOrderInput> {
   if (frozen) {
     return {};
@@ -81,7 +74,7 @@ export function seedForm(
   }
 
   if (!touched.has('leverage')) {
-    const seeded = seededLeverage(facts, closeMode, position);
+    const seeded = seededLeverage(facts, closeMode, position, pendingLeverage);
     if (seeded !== null) {
       seed.leverage = seeded;
     }
@@ -134,7 +127,8 @@ function positionFor(facts: PerpsOrderFacts): PerpsPosition | null {
 function seededLeverage(
   facts: PerpsOrderFacts,
   closeMode: boolean,
-  position: PerpsPosition | null
+  position: PerpsPosition | null,
+  pendingLeverage?: number
 ): number | null {
   const market = facts.market.status === 'ready' ? facts.market.market : null;
   if (!market) {
@@ -143,14 +137,11 @@ function seededLeverage(
   if (closeMode) {
     return position ? position.leverage : null;
   }
-  const activeLeverage = facts.activeAssetData?.leverage;
-  const exchange = !position || activeLeverage?.type === position.leverageType
-    ? activeLeverage?.value : null;
-  if (exchange && exchange >= 1 && exchange <= market.maxLeverage) {
-    return exchange;
-  }
-  if (position) {
-    return Math.min(position.leverage, market.maxLeverage);
-  }
-  return Math.min(DEFAULT_LEVERAGE, market.maxLeverage);
+  const leverage = [
+    position?.leverage,
+    pendingLeverage,
+    facts.activeAssetData?.leverage.value,
+    DEFAULT_LEVERAGE,
+  ].find((value) => Number.isInteger(value) && value >= 1);
+  return Math.min(leverage, market.maxLeverage);
 }

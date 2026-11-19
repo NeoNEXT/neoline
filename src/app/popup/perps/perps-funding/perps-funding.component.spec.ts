@@ -793,7 +793,7 @@ describe('PerpsFundingComponent pre-submit refresh', () => {
       spyOn(console, 'warn');
       const key = '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
       const address = '0x70997970c51812dc3a010c7d01b50e0d17dc79c8';
-      let mode = 'disabled';
+      let mode = 'default';
       const http = { post: (_url, body) => {
         if (body.type === 'userAbstraction') { return of(mode); }
         if (body.type === 'clearinghouseState') { return of({

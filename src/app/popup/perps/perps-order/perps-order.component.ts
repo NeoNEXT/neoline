@@ -127,6 +127,7 @@ function sameInput(a: PerpsOrderInput, b: PerpsOrderInput): boolean {
   styleUrls: ['perps-order.component.scss'],
 })
 export class PerpsOrderComponent implements OnInit, OnDestroy {
+  private static readonly pendingLeverages = new Map<string, number>();
   coin: string;
   connectionState: PerpsConnectionState = 'connecting';
   /**
@@ -194,6 +195,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   private activeAssetDataSub: Unsubscribable;
   private crossMarginSub: Unsubscribable;
   private userFeeSub: Unsubscribable;
+  private pendingLeverage?: number;
   /**
    * 这一单走到哪一步了 —— 审核、提交、下落未明。页面自己的那道闸门整个在里面；
    * 见 {@link PerpsOrderLifecycle}。
@@ -309,6 +311,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       this.wallet = state.currentWallet as EvmWalletJSON;
       if (address && address !== this.address) {
         this.address = address;
+        this.pendingLeverage = PerpsOrderComponent.pendingLeverages.get(this.leveragePreferenceKey);
         this.loadActiveAssetData();
         this.loadAccount();
         this.loadUserFeeRates();
@@ -379,7 +382,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       this.facts,
       this.input,
       this.touched,
-      this.reviewing || this.submitting
+      this.reviewing || this.submitting,
+      this.pendingLeverage
     );
     Object.assign(this, seed);
     if (
@@ -396,6 +400,10 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       }
     }
     this.loadCrossMarginAccount();
+  }
+
+  private get leveragePreferenceKey(): string {
+    return `${this.address.toLowerCase()}:${this.coin}`;
   }
 
   /**
@@ -780,6 +788,10 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       Math.min(max, Math.round(Number(leverage) || 1))
     );
     this.touched.add('leverage');
+    if (this.address && this.coin) {
+      PerpsOrderComponent.pendingLeverages.set(this.leveragePreferenceKey, this.leverage);
+      this.pendingLeverage = this.leverage;
+    }
     this.lifecycle.edited();
     // 金额滑块按购买力换算数量，而购买力刚刚随杠杆变了。
     if (this.activePercent !== null && !this.closeMode) {

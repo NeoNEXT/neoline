@@ -24,7 +24,6 @@ interface AddressBook {
   equity: string | null;
   available: string | null;
   spot: string | null;
-  separateSpot: boolean;
   unifiedLabel: boolean;
   empty: boolean;
   positionKeys: string[];
@@ -63,7 +62,6 @@ const BOOKS: AddressBook[] = [
     equity: '150',
     available: '150',
     spot: '20',
-    separateSpot: true,
     unifiedLabel: false,
     empty: false,
     positionKeys: ['hl:ETH', 'xyz:TSLA'],
@@ -82,7 +80,6 @@ const BOOKS: AddressBook[] = [
     equity: '0',
     available: '0',
     spot: '0',
-    separateSpot: false,
     unifiedLabel: false,
     empty: true,
     positionKeys: [],
@@ -101,7 +98,6 @@ const BOOKS: AddressBook[] = [
     equity: '230',
     available: '230',
     spot: '7',
-    separateSpot: true,
     unifiedLabel: false,
     empty: false,
     positionKeys: ['hl:ETH'],
@@ -120,7 +116,6 @@ const BOOKS: AddressBook[] = [
     equity: '0',
     available: '0',
     spot: '0',
-    separateSpot: false,
     unifiedLabel: false,
     empty: true,
     positionKeys: [],
@@ -139,7 +134,6 @@ const BOOKS: AddressBook[] = [
     equity: '11',
     available: '11',
     spot: '3',
-    separateSpot: true,
     unifiedLabel: false,
     empty: false,
     positionKeys: ['xyz:TSLA'],
@@ -158,7 +152,6 @@ const BOOKS: AddressBook[] = [
     equity: '0',
     available: '0',
     spot: '0',
-    separateSpot: false,
     unifiedLabel: false,
     empty: true,
     positionKeys: [],
@@ -181,7 +174,6 @@ const BOOKS: AddressBook[] = [
     equity: '120',
     available: '95',
     spot: '120',
-    separateSpot: false,
     unifiedLabel: true,
     empty: false,
     positionKeys: ['hl:ETH', 'xyz:TSLA'],
@@ -200,7 +192,6 @@ const BOOKS: AddressBook[] = [
     equity: '0',
     available: '0',
     spot: '0',
-    separateSpot: false,
     unifiedLabel: true,
     empty: true,
     positionKeys: [],
@@ -220,7 +211,6 @@ const BOOKS: AddressBook[] = [
     equity: '80',
     available: '0',
     spot: '80',
-    separateSpot: false,
     unifiedLabel: true,
     empty: false,
     positionKeys: ['hl:ETH'],
@@ -239,7 +229,6 @@ const BOOKS: AddressBook[] = [
     equity: '0',
     available: '0',
     spot: '0',
-    separateSpot: false,
     unifiedLabel: true,
     empty: true,
     positionKeys: [],
@@ -258,7 +247,6 @@ const BOOKS: AddressBook[] = [
     equity: null,
     available: null,
     spot: '20',
-    separateSpot: false,
     unifiedLabel: false,
     empty: false,
     positionKeys: [],
@@ -343,7 +331,6 @@ describe('Perps account modes by address', () => {
       expect(card.accountEquityExact).toBe(book.equity);
       expect(card.availableMarginExact).toBe(book.available);
       expect(state.account.spotUsdcExact).toBe(book.spot);
-      expect(card.hasSeparateSpotUsdc).toBe(book.separateSpot);
       expect(card.accountValueLabel).toBe(
         book.unifiedLabel ? 'perpsUsdcBalance' : 'perpsAccountValue'
       );

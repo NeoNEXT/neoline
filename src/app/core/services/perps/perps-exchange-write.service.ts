@@ -105,7 +105,7 @@ export class PerpsExchangeWriteService {
     return PERPS_UNIFIED_ACCOUNT_ENABLED;
   }
 
-  /** 仅在调用方已取得可用私钥时调用；不降级 Unified/PM，不迁移未知或已退役模式。 */
+  /** 只初始化 default；保留用户明确选择的 Standard、Unified/PM 及未知或已退役模式。 */
   ensureUnifiedAccount(privateKey: string): Observable<PerpsAccountMode | null> {
     return defer(() => {
       if (!this.unifiedAccountEnabled) { return of(null); }
@@ -113,7 +113,7 @@ export class PerpsExchangeWriteService {
       let request = this.unifiedAccountRequests.get(user);
       if (!request) {
         request = this.postInfo<PerpsAccountMode>({ type: 'userAbstraction', user }).pipe(
-          switchMap((mode) => mode === 'default' || mode === 'disabled'
+          switchMap((mode) => mode === 'default'
             ? this.signedL1Action(
               privateKey, { type: 'agentSetAbstraction', abstraction: 'u' }
             ).pipe(

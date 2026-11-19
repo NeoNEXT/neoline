@@ -1760,9 +1760,6 @@
   "perpsUsedMargin": {
     "message": "사용됨"
   },
-  "perpsSpotSeparate": {
-    "message": "현물 USDC(무기한 잔액에 포함되지 않음)"
-  },
   "perpsDeposit": {
     "message": "입금"
   },

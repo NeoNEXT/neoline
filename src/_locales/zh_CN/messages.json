@@ -1760,9 +1760,6 @@
   "perpsUsedMargin": {
     "message": "已用"
   },
-  "perpsSpotSeparate": {
-    "message": "现货 USDC（未计入永续余额）"
-  },
   "perpsDeposit": {
     "message": "存入"
   },

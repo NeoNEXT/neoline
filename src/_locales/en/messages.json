@@ -1760,9 +1760,6 @@
   "perpsUsedMargin": {
     "message": "used"
   },
-  "perpsSpotSeparate": {
-    "message": "Spot USDC (excluded from perps balances)"
-  },
   "perpsDeposit": {
     "message": "Deposit"
   },

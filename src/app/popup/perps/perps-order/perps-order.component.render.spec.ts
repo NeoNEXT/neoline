@@ -89,6 +89,7 @@ describe('PerpsOrderComponent 渲染与接线', () => {
   let crossAccount: BehaviorSubject<PerpsCrossMarginAccount>;
 
   beforeEach(async () => {
+    (PerpsOrderComponent as any).pendingLeverages.clear();
     account = { positions: [] };
     queryParams = {};
     connection = new BehaviorSubject<PerpsConnectionState>('live');
@@ -416,15 +417,15 @@ describe('PerpsOrderComponent 渲染与接线', () => {
       fixture.detectChanges();
       component.amount = '200';
       fixture.detectChanges();
-      expect(text('.available b')).toBe('0 USDC');
-      expect(component.availableExact).toBeNull();
+      expect(text('.available b')).toBe('1,000.00 USDC');
+      expect(component.availableExact).toBe('1000');
       expect(fixture.nativeElement.querySelector('.error-tip')).toBeNull();
       fixture.nativeElement.querySelector('.submit-wrap button').click();
       flushMicrotasks();
       expect(exchange.updateLeverage).toHaveBeenCalledOnceWith(key, 0, 10, 25, 'isolated');
       expect(capacityData.getActiveAssetData).toHaveBeenCalledOnceWith(signer, 'ETH');
       expect(exchange.submitOrder).not.toHaveBeenCalled();
-      refreshed.next({ ...ASSET_DATA, user: signer });
+      refreshed.next({ ...ASSET_DATA, user: signer, leverage: { type: 'isolated', value: 10 } });
       refreshed.complete();
       expect(exchange.submitOrder).toHaveBeenCalledTimes(1);
       expect(exchange.submitOrder.calls.first().args[1].sizeExact).toBe('0.1');
@@ -528,12 +529,53 @@ describe('PerpsOrderComponent 渲染与接线', () => {
   });
 
   describe('播种接线', () => {
-    it('seeds the form from the frames the page subscribes to', () => {
+    it('uses the position leverage without reading a leverage query parameter', () => {
+      queryParams = { leverage: '6' };
+      account = { positions: [ethPosition({ leverage: 20 })] };
+      fixture.detectChanges();
+      expect(component.leverage).toBe(20);
+    });
+
+    it('restores an in-memory session draft when reopening the form', () => {
+      fixture.detectChanges();
+      component.setLeverage(7);
+      fixture.destroy();
+      fixture = TestBed.createComponent(PerpsOrderComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+      expect(component.leverage).toBe(7);
+    });
+
+    it('does not persist leverage after selecting it or submitting an accepted order', fakeAsync(() => {
+      const read = spyOn(TestBed.inject(ChromeService), 'getStorage').and.returnValue(of(null));
+      const save = spyOn(TestBed.inject(ChromeService), 'setStorage');
+      fixture.detectChanges();
+      component.setLeverage(7);
+      expect(save).not.toHaveBeenCalled();
+      component.amount = '200';
+      component.submit();
+      flushMicrotasks();
+      expect(save).not.toHaveBeenCalled();
+      expect(read.calls.allArgs()).toEqual([[STORAGE_NAME.perpsMaxSlippage]]);
+    }));
+
+    it('follows exchange leverage frames until the user edits the form', () => {
+      const capacity = new Subject<PerpsActiveAssetData>();
+      spyOn(TestBed.inject(HyperliquidService), 'watchActiveAssetData').and.returnValue(capacity);
       fixture.detectChanges();
 
-      // 限价来自中间价、杠杆来自交易场所上报的那一个 —— 两条都得穿过订阅才到得了表单。
       expect(component.limitPrice).toBe('2000');
-      expect(component.leverage).toBe(10);
+      expect(component.leverage).toBe(3);
+      expect(component.availableExact).toBeNull();
+      expect(text('.available b')).toBe('0 USDC');
+      capacity.next({ ...ASSET_DATA, leverage: { type: 'isolated', value: 5 } });
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.leverage-range input[type="number"]').value).toBe('5');
+
+      component.setLeverage(7);
+      capacity.next(ASSET_DATA);
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.leverage-range input[type="number"]').value).toBe('7');
       expect(fixture.nativeElement.querySelector('.current-position')).toBeNull();
       expect(fixture.nativeElement.querySelector('.available')).not.toBeNull();
     });

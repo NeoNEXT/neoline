@@ -51,7 +51,7 @@ export const HYPERLIQUID_API = {
   },
 };
 
-/** Perps 初始化及操作前，允许已解锁的软件钱包将 Standard 账户迁移为 Unified。 */
+/** Perps 初始化及操作前，仅允许已解锁的软件钱包将 default 初始化为 Unified。 */
 export const PERPS_UNIFIED_ACCOUNT_ENABLED = true;
 
 /**
@@ -369,7 +369,7 @@ export const PERPS_BUILDER_MAX_FEE_RATE = '0.045%';
  */
 export const PERPS_BUILDER_ADDRESS: { mainnet: string; testnet: string } = {
   mainnet: '',
-  testnet: '',
+  testnet: '0x90bCB1D82E51701EaEa39fcb3A044450E2F01241',
 };
 
 /**

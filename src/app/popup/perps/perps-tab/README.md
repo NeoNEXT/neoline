@@ -25,7 +25,7 @@ NeoX 在这里是钱包类型约束。Hyperliquid 使用哪个网络由 `environ
 | 用户操作 | 预期结果及验收条件 | 代码证据 |
 | --- | --- | --- |
 | 进入永续 Tab | 展示账户卡、已有持仓和行情。账户未到达时金额为 `N/A`；行情初次加载为 6 行骨架；未知账户不能显示成零余额账户 | [Tab 组件][tab-ts]、[模板][tab-html]、[市场列表][list-ts] |
-| 查看账户 | 标准模式显示账户价值；统一/组合保证金模式显示 USDC 余额。标准模式的现货 USDC 单独列出 | `accountValueLabel`、`accountEquityExact`、`availableMarginExact`、`hasSeparateSpotUsdc` |
+| 查看账户 | 标准模式显示账户价值；统一/组合保证金模式显示 USDC 余额，不单独展示现货 USDC 行 | `accountValueLabel`、`accountEquityExact`、`availableMarginExact` |
 | 查看持仓 | 每个非零仓位对应一张卡：币种、DEX 标识、多空、杠杆、未实现盈亏、收益率、市场价格、强平价；数量本身不在本页卡片显示 | [账户解析][account-model]、[模板][tab-html] |
 | 点击持仓或行情行 | 进入 `/popup/perps/market/{coin}`，保留协议币种的 DEX 前缀，例如 `xyz:TSLA`。卡片上没有直接加仓/平仓按钮 | `toMarket`、[渲染测试][tab-render-test] |
 | 点击入金/提现 | 分别进入 `/popup/perps/funding?tab=deposit`、`?tab=withdraw`，本次点击只导航。无账户、聚合仍在加载、缺少 DEX 时禁用这两个入口 | `toFunding`、`globalActionsDisabled` |

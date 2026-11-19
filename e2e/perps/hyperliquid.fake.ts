@@ -7,6 +7,7 @@ import { installSocket, pushFrame } from './socket';
 
 type Payload = Record<string, any>;
 const api = 'https://api.hyperliquid-testnet.xyz';
+const builder = '0x90bcb1d82e51701eaea39fcb3a044450e2f01241';
 const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'POST, OPTIONS' };
 const assetCtx = (price = '100') => ({
   markPx: price, midPx: price, oraclePx: price, prevDayPx: '95',
@@ -130,6 +131,10 @@ export class FakeHyperliquid {
 
   private answer(body: Payload): unknown {
     this.infoRequests.push(body);
+    if (body.user?.toLowerCase() === builder && body.user.toLowerCase() !== this.user) {
+      if (body.type === 'userAbstraction') { return 'disabled'; }
+      if (body.type === 'clearinghouseState') { return { marginSummary: { accountValue: '100' } }; }
+    }
     if (body.user && body.user.toLowerCase() !== this.user) { throw new Error('Unexpected account'); }
     if (body.dex && body.dex !== 'xyz') { throw new Error(`Unexpected DEX: ${body.dex}`); }
     switch (body.type) {
@@ -159,6 +164,7 @@ export class FakeHyperliquid {
       case 'userAbstraction': return this.accountMode;
       case 'activeAssetData': return this.activeAssetData();
       case 'userFees': return this.fees;
+      case 'maxBuilderFee': return 100;
       case 'candleSnapshot': {
         const req = body.req;
         const requestedCoin = req.coin;
@@ -245,6 +251,11 @@ export class FakeHyperliquid {
         const signer = body.action.type === 'sendToEvmWithData' ? recoverWithdrawalSigner(body) : recoverSigner(body);
         if (signer.toLowerCase() !== this.user) { throw new Error('Invalid test-wallet signature'); }
         if (body.action.type === 'agentSetAbstraction' && body.action.abstraction === 'u') {
+          if (this.accountMode !== 'default') {
+            event.response = { status: 'err', response: 'Abstraction transition not allowed' };
+            await route.fulfill({ headers: cors, json: event.response });
+            return;
+          }
           const usdc = this.spotBalances?.find((balance) => balance.coin === 'USDC');
           this.spotTotal = new BigNumber(usdc?.total ?? '0').plus(this.accountValue).toFixed();
           this.spotHold = new BigNumber(usdc?.hold ?? '0')

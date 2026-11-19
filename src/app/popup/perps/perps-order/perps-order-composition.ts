@@ -193,7 +193,7 @@ export function composeOrder(
 ): PerpsOrderComposition {
   const market = facts.market.status === 'ready' ? facts.market.market : null;
   const account = facts.account.account;
-  // 容量属于交易场所当前模式；切换后的预览不能沿用另一种模式的按方向抵押品与上限。
+  // 可直接提交的容量必须与表单模式一致；新仓的模式准备由提交服务完成。
   const activeAssetData = facts.activeAssetData?.leverage.type === input.marginMode
     ? facts.activeAssetData : null;
   const accountUnavailable = facts.account.availability === 'unavailable';
@@ -211,6 +211,9 @@ export function composeOrder(
   // 不是一个页面可以另有主张的独立事实。
   const position =
     account?.positions.find((item) => item.coin === facts.coin) ?? null;
+  // 无仓位时先用交易场所已报出的方向额度展示余额和计算百分比，
+  // 提交仍须先设置所选模式/杠杆，再读取并验证新额度。
+  const previewCapacity = activeAssetData ?? (!closeMode && !position ? facts.activeAssetData : null);
 
   const orderPriceExact = executionPriceExact(market, input);
   const orderPrice = new BigNumber(orderPriceExact);
@@ -262,13 +265,13 @@ export function composeOrder(
   const increasesPosition =
     !closeMode && !!position && position.isLong === isLong;
 
-  const availableExact = activeAssetData
-    ? availableToTradeForSide(activeAssetData, input.side)
+  const availableExact = previewCapacity
+    ? availableToTradeForSide(previewCapacity, input.side)
     : null;
 
-  const maxOrderNotional = activeAssetData
+  const maxOrderNotional = previewCapacity
     ? maxOrderNotionalForSide(
-        activeAssetData,
+        previewCapacity,
         input.side,
         input.leverage,
         orderPriceExact
@@ -898,7 +901,8 @@ export function normalizeLimitPrice(
  * Hyperliquid 为这个资产按方向上报的自由抵押品。
  *
  * 本地按抵押品金额消费，不随表单杠杆缩放；名义容量由下方函数结合数量上限计算。
- * 这个值属于该地址和合约的当前模式，不能由账户 USDC 余额或另一种模式的值代替。
+ * 无仓位时可用于所选模式的下单前预览，提交时必须重新读取设置后的额度；
+ * 始终使用这个地址和合约的真实返回值，不从账户总余额推测。
  */
 function availableToTradeForSide(
   data: PerpsActiveAssetData,

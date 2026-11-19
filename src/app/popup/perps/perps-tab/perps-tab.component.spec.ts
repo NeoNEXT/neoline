@@ -124,20 +124,18 @@ describe('PerpsTabComponent account initialization', () => {
 
   afterEach(() => component.ngOnDestroy());
 
-  for (const mode of ['default', 'disabled']) {
-    it(`initializes ${mode} through the existing software-wallet session without a submit click`, fakeAsync(() => {
-      accounts.next({ availability: 'live', account: { abstractionMode: mode } });
-      component.ngOnInit();
-      flushMicrotasks();
-      expect(walletService.getPrivateKey).toHaveBeenCalledOnceWith(wallets.value.currentWallet, 'password');
-      expect(writes.ensureUnifiedAccount).toHaveBeenCalledOnceWith('private-key');
-      wallets.next({ ...wallets.value });
-      flushMicrotasks();
-      expect(writes.ensureUnifiedAccount).toHaveBeenCalledTimes(1);
-    }));
-  }
+  it('initializes default through the existing software-wallet session without a submit click', fakeAsync(() => {
+    accounts.next({ availability: 'live', account: { abstractionMode: 'default' } });
+    component.ngOnInit();
+    flushMicrotasks();
+    expect(walletService.getPrivateKey).toHaveBeenCalledOnceWith(wallets.value.currentWallet, 'password');
+    expect(writes.ensureUnifiedAccount).toHaveBeenCalledOnceWith('private-key');
+    wallets.next({ ...wallets.value });
+    flushMicrotasks();
+    expect(writes.ensureUnifiedAccount).toHaveBeenCalledTimes(1);
+  }));
 
-  for (const mode of ['unifiedAccount', 'portfolioMargin', 'unknown', 'dexAbstraction']) {
+  for (const mode of ['disabled', 'unifiedAccount', 'portfolioMargin', 'unknown', 'dexAbstraction']) {
     it(`does not unlock or migrate ${mode} during initialization`, fakeAsync(() => {
       accounts.next({ availability: 'live', account: { abstractionMode: mode } });
       component.ngOnInit();
@@ -184,7 +182,7 @@ describe('PerpsTabComponent account initialization', () => {
     accounts.next({ availability: 'loading', account: aggregatePerpsAccounts([hip3]) });
     flushMicrotasks();
     expect(chrome.getPassword).not.toHaveBeenCalled();
-    const standard = parsePerpsAccount(null, { balances: [] }, 'disabled');
+    const standard = parsePerpsAccount(null, { balances: [] }, 'default');
     accounts.next({ availability: 'live', account: aggregatePerpsAccounts([standard, hip3]) });
     flushMicrotasks();
     expect(writes.ensureUnifiedAccount).toHaveBeenCalledOnceWith('private-key');

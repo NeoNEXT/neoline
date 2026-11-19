@@ -39,6 +39,9 @@ export async function openLongOrder(page: Page) {
   await marketRow(page).click();
   await page.getByRole('button', { name: 'Long', exact: true }).click();
   await expect(page).toHaveURL(/\/popup\/perps\/order\/ETH\?side=long$/);
+  // Existing order scenarios use an explicit 2x; default initialization has its own coverage.
+  await page.getByRole('spinbutton', { name: 'Leverage', exact: true }).fill('2');
+  await page.getByRole('spinbutton', { name: 'Leverage', exact: true }).blur();
   await page.getByRole('textbox', { name: /Amount/ }).fill('100');
   await expect(page.getByRole('button', { name: 'Place order', exact: true })).toBeEnabled();
 }

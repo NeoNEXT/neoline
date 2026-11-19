@@ -237,7 +237,7 @@ describe('PerpsTabComponent 渲染与接线', () => {
     });
   });
 
-  it('labels USDC balances and keeps standard spot balances separate', () => {
+  it('labels USDC balances without a separate spot balance row', () => {
     account.abstractionMode = 'portfolioMargin';
     fixture.detectChanges();
     expect(text('.card-top')).toContain('perpsUsdcBalance');
@@ -246,7 +246,7 @@ describe('PerpsTabComponent 渲染与接线', () => {
     account.abstractionMode = 'disabled';
     account.spotUsdcExact = '500';
     fixture.detectChanges();
-    expect(text('.card-spot')).toContain('500');
+    expect(fixture.nativeElement.querySelector('.card-spot')).toBeNull();
   });
 
   it('shows unknown balances without an empty-account deposit prompt', () => {

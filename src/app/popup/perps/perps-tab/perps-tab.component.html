@@ -17,7 +17,7 @@
     </div>
     <!--
       净值 / 可用余额按账户模式分别计算：统一账户用现货 USDC 给永续做抵押（会折算进来），
-      标准账户把两者分开（这里只算永续，现货余额单独显示在下面一行），
+      标准账户把两者分开（这里只算永续），
       避免将无法划转的现货余额计入永续购买力。
     -->
     <div class="card-value" *ngIf="!accountLoadError">
@@ -26,10 +26,6 @@
     <div class="card-margin" *ngIf="!accountLoadError">
       {{ "perpsAvailableMargin" | translate | async }}
       {{ availableMarginExact | perpsUsd }}
-    </div>
-    <div class="card-spot" *ngIf="hasSeparateSpotUsdc">
-      {{ "perpsSpotSeparate" | translate | async }}
-      {{ separateSpotUsdcExact | perpsUsd }}
     </div>
     <div class="card-actions">
       <button class="primary" [disabled]="globalActionsDisabled" (click)="toFunding('deposit')">

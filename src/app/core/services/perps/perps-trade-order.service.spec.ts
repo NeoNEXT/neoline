@@ -118,7 +118,7 @@ describe('PerpsTradeOrderService', () => {
 
   it('continues through capacity validation and order submission after a rejected migration', fakeAsync(() => {
     spyOn(console, 'warn');
-    const replies = [of('disabled'), of({ status: 'err', response: 'Migration rejected' }), of('disabled')];
+    const replies = [of('default'), of({ status: 'err', response: 'Migration rejected' }), of('disabled')];
     const writer = new PerpsExchangeWriteService({ post: () => replies.shift() } as any);
     exchange.ensureUnifiedAccount.and.callFake((key) => writer.ensureUnifiedAccount(key));
     service.submit(PRIVATE_KEY, intent()).subscribe();

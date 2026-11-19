@@ -1760,9 +1760,6 @@
   "perpsUsedMargin": {
     "message": "使用中"
   },
-  "perpsSpotSeparate": {
-    "message": "現物 USDC（無期限先物残高には含まれません）"
-  },
   "perpsDeposit": {
     "message": "入金"
   },

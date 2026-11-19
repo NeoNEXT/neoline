@@ -119,6 +119,30 @@ const sides = (
  * 所以断言改从 `availableExact` 和 `percentBaseExact` 上读 —— 那才是页面看得见的东西。
  */
 describe('composeOrder 购买力', () => {
+  it('shows the reported 5.92339 USDC and sizes a new isolated order before switching from cross', () => {
+    const data = {
+      ...capacity('BTC', 68716, '5.92339', '0.00172', 20),
+      user: '0x5be1a4c623a63498d78c08b8890a6e5dad6bf359',
+      leverage: { type: 'cross' as const, value: 20 },
+    };
+    const f = facts({
+      coin: 'BTC', market: priced('BTC', 68716, 5, 40), activeAssetData: data,
+      account: { ...withPositions(), account: account({
+        unified: true, abstractionMode: 'unifiedAccount', availableBalanceExact: '5.92339',
+      }) },
+    });
+    const order = input({ side: 'short', leverage: 3 });
+    const composed = composeOrder(f, order);
+    expect(composed.availableExact).toBe('5.92339');
+    expect(composed.percentBaseExact).toBe('17.179');
+    const amount = amountForPercent(composed, 100);
+    expect(amount).toBe('17.17');
+    const prepared = composeOrder(f, { ...order, amount, activePercent: 100 });
+    expect(prepared.preparable).toBeTrue();
+    expect(prepared.submittable).toBeFalse();
+    expect(prepared.intent?.marginMode).toBe('isolated');
+  });
+
   for (const mode of ['default', 'disabled', 'unifiedAccount', 'portfolioMargin', 'dexAbstraction', 'unknown'] as const) {
     it(`does not substitute account balance for missing ${mode} capacity`, () => {
       const f = facts({
@@ -166,32 +190,41 @@ describe('composeOrder 购买力', () => {
       .toBe('insufficient-margin');
   });
 
-  it('does not reuse isolated capacity after switching to cross margin', () => {
+  it('previews reported collateral for a new cross order without treating it as confirmed cross capacity', () => {
     const f = facts({
       activeAssetData: capacity('ETH', 100, '1000', '100', 5),
       account: { ...withPositions(), account: account({ availableBalanceExact: '20' }) },
     });
     const composed = composeOrder(f, input({ leverage: 5, marginMode: 'cross' }));
-    expect(composed.availableExact).toBeNull();
-    expect(composed.percentBaseExact).toBe('0');
+    expect(composed.availableExact).toBe('1000');
+    expect(composed.percentBaseExact).toBe('5000');
     expect(reason(f, input({ amount: '200', leverage: 5, marginMode: 'cross' })))
       .toBe('capacity-unavailable');
   });
 
-  it('can prepare a new isolated order when the venue is still cross, without quoting cross capacity', () => {
+  it('previews a new isolated order while the venue is still cross and requires mode preparation', () => {
     const f = facts({ activeAssetData: {
       ...capacity('ETH', 100, '1000', '100', 5), leverage: { type: 'cross', value: 5 },
     } });
     const prepared = composeOrder(f, input({ amount: '100', leverage: 5 }));
     expect(prepared.preparable).toBeTrue();
     expect(prepared.submittable).toBeFalse();
-    expect(prepared.availableExact).toBeNull();
+    expect(prepared.availableExact).toBe('1000');
     expect(prepared.intent?.marginMode).toBe('isolated');
     expect(prepared.intent?.requestedSizeExact).toBe('1');
     expect(composeOrder(f, input({ amount: '1' })).preparable).toBeFalse();
     expect(composeOrder(f, input({ amount: '100', protectionEnabled: true,
       takeProfitPrice: '90',
     })).preparable).toBeFalse();
+  });
+
+  it('does not preview mismatched capacity for an existing position', () => {
+    const f = facts({
+      account: withPositions(ethPosition({ leverageType: 'isolated' })),
+      activeAssetData: { ...capacity('ETH', 100, '1000', '100', 5), leverage: { type: 'cross', value: 5 } },
+    });
+    expect(composeOrder(f, input()).availableExact).toBeNull();
+    expect(composeOrder(f, input()).percentBaseExact).toBe('0');
   });
 
   for (const marginMode of ['noCross', 'strictIsolated'] as const) {

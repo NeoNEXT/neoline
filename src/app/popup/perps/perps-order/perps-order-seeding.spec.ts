@@ -120,22 +120,21 @@ describe('seedForm 限价', () => {
 });
 
 describe('seedForm 杠杆', () => {
-  it('takes the leverage the exchange reports for this asset', () => {
+  it('uses the exchange leverage when there is no position or session draft', () => {
     const seed = seedForm(
-      facts({ activeAssetData: capacity(10) }),
+      facts({ activeAssetData: capacity(5) }),
       input(),
       none,
       false
     );
 
-    expect(seed.leverage).toBe(10);
+    expect(seed.leverage).toBe(5);
   });
 
-  /** 缺省，不是播种：交易场所的值一到就取而代之，不需要第二个闩锁去记它是不是占位。 */
-  it('falls back to a default until the exchange value arrives', () => {
+  it('defaults to three when there is no preference or position', () => {
     const seed = seedForm(facts(), input(), none, false);
 
-    expect(seed.leverage).toBe(2);
+    expect(seed.leverage).toBe(3);
   });
 
   it('never proposes more than the market allows', () => {
@@ -154,7 +153,7 @@ describe('seedForm 杠杆', () => {
     expect(seed.leverage).toBe(1);
   });
 
-  it('ignores an exchange leverage outside what the market allows', () => {
+  it('caps the exchange leverage at the market maximum', () => {
     const seed = seedForm(
       facts({ activeAssetData: capacity(99) }),
       input(),
@@ -162,7 +161,29 @@ describe('seedForm 杠杆', () => {
       false
     );
 
-    expect(seed.leverage).toBe(2);
+    expect(seed.leverage).toBe(25);
+  });
+
+  for (const scenario of [
+    { name: 'position', position: holding(), pending: 7, expected: 20 },
+    { name: 'pending', position: null, pending: 7, expected: 7 },
+  ]) {
+    it(`prioritizes ${scenario.name} leverage over lower-priority values`, () => {
+      const f = facts({ account: { ...facts().account, account: scenario.position }, activeAssetData: capacity(10) });
+      const seed = seedForm(f, input(), none, false, scenario.pending);
+      expect(seed.leverage).toBe(scenario.expected);
+    });
+  }
+
+  it('caps a session draft when the market maximum has been reduced', () => {
+    expect(seedForm(facts(), input(), none, false, 40).leverage).toBe(25);
+  });
+
+  it('uses the exchange leverage when the session draft is invalid', () => {
+    for (const pending of [NaN, 0, -1, 1.5]) {
+      expect(seedForm(facts({ activeAssetData: capacity(5) }), input(), none, false,
+        pending).leverage).toBe(5);
+    }
   });
 
   it('leaves the leverage the user chose alone', () => {
@@ -201,6 +222,11 @@ describe('seedForm 平仓', () => {
     const seed = seedForm(closing(), input({ mode: 'close' }), none, false);
 
     expect(seed.leverage).toBe(20);
+  });
+
+  it('keeps the existing position leverage when closing despite a session draft', () => {
+    expect(seedForm(closing(), input({ mode: 'close' }), none, false,
+      7).leverage).toBe(20);
   });
 
   /**

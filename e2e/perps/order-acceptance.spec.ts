@@ -109,7 +109,7 @@ test('O3 missing capacity does not use the 1000 USDC account balance as a substi
   hl.capacityOverride = null;
   await ordinaryOrder(page);
   await amount(page).fill('100');
-  await expect(page.locator('.account-summary .available')).toContainText('0 USDC');
+  await expect(page.locator('.account-summary .available b')).toHaveText('0 USDC');
   await expect(submit(page)).toBeDisabled();
   expect(hl.writes.filter((item) => item.action.type !== 'agentSetAbstraction')).toHaveLength(0);
 });
@@ -180,12 +180,12 @@ for (const outcome of ['success', 'rejected', 'lost response']) {
 }
 
 for (const scenario of [
-  { name: 'd<1', metadata: { deployerFeeScale: '0.5' }, rate: '0.0648%' },
-  { name: 'd>=1', metadata: { deployerFeeScale: '2' }, rate: '0.1728%' },
-  { name: 'growth', metadata: { deployerFeeScale: '1', growthMode: 'enabled' }, rate: '0.00864%' },
+  { name: 'd<1', metadata: { deployerFeeScale: '0.5' }, rate: '0.1098%' },
+  { name: 'd>=1', metadata: { deployerFeeScale: '2' }, rate: '0.2178%' },
+  { name: 'growth', metadata: { deployerFeeScale: '1', growthMode: 'enabled' }, rate: '0.05364%' },
   { name: 'missing coefficient', metadata: {}, rate: 'Not available' },
 ]) {
-  test(`O1 O9 HIP-3 ${scenario.name} preserves full coin and quotes fees without builder approval`, async ({ page, hl }) => {
+  test(`O1 O9 HIP-3 ${scenario.name} preserves full coin and quotes fees with an approved builder`, async ({ page, hl }) => {
     hl.coin = 'xyz:XYZ100'; hl.marketMetadata = scenario.metadata;
     hl.fees = { userCrossRate: '0.00045', userAddRate: '-0.00002', activeReferralDiscount: '0.04' };
     await page.goto('/#/popup/perps/market/xyz%3AXYZ100');
