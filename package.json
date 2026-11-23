@@ -118,6 +118,9 @@
     "webpack-cli": "^5.1.4"
   },
   "overrides": {
+    "@angular-devkit/build-angular": {
+      "terser": "5.48.0"
+    },
     "elliptic": "6.6.1",
     "axios": "1.18.1",
     "cipher-base": "1.0.5",
