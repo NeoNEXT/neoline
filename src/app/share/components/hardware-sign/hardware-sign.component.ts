@@ -121,6 +121,8 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
     this.destroyed = true;
     if (this.currentWallet?.accounts[0].extra?.device === 'OneKey') {
       this.oneKeyService.cancel();
+    } else if (this.currentWallet?.accounts[0].extra?.device !== 'QRCode') {
+      this.ledger.cancel();
     }
     this.getStatusInterval?.unsubscribe();
   }
@@ -129,6 +131,8 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
     this.destroyed = true;
     if (this.currentWallet?.accounts[0].extra?.device === 'OneKey') {
       this.oneKeyService.cancel();
+    } else if (this.currentWallet?.accounts[0].extra?.device !== 'QRCode') {
+      this.ledger.cancel();
     }
     this.backWithSignedTx.emit();
     this.getStatusInterval?.unsubscribe();
@@ -138,6 +142,7 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
     if (this.ledgerBusy) return;
     this.ledgerBusy = true;
     this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
+      if (this.destroyed) return;
       switch (this.chainType) {
         case 'Neo2':
           this.loadingMsg = LedgerStatuses[res].msg;
@@ -175,10 +180,12 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
             )
         )
           .then((tx) => {
+            if (this.destroyed) return;
             this.loadingMsg = '';
             this.backWithSignedTx.emit(tx);
           })
           .catch((error) => {
+            if (this.destroyed) return;
             this.loadingMsg = '';
             this.backWithSignedTx.emit();
             this.ledger.handleLedgerError(error);
