@@ -204,6 +204,17 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   }
 
   async confirm(nonce: number) {
+    if (!this.encryptWallet) {
+      this.chrome.windowCallback(
+        {
+          error: ethErrors.provider.unauthorized().serialize(),
+          return: requestTargetEVM.request,
+          ID: this.messageID,
+        },
+        true
+      );
+      return;
+    }
     this.customNonce = nonce;
 
     const { newParams, PreExecutionParams } = this.getTxParams();
@@ -388,9 +399,9 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     }
 
     // from wallet
+    const normalizedAddress = ethers.getAddress(from).toLowerCase();
     this.encryptWallet = this.neoXWalletArr.find(
-      (item) =>
-        item.accounts[0].address === ethers.getAddress(this.txParams.from)
+      (item) => item.accounts[0].address.toLowerCase() === normalizedAddress
     );
 
     // from address SOURCE_ASSET balance

@@ -75,6 +75,9 @@ export class PopupWalletSwitchAccountComponent implements OnInit {
   }
 
   confirm() {
+    if (!this.selectedWallet) {
+      return;
+    }
     if (
       this.selectedWallet.accounts[0].address ===
       this.currentWallet.accounts[0].address
