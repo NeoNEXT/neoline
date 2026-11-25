@@ -37,6 +37,8 @@ export const LedgerStatuses = {
   TX_DENIED: 'TX_DENIED',
 };
 const LedgerReadyStatusCode = 0x9000;
+const LEDGER_VENDOR_ID = 0x2c97;
+const LEDGER_CONNECT_HASH = '#/ledger/hardware-connect?device=Ledger';
 
 @Injectable()
 export class LedgerService {
@@ -64,6 +66,76 @@ export class LedgerService {
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+    });
+  }
+
+  get supportsWebHid(): boolean {
+    return !!(navigator as any).hid;
+  }
+
+  async requestDevice(): Promise<any> {
+    const hid = (navigator as any).hid;
+    if (!hid) throw LedgerStatuses.UNSUPPORTED;
+    const device = (await hid.getDevices()).find(
+      (item) => item.vendorId === LEDGER_VENDOR_ID
+    );
+    if (device) return device;
+
+    const chromeApi = (window as any).chrome;
+    if (
+      !chromeApi?.runtime?.id ||
+      (window.location.hash || '').startsWith('#/ledger/hardware-connect') ||
+      !window.innerWidth || window.innerWidth >= 500
+    ) {
+      const [selected] = await hid.requestDevice({
+        filters: [{ vendorId: LEDGER_VENDOR_ID }],
+      });
+      if (!selected) throw new DOMException('No Ledger selected', 'NotFoundError');
+      return selected;
+    }
+    return this.authorizeDeviceInTab(hid);
+  }
+
+  private authorizeDeviceInTab(hid): Promise<any> {
+    const chromeApi = (window as any).chrome;
+    const queue = this.sendQueue;
+    const url = chromeApi.runtime.getURL('/index.html') + LEDGER_CONNECT_HASH;
+    return new Promise((resolve, reject) => {
+      chromeApi.tabs.create({ url, active: true }, (tab) => {
+        const lastError = chromeApi.runtime?.lastError;
+        if (lastError || !tab?.id) {
+          reject(new Error(lastError?.message || 'Unable to open Ledger connect tab'));
+          return;
+        }
+        let settled = false;
+        let closed = false;
+        const checkDevice = async () => {
+          const checkedAfterClose = closed;
+          const device = await hid.getDevices().then(
+            (devices) => devices.find((item) => item.vendorId === LEDGER_VENDOR_ID),
+            () => undefined
+          );
+          if (settled || (!device && !checkedAfterClose && this.sendQueue === queue)) return;
+          settled = true;
+          window.clearInterval(poll);
+          chromeApi.tabs.onRemoved.removeListener(onTabRemoved);
+          if (this.sendQueue !== queue) {
+            reject(LedgerStatuses.DISCONNECTED);
+          } else if (device) {
+            resolve(device);
+          } else {
+            reject(new DOMException('No Ledger selected', 'NotFoundError'));
+          }
+        };
+        const onTabRemoved = (id: number) => {
+          if (id !== tab.id) return;
+          closed = true;
+          void checkDevice();
+        };
+        const poll = window.setInterval(checkDevice, 100);
+        chromeApi.tabs.onRemoved.addListener(onTabRemoved);
+        void checkDevice();
+      });
     });
   }
 
@@ -510,10 +582,9 @@ export class LedgerService {
     const queue = this.sendQueue;
     this.devicePromise = (async () => {
       await this.closePromise;
-      const hid = (navigator as any).hid;
-      if (!hid) throw LedgerStatuses.UNSUPPORTED;
+      await this.requestDevice();
       const [
-        { DeviceManagementKitBuilder, LEDGER_VENDOR_ID, DeviceStatus },
+        { DeviceManagementKitBuilder, DeviceStatus },
         { webHidTransportFactory },
       ] = await Promise.all([
         import('@ledgerhq/device-management-kit'),
@@ -522,18 +593,14 @@ export class LedgerService {
       if (!this.dmk) {
         this.dmk = new DeviceManagementKitBuilder()
           .addTransport(webHidTransportFactory)
+          // .addLogger(new ConsoleLogger(LogLevel.Debug))
           .build();
       }
-      const authorized = (await hid.getDevices()).some(
-        (device) => device.vendorId === LEDGER_VENDOR_ID
-      );
-      const device = authorized
-        ? (await firstValueFrom<any[]>(
-            this.dmk.listenToAvailableDevices({}).pipe(
-              filter((devices: any[]) => devices.length > 0)
-            )
-          ))[0]
-        : await firstValueFrom(this.dmk.startDiscovering({}));
+      const device = (await firstValueFrom<any[]>(
+        this.dmk.listenToAvailableDevices({}).pipe(
+          filter((devices: any[]) => devices.length > 0)
+        )
+      ))[0];
       const sessionId = await this.dmk.connect({
         device,
         // Background app probes must not interrupt Neo's multi-APDU signing.

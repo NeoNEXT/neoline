@@ -178,7 +178,7 @@ describe('OneKeyService WebUSB', () => {
       expect(requestDevice).not.toHaveBeenCalled();
       expect(tabs.create).toHaveBeenCalledWith(
         jasmine.objectContaining({
-          url: 'chrome-extension://ext-id/index.html#/ledger/onekey-connect',
+          url: 'chrome-extension://ext-id/index.html#/ledger/hardware-connect?device=OneKey',
         }),
         jasmine.any(Function)
       );

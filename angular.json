@@ -68,7 +68,8 @@
               "seed-random",
               "javascript-natural-sort",
               "tiny-emitter",
-              "escape-latex"
+              "escape-latex",
+              "isomorphic-ws"
             ]
           },
           "configurations": {

@@ -109,10 +109,7 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
       if (this.currentWallet.accounts[0].extra?.device === 'OneKey') {
         void this.connectOneKey();
       } else {
-        this.handleLedger();
-        this.getStatusInterval = interval(5000).subscribe(() => {
-          this.handleLedger();
-        });
+        void this.connectLedger();
       }
     }
   }
@@ -136,6 +133,27 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
     }
     this.backWithSignedTx.emit();
     this.getStatusInterval?.unsubscribe();
+  }
+
+  private async connectLedger() {
+    try {
+      const device = await this.ledger.requestDevice();
+      if (!device || this.destroyed) return;
+      this.getStatusInterval = interval(5000).subscribe(() => {
+        this.handleLedger();
+      });
+      this.handleLedger();
+    } catch (error) {
+      if (this.destroyed) return;
+      if (error === 'UNSUPPORTED') {
+        this.loadingMsg = 'LedgerNotSupportComputer';
+        return;
+      }
+      this.backWithSignedTx.emit();
+      if (error?.name !== 'NotFoundError' && error?.name !== 'SecurityError') {
+        this.ledger.handleLedgerError(error);
+      }
+    }
   }
 
   private handleLedger() {

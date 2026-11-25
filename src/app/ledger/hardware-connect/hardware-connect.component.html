@@ -1,0 +1,35 @@
+<app-header></app-header>
+<section class="main">
+  <p class="title">
+    {{ (device === 'OneKey' ? 'connectOneKeyDevice' : 'connectLedgerDevice') | translate | async }}
+  </p>
+  <p class="tip" *ngIf="!authorized">
+    {{
+      (device === 'OneKey'
+        ? (supported ? 'oneKeyUsbConnectTip' : 'oneKeyWebUsbUnsupported')
+        : (supported ? 'ledgerUsbConnectTip' : 'LedgerNotSupportComputer'))
+        | translate
+        | async
+    }}<a
+      *ngIf="supported"
+      class="link"
+      [href]="device === 'OneKey'
+        ? 'https://tutorial.neoline.io/hardware-wallet/connect-your-onekey-to-neoline'
+        : 'https://tutorial.neoline.io/hardware-wallet/connect-your-ledger-to-neoline'"
+      target="_blank"
+      rel="noopener noreferrer"
+      >{{ "hardwareUsbConnectIssue" | translate | async }}</a>
+  </p>
+  <p class="tip success" *ngIf="authorized">
+    {{ "hardwareUsbAuthorized" | translate | async }}
+  </p>
+  <p class="tip error" *ngIf="error">{{ error | translate | async }}</p>
+  <button
+    class="confirm"
+    *ngIf="supported && !authorized"
+    (click)="connect()"
+    [disabled]="connecting"
+  >
+    {{ "connect" | translate | async }}
+  </button>
+</section>

@@ -94,7 +94,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.currentUrl.indexOf('/login') >= 0 ||
       this.currentUrl.indexOf('/wallet/new-guide') >= 0 ||
       this.currentUrl.indexOf('/notification') >= 0 ||
-      this.currentUrl.indexOf('/ledger/onekey-connect') >= 0
+      this.currentUrl.indexOf('/ledger/hardware-connect') >= 0
     ) {
       return false;
     }
