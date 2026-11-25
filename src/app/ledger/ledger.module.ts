@@ -8,7 +8,7 @@ import { AddressSelectorComponent } from './address-selector/address-selector.co
 import { AccountNameComponent } from './account-name/account-name.component';
 import { LedgerDeviceComponent } from './select-hardware/select-hardware.component';
 import { ScanQRCodeComponent } from './scan-qrcode/scan-qrcode.dialog';
-import { OneKeyConnectComponent } from './onekey-connect/onekey-connect.component';
+import { HardwareConnectComponent } from './hardware-connect/hardware-connect.component';
 
 @NgModule({
   declarations: [
@@ -18,7 +18,7 @@ import { OneKeyConnectComponent } from './onekey-connect/onekey-connect.componen
     AccountNameComponent,
     LedgerDeviceComponent,
     ScanQRCodeComponent,
-    OneKeyConnectComponent,
+    HardwareConnectComponent,
   ],
   imports: [CommonModule, LedgerRoutingModule, ShareModule],
   exports: [],

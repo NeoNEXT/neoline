@@ -26,7 +26,12 @@
     <button class="cancel" (click)="refuse()">
       {{ "refuse" | translate | async }}
     </button>
-    <button class="confirm" (click)="confirm()">
+    <button
+      class="confirm"
+      [class.disabled]="!selectedWallet"
+      [disabled]="!selectedWallet"
+      (click)="confirm()"
+    >
       {{ "switchAccount" | translate | async }}
     </button>
   </div>

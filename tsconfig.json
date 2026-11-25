@@ -13,6 +13,10 @@
       "@share/*": ["src/app/share/*"],
       "@popup/*": ["src/app/popup/*"],
       "@cross-runtime/*": ["cross-runtime/*"],
+      // DMK's XState 5 declarations require TS 5; Angular 14 uses TS 4.7.
+      "@ledgerhq/device-management-kit": ["node_modules/@ledgerhq/device-management-kit/lib/esm/index.js"],
+      "@ledgerhq/device-signer-kit-ethereum": ["node_modules/@ledgerhq/device-signer-kit-ethereum/lib/esm/index.js"],
+      "@ledgerhq/device-transport-kit-web-hid": ["node_modules/@ledgerhq/device-transport-kit-web-hid/lib/esm/index.js"],
     },
     "outDir": "./dist/out-tsc",
     "sourceMap": false,

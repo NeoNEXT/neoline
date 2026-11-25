@@ -41,7 +41,7 @@ interface OneKeyUsbNavigator extends Navigator {
   usb?: OneKeyUsbApi;
 }
 
-const ONEKEY_CONNECT_HASH = '#/ledger/onekey-connect';
+const ONEKEY_CONNECT_HASH = '#/ledger/hardware-connect?device=OneKey';
 const WEBUSB_CHOOSER_MIN_WIDTH = 500;
 const USB_HELPER_POLL_MS = 100;
 

@@ -2375,7 +2375,7 @@
   "oneKeyUsbConnectTip": {
     "message": "连接并解锁 OneKey，然后在浏览器弹出的设备列表中选择设备。"
   },
-  "oneKeyUsbConnectIssue": {
+  "hardwareUsbConnectIssue": {
     "message": "设备连接有问题吗？"
   },
   "oneKeyUnlockDevice": {
@@ -2387,7 +2387,13 @@
   "oneKeyConnectionFailed": {
     "message": "无法连接 OneKey，请关闭其他钱包应用，重新插入设备后重试。"
   },
-  "oneKeyUsbAuthorized": {
+  "ledgerUsbConnectTip": {
+    "message": "连接并解锁 Ledger，然后在浏览器弹出的设备列表中选择设备。"
+  },
+  "ledgerConnectionFailed": {
+    "message": "无法连接 Ledger，请关闭其他钱包应用，重新插入设备后重试。"
+  },
+  "hardwareUsbAuthorized": {
     "message": "请回到原页面继续操作，当前标签页可关闭。"
   }
 }

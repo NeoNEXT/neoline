@@ -159,14 +159,12 @@ export class PopupNoticeEvmSignComponent implements OnInit, OnDestroy {
   }
 
   public async signature() {
-    this.encryptWallet = this.neoXWalletArr.find(
-      (item) => item.accounts[0].address === ethers.getAddress(this.signAddress)
-    );
-    if (this.encryptWallet.accounts[0].extra.ledgerSLIP44) {
-      this.showHardwareSign = true;
-      return;
-    }
+    this.setDisplayWallet();
     if (this.encryptWallet) {
+      if (this.encryptWallet.accounts[0].extra.ledgerSLIP44) {
+        this.showHardwareSign = true;
+        return;
+      }
       try {
         const pwd = await this.chrome.getPassword();
         const privateKey = await this.evmWalletService.getPrivateKey(
@@ -192,6 +190,15 @@ export class PopupNoticeEvmSignComponent implements OnInit, OnDestroy {
       } catch (error) {
         this.global.snackBarTip(error?.message || 'wentWrong');
       }
+    } else {
+      this.chrome.windowCallback(
+        {
+          error: ethErrors.provider.unauthorized().serialize(),
+          return: requestTargetEVM.request,
+          ID: this.messageID,
+        },
+        true
+      );
     }
   }
 
@@ -257,9 +264,9 @@ export class PopupNoticeEvmSignComponent implements OnInit, OnDestroy {
       this.encryptWallet = undefined;
       return;
     }
-    const normalized = ethers.getAddress(this.signAddress);
+    const normalized = ethers.getAddress(this.signAddress).toLowerCase();
     this.encryptWallet = this.neoXWalletArr?.find(
-      (item) => item.accounts[0].address === normalized
+      (item) => item.accounts[0].address.toLowerCase() === normalized
     );
   }
 }

@@ -2375,7 +2375,7 @@
   "oneKeyUsbConnectTip": {
     "message": "Connect and unlock your OneKey, then select it in the browser device picker. "
   },
-  "oneKeyUsbConnectIssue": {
+  "hardwareUsbConnectIssue": {
     "message": "Having trouble connecting your device?"
   },
   "oneKeyUnlockDevice": {
@@ -2387,7 +2387,13 @@
   "oneKeyConnectionFailed": {
     "message": "Unable to connect to OneKey. Close other wallet apps, reconnect the device, and try again."
   },
-  "oneKeyUsbAuthorized": {
+  "ledgerUsbConnectTip": {
+    "message": "Connect and unlock your Ledger, then select it in the browser device picker."
+  },
+  "ledgerConnectionFailed": {
+    "message": "Unable to connect to Ledger. Close other wallet apps, reconnect the device, and try again."
+  },
+  "hardwareUsbAuthorized": {
     "message": "Return to the original page to continue. You can close this tab."
   }
 }

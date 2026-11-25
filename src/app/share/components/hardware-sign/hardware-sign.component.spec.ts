@@ -113,3 +113,75 @@ describe('HardwareSignComponent OneKey authorization', () => {
     expect(oneKey.requestDevice).not.toHaveBeenCalled();
   });
 });
+
+describe('HardwareSignComponent Ledger authorization', () => {
+  let component: HardwareSignComponent;
+  let ledger: any;
+
+  beforeEach(() => {
+    jasmine.clock().install();
+    ledger = {
+      requestDevice: jasmine.createSpy('requestDevice').and.resolveTo({}),
+      getDeviceStatus: jasmine.createSpy('getDeviceStatus').and.resolveTo('READY'),
+      getLedgerSignedTx: jasmine.createSpy('getLedgerSignedTx').and.resolveTo('signed-tx'),
+      handleLedgerError: jasmine.createSpy('handleLedgerError'),
+      cancel: jasmine.createSpy('cancel'),
+    };
+    component = new HardwareSignComponent(ledger, {} as any, {} as any);
+    component.currentWallet = { accounts: [{ extra: { device: 'Ledger' } }] } as any;
+    component.chainType = 'Neo3';
+  });
+
+  afterEach(() => {
+    component.ngOnDestroy();
+    jasmine.clock().uninstall();
+  });
+
+  it('authorizes and signs legacy Ledger wallets without a device type', async () => {
+    delete component.currentWallet.accounts[0].extra.device;
+    const signed = spyOn(component.backWithSignedTx, 'emit');
+    component.ngOnInit();
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    expect(ledger.requestDevice).toHaveBeenCalledOnceWith();
+    expect(signed).toHaveBeenCalledOnceWith('signed-tx');
+  });
+
+  it('waits for device authorization before checking the app and signing once', async () => {
+    let resolve: (value: object) => void;
+    ledger.requestDevice.and.returnValue(new Promise((done) => { resolve = done; }));
+    const signed = spyOn(component.backWithSignedTx, 'emit');
+    component.ngOnInit();
+    expect(ledger.requestDevice).toHaveBeenCalledOnceWith();
+    jasmine.clock().tick(10000);
+    expect(ledger.getDeviceStatus).not.toHaveBeenCalled();
+    resolve({});
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    expect(ledger.getDeviceStatus).toHaveBeenCalledTimes(1);
+    expect(signed).toHaveBeenCalledOnceWith('signed-tx');
+    jasmine.clock().tick(10000);
+    expect(ledger.getLedgerSignedTx).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not retry authorization when the connect tab is closed', async () => {
+    ledger.requestDevice.and.rejectWith(new DOMException('No Ledger selected', 'NotFoundError'));
+    const signed = spyOn(component.backWithSignedTx, 'emit');
+    component.ngOnInit();
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    jasmine.clock().tick(10000);
+    expect(ledger.requestDevice).toHaveBeenCalledTimes(1);
+    expect(ledger.getDeviceStatus).not.toHaveBeenCalled();
+    expect(ledger.handleLedgerError).not.toHaveBeenCalled();
+    expect(signed).toHaveBeenCalledOnceWith();
+  });
+
+  it('does not start signing when the view closes during authorization', async () => {
+    let resolve: (value: object) => void;
+    ledger.requestDevice.and.returnValue(new Promise((done) => { resolve = done; }));
+    component.ngOnInit();
+    component.ngOnDestroy();
+    resolve({});
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+    expect(ledger.getDeviceStatus).not.toHaveBeenCalled();
+    expect(ledger.getLedgerSignedTx).not.toHaveBeenCalled();
+  });
+});

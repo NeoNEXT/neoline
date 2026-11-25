@@ -2375,7 +2375,7 @@
   "oneKeyUsbConnectTip": {
     "message": "OneKeyを接続してロックを解除し、ブラウザのデバイス選択画面で選択してください。"
   },
-  "oneKeyUsbConnectIssue": {
+  "hardwareUsbConnectIssue": {
     "message": "デバイスの接続に問題がありますか？"
   },
   "oneKeyUnlockDevice": {
@@ -2387,7 +2387,13 @@
   "oneKeyConnectionFailed": {
     "message": "OneKeyに接続できません。他のウォレットアプリを閉じ、デバイスを接続し直して再試行してください。"
   },
-  "oneKeyUsbAuthorized": {
+  "ledgerUsbConnectTip": {
+    "message": "Ledgerを接続してロックを解除し、ブラウザのデバイス選択画面で選択してください。"
+  },
+  "ledgerConnectionFailed": {
+    "message": "Ledgerに接続できません。他のウォレットアプリを閉じ、デバイスを接続し直して再試行してください。"
+  },
+  "hardwareUsbAuthorized": {
     "message": "元のページに戻って操作を続けてください。このタブは閉じて構いません。"
   }
 }

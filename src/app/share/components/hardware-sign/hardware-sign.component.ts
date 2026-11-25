@@ -41,6 +41,7 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
   oneKeyConnecting = false;
   oneKeyError = '';
   private destroyed = false;
+  private ledgerBusy = false;
 
   get oneKeySupported() {
     return this.oneKeyService.supportsWebUsb;
@@ -108,10 +109,7 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
       if (this.currentWallet.accounts[0].extra?.device === 'OneKey') {
         void this.connectOneKey();
       } else {
-        this.handleLedger();
-        this.getStatusInterval = interval(5000).subscribe(() => {
-          this.handleLedger();
-        });
+        void this.connectLedger();
       }
     }
   }
@@ -120,6 +118,8 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
     this.destroyed = true;
     if (this.currentWallet?.accounts[0].extra?.device === 'OneKey') {
       this.oneKeyService.cancel();
+    } else if (this.currentWallet?.accounts[0].extra?.device !== 'QRCode') {
+      this.ledger.cancel();
     }
     this.getStatusInterval?.unsubscribe();
   }
@@ -128,13 +128,39 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
     this.destroyed = true;
     if (this.currentWallet?.accounts[0].extra?.device === 'OneKey') {
       this.oneKeyService.cancel();
+    } else if (this.currentWallet?.accounts[0].extra?.device !== 'QRCode') {
+      this.ledger.cancel();
     }
     this.backWithSignedTx.emit();
     this.getStatusInterval?.unsubscribe();
   }
 
+  private async connectLedger() {
+    try {
+      const device = await this.ledger.requestDevice();
+      if (!device || this.destroyed) return;
+      this.getStatusInterval = interval(5000).subscribe(() => {
+        this.handleLedger();
+      });
+      this.handleLedger();
+    } catch (error) {
+      if (this.destroyed) return;
+      if (error === 'UNSUPPORTED') {
+        this.loadingMsg = 'LedgerNotSupportComputer';
+        return;
+      }
+      this.backWithSignedTx.emit();
+      if (error?.name !== 'NotFoundError' && error?.name !== 'SecurityError') {
+        this.ledger.handleLedgerError(error);
+      }
+    }
+  }
+
   private handleLedger() {
+    if (this.ledgerBusy) return;
+    this.ledgerBusy = true;
     this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
+      if (this.destroyed) return;
       switch (this.chainType) {
         case 'Neo2':
           this.loadingMsg = LedgerStatuses[res].msg;
@@ -172,14 +198,18 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
             )
         )
           .then((tx) => {
+            if (this.destroyed) return;
             this.loadingMsg = '';
             this.backWithSignedTx.emit(tx);
           })
           .catch((error) => {
+            if (this.destroyed) return;
             this.loadingMsg = '';
             this.backWithSignedTx.emit();
             this.ledger.handleLedgerError(error);
           });
+      } else {
+        this.ledgerBusy = false;
       }
     });
   }

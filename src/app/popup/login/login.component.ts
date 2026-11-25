@@ -48,6 +48,7 @@ export class PopupLoginComponent
   private accountSub: Unsubscribable;
   private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   private allWallet = [];
+  private neoXWalletArr: EvmWalletJSON[] = [];
   private currentChainType: ChainType;
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
@@ -75,6 +76,7 @@ export class PopupLoginComponent
       this.currentWallet = state.currentWallet;
       this.selectWallet = state.currentWallet as Wallet2 | Wallet3 | EvmWalletJSON;
       this.allWallet = (state.neo3WalletArr as any).concat(state.neo2WalletArr);
+      this.neoXWalletArr = state.neoXWalletArr;
     });
   }
 
@@ -122,6 +124,24 @@ export class PopupLoginComponent
     let account;
     if (this.checkIsLedger(this.selectWallet)) {
       const wallet = this.allWallet.find((item) => !this.checkIsLedger(item));
+      if (!wallet) {
+        const neoXWallet = this.neoXWalletArr.find(
+          (item) => !this.checkIsLedger(item)
+        );
+        if (!neoXWallet) {
+          this.handleLoginFailed();
+          return;
+        }
+        this.evmWalletService
+          .getPrivateKey(neoXWallet, this.loginForm.value.password)
+          .then(() => {
+            this.handleLoginSuccess();
+          })
+          .catch(() => {
+            this.handleLoginFailed();
+          });
+        return;
+      }
       account = wallet.accounts[0];
     } else {
       switch (this.selectChainType) {

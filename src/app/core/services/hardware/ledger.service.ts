@@ -17,16 +17,16 @@ import { tx as tx3 } from '@cityofzion/neon-core-neo3/lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
 import { NEO, GAS, Asset } from '@/models/models';
-import { map } from 'rxjs/operators';
+import { filter, map } from 'rxjs/operators';
 import BigNumber from 'bignumber.js';
 import { AppState } from '@/app/reduers';
 import { Store } from '@ngrx/store';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { ethers } from 'ethers';
+import { firstValueFrom, Observable, Subscription } from 'rxjs';
 import { TypedMessage, MessageTypes } from '@metamask/eth-sig-util';
 import { HttpService } from '../http.service';
 import { GlobalService } from '../global.service';
-import { transformTypedDataPlugin } from '../../utils/evm';
 import * as Sentry from '@sentry/angular';
 
 export const LedgerStatuses = {
@@ -37,11 +37,18 @@ export const LedgerStatuses = {
   TX_DENIED: 'TX_DENIED',
 };
 const LedgerReadyStatusCode = 0x9000;
+const LEDGER_VENDOR_ID = 0x2c97;
+const LEDGER_CONNECT_HASH = '#/ledger/hardware-connect?device=Ledger';
 
 @Injectable()
 export class LedgerService {
-  private deviceInstance;
-  private ethTransport;
+  private dmk;
+  private ethSigner;
+  private sessionId: string;
+  private devicePromise: Promise<string>;
+  private closePromise: Promise<void>;
+  private deviceStateSub: Subscription;
+  private cancelNeoXAction: () => void;
   private accounts = { Neo2: [], Neo3: [], NeoX: [] };
   private sendQueue = [];
   private ledgerInUse = false;
@@ -59,6 +66,76 @@ export class LedgerService {
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+    });
+  }
+
+  get supportsWebHid(): boolean {
+    return !!(navigator as any).hid;
+  }
+
+  async requestDevice(): Promise<any> {
+    const hid = (navigator as any).hid;
+    if (!hid) throw LedgerStatuses.UNSUPPORTED;
+    const device = (await hid.getDevices()).find(
+      (item) => item.vendorId === LEDGER_VENDOR_ID
+    );
+    if (device) return device;
+
+    const chromeApi = (window as any).chrome;
+    if (
+      !chromeApi?.runtime?.id ||
+      (window.location.hash || '').startsWith('#/ledger/hardware-connect') ||
+      !window.innerWidth || window.innerWidth >= 500
+    ) {
+      const [selected] = await hid.requestDevice({
+        filters: [{ vendorId: LEDGER_VENDOR_ID }],
+      });
+      if (!selected) throw new DOMException('No Ledger selected', 'NotFoundError');
+      return selected;
+    }
+    return this.authorizeDeviceInTab(hid);
+  }
+
+  private authorizeDeviceInTab(hid): Promise<any> {
+    const chromeApi = (window as any).chrome;
+    const queue = this.sendQueue;
+    const url = chromeApi.runtime.getURL('/index.html') + LEDGER_CONNECT_HASH;
+    return new Promise((resolve, reject) => {
+      chromeApi.tabs.create({ url, active: true }, (tab) => {
+        const lastError = chromeApi.runtime?.lastError;
+        if (lastError || !tab?.id) {
+          reject(new Error(lastError?.message || 'Unable to open Ledger connect tab'));
+          return;
+        }
+        let settled = false;
+        let closed = false;
+        const checkDevice = async () => {
+          const checkedAfterClose = closed;
+          const device = await hid.getDevices().then(
+            (devices) => devices.find((item) => item.vendorId === LEDGER_VENDOR_ID),
+            () => undefined
+          );
+          if (settled || (!device && !checkedAfterClose && this.sendQueue === queue)) return;
+          settled = true;
+          window.clearInterval(poll);
+          chromeApi.tabs.onRemoved.removeListener(onTabRemoved);
+          if (this.sendQueue !== queue) {
+            reject(LedgerStatuses.DISCONNECTED);
+          } else if (device) {
+            resolve(device);
+          } else {
+            reject(new DOMException('No Ledger selected', 'NotFoundError'));
+          }
+        };
+        const onTabRemoved = (id: number) => {
+          if (id !== tab.id) return;
+          closed = true;
+          void checkDevice();
+        };
+        const poll = window.setInterval(checkDevice, 100);
+        chromeApi.tabs.onRemoved.addListener(onTabRemoved);
+        void checkDevice();
+      });
     });
   }
 
@@ -119,18 +196,45 @@ export class LedgerService {
   }
 
   getDeviceStatus(chainType: ChainType): Promise<any> {
+    if (chainType === 'NeoX') {
+      return this.getNeoXSigner()
+        .then(async () => {
+          const { GetAppAndVersionCommand, isSuccessCommandResult } =
+            await import('@ledgerhq/device-management-kit');
+          const result = await this.dmk.sendCommand({
+            sessionId: this.sessionId,
+            command: new GetAppAndVersionCommand(),
+          });
+          return isSuccessCommandResult(result) && result.data.name === 'Ethereum'
+            ? LedgerStatuses.READY
+            : LedgerStatuses.APP_CLOSED;
+        })
+        .catch((error) => {
+          if (
+            error === LedgerStatuses.UNSUPPORTED ||
+            error === LedgerStatuses.DISCONNECTED ||
+            error?._tag === 'NoAccessibleDeviceError'
+          ) {
+            return error === LedgerStatuses.UNSUPPORTED
+              ? LedgerStatuses.UNSUPPORTED
+              : LedgerStatuses.DISCONNECTED;
+          }
+          return LedgerStatuses.APP_CLOSED;
+        });
+    }
+    const queue = this.sendQueue;
     return this.getAppName(chainType)
       .then(() => LedgerStatuses.READY)
       .catch((err) => {
-        if (chainType === 'NeoX') {
-          return LedgerStatuses[err] ? err : LedgerStatuses.APP_CLOSED;
+        if (this.sendQueue === queue) {
+          this.closeDevice();
         }
-        this.closeDevice();
         return LedgerStatuses[err] ? err : LedgerStatuses.APP_CLOSED;
       });
   }
 
   async fetchAccounts(page: number, chainType: ChainType) {
+    const signer = chainType === 'NeoX' ? await this.getNeoXSigner() : undefined;
     const startingIndex = (page - 1) * LEDGER_PAGE_SIZE;
     const maxIndex = page * LEDGER_PAGE_SIZE;
     let newAccounts = [];
@@ -142,7 +246,9 @@ export class LedgerService {
       }
       let account;
       if (chainType === 'NeoX') {
-        account = await this.ethTransport.getAddress(`44'/60'/0'/0/${index}`);
+        account = await this.waitForNeoXAction(
+          signer.getAddress(`44'/60'/0'/0/${index}`)
+        );
       } else {
         account = await this.getPublicKey(index, chainType);
       }
@@ -231,9 +337,12 @@ export class LedgerService {
   }
 
   async getNeoXSignPersonalMessage(message: string, wallet: EvmWalletJSON) {
-    const result = await this.ethTransport.signPersonalMessage(
-      `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
-      Buffer.from(message).toString('hex')
+    const signer = await this.getNeoXSigner();
+    const result = await this.waitForNeoXAction(
+      signer.signMessage(
+        `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
+        message
+      )
     );
     return this.handleSignResult(result);
   }
@@ -241,59 +350,71 @@ export class LedgerService {
     typedData: TypedMessage<MessageTypes>,
     wallet: EvmWalletJSON
   ) {
-    try {
-      const result = await this.ethTransport.signEIP712Message(
+    const signer = await this.getNeoXSigner();
+    const result = await this.waitForNeoXAction(
+      signer.signTypedData(
         `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
         typedData
-      );
-      return this.handleSignResult(result);
-    } catch {
-      const { domainHash, messageHash } = transformTypedDataPlugin(typedData);
-      const result = await this.ethTransport.signEIP712HashedMessage(
-        `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
-        domainHash,
-        messageHash
-      );
-      return this.handleSignResult(result);
-    }
+      )
+    );
+    return this.handleSignResult(result);
   }
 
   //#region private function
-  private handleSignResult(result) {
-    let v = result['v'];
-    v = v.toString(16);
-    if (v.length < 2) {
-      v = '0' + v;
+  private async getNeoXSigner(): Promise<any> {
+    const sessionId = await this.getDevice();
+    if (!this.ethSigner) {
+      const { SignerEthBuilder } = await import('@ledgerhq/device-signer-kit-ethereum');
+      if (this.sessionId !== sessionId) throw LedgerStatuses.DISCONNECTED;
+      this.ethSigner = new SignerEthBuilder({ dmk: this.dmk, sessionId }).build();
     }
-    const data = '0x' + result['r'] + result['s'] + v;
-    return data;
+    return this.ethSigner;
+  }
+
+  cancel() {
+    this.cancelNeoXAction?.();
+    void this.closeDevice();
+  }
+
+  private async waitForNeoXAction(action: {
+    observable: Observable<{ status: string; output?: any; error?: unknown }>;
+    cancel: () => void;
+  }): Promise<any> {
+    this.cancelNeoXAction = action.cancel;
+    try {
+      const state = await firstValueFrom(
+        action.observable.pipe(
+          filter((value) => value.status === 'completed' ||
+            value.status === 'error' || value.status === 'stopped')
+        )
+      );
+      if (state.status === 'completed') return state.output;
+      if (state.status === 'error') throw state.error;
+      throw new Error('TransactionDeniedByUser');
+    } finally {
+      if (this.cancelNeoXAction === action.cancel) {
+        this.cancelNeoXAction = undefined;
+      }
+    }
+  }
+
+  private handleSignResult(result: { r: string; s: string; v: number }) {
+    return ethers.Signature.from(result).serialized;
   }
 
   private async getNeoXSignature(txData, wallet: EvmWalletJSON) {
-    const { ledgerService } = await import('@ledgerhq/hw-app-eth');
+    const signer = await this.getNeoXSigner();
     txData.chainId = this.neoXNetwork.chainId;
-    let unsignedTx = ethers.Transaction.from(txData).unsignedSerialized;
-    unsignedTx = unsignedTx.startsWith('0x')
-      ? unsignedTx.substring(2)
-      : unsignedTx;
-
-    const resolution = await ledgerService.resolveTransaction(
-      unsignedTx,
-      {},
-      {}
-    );
-    const result = await this.ethTransport.signTransaction(
-      `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
-      unsignedTx,
-      resolution
+    const unsignedTx = ethers.Transaction.from(txData).unsignedSerialized;
+    const result = await this.waitForNeoXAction(
+      signer.signTransaction(
+        `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
+        ethers.getBytes(unsignedTx)
+      )
     );
     return {
       ...txData,
-      signature: {
-        r: `0x${result.r}`,
-        s: `0x${result.s}`,
-        v: `0x${result.v}`,
-      },
+      signature: result,
     };
   }
   private getNeo2Signature({ data, addressIndex }) {
@@ -397,6 +518,7 @@ export class LedgerService {
     }
   }
   private getPublicKey(addressIndex = 0, chainType: ChainType): Promise<any> {
+    const queue = this.sendQueue;
     return this.send('80040000', this.BIP44(addressIndex))
       .then((res) => res.toString('hex').substring(0, 130))
       .then((key) => {
@@ -405,136 +527,125 @@ export class LedgerService {
           : new wallet3.Account(key);
       })
       .catch((err) => {
-        this.closeDevice();
+        if (this.sendQueue === queue) {
+          this.closeDevice();
+        }
         throw LedgerStatuses[err] ? err : LedgerStatuses.APP_CLOSED;
       });
   }
 
-  private send(params, msg): Promise<any> {
+  private send(params: string, msg: string): Promise<Buffer> {
     return new Promise((resolve, reject) => {
-      this.sendQueue.push(() => {
-        const data = Buffer.from(msg, 'hex');
-        const [cla, ins, p1, p2] = params
-          .match(/.{1,2}/g)
-          .map((i) => parseInt(i, 16));
-        return this.getDevice()
-          .then((device) => {
-            return device.send(cla, ins, p1, p2, data, [LedgerReadyStatusCode]);
-          })
-          .then((buffer) => {
-            resolve(buffer);
-            return;
-          })
-          .catch((err) => {
-            if (
-              err.toString() === 'Error: could not read from HID device' ||
-              err.statusCode === 27911
-            ) {
-              this.closeDevice();
-            }
-            this.ledgerInUse = false;
-            reject(err);
-            throw err;
-          });
-      });
-      this.executeSend();
-    });
-  }
-
-  private async getDevice(): Promise<any> {
-    if (this.deviceInstance) {
-      return this.deviceInstance;
-    }
-    const { default: TransportWebHID } = await import(
-      '@ledgerhq/hw-transport-webhid'
-    );
-    this.deviceInstance = await TransportWebHID.create();
-    this.deviceInstance.on('disconnect', () => {
-      this.closeDevice();
-    });
-    if (this.deviceInstance) {
-      return this.deviceInstance;
-    }
-    throw LedgerStatuses.DISCONNECTED;
-  }
-
-  private getAppName(chainType: ChainType): Promise<any> {
-    return new Promise((resolve, reject) => {
-      this.sendQueue.push(() => {
-        if (chainType === 'NeoX') {
-          return this.getDevice()
-            .then(async (device) => {
-              const { default: Eth } = await import('@ledgerhq/hw-app-eth');
-              this.ethTransport = new Eth(device);
-              return this.ethTransport.getAppConfiguration();
-            })
-            .then(() => {
-              resolve('open');
-            })
-            .catch((error) => {
-              if (
-                error.statusCode == '0x5515' ||
-                error.statusCode === 27906 || // UNKNOWN_APDU
-                error.statusCode === 28160 // CLA_NOT_SUPPORTED
-              ) {
-                reject(LedgerStatuses.APP_CLOSED);
-              }
-
-              if (error.includes('TransportOpenUserCancelled')) {
-                reject(LedgerStatuses.DISCONNECTED);
-              }
-              reject(error);
-            });
+      const queue = this.sendQueue;
+      const execute = async () => {
+        try {
+          const sessionId = await this.getDevice();
+          if (this.sendQueue !== queue) throw LedgerStatuses.DISCONNECTED;
+          const data = Buffer.from(msg, 'hex');
+          const apdu = Buffer.concat([
+            Buffer.from(params, 'hex'),
+            Buffer.from([data.length]),
+            data,
+          ]);
+          let response;
+          try {
+            response = await this.dmk.sendApdu({ sessionId, apdu });
+          } catch {
+            if (this.sessionId === sessionId) void this.closeDevice();
+            throw LedgerStatuses.DISCONNECTED;
+          }
+          if (this.sendQueue !== queue) throw LedgerStatuses.DISCONNECTED;
+          const status = Buffer.from(response.statusCode);
+          const statusCode = status.readUInt16BE(0);
+          if (statusCode !== LedgerReadyStatusCode) {
+            if (statusCode === 27911) void this.closeDevice();
+            throw Object.assign(
+              new Error(`Ledger device returned 0x${status.toString('hex')}`),
+              { statusCode }
+            );
+          }
+          // Existing Neo parsers expect the response payload followed by SW1/SW2.
+          resolve(Buffer.concat([Buffer.from(response.data), status]));
+        } catch (error) {
+          reject(error);
+          throw error;
         }
-        return this.getDevice()
-          .then((device) => {
-            return device.send(0x80, 0x00, 0x00, 0x00, undefined, [
-              LedgerReadyStatusCode,
-            ]);
-          })
-          .then((buffer) => {
-            const version = buffer.toString('ascii');
-            let appName = null;
-            if (version && version.length > 2) {
-              appName = version.substring(0, version.length - 2);
-            }
-            if (chainType === 'Neo3') {
-              if (appName === 'NEO N3' || appName === 'NEO -DN3') {
-                resolve('open');
-              } else {
-                reject(LedgerStatuses.APP_CLOSED);
-              }
-            } else {
-              reject(LedgerStatuses.APP_CLOSED);
-            }
-            return;
-          })
-          .catch((err) => {
-            if (
-              err.toString() === 'Error: could not read from HID device' ||
-              err.statusCode === 27911
-            ) {
-              this.closeDevice();
-            }
-            if (chainType === 'Neo2') {
-              if (
-                err.statusCode === 27904 ||
-                err.statusText === 'INS_NOT_SUPPORTED'
-              ) {
-                resolve('open');
-              } else {
-                // console.log(err);
-                reject(err);
-              }
-            } else {
-              // console.log(err);
-              reject(err);
-            }
-            return;
-          });
-      });
+      };
+      queue.push({ execute, reject });
       this.executeSend();
     });
+  }
+
+  private getDevice(): Promise<string> {
+    if (this.devicePromise) return this.devicePromise;
+    if (this.sessionId) return Promise.resolve(this.sessionId);
+    const queue = this.sendQueue;
+    this.devicePromise = (async () => {
+      await this.closePromise;
+      await this.requestDevice();
+      const [
+        { DeviceManagementKitBuilder, DeviceStatus },
+        { webHidTransportFactory },
+      ] = await Promise.all([
+        import('@ledgerhq/device-management-kit'),
+        import('@ledgerhq/device-transport-kit-web-hid'),
+      ]);
+      if (!this.dmk) {
+        this.dmk = new DeviceManagementKitBuilder()
+          .addTransport(webHidTransportFactory)
+          // .addLogger(new ConsoleLogger(LogLevel.Debug))
+          .build();
+      }
+      const device = (await firstValueFrom<any[]>(
+        this.dmk.listenToAvailableDevices({}).pipe(
+          filter((devices: any[]) => devices.length > 0)
+        )
+      ))[0];
+      const sessionId = await this.dmk.connect({
+        device,
+        // Background app probes must not interrupt Neo's multi-APDU signing.
+        sessionRefresherOptions: { isRefresherDisabled: true },
+      });
+      if (this.sendQueue !== queue) {
+        await this.dmk.disconnect({ sessionId });
+        throw LedgerStatuses.DISCONNECTED;
+      }
+      this.sessionId = sessionId;
+      this.accounts = { Neo2: [], Neo3: [], NeoX: [] };
+      this.deviceStateSub = this.dmk.getDeviceSessionState({ sessionId }).subscribe(
+        (state) => {
+          if (this.sessionId === sessionId &&
+              state.deviceStatus === DeviceStatus.NOT_CONNECTED) {
+            void this.closeDevice();
+          }
+        }
+      );
+      return sessionId;
+    })().catch((error) => {
+      throw error?._tag === 'NoAccessibleDeviceError'
+        ? LedgerStatuses.DISCONNECTED
+        : error;
+    }).finally(() => {
+      this.devicePromise = undefined;
+    });
+    return this.devicePromise;
+  }
+
+  private getAppName(chainType: ChainType): Promise<string> {
+    return this.send('80000000', '')
+      .then((buffer) => {
+        const appName = buffer.subarray(0, -2).toString('ascii');
+        if (chainType === 'Neo3' &&
+            (appName === 'NEO N3' || appName === 'NEO -DN3')) {
+          return 'open';
+        }
+        throw LedgerStatuses.APP_CLOSED;
+      })
+      .catch((error) => {
+        // The legacy Neo app identifies itself by rejecting this instruction.
+        if (chainType === 'Neo2' && error.statusCode === 27904) return 'open';
+        throw error;
+      });
   }
 
   private executeSend() {
@@ -542,13 +653,16 @@ export class LedgerService {
       return;
     }
     this.ledgerInUse = true;
-    this.sendQueue[0]()
+    const request = this.sendQueue[0];
+    request.execute()
       .then((res) => {
+        if (this.sendQueue[0] !== request) return;
         this.sendQueue.shift();
         this.ledgerInUse = false;
         this.executeSend();
       })
       .catch((err) => {
+        if (this.sendQueue[0] !== request) return;
         this.sendQueue.shift();
         this.ledgerInUse = false;
         this.executeSend();
@@ -568,10 +682,21 @@ export class LedgerService {
     return purpose + SLIP44 + account + change + addressIndex;
   }
 
-  private closeDevice(): void {
-    this.deviceInstance && this.deviceInstance.close();
-    this.deviceInstance = null;
+  private closeDevice(): Promise<void> {
+    const sessionId = this.sessionId;
+    this.sessionId = undefined;
+    this.ethSigner = undefined;
+    this.deviceStateSub?.unsubscribe();
+    this.deviceStateSub = undefined;
+    this.accounts = { Neo2: [], Neo3: [], NeoX: [] };
+    const requests = this.sendQueue;
     this.sendQueue = [];
+    this.ledgerInUse = false;
+    requests.forEach((request) => request.reject(LedgerStatuses.DISCONNECTED));
+    if (sessionId) {
+      this.closePromise = this.dmk.disconnect({ sessionId }).catch(() => undefined);
+    }
+    return this.closePromise || Promise.resolve();
   }
   //#endregion
 }
